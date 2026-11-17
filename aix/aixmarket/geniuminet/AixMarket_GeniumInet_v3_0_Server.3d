@@ -1,0 +1,207 @@
+// Astana International Exchange Genium Inet
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out AixMarket_GeniumInet_v3_0_Server.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a length prefix framing what follows
+//
+// License: MIT No Attribution
+
+// ---- Server Packet Header: 3 bytes -------------------------------------------
+
+// Packet header of a packet sent by the server
+entrypoint typedef struct _ServerPacketHeader {
+  UINT16BE packet_length;    // bytes 0 to 1
+  UINT8 server_packet_type;  // byte 2
+} ServerPacketHeader;
+
+// ---- Login Accepted Packet: 30 bytes -----------------------------------------
+
+// The SoupBinTCP server sends a Login Accepted Packet in response to receiving a valid Login Request from the client
+entrypoint typedef struct _LoginAcceptedPacket {
+  UINT8 accepted_session[10];          // bytes 0 to 9
+  UINT8 accepted_sequence_number[20];  // bytes 10 to 29
+} LoginAcceptedPacket;
+
+// ---- Login Rejected Packet: 1 byte -------------------------------------------
+
+// The SoupBinTCP server sends this packet in response to an invalid Login Request Packet from the client
+entrypoint typedef struct _LoginRejectedPacket {
+  UINT8 reject_reason_code;  // byte 0
+} LoginRejectedPacket;
+
+// ---- Seconds Message: 4 bytes ------------------------------------------------
+
+// This message is sent every second for which at least one ITCH message is being generated.
+entrypoint typedef struct _SecondsMessage {
+  UINT32BE second;  // bytes 0 to 3
+} SecondsMessage;
+
+// ---- Order Book Directory Message: 129 bytes ---------------------------------
+
+// At the start of each trading day, Order book directory messages are disseminated for all active securities, including halted securities, in the AIX Trading system.
+entrypoint typedef struct _OrderBookDirectoryMessage {
+  UINT32BE nanoseconds;                          // bytes 0 to 3
+  UINT32BE order_book_id;                        // bytes 4 to 7
+  UINT8 symbol[32];                              // bytes 8 to 39
+  UINT8 long_name[32];                           // bytes 40 to 71
+  UINT8 isin[12];                                // bytes 72 to 83
+  UINT8 financial_product;                       // byte 84
+  UINT8 trading_currency[3];                     // bytes 85 to 87
+  UINT16BE number_of_decimals_in_price;          // bytes 88 to 89
+  UINT16BE number_of_decimals_in_nominal_value;  // bytes 90 to 91
+  UINT32BE odd_lot_size;                         // bytes 92 to 95
+  UINT32BE round_lot_size;                       // bytes 96 to 99
+  UINT32BE block_lot_size;                       // bytes 100 to 103
+  UINT64BE nominal_value;                        // bytes 104 to 111
+  UINT8 reserved_1;                              // byte 112
+  UINT32BE underlying_order_book_id;             // bytes 113 to 116
+  UINT32BE strike_price;                         // bytes 117 to 120, signed, read here as unsigned
+  UINT32BE expiration_date;                      // bytes 121 to 124
+  UINT16BE number_of_decimals_in_strike_price;   // bytes 125 to 126
+  UINT8 put_or_call;                             // byte 127
+  UINT8 ranking_type;                            // byte 128
+} OrderBookDirectoryMessage;
+
+// ---- Tick Size Table Entry Message: 24 bytes ---------------------------------
+
+// This message contains information on a tick size for a price range.
+entrypoint typedef struct _TickSizeTableEntryMessage {
+  UINT32BE nanoseconds;    // bytes 0 to 3
+  UINT32BE order_book_id;  // bytes 4 to 7
+  UINT64BE tick_size;      // bytes 8 to 15
+  UINT32BE price_from;     // bytes 16 to 19, signed, read here as unsigned
+  UINT32BE price_to;       // bytes 20 to 23, signed, read here as unsigned
+} TickSizeTableEntryMessage;
+
+// ---- Short Sell Status Message: 9 bytes --------------------------------------
+
+// A Short Sell Status Message indicates the short sell rules of an order book.
+entrypoint typedef struct _ShortSellStatusMessage {
+  UINT32BE nanoseconds;          // bytes 0 to 3
+  UINT32BE order_book_id;        // bytes 4 to 7
+  UINT8 short_sale_restriction;  // byte 8
+} ShortSellStatusMessage;
+
+// ---- System Event Message: 5 bytes -------------------------------------------
+
+// The system event message type is used to signal a market or data feed handler event.
+entrypoint typedef struct _SystemEventMessage {
+  UINT32BE nanoseconds;  // bytes 0 to 3
+  UINT8 event_code;      // byte 4
+} SystemEventMessage;
+
+// ---- Order Book State Message: 28 bytes --------------------------------------
+
+// The Order book state message relays information on state changes.
+entrypoint typedef struct _OrderBookStateMessage {
+  UINT32BE nanoseconds;    // bytes 0 to 3
+  UINT32BE order_book_id;  // bytes 4 to 7
+  UINT8 state_name[20];    // bytes 8 to 27
+} OrderBookStateMessage;
+
+// ---- Add Order Message: 44 bytes ---------------------------------------------
+
+// An Add Order Message indicates that a new order has been accepted by the AIX Trading system and was added to the displayable book.
+entrypoint typedef struct _AddOrderMessage {
+  UINT32BE nanoseconds;              // bytes 0 to 3
+  UINT64BE order_id;                 // bytes 4 to 11
+  UINT32BE order_book_id;            // bytes 12 to 15
+  UINT8 side;                        // byte 16
+  UINT32BE ranking_sequence_number;  // bytes 17 to 20
+  UINT64BE quantity;                 // bytes 21 to 28
+  UINT32BE price;                    // bytes 29 to 32, signed, read here as unsigned
+  UINT16BE order_attributes;         // bytes 33 to 34
+  UINT8 lot_type;                    // byte 35
+  UINT64BE ranking_time;             // bytes 36 to 43
+} AddOrderMessage;
+
+// ---- Order Executed Message: 51 bytes ----------------------------------------
+
+// This message is sent whenever an order on the book is executed in whole or in part.
+entrypoint typedef struct _OrderExecutedMessage {
+  UINT32BE nanoseconds;        // bytes 0 to 3
+  UINT64BE order_id;           // bytes 4 to 11
+  UINT32BE order_book_id;      // bytes 12 to 15
+  UINT8 side;                  // byte 16
+  UINT64BE executed_quantity;  // bytes 17 to 24
+  UINT64BE match_id;           // bytes 25 to 32
+  UINT8 reserved_4[4];         // bytes 33 to 36
+  UINT8 reserved_14[14];       // bytes 37 to 50
+} OrderExecutedMessage;
+
+// ---- Order Executed With Price Message: 57 bytes -----------------------------
+
+// This message is sent that an order on the book is executed in whole or in part with a price different than the initial display price.
+entrypoint typedef struct _OrderExecutedWithPriceMessage {
+  UINT32BE nanoseconds;        // bytes 0 to 3
+  UINT64BE order_id;           // bytes 4 to 11
+  UINT32BE order_book_id;      // bytes 12 to 15
+  UINT8 side;                  // byte 16
+  UINT64BE executed_quantity;  // bytes 17 to 24
+  UINT64BE match_id;           // bytes 25 to 32
+  UINT8 reserved_18[18];       // bytes 33 to 50
+  UINT32BE trade_price;        // bytes 51 to 54, signed, read here as unsigned
+  UINT8 occurred_at_cross;     // byte 55
+  UINT8 printable;             // byte 56
+} OrderExecutedWithPriceMessage;
+
+// ---- Order Delete Message: 17 bytes ------------------------------------------
+
+// This message is sent whenever an order on the book is being deleted.
+entrypoint typedef struct _OrderDeleteMessage {
+  UINT32BE nanoseconds;    // bytes 0 to 3
+  UINT64BE order_id;       // bytes 4 to 11
+  UINT32BE order_book_id;  // bytes 12 to 15
+  UINT8 side;              // byte 16
+} OrderDeleteMessage;
+
+// ---- Order Book Flush Message: 8 bytes ---------------------------------------
+
+// This message is sent whenever an order book is flushed.
+entrypoint typedef struct _OrderBookFlushMessage {
+  UINT32BE nanoseconds;    // bytes 0 to 3
+  UINT32BE order_book_id;  // bytes 4 to 7
+} OrderBookFlushMessage;
+
+// ---- Trade Message: 49 bytes -------------------------------------------------
+
+// The Trade Message is designed to provide execution details for normal match events involving non-displayable order types.
+entrypoint typedef struct _TradeMessage {
+  UINT32BE nanoseconds;     // bytes 0 to 3
+  UINT64BE match_id;        // bytes 4 to 11
+  UINT32BE combo_group_id;  // bytes 12 to 15
+  UINT8 side;               // byte 16
+  UINT64BE quantity;        // bytes 17 to 24
+  UINT32BE order_book_id;   // bytes 25 to 28
+  UINT32BE trade_price;     // bytes 29 to 32, signed, read here as unsigned
+  UINT8 trade_report;       // byte 33
+  UINT8 reserved_13[13];    // bytes 34 to 46
+  UINT8 printable;          // byte 47
+  UINT8 occurred_at_cross;  // byte 48
+} TradeMessage;
+
+// ---- Equilibrium Price Update Message: 52 bytes ------------------------------
+
+// This message is used when auctions occur.
+entrypoint typedef struct _EquilibriumPriceUpdateMessage {
+  UINT32BE nanoseconds;                                  // bytes 0 to 3
+  UINT32BE order_book_id;                                // bytes 4 to 7
+  UINT64BE available_bid_quantity_at_equilibrium_price;  // bytes 8 to 15
+  UINT64BE available_ask_quantity_at_equilibrium_price;  // bytes 16 to 23
+  UINT32BE equilibrium_price;                            // bytes 24 to 27, signed, read here as unsigned
+  UINT32BE best_bid_price;                               // bytes 28 to 31, signed, read here as unsigned
+  UINT32BE best_ask_price;                               // bytes 32 to 35, signed, read here as unsigned
+  UINT64BE best_bid_quantity;                            // bytes 36 to 43
+  UINT64BE best_ask_quantity;                            // bytes 44 to 51
+} EquilibriumPriceUpdateMessage;
+

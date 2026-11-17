@@ -1,0 +1,88 @@
+// National Association of Securities Dealers Automated Quotations (Nasdaq) TotalView Itch
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out NsmEquities_TotalView_v2_0_Udp.3d
+//
+// What this definition does not state, and the model does:
+// - the dispatch that chooses a message by its type
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Packet Header: 16 bytes -------------------------------------------------
+
+entrypoint typedef struct _PacketHeader {
+  UINT8 session[10];       // bytes 0 to 9
+  UINT32 sequence_number;  // bytes 10 to 13
+  UINT16 message_count;    // bytes 14 to 15
+} PacketHeader;
+
+// ---- Message Header: 9 bytes -------------------------------------------------
+
+entrypoint typedef struct _MessageHeader {
+  UINT8 timestamp[8];  // bytes 0 to 7
+  UINT8 message_type;  // byte 8
+} MessageHeader;
+
+// ---- System Event Message: 1 byte --------------------------------------------
+
+// System Event Messages signal events that affect the entire NASDAQ system.
+entrypoint typedef struct _SystemEventMessage {
+  UINT8 event_code;  // byte 0
+} SystemEventMessage;
+
+// ---- Add Order Message: 33 bytes ---------------------------------------------
+
+// An Add Order Message indicates that a new order has been accepted by the NASDAQ system and added onto the displayable book. It includes a day-unique Order Reference Number assigned by NASDAQ to the order.
+entrypoint typedef struct _AddOrderMessage {
+  UINT8 order_reference_number[9];  // bytes 0 to 8
+  UINT8 side;                       // byte 9
+  UINT8 shares[6];                  // bytes 10 to 15
+  UINT8 stock[6];                   // bytes 16 to 21
+  UINT8 price[10];                  // bytes 22 to 31
+  UINT8 display;                    // byte 32
+} AddOrderMessage;
+
+// ---- Order Executed Message: 24 bytes ----------------------------------------
+
+// This message is sent whenever an order on the book is executed in whole or in part. The execution price is always equal to the limit price of the order as indicated in the Add Order Message.
+entrypoint typedef struct _OrderExecutedMessage {
+  UINT8 order_reference_number[9];  // bytes 0 to 8
+  UINT8 executed_shares[6];         // bytes 9 to 14
+  UINT8 match_number[9];            // bytes 15 to 23
+} OrderExecutedMessage;
+
+// ---- Order Cancel Message: 15 bytes ------------------------------------------
+
+// This message is sent whenever an order on the book is modified as a result of being canceled in whole or in part.
+entrypoint typedef struct _OrderCancelMessage {
+  UINT8 order_reference_number[9];  // bytes 0 to 8
+  UINT8 canceled_shares[6];         // bytes 9 to 14
+} OrderCancelMessage;
+
+// ---- Trade Message: 41 bytes -------------------------------------------------
+
+// The Trade Message provides information about execution events that involve orders not visible on the NASDAQ book. A Trade Message is transmitted each time a hidden order is executed in whole or in part.
+entrypoint typedef struct _TradeMessage {
+  UINT8 order_reference_number[9];  // bytes 0 to 8
+  UINT8 side;                       // byte 9
+  UINT8 shares[6];                  // bytes 10 to 15
+  UINT8 stock[6];                   // bytes 16 to 21
+  UINT8 price[10];                  // bytes 22 to 31
+  UINT8 match_number[9];            // bytes 32 to 40
+} TradeMessage;
+
+// ---- Broken Trade Message: 9 bytes -------------------------------------------
+
+// The Broken Trade message is sent whenever an execution on NASDAQ is broken.
+entrypoint typedef struct _BrokenTradeMessage {
+  UINT8 match_number[9];  // bytes 0 to 8
+} BrokenTradeMessage;
+

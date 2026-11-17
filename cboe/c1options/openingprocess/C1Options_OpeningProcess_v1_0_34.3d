@@ -1,0 +1,128 @@
+// Chicago Board Options Exchange Opening Process
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out C1Options_OpeningProcess_v1_0_34.3d
+//
+// What this definition does not state, and the model does:
+// - the dispatch that chooses a message by its type
+// - a run filling what frames it
+//
+// License: MIT No Attribution
+
+// ---- Packet Header: 8 bytes --------------------------------------------------
+
+entrypoint typedef struct _PacketHeader {
+  UINT16 length;        // bytes 0 to 1
+  UINT8 message_count;  // byte 2
+  UINT8 unit_;          // byte 3
+  UINT32 sequence;      // bytes 4 to 7
+} PacketHeader;
+
+// ---- Message Header: 2 bytes -------------------------------------------------
+
+entrypoint typedef struct _MessageHeader {
+  UINT8 message_length;  // byte 0
+  UINT8 message_type;    // byte 1
+} MessageHeader;
+
+// ---- Time Reference Message: 16 bytes ----------------------------------------
+
+// The Time Reference message is used to provide a midnight reference point for recipients of the feed.
+entrypoint typedef struct _TimeReferenceMessage {
+  UINT32 midnight_reference;  // bytes 0 to 3
+  UINT32 time;                // bytes 4 to 7
+  UINT32 time_offset;         // bytes 8 to 11
+  UINT32 trade_date;          // bytes 12 to 15
+} TimeReferenceMessage;
+
+// ---- Time Message: 8 bytes ---------------------------------------------------
+
+// A Time message is sent whenever the source time for a unit passes over a second boundary.
+entrypoint typedef struct _TimeMessage {
+  UINT32 time;        // bytes 0 to 3
+  UINT32 epoch_time;  // bytes 4 to 7
+} TimeMessage;
+
+// ---- Options Auction Update Message: 62 bytes --------------------------------
+
+// Options Auction Update messages are used to disseminate price and size information and Composite Market bid and offer prices during Opening and Re-Opening (halt) auctions on the Cboe Options Exchange.
+entrypoint typedef struct _OptionsAuctionUpdateMessage {
+  UINT32 time_offset;                   // bytes 0 to 3
+  UINT8 symbol[8];                      // bytes 4 to 11
+  UINT8 auction_type;                   // byte 12
+  UINT64 reference_price;               // bytes 13 to 20
+  UINT32 buy_contracts;                 // bytes 21 to 24
+  UINT32 sell_contracts;                // bytes 25 to 28
+  UINT64 indicative_price;              // bytes 29 to 36
+  UINT64 auction_only_price;            // bytes 37 to 44
+  UINT8 opening_condition;              // byte 45
+  UINT64 composite_market_bid_price;    // bytes 46 to 53
+  UINT64 composite_market_offer_price;  // bytes 54 to 61
+} OptionsAuctionUpdateMessage;
+
+// ---- Auction Summary Message: 25 bytes ---------------------------------------
+
+// Auction Summary messages are used to disseminate the results of an auction. An Opening or Re-Opening Auction Summary message for each symbol is sent at the conclusion of its Opening or Re-Opening auction and represents the Cboe Opening Price.
+entrypoint typedef struct _AuctionSummaryMessage {
+  UINT32 time_offset;  // bytes 0 to 3
+  UINT8 symbol[8];     // bytes 4 to 11
+  UINT8 auction_type;  // byte 12
+  UINT64 price;        // bytes 13 to 20
+  UINT32 quantity;     // bytes 21 to 24
+} AuctionSummaryMessage;
+
+// ---- Width Update Message: 17 bytes ------------------------------------------
+
+// The Width Update message is used to communicate the opening quote width multiplier.
+entrypoint typedef struct _WidthUpdateMessage {
+  UINT32 time_offset;   // bytes 0 to 3
+  UINT8 underlying[8];  // bytes 4 to 11
+  UINT8 width_type;     // byte 12
+  UINT32 multiplier;    // bytes 13 to 16
+} WidthUpdateMessage;
+
+// ---- Symbol Mapping Message: 36 bytes ----------------------------------------
+
+// A Symbol Mapping message is used to map the 6 character multicast feed symbol field to an OSI symbol.
+entrypoint typedef struct _SymbolMappingMessage {
+  UINT8 feed_symbol[6];    // bytes 0 to 5
+  UINT8 osi_symbol[21];    // bytes 6 to 26
+  UINT8 symbol_condition;  // byte 27
+  UINT8 underlying[8];     // bytes 28 to 35
+} SymbolMappingMessage;
+
+// ---- End Of Session Message: 4 bytes -----------------------------------------
+
+// The End of Session message is sent for the feed when all the units have shut down.
+entrypoint typedef struct _EndOfSessionMessage {
+  UINT32 time_offset;  // bytes 0 to 3
+} EndOfSessionMessage;
+
+// ---- Soq Strike Range Update Message: 40 bytes -------------------------------
+
+// The SOQ Strike Range Update message is only available on the C1 Exchange. This message disseminates the minimum and maximum strike prices of the price range used to calculate the Special Opening Quote (SOQ) on a Volatility Settlement date.
+entrypoint typedef struct _SoqStrikeRangeUpdateMessage {
+  UINT32 time_offset;         // bytes 0 to 3
+  UINT8 soq_identifier[20];   // bytes 4 to 23
+  UINT64 lower_strike_price;  // bytes 24 to 31
+  UINT64 upper_strike_price;  // bytes 32 to 39
+} SoqStrikeRangeUpdateMessage;
+
+// ---- Constituent Symbol Mapping Message: 56 bytes ----------------------------
+
+// The Constituent Symbol Mapping message is only available on the C1 Exchange. This message is used to communicate which options series (if any) are Constituent Series in a Volatility Settlement Special Opening Quote (SOQ).
+entrypoint typedef struct _ConstituentSymbolMappingMessage {
+  UINT8 feed_symbol[6];      // bytes 0 to 5
+  UINT8 osi_symbol[21];      // bytes 6 to 26
+  UINT8 symbol_condition;    // byte 27
+  UINT8 underlying[8];       // bytes 28 to 35
+  UINT8 soq_identifier[20];  // bytes 36 to 55
+} ConstituentSymbolMappingMessage;
+

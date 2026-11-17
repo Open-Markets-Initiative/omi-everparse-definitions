@@ -1,0 +1,135 @@
+// National Association of Securities Dealers Automated Quotations (Nasdaq) Specialized Quote Interface
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out MrxOptions_Quoting_v9_0_Client.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a length prefix framing what follows
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Client Packet Header: 3 bytes -------------------------------------------
+
+// Packet header of a packet sent by the client
+entrypoint typedef struct _ClientPacketHeader {
+  UINT16BE packet_length;    // bytes 0 to 1
+  UINT8 client_packet_type;  // byte 2
+} ClientPacketHeader;
+
+// ---- Login Request Packet: 51 bytes ------------------------------------------
+
+// The SoupBinTCP client must send a Login Request Packet immediately upon establishing a new TCP/IP socket connection to the server
+entrypoint typedef struct _LoginRequestPacket {
+  UINT8 username[6];                    // bytes 0 to 5
+  UINT8 password[10];                   // bytes 6 to 15
+  UINT8 requested_session[10];          // bytes 16 to 25
+  UINT8 requested_sequence_number[20];  // bytes 26 to 45
+  UINT8 heartbeat_timeout[5];           // bytes 46 to 50
+} LoginRequestPacket;
+
+// ---- Notification Subscription Request Message: 36 bytes ---------------------
+
+// Modifies the set of optional notification types delivered on the current session.
+entrypoint typedef struct _NotificationSubscriptionRequestMessage {
+  UINT8 badge[4];          // bytes 0 to 3
+  UINT64BE message_id;     // bytes 4 to 11
+  UINT8 subscription[24];  // bytes 12 to 35
+} NotificationSubscriptionRequestMessage;
+
+// ---- Mm Parameter Definition Request Message: 74 bytes -----------------------
+
+// Sets the Rapid Fire/Curtailment parameters (CumQty, Percentage, Delta, Vega and Interval) per underlying and instrument type. Rejected if the badge is configured for ActiveQP.
+entrypoint typedef struct _MmParameterDefinitionRequestMessage {
+  UINT8 badge[4];         // bytes 0 to 3
+  UINT64BE message_id;    // bytes 4 to 11
+  UINT8 instrument_type;  // byte 12
+  UINT8 underlying[13];   // bytes 13 to 25
+  UINT16BE interval;      // bytes 26 to 27
+  UINT16BE percentage;    // bytes 28 to 29
+  UINT32BE cum_qty;       // bytes 30 to 33
+  UINT32BE delta;         // bytes 34 to 37
+  UINT32BE vega;          // bytes 38 to 41
+  UINT8 reserved_32[32];  // bytes 42 to 73
+} MmParameterDefinitionRequestMessage;
+
+// ---- Active Qp Self Replenishment Set Limit Message: 29 bytes ----------------
+
+// ActiveQP/Self-Replenishment Set Limit Message: sets the contract limit for self-replenishment purge.
+entrypoint typedef struct _ActiveQpSelfReplenishmentSetLimitMessage {
+  UINT8 badge[4];               // bytes 0 to 3
+  UINT64BE message_id;          // bytes 4 to 11
+  UINT8 underlying_symbol[13];  // bytes 12 to 24
+  UINT32BE set_value;           // bytes 25 to 28
+} ActiveQpSelfReplenishmentSetLimitMessage;
+
+// ---- Underlying Purge Request Message: 34 bytes ------------------------------
+
+// Underlying Purge Message including SentTimestamp: pulls all quotes for all options contracts of the specified underlying and inhibits new quotes until reentry.
+entrypoint typedef struct _UnderlyingPurgeRequestMessage {
+  UINT8 badge[4];               // bytes 0 to 3
+  UINT64BE message_id;          // bytes 4 to 11
+  UINT64BE sent_timestamp;      // bytes 12 to 19
+  UINT8 underlying_symbol[13];  // bytes 20 to 32
+  UINT8 instrument_type;        // byte 33
+} UnderlyingPurgeRequestMessage;
+
+// ---- Market Reentry Request Message: 26 bytes --------------------------------
+
+// Market Reentry Message: resets risk protection previously triggered by a Rapid Fire/Curtailment event or a user Purge request.
+entrypoint typedef struct _MarketReentryRequestMessage {
+  UINT8 badge[4];               // bytes 0 to 3
+  UINT64BE message_id;          // bytes 4 to 11
+  UINT8 underlying_symbol[13];  // bytes 12 to 24
+  UINT8 instrument_type;        // byte 25
+} MarketReentryRequestMessage;
+
+// ---- Active Qp Self Replenishment Request Reentry Message: 29 bytes ----------
+
+// ActiveQP/Self-Replenishment Request/Reentry Message: partial replenishment (removes a number of contracts from the Active QP counter) or full replenishment/reentry (value 0).
+entrypoint typedef struct _ActiveQpSelfReplenishmentRequestReentryMessage {
+  UINT8 badge[4];                // bytes 0 to 3
+  UINT64BE message_id;           // bytes 4 to 11
+  UINT8 underlying_symbol[13];   // bytes 12 to 24
+  UINT32BE replenishment_value;  // bytes 25 to 28
+} ActiveQpSelfReplenishmentRequestReentryMessage;
+
+// ---- Simple Msar Request Message: 30 bytes -----------------------------------
+
+// SQF Market Sweep and Auction Response (MSAR) request for a simple instrument. A size of zero cancels a prior auction response for the same instrument/price/side.
+entrypoint typedef struct _SimpleMsarRequestMessage {
+  UINT8 badge[4];          // bytes 0 to 3
+  UINT64BE message_id;     // bytes 4 to 11
+  UINT32BE instrument_id;  // bytes 12 to 15
+  UINT8 msar_type;         // byte 16
+  UINT32BE auction_id;     // bytes 17 to 20
+  UINT32BE price;          // bytes 21 to 24, signed, read here as unsigned
+  UINT8 side;              // byte 25
+  UINT32BE contracts;      // bytes 26 to 29
+} SimpleMsarRequestMessage;
+
+// ---- Complex Msar Request Message: 36 bytes ----------------------------------
+
+// MSAR request for a complex instrument. Price cannot be negative; the Debit/Credit indicator gives the sign.
+entrypoint typedef struct _ComplexMsarRequestMessage {
+  UINT8 badge[4];          // bytes 0 to 3
+  UINT64BE message_id;     // bytes 4 to 11
+  UINT32BE instrument_id;  // bytes 12 to 15
+  UINT8 msar_type;         // byte 16
+  UINT32BE auction_id;     // bytes 17 to 20
+  UINT32BE price;          // bytes 21 to 24, signed, read here as unsigned
+  UINT8 side;              // byte 25
+  UINT8 debit_credit;      // byte 26
+  UINT32BE contracts;      // bytes 27 to 30
+  UINT8 price_protection;  // byte 31
+  UINT8 reserved_4[4];     // bytes 32 to 35
+} ComplexMsarRequestMessage;
+

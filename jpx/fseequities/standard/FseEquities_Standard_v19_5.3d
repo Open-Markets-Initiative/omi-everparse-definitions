@@ -1,0 +1,443 @@
+// Japan Exchange Group Standard
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out FseEquities_Standard_v19_5.3d
+//
+// What this definition does not state, and the model does:
+// - the dispatch that chooses a message by its type
+// - a run filling what frames it
+//
+// License: MIT No Attribution
+
+// ---- Message Serial No: 11 bytes ---------------------------------------------
+
+// Numbered from 1 on each Multicast Group, with the multicast group number in the first to third byte
+entrypoint typedef struct _MessageSerialNo {
+  UINT8 multicast_group_number[3];  // bytes 0 to 2
+  UINT8 sequence_number[8];         // bytes 3 to 10
+} MessageSerialNo;
+
+// ---- Issue Classification: 4 bytes -------------------------------------------
+
+// Set in issue realtime message and issue basic message. In the case of Control, Index and Statistics Message, space is set.
+entrypoint typedef struct _IssueClassification {
+  UINT8 issue_classification_large_classification[2];   // bytes 0 to 1
+  UINT8 issue_classification_medium_classification[2];  // bytes 2 to 3
+} IssueClassification;
+
+// ---- Stock Issue Code: 12 bytes ----------------------------------------------
+
+// Issue Code layout a. Stocks, used when Issue Classification Large Classification is 01 Stock-Related. FLEX Issue Code is set with right-align.
+entrypoint typedef struct _StockIssueCode {
+  UINT8 stock_space[7];             // bytes 0 to 6
+  UINT8 stock_proper_name_code[4];  // bytes 7 to 10
+  UINT8 stock_reserved_code;        // byte 11
+} StockIssueCode;
+
+// ---- CB Issue Code: 12 bytes -------------------------------------------------
+
+// Issue Code layout used when Issue Classification Large Classification is 02 CB-Related. The figure carries no label of its own in 5.3.3 (7). FLEX Issue Code is set with right-align.
+entrypoint typedef struct _CBIssueCode {
+  UINT8 c_b_space[3];             // bytes 0 to 2
+  UINT8 c_b_reserved_code;        // byte 3
+  UINT8 time_symbol[4];           // bytes 4 to 7
+  UINT8 c_b_proper_name_code[4];  // bytes 8 to 11
+} CBIssueCode;
+
+// ---- Update No Message: 8 bytes ----------------------------------------------
+
+// In this tag, Update Number for each issue is set. This tag appears as part of realtime data.
+entrypoint typedef struct _UpdateNoMessage {
+  UINT8 update_no[8];  // bytes 0 to 7
+} UpdateNoMessage;
+
+// ---- Status Information: 5 bytes ---------------------------------------------
+
+// Status Information
+entrypoint typedef struct _StatusInformation {
+  UINT8 issue_status[2];                // bytes 0 to 1
+  UINT8 status_flag[2];                 // bytes 2 to 3
+  UINT8 short_selling_regulation_flag;  // byte 4
+} StatusInformation;
+
+// ---- Status Information Message: 24 bytes ------------------------------------
+
+// In this tag, status information (Issue Status, Status Flag and Short Selling Regulation Flag) is set. This tag appears as part of realtime data.
+entrypoint typedef struct _StatusInformationMessage {
+  UINT8 reserved_2[2];                   // bytes 0 to 1
+  UINT8 change_flag;                     // byte 2
+  StatusInformation status_information;  // bytes 3 to 7
+  UINT8 precise_time[12];                // bytes 8 to 19
+  UINT8 reserved_4[4];                   // bytes 20 to 23
+} StatusInformationMessage;
+
+// ---- Price: 16 bytes ---------------------------------------------------------
+
+// Price
+entrypoint typedef struct _Price {
+  UINT8 unit_flag;        // byte 0
+  UINT8 price_value[14];  // bytes 1 to 14
+  UINT8 sign;             // byte 15
+} Price;
+
+// ---- Open: 23 bytes ----------------------------------------------------------
+
+// Open
+entrypoint typedef struct _Open {
+  Price price;        // bytes 0 to 15
+  UINT8 time[6];      // bytes 16 to 21
+  UINT8 change_flag;  // byte 22
+} Open;
+
+// ---- High: 24 bytes ----------------------------------------------------------
+
+// High
+entrypoint typedef struct _High {
+  UINT8 limit_up_flag;  // byte 0
+  Price price;          // bytes 1 to 16
+  UINT8 time[6];        // bytes 17 to 22
+  UINT8 change_flag;    // byte 23
+} High;
+
+// ---- Low: 24 bytes -----------------------------------------------------------
+
+// Low
+entrypoint typedef struct _Low {
+  UINT8 limit_down_flag;  // byte 0
+  Price price;            // bytes 1 to 16
+  UINT8 time[6];          // bytes 17 to 22
+  UINT8 change_flag;      // byte 23
+} Low;
+
+// ---- Current: 32 bytes -------------------------------------------------------
+
+// Current
+entrypoint typedef struct _Current {
+  Price price;                     // bytes 0 to 15
+  UINT8 precise_time[12];          // bytes 16 to 27
+  UINT8 current_change_flag;       // byte 28
+  UINT8 stq_reference_point_flag;  // byte 29
+  UINT8 reserved_1;                // byte 30
+  UINT8 closing_price_input_flag;  // byte 31
+} Current;
+
+// ---- Open High Low And Current Price Message: 105 bytes ----------------------
+
+// In this tag, Open, High, Low and Current Price and other information are set. This tag appears as part of realtime data.
+entrypoint typedef struct _OpenHighLowAndCurrentPriceMessage {
+  UINT8 reserved_2[2];  // bytes 0 to 1
+  Open open_;           // bytes 2 to 24
+  High high;            // bytes 25 to 48
+  Low low;              // bytes 49 to 72
+  Current current;      // bytes 73 to 104
+} OpenHighLowAndCurrentPriceMessage;
+
+// ---- Quote Quantity: 16 bytes ------------------------------------------------
+
+// Quote Quantity
+entrypoint typedef struct _QuoteQuantity {
+  UINT8 trading_volume_turnover_unit_flag;  // byte 0
+  UINT8 quantity[14];                       // bytes 1 to 14
+  UINT8 sign;                               // byte 15
+} QuoteQuantity;
+
+// ---- Ask Quote: 46 bytes -----------------------------------------------------
+
+// Ask Quote
+entrypoint typedef struct _AskQuote {
+  UINT8 change_flag;             // byte 0
+  Price price;                   // bytes 1 to 16
+  UINT8 precise_time[12];        // bytes 17 to 28
+  UINT8 quote_flag;              // byte 29
+  QuoteQuantity quote_quantity;  // bytes 30 to 45
+} AskQuote;
+
+// ---- Bid Quote: 46 bytes -----------------------------------------------------
+
+// Bid Quote
+entrypoint typedef struct _BidQuote {
+  UINT8 change_flag;             // byte 0
+  Price price;                   // bytes 1 to 16
+  UINT8 precise_time[12];        // bytes 17 to 28
+  UINT8 quote_flag;              // byte 29
+  QuoteQuantity quote_quantity;  // bytes 30 to 45
+} BidQuote;
+
+// ---- Quote 1 Message: 94 bytes -----------------------------------------------
+
+// In this tag, Quote 1 (Ask and Bid Quotes with the Highest Priority) information is set. This tag appears as part of realtime data.
+entrypoint typedef struct _Quote1Message {
+  UINT8 reserved_2[2];  // bytes 0 to 1
+  AskQuote ask_quote;   // bytes 2 to 47
+  BidQuote bid_quote;   // bytes 48 to 93
+} Quote1Message;
+
+// ---- Quote 2 Message: 94 bytes -----------------------------------------------
+
+// In this tag, Quote 2 (ask and bid quotes with the 2nd Highest Priority) information is set. This tag appears as part of realtime data.
+entrypoint typedef struct _Quote2Message {
+  UINT8 reserved_2[2];  // bytes 0 to 1
+  AskQuote ask_quote;   // bytes 2 to 47
+  BidQuote bid_quote;   // bytes 48 to 93
+} Quote2Message;
+
+// ---- Quote 3 Message: 94 bytes -----------------------------------------------
+
+// In this tag, Quote 3 (ask and bid quotes with the 3rd Highest Priority) information is set. This tag appears as part of realtime data.
+entrypoint typedef struct _Quote3Message {
+  UINT8 reserved_2[2];  // bytes 0 to 1
+  AskQuote ask_quote;   // bytes 2 to 47
+  BidQuote bid_quote;   // bytes 48 to 93
+} Quote3Message;
+
+// ---- Quote 4 Message: 94 bytes -----------------------------------------------
+
+// In this tag, Quote 4 (ask and bid quotes with the 4th Highest Priority) information is set. This tag appears as part of realtime data.
+entrypoint typedef struct _Quote4Message {
+  UINT8 reserved_2[2];  // bytes 0 to 1
+  AskQuote ask_quote;   // bytes 2 to 47
+  BidQuote bid_quote;   // bytes 48 to 93
+} Quote4Message;
+
+// ---- Quote 5 Message: 94 bytes -----------------------------------------------
+
+// In this tag, Quote 5 (ask and bid quotes with the 5th Highest Priority) information is set. This tag appears as part of realtime data.
+entrypoint typedef struct _Quote5Message {
+  UINT8 reserved_2[2];  // bytes 0 to 1
+  AskQuote ask_quote;   // bytes 2 to 47
+  BidQuote bid_quote;   // bytes 48 to 93
+} Quote5Message;
+
+// ---- Quote 6 Message: 94 bytes -----------------------------------------------
+
+// In this tag, Quote 6 (ask and bid quotes with the 6th Highest Priority) information is set. This tag appears as part of realtime data.
+entrypoint typedef struct _Quote6Message {
+  UINT8 reserved_2[2];  // bytes 0 to 1
+  AskQuote ask_quote;   // bytes 2 to 47
+  BidQuote bid_quote;   // bytes 48 to 93
+} Quote6Message;
+
+// ---- Quote 7 Message: 94 bytes -----------------------------------------------
+
+// In this tag, Quote 7 (ask and bid quotes with the 7th Highest Priority) information is set. This tag appears as part of realtime data.
+entrypoint typedef struct _Quote7Message {
+  UINT8 reserved_2[2];  // bytes 0 to 1
+  AskQuote ask_quote;   // bytes 2 to 47
+  BidQuote bid_quote;   // bytes 48 to 93
+} Quote7Message;
+
+// ---- Quote 8 Message: 94 bytes -----------------------------------------------
+
+// In this tag, Quote 8 (ask and bid quotes with the 8th Highest Priority) information is set. This tag appears as part of realtime data.
+entrypoint typedef struct _Quote8Message {
+  UINT8 reserved_2[2];  // bytes 0 to 1
+  AskQuote ask_quote;   // bytes 2 to 47
+  BidQuote bid_quote;   // bytes 48 to 93
+} Quote8Message;
+
+// ---- Quote 9 Message: 94 bytes -----------------------------------------------
+
+// In this tag, Quote 9 (ask and bid quotes with the 9th Highest Priority) information is set. This tag appears as part of realtime data.
+entrypoint typedef struct _Quote9Message {
+  UINT8 reserved_2[2];  // bytes 0 to 1
+  AskQuote ask_quote;   // bytes 2 to 47
+  BidQuote bid_quote;   // bytes 48 to 93
+} Quote9Message;
+
+// ---- Quote 10 Message: 94 bytes ----------------------------------------------
+
+// In this tag, Quote 10 (ask and bid quotes with the 10th Highest Priority) information is set. This tag appears as part of realtime data.
+entrypoint typedef struct _Quote10Message {
+  UINT8 reserved_2[2];  // bytes 0 to 1
+  AskQuote ask_quote;   // bytes 2 to 47
+  BidQuote bid_quote;   // bytes 48 to 93
+} Quote10Message;
+
+// ---- Sell Order: 29 bytes ----------------------------------------------------
+
+// Sell Order
+entrypoint typedef struct _SellOrder {
+  UINT8 change_flag;             // byte 0
+  UINT8 precise_time[12];        // bytes 1 to 12
+  QuoteQuantity quote_quantity;  // bytes 13 to 28
+} SellOrder;
+
+// ---- Buy Order: 29 bytes -----------------------------------------------------
+
+// Buy Order
+entrypoint typedef struct _BuyOrder {
+  UINT8 change_flag;             // byte 0
+  UINT8 precise_time[12];        // bytes 1 to 12
+  QuoteQuantity quote_quantity;  // bytes 13 to 28
+} BuyOrder;
+
+// ---- Market Order Message: 60 bytes ------------------------------------------
+
+// In this tag, both Ask and Bid Market Order Information is set. This tag appears as part of realtime data.
+entrypoint typedef struct _MarketOrderMessage {
+  UINT8 reserved_2[2];   // bytes 0 to 1
+  SellOrder sell_order;  // bytes 2 to 30
+  BuyOrder buy_order;    // bytes 31 to 59
+} MarketOrderMessage;
+
+// ---- Over Quote: 29 bytes ----------------------------------------------------
+
+// OVER Quote
+entrypoint typedef struct _OverQuote {
+  UINT8 change_flag;             // byte 0
+  UINT8 precise_time[12];        // bytes 1 to 12
+  QuoteQuantity quote_quantity;  // bytes 13 to 28
+} OverQuote;
+
+// ---- Under Quote: 29 bytes ---------------------------------------------------
+
+// UNDER Quote
+entrypoint typedef struct _UnderQuote {
+  UINT8 change_flag;             // byte 0
+  UINT8 precise_time[12];        // bytes 1 to 12
+  QuoteQuantity quote_quantity;  // bytes 13 to 28
+} UnderQuote;
+
+// ---- Over Under Message: 60 bytes --------------------------------------------
+
+// In this tag, OVER/UNDER quote (Total of quote 11 (Ask) and above or quote 11 (Bid) and below) information is set. This tag is appeared as one of realtime data.
+entrypoint typedef struct _OverUnderMessage {
+  UINT8 reserved_2[2];     // bytes 0 to 1
+  OverQuote over_quote;    // bytes 2 to 30
+  UnderQuote under_quote;  // bytes 31 to 59
+} OverUnderMessage;
+
+// ---- Trading Volume: 23 bytes ------------------------------------------------
+
+// Trading Volume
+entrypoint typedef struct _TradingVolume {
+  UINT8 reserved_1;                         // byte 0
+  UINT8 trading_volume_turnover_unit_flag;  // byte 1
+  UINT8 trading_volume_value[14];           // bytes 2 to 15
+  UINT8 time[6];                            // bytes 16 to 21
+  UINT8 second_reserved_1;                  // byte 22
+} TradingVolume;
+
+// ---- Trading Volume Message: 25 bytes ----------------------------------------
+
+// In this tag, by-issue trading volume information is set. This tag appears as part of realtime data.
+entrypoint typedef struct _TradingVolumeMessage {
+  UINT8 reserved_2[2];           // bytes 0 to 1
+  TradingVolume trading_volume;  // bytes 2 to 24
+} TradingVolumeMessage;
+
+// ---- Turnover In Yen Value: 23 bytes -----------------------------------------
+
+// Turnover in yen value
+entrypoint typedef struct _TurnoverInYenValue {
+  UINT8 reserved_1;                         // byte 0
+  UINT8 trading_volume_turnover_unit_flag;  // byte 1
+  UINT8 turnover_value[14];                 // bytes 2 to 15
+  UINT8 time[6];                            // bytes 16 to 21
+  UINT8 second_reserved_1;                  // byte 22
+} TurnoverInYenValue;
+
+// ---- Turnover Message: 25 bytes ----------------------------------------------
+
+// In this tag, by-issue Turnover Information is set. This tag appears as part of realtime data.
+entrypoint typedef struct _TurnoverMessage {
+  UINT8 reserved_2[2];                       // bytes 0 to 1
+  TurnoverInYenValue turnover_in_yen_value;  // bytes 2 to 24
+} TurnoverMessage;
+
+// ---- All Day Vwap: 24 bytes --------------------------------------------------
+
+// All-Day VWAP
+entrypoint typedef struct _AllDayVwap {
+  UINT8 reserved_1;              // byte 0
+  UINT8 lot_size_unit_flag;      // byte 1
+  UINT8 all_day_vwap_value[14];  // bytes 2 to 15
+  UINT8 sign;                    // byte 16
+  UINT8 time[6];                 // bytes 17 to 22
+  UINT8 second_reserved_1;       // byte 23
+} AllDayVwap;
+
+// ---- Current Session Vwap: 24 bytes ------------------------------------------
+
+// Current-Session VWAP
+entrypoint typedef struct _CurrentSessionVwap {
+  UINT8 reserved_1;                      // byte 0
+  UINT8 lot_size_unit_flag;              // byte 1
+  UINT8 current_session_vwap_value[14];  // bytes 2 to 15
+  UINT8 sign;                            // byte 16
+  UINT8 time[6];                         // bytes 17 to 22
+  UINT8 second_reserved_1;               // byte 23
+} CurrentSessionVwap;
+
+// ---- Vwap Message: 50 bytes --------------------------------------------------
+
+// In this tag, by-issue Volume Weighted Stock Price average (VWAP) Information is set. This tag appears as part of realtime data.
+entrypoint typedef struct _VwapMessage {
+  UINT8 reserved_2[2];                      // bytes 0 to 1
+  AllDayVwap all_day_vwap;                  // bytes 2 to 25
+  CurrentSessionVwap current_session_vwap;  // bytes 26 to 49
+} VwapMessage;
+
+// ---- Parity Estimated Price: 23 bytes ----------------------------------------
+
+// Parity/Estimated Price
+entrypoint typedef struct _ParityEstimatedPrice {
+  UINT8 unit_flag;                         // byte 0
+  UINT8 parity_estimated_price_value[14];  // bytes 1 to 14
+  UINT8 sign;                              // byte 15
+  UINT8 time[6];                           // bytes 16 to 21
+  UINT8 reserved_1;                        // byte 22
+} ParityEstimatedPrice;
+
+// ---- Parity Message: 25 bytes ------------------------------------------------
+
+// In this tag, estimated Price Information for parity of CB is set. This tag appears as part of realtime data.
+entrypoint typedef struct _ParityMessage {
+  UINT8 reserved_2[2];                          // bytes 0 to 1
+  ParityEstimatedPrice parity_estimated_price;  // bytes 2 to 24
+} ParityMessage;
+
+// ---- Direct Yield: 9 bytes ---------------------------------------------------
+
+// Direct Yield
+entrypoint typedef struct _DirectYield {
+  UINT8 direct_yield_value[8];  // bytes 0 to 7
+  UINT8 sign;                   // byte 8
+} DirectYield;
+
+// ---- Final Yield: 9 bytes ----------------------------------------------------
+
+// Final Yield
+entrypoint typedef struct _FinalYield {
+  UINT8 final_yield_value[8];  // bytes 0 to 7
+  UINT8 sign;                  // byte 8
+} FinalYield;
+
+// ---- Yield Message: 27 bytes -------------------------------------------------
+
+// In this tag, Direct and Final Yield Information for CB is set. This tag appears as part of realtime data.
+entrypoint typedef struct _YieldMessage {
+  UINT8 reserved_2[2];       // bytes 0 to 1
+  DirectYield direct_yield;  // bytes 2 to 10
+  FinalYield final_yield;    // bytes 11 to 19
+  UINT8 time[6];             // bytes 20 to 25
+  UINT8 reserved_1;          // byte 26
+} YieldMessage;
+
+// ---- Control Message: 10 bytes -----------------------------------------------
+
+// In this tag, the Test Mode Flag and the Start/End Flag that are used in a Control Message are set. This tag appears as part of a Control Message.
+entrypoint typedef struct _ControlMessage {
+  UINT8 reserved_2[2];   // bytes 0 to 1
+  UINT8 test_mode_flag;  // byte 2
+  UINT8 start_end_flag;  // byte 3
+  UINT8 time[6];         // bytes 4 to 9
+} ControlMessage;
+

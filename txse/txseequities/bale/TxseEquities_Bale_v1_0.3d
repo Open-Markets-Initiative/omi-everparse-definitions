@@ -1,0 +1,94 @@
+// Texas Stock Exchange BALE Top-of-Book Market Data Feed
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out TxseEquities_Bale_v1_0.3d
+//
+// What this definition does not state, and the model does:
+// - a run counted by a field
+// - a field read in bits
+//
+// License: MIT No Attribution
+
+// ---- Udp Header: 19 bytes ----------------------------------------------------
+
+// Rake Udp packet header
+entrypoint typedef struct _UdpHeader {
+  UINT64 session;        // bytes 0 to 7
+  UINT64 sequence;       // bytes 8 to 15
+  UINT16 message_count;  // bytes 16 to 17
+  UINT8 packet_type;     // byte 18
+} UdpHeader;
+
+// ---- Trade Message: 23 bytes -------------------------------------------------
+
+// An execution report for a single fill event in the order book. Quantity is the number of shares in this execution. An aggressive order that sweeps multiple resting orders produces one Trade per resting order filled.
+entrypoint typedef struct _TradeMessage {
+  UINT64 transact_time;                  // bytes 0 to 7, signed, read here as unsigned
+  UINT16 symbol_id;                      // bytes 8 to 9, signed, read here as unsigned
+  UINT64 price;                          // bytes 10 to 17, signed, read here as unsigned
+  UINT32 qty;                            // bytes 18 to 21, signed, read here as unsigned
+  UINT8 trade_through_exemption_reason;  // byte 22, signed, read here as unsigned
+} TradeMessage;
+
+// ---- Top Of Book Message: 34 bytes -------------------------------------------
+
+// Current best bid and offer for a symbol. The BBO is the most aggressive price at which cumulative displayed liquidity reaches a round lot. Quantity is the total displayed shares at the BBO price combined with any displayed shares at more aggressive prices on that side. Price and quantity are zero when cumulative displayed liquidity does not reach a round lot. A TopOfBook is published whenever a depth change occurs at or inside the current BBO on the affected side. A TopOfBook may be published with values identical to the previous one if the net result for the BBO happens to be unchanged after a relevant quantity change. When an execution causes both Trade and TopOfBook messages, all Trade messages from that execution event are delivered before the TopOfBook that reflects the resulting depth change.
+entrypoint typedef struct _TopOfBookMessage {
+  UINT64 transact_time;  // bytes 0 to 7, signed, read here as unsigned
+  UINT16 symbol_id;      // bytes 8 to 9, signed, read here as unsigned
+  UINT64 bid_price;      // bytes 10 to 17, signed, read here as unsigned
+  UINT32 bid_qty;        // bytes 18 to 21, signed, read here as unsigned
+  UINT64 ask_price;      // bytes 22 to 29, signed, read here as unsigned
+  UINT32 ask_qty;        // bytes 30 to 33, signed, read here as unsigned
+} TopOfBookMessage;
+
+// ---- Auction Preamble Message: 32 bytes --------------------------------------
+
+// Published every 5 seconds during the Accumulation Period to indicate projected auction size. Reports the matched volume and excess side that would result if the auction crossed at that moment, considering only Auction-Only orders; the Continuous Book is excluded. Emitted for OPENING and CLOSING auction types only. Not emitted for HALT or IPO auctions, which proceed directly to the Band Window phase at onset (see AuctionBandWindow).
+entrypoint typedef struct _AuctionPreambleMessage {
+  UINT64 transact_time;       // bytes 0 to 7, signed, read here as unsigned
+  UINT16 symbol_id;           // bytes 8 to 9, signed, read here as unsigned
+  UINT8 auction_type;         // byte 10, signed, read here as unsigned
+  UINT64 auction_start;       // bytes 11 to 18, signed, read here as unsigned
+  UINT32 matched_shares;      // bytes 19 to 22, signed, read here as unsigned
+  UINT8 excess_auction_side;  // byte 23, signed, read here as unsigned
+  UINT64 reserved_8;          // bytes 24 to 31, signed, read here as unsigned
+} AuctionPreambleMessage;
+
+// ---- Auction Band Window Message: 60 bytes -----------------------------------
+
+// Published every 5 seconds during the Band Window to report Auction-Only volume positioned at each Participation Band boundary. The Participation Band is a volatility-based price range; its derivation methodology is described in the Participation Bands specification. Auction-Only orders entered during the Band Window that are priced outside the band have their price adjusted to the nearest boundary. The Continuous Book is excluded. Volume counting at boundaries: a limit order is counted at each boundary price at which it would be eligible to execute; a market order is counted at both boundaries. Example: a limit buy at 10.05 counts at the lower boundary if lower = 10.05, but not at the upper boundary if upper = 10.10.
+entrypoint typedef struct _AuctionBandWindowMessage {
+  UINT64 transact_time;             // bytes 0 to 7, signed, read here as unsigned
+  UINT16 symbol_id;                 // bytes 8 to 9, signed, read here as unsigned
+  UINT8 auction_type;               // byte 10, signed, read here as unsigned
+  UINT64 auction_start;             // bytes 11 to 18, signed, read here as unsigned
+  UINT8 extension_cycle_count;      // byte 19, signed, read here as unsigned
+  UINT64 lower_participation_band;  // bytes 20 to 27, signed, read here as unsigned
+  UINT32 buy_shares_at_lower;       // bytes 28 to 31, signed, read here as unsigned
+  UINT32 sell_shares_at_lower;      // bytes 32 to 35, signed, read here as unsigned
+  UINT64 upper_participation_band;  // bytes 36 to 43, signed, read here as unsigned
+  UINT32 buy_shares_at_upper;       // bytes 44 to 47, signed, read here as unsigned
+  UINT32 sell_shares_at_upper;      // bytes 48 to 51, signed, read here as unsigned
+  UINT64 reserved_8;                // bytes 52 to 59, signed, read here as unsigned
+} AuctionBandWindowMessage;
+
+// ---- Auction Print Message: 31 bytes -----------------------------------------
+
+// Summary of an auction cross. Emitted before any per-order auction execution messages for the same cross. Universal lifecycle terminator emitted for every auction. Encoding: (a) matchedShares > 0 with a valid auctionPrice indicates a normal cross; (b) matchedShares = 0 with a valid auctionPrice indicates a zero-share completion (e.g., halt-into-close default or demand failure); (c) matchedShares = 0 with auctionPrice = CANCELED_SENTINEL indicates a canceled auction. Where the feed publishes per-order auction executions, those executions share this message's execId.
+entrypoint typedef struct _AuctionPrintMessage {
+  UINT64 transact_time;   // bytes 0 to 7, signed, read here as unsigned
+  UINT16 symbol_id;       // bytes 8 to 9, signed, read here as unsigned
+  UINT8 auction_type;     // byte 10, signed, read here as unsigned
+  UINT64 auction_price;   // bytes 11 to 18, signed, read here as unsigned
+  UINT32 matched_shares;  // bytes 19 to 22, signed, read here as unsigned
+  UINT64 exec_id;         // bytes 23 to 30, signed, read here as unsigned
+} AuctionPrintMessage;
+

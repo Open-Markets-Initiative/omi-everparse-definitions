@@ -1,0 +1,122 @@
+// Chicago Board Options Exchange Multicast Top Of Book
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out CxaEquities_MulticastTopOfBook_Pitch_v1_0_10.3d
+//
+// What this definition does not state, and the model does:
+// - the dispatch that chooses a message by its type
+// - a run filling what frames it
+// - a field read in bits
+//
+// License: MIT No Attribution
+
+// ---- Packet Header: 8 bytes --------------------------------------------------
+
+entrypoint typedef struct _PacketHeader {
+  UINT16 length;        // bytes 0 to 1
+  UINT8 message_count;  // byte 2
+  UINT8 unit_;          // byte 3
+  UINT32 sequence;      // bytes 4 to 7
+} PacketHeader;
+
+// ---- Message Header: 2 bytes -------------------------------------------------
+
+entrypoint typedef struct _MessageHeader {
+  UINT8 message_length;  // byte 0
+  UINT8 message_type;    // byte 1
+} MessageHeader;
+
+// ---- Unit Clear Message: 4 bytes ---------------------------------------------
+
+// Instructs feed recipients to clear all data for the CXA book in the unit specified in the Sequenced Unit Header. Distributed in rare recovery events such as a datacentre fail-over.
+entrypoint typedef struct _UnitClearMessage {
+  UINT32 reserved_4;  // bytes 0 to 3
+} UnitClearMessage;
+
+// ---- Trading Status Message: 20 bytes ----------------------------------------
+
+// Indicates the current trading status of a security. A Trading Status message will be sent whenever trading status changes for a security.
+entrypoint typedef struct _TradingStatusMessage {
+  UINT64 timestamp;         // bytes 0 to 7
+  UINT8 symbol[6];          // bytes 8 to 13
+  UINT8 trading_status;     // byte 14
+  UINT8 market_id_code[4];  // bytes 15 to 18
+  UINT8 reserved_1;         // byte 19
+} TradingStatusMessage;
+
+// ---- Single Side Update Message: 28 bytes ------------------------------------
+
+// Provides an updated price and size for a single side of a Symbol. The side is denoted by the Side field. One Single Side Update message may reflect one or more updates to the inside book that were processed at the same time but will only be done so in a way that can be arbitrated between A/B feeds.
+entrypoint typedef struct _SingleSideUpdateMessage {
+  UINT64 timestamp;  // bytes 0 to 7
+  UINT8 symbol[6];   // bytes 8 to 13
+  UINT8 side;        // byte 14
+  UINT64 price;      // bytes 15 to 22
+  UINT32 quantity;   // bytes 23 to 26
+  UINT8 reserved_1;  // byte 27
+} SingleSideUpdateMessage;
+
+// ---- Two Side Update Message: 40 bytes ---------------------------------------
+
+// Provides an updated price and size for both sides of a Symbol. One Two Side Update message may reflect one or more updates to the inside book that were processed at the same time but will only be done so in a way that can be arbitrated between A/B feeds.
+entrypoint typedef struct _TwoSideUpdateMessage {
+  UINT64 timestamp;         // bytes 0 to 7
+  UINT8 symbol[6];          // bytes 8 to 13
+  UINT64 bid_price;         // bytes 14 to 21
+  UINT32 bid_quantity;      // bytes 22 to 25
+  UINT8 reserved_1;         // byte 26
+  UINT64 ask_price;         // bytes 27 to 34
+  UINT32 ask_quantity;      // bytes 35 to 38
+  UINT8 second_reserved_1;  // byte 39
+} TwoSideUpdateMessage;
+
+// ---- Calculated Value Message: 31 bytes --------------------------------------
+
+// Sent when CXA calculates market values for a specified symbol or when a calculated market value is reported to CXA. The specified symbol may not trade on CXA, but instead could represent index or iNAV values reported to CXA from third parties as indicated by the Value Category field. The index values will be reported on each of the unitised CXA TOP feeds and are not specific to an individual unit. Calculated Value messages will be included in a spin response.
+entrypoint typedef struct _CalculatedValueMessage {
+  UINT64 timestamp;        // bytes 0 to 7
+  UINT8 symbol[6];         // bytes 8 to 13
+  UINT8 value_category;    // byte 14
+  UINT64 value;            // bytes 15 to 22
+  UINT64 value_timestamp;  // bytes 23 to 30
+} CalculatedValueMessage;
+
+// ---- End Of Session Message: 4 bytes -----------------------------------------
+
+// Sent for each unit when the unit shuts down. No more sequenced messages will be delivered for this unit, but heartbeats from the unit may be received.
+entrypoint typedef struct _EndOfSessionMessage {
+  UINT32 reserved_4;  // bytes 0 to 3
+} EndOfSessionMessage;
+
+// ---- Auction Update Message: 32 bytes ----------------------------------------
+
+// Sent during Pre-Open and Pre-Close trading states when a symbol has an order update which relates to an overlapping order book (where the best bid price is greater than or equal to the best ask price). Includes the potential number of shares and the indicative auction price if the symbol were to undergo an auction now. Only sent if there are updates to the Buy Shares, Sell Shares, or Indicative Price fields.
+entrypoint typedef struct _AuctionUpdateMessage {
+  UINT64 timestamp;         // bytes 0 to 7
+  UINT8 symbol[6];          // bytes 8 to 13
+  UINT8 auction_type;       // byte 14
+  UINT32 buy_shares;        // bytes 15 to 18
+  UINT32 sell_shares;       // bytes 19 to 22
+  UINT64 indicative_price;  // bytes 23 to 30
+  UINT8 reserved_1;         // byte 31
+} AuctionUpdateMessage;
+
+// ---- Auction Summary Message: 28 bytes ---------------------------------------
+
+// Sent at the completion of the Auction per symbol and includes the Auction Price and Shares traded. If there is no overlapping order book at the time of the auction, no auction trades will result, however the Auction Summary message will still be disseminated and contain zeroes in the Price and Shares fields.
+entrypoint typedef struct _AuctionSummaryMessage {
+  UINT64 timestamp;    // bytes 0 to 7
+  UINT8 symbol[6];     // bytes 8 to 13
+  UINT8 auction_type;  // byte 14
+  UINT64 price;        // bytes 15 to 22
+  UINT32 shares;       // bytes 23 to 26
+  UINT8 reserved_1;    // byte 27
+} AuctionSummaryMessage;
+

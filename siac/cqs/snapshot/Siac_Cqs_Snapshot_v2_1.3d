@@ -1,0 +1,155 @@
+// The Securities Industry Automation Corporation
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out Siac_Cqs_Snapshot_v2_1.3d
+//
+// What this definition does not state, and the model does:
+// - a run counted by a field
+// - the dispatch that chooses a message by its type
+//
+// License: MIT No Attribution
+
+// ---- Sip Block Timestamp: 8 bytes --------------------------------------------
+
+// Cqs packet timestamp
+entrypoint typedef struct _SipBlockTimestamp {
+  UINT32BE seconds;      // bytes 0 to 3
+  UINT32BE nanoseconds;  // bytes 4 to 7
+} SipBlockTimestamp;
+
+// ---- Block Header: 24 bytes --------------------------------------------------
+
+// Cqs Snapshot packet header
+entrypoint typedef struct _BlockHeader {
+  UINT8 version;                          // byte 0
+  UINT16BE block_size;                    // bytes 1 to 2
+  UINT32BE block_sequence_number;         // bytes 3 to 6
+  UINT8 messages_in_block;                // byte 7
+  UINT8 deliveryflag;                     // byte 8
+  UINT32BE lastseqnum;                    // bytes 9 to 12
+  UINT8 totpubseqrollover;                // byte 13
+  SipBlockTimestamp sip_block_timestamp;  // bytes 14 to 21
+  UINT16BE block_checksum;                // bytes 22 to 23
+} BlockHeader;
+
+// ---- Line Integrity Message: 1 byte ------------------------------------------
+
+// Sent to verify continued integrity of multicast transmission
+entrypoint typedef struct _LineIntegrityMessage {
+  UINT8 participant_id;  // byte 0
+} LineIntegrityMessage;
+
+// ---- Symbol Reference Data Message: 57 bytes ---------------------------------
+
+// Contains the latest symbol configuration details at the time Snapshot is generated
+entrypoint typedef struct _SymbolReferenceDataMessage {
+  UINT8 participant_id;                                    // byte 0
+  UINT8 security_symbol[11];                               // bytes 1 to 11
+  UINT8 prior_security_symbol[11];                         // bytes 12 to 22
+  UINT8 primary_listing_market_participant_id;             // byte 23
+  UINT64BE primary_listing_market_previous_closing_price;  // bytes 24 to 31
+  UINT64BE consolidated_closing_price;                     // bytes 32 to 39
+  UINT16BE round_lot_size;                                 // bytes 40 to 41
+  UINT8 reserved;                                          // byte 42
+  UINT8 luld_tier;                                         // byte 43
+  UINT32BE luld_leverage_ratio;                            // bytes 44 to 47
+  UINT8 test;                                              // byte 48
+  UINT8 ipo;                                               // byte 49
+  UINT8 financial_status_indicator;                        // byte 50
+  UINT8 short_sale_restriction_indicator;                  // byte 51
+  UINT8 halt_reason;                                       // byte 52
+  UINT8 instrument_type;                                   // byte 53
+  UINT8 second_reserved;                                   // byte 54
+  UINT8 third_reserved;                                    // byte 55
+  UINT8 fourth_reserved;                                   // byte 56
+} SymbolReferenceDataMessage;
+
+// ---- Market Wide Circuit Breaker Decline Level Status Snapshot Message: 26 bytes ----
+
+// Reports the calculated Level 1, Level 2 and Level 3 threshold values for the current trading day necessary to trigger a circuit breaker
+entrypoint typedef struct _MarketWideCircuitBreakerDeclineLevelStatusSnapshotMessage {
+  UINT8 participant_id;   // byte 0
+  UINT64BE mwcb_level_1;  // bytes 1 to 8, signed, read here as unsigned
+  UINT64BE mwcb_level_2;  // bytes 9 to 16, signed, read here as unsigned
+  UINT64BE mwcb_level_3;  // bytes 17 to 24, signed, read here as unsigned
+  UINT8 reserved;         // byte 25
+} MarketWideCircuitBreakerDeclineLevelStatusSnapshotMessage;
+
+// ---- Consolidated Snapshot Message: 96 bytes ---------------------------------
+
+// SIP generated message reporting latest LULD price bands, auction information, NBBO, and other per-symbol data at the time Snapshot is generated
+entrypoint typedef struct _ConsolidatedSnapshotMessage {
+  UINT8 participant_id;                           // byte 0
+  UINT8 security_symbol[11];                      // bytes 1 to 11
+  UINT8 instrument_type;                          // byte 12
+  UINT64BE lower_limit_price_band;                // bytes 13 to 20
+  UINT64BE upper_limit_price_band;                // bytes 21 to 28
+  UINT64BE auction_collar_reference_price;        // bytes 29 to 36
+  UINT64BE auction_collar_upper_threshold_price;  // bytes 37 to 44
+  UINT64BE auction_collar_lower_threshold_price;  // bytes 45 to 52
+  UINT8 number_of_extensions;                     // byte 53
+  UINT8 national_best_bid_participant_id;         // byte 54
+  UINT8 national_best_bid_quote_condition;        // byte 55
+  UINT64BE national_best_bid_price;               // bytes 56 to 63
+  UINT32BE national_best_bid_size;                // bytes 64 to 67
+  UINT8 finra_best_bid_market_maker_id[4];        // bytes 68 to 71
+  UINT8 national_best_offer_participant_id;       // byte 72
+  UINT8 national_best_offer_quote_condition;      // byte 73
+  UINT64BE national_best_offer_price;             // bytes 74 to 81
+  UINT32BE national_best_offer_size;              // bytes 82 to 85
+  UINT8 finra_best_offer_market_maker_id[4];      // bytes 86 to 89
+  UINT8 national_bbo_luld_indicator;              // byte 90
+  UINT8 primary_listing_market_participant_id;    // byte 91
+  UINT8 financial_status_indicator;               // byte 92
+  UINT8 short_sale_restriction_indicator;         // byte 93
+  UINT8 halt_reason;                              // byte 94
+  UINT8 reserved;                                 // byte 95
+} ConsolidatedSnapshotMessage;
+
+// ---- Participant Snapshot Message: 58 bytes ----------------------------------
+
+// SIP generated message reporting latest participant quote, LULD indicator, price and trading range indications, and halt reason per symbol
+entrypoint typedef struct _ParticipantSnapshotMessage {
+  UINT8 participant_id;                      // byte 0
+  UINT8 security_symbol[11];                 // bytes 1 to 11
+  UINT8 quote_condition;                     // byte 12
+  UINT64BE bid_price;                        // bytes 13 to 20
+  UINT32BE bid_size;                         // bytes 21 to 24
+  UINT64BE offer_price;                      // bytes 25 to 32
+  UINT32BE offer_size;                       // bytes 33 to 36
+  UINT8 retail_interest_indicator;           // byte 37
+  UINT8 settlement_condition;                // byte 38
+  UINT8 market_condition;                    // byte 39
+  UINT8 limit_up_limit_down_luld_indicator;  // byte 40
+  UINT64BE high_indication_price;            // bytes 41 to 48
+  UINT64BE low_indication_price;             // bytes 49 to 56
+  UINT8 halt_reason;                         // byte 57
+} ParticipantSnapshotMessage;
+
+// ---- Finra Snapshot Message: 64 bytes ----------------------------------------
+
+// SIP generated message reporting FINRA Best Bid and Offer (FBBO)
+entrypoint typedef struct _FinraSnapshotMessage {
+  UINT8 participant_id;                       // byte 0
+  UINT8 security_symbol[11];                  // bytes 1 to 11
+  UINT8 finra_best_bid_quote_condition;       // byte 12
+  UINT64BE finra_best_bid_price;              // bytes 13 to 20
+  UINT32BE finra_best_bid_size;               // bytes 21 to 24
+  UINT8 finra_best_bid_market_maker_id[4];    // bytes 25 to 28
+  UINT8 finra_best_offer_quote_condition;     // byte 29
+  UINT64BE finra_best_offer_price;            // bytes 30 to 37
+  UINT32BE finra_best_offer_size;             // bytes 38 to 41
+  UINT8 finra_best_offer_market_maker_id[4];  // bytes 42 to 45
+  UINT8 finra_bbo_luld_indicator;             // byte 46
+  UINT64BE high_indication_price;             // bytes 47 to 54
+  UINT64BE low_indication_price;              // bytes 55 to 62
+  UINT8 halt_reason;                          // byte 63
+} FinraSnapshotMessage;
+

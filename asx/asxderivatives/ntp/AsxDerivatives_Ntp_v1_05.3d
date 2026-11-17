@@ -1,0 +1,399 @@
+// Australian Securities Exchange New Trading Platform
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out AsxDerivatives_Ntp_v1_05.3d
+//
+// What this definition does not state, and the model does:
+// - the dispatch that chooses a message by its type
+// - a run counted by a field
+// - a run of a stated number of entries
+//
+// License: MIT No Attribution
+
+// ---- Packet Header: 20 bytes -------------------------------------------------
+
+// Itch Mold Udp 64 Packet Header
+entrypoint typedef struct _PacketHeader {
+  UINT8 session[10];         // bytes 0 to 9
+  UINT64BE sequence_number;  // bytes 10 to 17
+  UINT16BE message_count;    // bytes 18 to 19
+} PacketHeader;
+
+// ---- Message Header: 3 bytes -------------------------------------------------
+
+// Mold Udp 64 Message Header
+entrypoint typedef struct _MessageHeader {
+  UINT16BE message_length;  // bytes 0 to 1
+  UINT8 message_type;       // byte 2
+} MessageHeader;
+
+// ---- Seconds Message: 4 bytes ------------------------------------------------
+
+// A seconds Nanoseconds is issued every second and any message thereafter will be stamped with the number of nanoseconds past the last Time message received as a time reference point
+entrypoint typedef struct _SecondsMessage {
+  UINT32BE second;  // bytes 0 to 3
+} SecondsMessage;
+
+// ---- End Of Business Trade Date Message: 7 bytes -----------------------------
+
+// This message will be sent as the last message for a Business Trade Date to signal no further messages will be disseminated for that date.
+entrypoint typedef struct _EndOfBusinessTradeDateMessage {
+  UINT32BE nanoseconds;  // bytes 0 to 3
+  UINT16BE trade_date;   // bytes 4 to 5
+  UINT8 event_code;      // byte 6
+} EndOfBusinessTradeDateMessage;
+
+// ---- Future Symbol Directory Message: 179 bytes ------------------------------
+
+// The Future Symbol Directory message describes futures contract
+entrypoint typedef struct _FutureSymbolDirectoryMessage {
+  UINT32BE nanoseconds;                   // bytes 0 to 3
+  UINT16BE trade_date;                    // bytes 4 to 5
+  UINT32BE tradeable_instrument_id;       // bytes 6 to 9
+  UINT8 symbol_name[32];                  // bytes 10 to 41
+  UINT8 long_name[60];                    // bytes 42 to 101
+  UINT8 isin[12];                         // bytes 102 to 113
+  UINT8 exchange[6];                      // bytes 114 to 119
+  UINT8 instrument[6];                    // bytes 120 to 125
+  UINT8 cfi_code[6];                      // bytes 126 to 131
+  UINT16BE expiry_year;                   // bytes 132 to 133
+  UINT8 expiry_month;                     // byte 134
+  UINT8 price_display_decimals;           // byte 135
+  UINT32BE price_fractional_denominator;  // bytes 136 to 139
+  UINT32BE price_minimum_tick;            // bytes 140 to 143
+  UINT32BE last_trading_date;             // bytes 144 to 147
+  UINT64BE prior_day_settlement;          // bytes 148 to 155, signed, read here as unsigned
+  UINT8 currency[3];                      // bytes 156 to 158
+  UINT64BE lot_size_or_face_value;        // bytes 159 to 166
+  UINT8 maturity_value;                   // byte 167
+  UINT16BE coupon_rate;                   // bytes 168 to 169
+  UINT8 payments_per_year;                // byte 170
+  UINT32BE block_lot_size;                // bytes 171 to 174
+  UINT32BE expiry_date;                   // bytes 175 to 178
+} FutureSymbolDirectoryMessage;
+
+// ---- Options Symbol Directory Message: 219 bytes -----------------------------
+
+// The Options Symbol Directory message describes options and warrants contracts.
+entrypoint typedef struct _OptionsSymbolDirectoryMessage {
+  UINT32BE nanoseconds;                          // bytes 0 to 3
+  UINT16BE trade_date;                           // bytes 4 to 5
+  UINT32BE tradeable_instrument_id;              // bytes 6 to 9
+  UINT8 symbol_name[32];                         // bytes 10 to 41
+  UINT8 long_name[60];                           // bytes 42 to 101
+  UINT8 isin[12];                                // bytes 102 to 113
+  UINT8 exchange[6];                             // bytes 114 to 119
+  UINT8 instrument[6];                           // bytes 120 to 125
+  UINT8 cfi_code[6];                             // bytes 126 to 131
+  UINT16BE expiry_year;                          // bytes 132 to 133
+  UINT8 expiry_month;                            // byte 134
+  UINT8 option_type;                             // byte 135
+  UINT64BE strike;                               // bytes 136 to 143, signed, read here as unsigned
+  UINT32BE underlying_tradeable_instrument_id;   // bytes 144 to 147
+  UINT8 price_display_decimals;                  // byte 148
+  UINT32BE price_fractional_denominator;         // bytes 149 to 152
+  UINT32BE price_minimum_tick;                   // bytes 153 to 156
+  UINT8 strike_price_decimal_position;           // byte 157
+  UINT32BE strike_price_fractional_denominator;  // bytes 158 to 161
+  UINT32BE strike_price_minimum_tick;            // bytes 162 to 165
+  UINT32BE last_trading_date;                    // bytes 166 to 169
+  UINT64BE prior_day_settlement;                 // bytes 170 to 177, signed, read here as unsigned
+  UINT64BE volatility;                           // bytes 178 to 185
+  UINT8 currency[3];                             // bytes 186 to 188
+  UINT64BE lot_size_or_face_value;               // bytes 189 to 196
+  UINT8 maturity_value;                          // byte 197
+  UINT16BE coupon_rate;                          // bytes 198 to 199
+  UINT8 payments_per_year;                       // byte 200
+  UINT32BE block_lot_size;                       // bytes 201 to 204
+  UINT32BE expiry_date;                          // bytes 205 to 208
+  UINT8 basis_of_quotation[10];                  // bytes 209 to 218
+} OptionsSymbolDirectoryMessage;
+
+// ---- Order Book State Message: 11 bytes --------------------------------------
+
+// This message indicates the current session state of a contract to the market
+entrypoint typedef struct _OrderBookStateMessage {
+  UINT32BE nanoseconds;              // bytes 0 to 3
+  UINT16BE trade_date;               // bytes 4 to 5
+  UINT32BE tradeable_instrument_id;  // bytes 6 to 9
+  UINT8 session_state;               // byte 10
+} OrderBookStateMessage;
+
+// ---- Add Order Message: 39 bytes ---------------------------------------------
+
+// An Order Added message indicates a new order or a restated order that has been accepted by the matching engine and added to the order book
+entrypoint typedef struct _AddOrderMessage {
+  UINT32BE nanoseconds;              // bytes 0 to 3
+  UINT16BE trade_date;               // bytes 4 to 5
+  UINT32BE tradeable_instrument_id;  // bytes 6 to 9
+  UINT8 side;                        // byte 10
+  UINT64BE order_id;                 // bytes 11 to 18
+  UINT64BE order_book_priority;      // bytes 19 to 26
+  UINT32BE quantity;                 // bytes 27 to 30
+  UINT64BE price;                    // bytes 31 to 38, signed, read here as unsigned
+} AddOrderMessage;
+
+// ---- Order Volume Cancelled Message: 23 bytes --------------------------------
+
+// An Order Volume Cancelled message is sent when an order is modified as a result of partial cancellation of volume
+entrypoint typedef struct _OrderVolumeCancelledMessage {
+  UINT32BE nanoseconds;              // bytes 0 to 3
+  UINT16BE trade_date;               // bytes 4 to 5
+  UINT32BE tradeable_instrument_id;  // bytes 6 to 9
+  UINT8 side;                        // byte 10
+  UINT64BE order_id;                 // bytes 11 to 18
+  UINT32BE quantity;                 // bytes 19 to 22
+} OrderVolumeCancelledMessage;
+
+// ---- Order Deleted Message: 19 bytes -----------------------------------------
+
+// This message is sent whenever an order in the book is cancelled by the owner, expired, cancelled by the exchange, purged or volume cancelled
+entrypoint typedef struct _OrderDeletedMessage {
+  UINT32BE nanoseconds;              // bytes 0 to 3
+  UINT16BE trade_date;               // bytes 4 to 5
+  UINT32BE tradeable_instrument_id;  // bytes 6 to 9
+  UINT8 side;                        // byte 10
+  UINT64BE order_id;                 // bytes 11 to 18
+} OrderDeletedMessage;
+
+// ---- Order Executed Message: 55 bytes ----------------------------------------
+
+// This message is sent whenever a resting order of the book is executed in whole or in part and the counterparty to the trade is an aggressive order
+entrypoint typedef struct _OrderExecutedMessage {
+  UINT32BE nanoseconds;              // bytes 0 to 3
+  UINT16BE trade_date;               // bytes 4 to 5
+  UINT32BE tradeable_instrument_id;  // bytes 6 to 9
+  UINT8 side;                        // byte 10
+  UINT64BE order_id;                 // bytes 11 to 18
+  UINT32BE quantity_remaining;       // bytes 19 to 22
+  UINT8 trade_type;                  // byte 23
+  UINT64BE trade_id;                 // bytes 24 to 31
+  UINT32BE executed_quantity;        // bytes 32 to 35
+  UINT64BE trade_price;              // bytes 36 to 43, signed, read here as unsigned
+  UINT64BE combination_trade_id;     // bytes 44 to 51
+  UINT8 counter_party_id[3];         // bytes 52 to 54
+} OrderExecutedMessage;
+
+// ---- Auction Order Executed Message: 52 bytes --------------------------------
+
+// This message is sent when orders are executed in the auction at the open of the market
+entrypoint typedef struct _AuctionOrderExecutedMessage {
+  UINT32BE nanoseconds;              // bytes 0 to 3
+  UINT16BE trade_date;               // bytes 4 to 5
+  UINT32BE tradeable_instrument_id;  // bytes 6 to 9
+  UINT8 side;                        // byte 10
+  UINT64BE order_id;                 // bytes 11 to 18
+  UINT32BE quantity_remaining;       // bytes 19 to 22
+  UINT8 trade_type;                  // byte 23
+  UINT64BE trade_id;                 // bytes 24 to 31
+  UINT32BE executed_quantity;        // bytes 32 to 35
+  UINT64BE trade_price;              // bytes 36 to 43, signed, read here as unsigned
+  UINT64BE opposite_order_id;        // bytes 44 to 51
+} AuctionOrderExecutedMessage;
+
+// ---- Combination Order Executed Message: 65 bytes ----------------------------
+
+// This message is sent whenever a resting order is matched with an open leg of a resting combination order in whole or in part
+entrypoint typedef struct _CombinationOrderExecutedMessage {
+  UINT32BE nanoseconds;                       // bytes 0 to 3
+  UINT16BE trade_date;                        // bytes 4 to 5
+  UINT32BE tradeable_instrument_id;           // bytes 6 to 9
+  UINT8 side;                                 // byte 10
+  UINT64BE order_id;                          // bytes 11 to 18
+  UINT32BE quantity_remaining;                // bytes 19 to 22
+  UINT8 trade_type;                           // byte 23
+  UINT64BE trade_id;                          // bytes 24 to 31
+  UINT32BE executed_quantity;                 // bytes 32 to 35
+  UINT64BE trade_price;                       // bytes 36 to 43, signed, read here as unsigned
+  UINT32BE opposite_tradeable_instrument_id;  // bytes 44 to 47
+  UINT8 opposite_side;                        // byte 48
+  UINT64BE opposite_order_id;                 // bytes 49 to 56
+  UINT64BE combination_trade_id;              // bytes 57 to 64
+} CombinationOrderExecutedMessage;
+
+// ---- Implied Order Added Message: 39 bytes -----------------------------------
+
+// This message is a similar format to the Order Added message, except the nature of this order is it has an implied price, implied volume and a priority that is derived from two or more real orders deriving the implied price
+entrypoint typedef struct _ImpliedOrderAddedMessage {
+  UINT32BE nanoseconds;              // bytes 0 to 3
+  UINT16BE trade_date;               // bytes 4 to 5
+  UINT32BE tradeable_instrument_id;  // bytes 6 to 9
+  UINT8 side;                        // byte 10
+  UINT64BE order_id;                 // bytes 11 to 18
+  UINT64BE order_book_priority;      // bytes 19 to 26
+  UINT32BE quantity;                 // bytes 27 to 30
+  UINT64BE price;                    // bytes 31 to 38, signed, read here as unsigned
+} ImpliedOrderAddedMessage;
+
+// ---- Implied Order Replaced Message: 39 bytes --------------------------------
+
+// This message notifies the subscriber that an existing implied order is to be replaced when the implied price, volume or priority has changed due to a price or volume movement of real orders for a side of a single Tradeable Instrument Id
+entrypoint typedef struct _ImpliedOrderReplacedMessage {
+  UINT32BE nanoseconds;              // bytes 0 to 3
+  UINT16BE trade_date;               // bytes 4 to 5
+  UINT32BE tradeable_instrument_id;  // bytes 6 to 9
+  UINT8 side;                        // byte 10
+  UINT64BE order_id;                 // bytes 11 to 18
+  UINT64BE order_book_priority;      // bytes 19 to 26
+  UINT32BE quantity;                 // bytes 27 to 30
+  UINT64BE price;                    // bytes 31 to 38, signed, read here as unsigned
+} ImpliedOrderReplacedMessage;
+
+// ---- Implied Order Deleted Message: 19 bytes ---------------------------------
+
+// This message is sent whenever the implied pricing or volume has changed due to price or volume movement of real orders for a side of a single contract number. When received, any implied volume is no longer accessible so the implied order of the indicated side must be removed from the book
+entrypoint typedef struct _ImpliedOrderDeletedMessage {
+  UINT32BE nanoseconds;              // bytes 0 to 3
+  UINT16BE trade_date;               // bytes 4 to 5
+  UINT32BE tradeable_instrument_id;  // bytes 6 to 9
+  UINT8 side;                        // byte 10
+  UINT64BE order_id;                 // bytes 11 to 18
+} ImpliedOrderDeletedMessage;
+
+// ---- Trade Executed Message: 45 bytes ----------------------------------------
+
+// The Trade Message is designed to provide details for executions in combination order books. Trade Executed messages are reported in the same sequence as order execution messages are reported
+entrypoint typedef struct _TradeExecutedMessage {
+  UINT32BE nanoseconds;              // bytes 0 to 3
+  UINT16BE trade_date;               // bytes 4 to 5
+  UINT32BE tradeable_instrument_id;  // bytes 6 to 9
+  UINT8 trade_type;                  // byte 10
+  UINT64BE trade_id;                 // bytes 11 to 18
+  UINT32BE executed_quantity;        // bytes 19 to 22
+  UINT64BE trade_price;              // bytes 23 to 30, signed, read here as unsigned
+  UINT64BE combination_trade_id;     // bytes 31 to 38
+  UINT8 participant_id_buyer[3];     // bytes 39 to 41
+  UINT8 participant_id_seller[3];    // bytes 42 to 44
+} TradeExecutedMessage;
+
+// ---- Combination Trade Executed Message: 79 bytes ----------------------------
+
+// The Combination Trade Executed Message is designed to provide details for executions where one or both orders are resting from a different order book id from the order book id of the trade
+entrypoint typedef struct _CombinationTradeExecutedMessage {
+  UINT32BE nanoseconds;                     // bytes 0 to 3
+  UINT16BE trade_date;                      // bytes 4 to 5
+  UINT32BE tradeable_instrument_id;         // bytes 6 to 9
+  UINT8 trade_type;                         // byte 10
+  UINT64BE trade_id;                        // bytes 11 to 18
+  UINT32BE executed_quantity;               // bytes 19 to 22
+  UINT64BE trade_price;                     // bytes 23 to 30, signed, read here as unsigned
+  UINT32BE buyer_tradeable_instrument_id;   // bytes 31 to 34
+  UINT8 buyer_side;                         // byte 35
+  UINT64BE buyer_order_id;                  // bytes 36 to 43
+  UINT64BE buyer_combination_trade_id;      // bytes 44 to 51
+  UINT8 buyer_participant_id[3];            // bytes 52 to 54
+  UINT32BE seller_tradeable_instrument_id;  // bytes 55 to 58
+  UINT8 seller_side;                        // byte 59
+  UINT64BE seller_order_id;                 // bytes 60 to 67
+  UINT64BE seller_combination_trade_id;     // bytes 68 to 75
+  UINT8 seller_participant_id[3];           // bytes 76 to 78
+} CombinationTradeExecutedMessage;
+
+// ---- Trade Cancellation Message: 18 bytes ------------------------------------
+
+// This message is sent whenever a trade is cancelled by ASX
+entrypoint typedef struct _TradeCancellationMessage {
+  UINT32BE nanoseconds;              // bytes 0 to 3
+  UINT16BE trade_date;               // bytes 4 to 5
+  UINT32BE tradeable_instrument_id;  // bytes 6 to 9
+  UINT64BE trade_id;                 // bytes 10 to 17
+} TradeCancellationMessage;
+
+// ---- Equilibrium Price Message: 42 bytes -------------------------------------
+
+// This message is disseminated in response to changes in the equilibrium price for an order book during a pre-open period
+entrypoint typedef struct _EquilibriumPriceMessage {
+  UINT32BE nanoseconds;              // bytes 0 to 3
+  UINT16BE trade_date;               // bytes 4 to 5
+  UINT32BE tradeable_instrument_id;  // bytes 6 to 9
+  UINT64BE equilibrium_price;        // bytes 10 to 17, signed, read here as unsigned
+  UINT64BE matched_quantity;         // bytes 18 to 25
+  UINT64BE bid_quantity;             // bytes 26 to 33
+  UINT64BE ask_quantity;             // bytes 34 to 41
+} EquilibriumPriceMessage;
+
+// ---- Open High Low Last Trade Adjustment Message: 54 bytes -------------------
+
+// Market trade price adjustments are sent resulting from modifications of Open, High, Low, Last and volume statistics due to market operations, prior to the instrument moving to the next session within the trade date, or at the close of instrument
+entrypoint typedef struct _OpenHighLowLastTradeAdjustmentMessage {
+  UINT32BE nanoseconds;              // bytes 0 to 3
+  UINT16BE trade_date;               // bytes 4 to 5
+  UINT32BE tradeable_instrument_id;  // bytes 6 to 9
+  UINT64BE opening_trade;            // bytes 10 to 17, signed, read here as unsigned
+  UINT64BE highest_trade;            // bytes 18 to 25, signed, read here as unsigned
+  UINT64BE lowest_trade;             // bytes 26 to 33, signed, read here as unsigned
+  UINT64BE last_trade;               // bytes 34 to 41, signed, read here as unsigned
+  UINT32BE last_volume;              // bytes 42 to 45
+  UINT64BE total_traded_volume;      // bytes 46 to 53
+} OpenHighLowLastTradeAdjustmentMessage;
+
+// ---- Market Settlement Message: 54 bytes -------------------------------------
+
+// This message disseminates the final settlement price of a future or option contracts order book for the trade date it pertains to
+entrypoint typedef struct _MarketSettlementMessage {
+  UINT32BE nanoseconds;              // bytes 0 to 3
+  UINT16BE trade_date;               // bytes 4 to 5
+  UINT32BE tradeable_instrument_id;  // bytes 6 to 9
+  UINT64BE opening_trade;            // bytes 10 to 17, signed, read here as unsigned
+  UINT64BE highest_trade;            // bytes 18 to 25, signed, read here as unsigned
+  UINT64BE lowest_trade;             // bytes 26 to 33, signed, read here as unsigned
+  UINT64BE last_trade;               // bytes 34 to 41, signed, read here as unsigned
+  UINT32BE last_volume;              // bytes 42 to 45
+  UINT64BE total_traded_volume;      // bytes 46 to 53
+} MarketSettlementMessage;
+
+// ---- Text Message: 112 bytes -------------------------------------------------
+
+// This message disseminates free text information describing ad-hoc market events
+entrypoint typedef struct _TextMessage {
+  UINT32BE nanoseconds;  // bytes 0 to 3
+  UINT16BE trade_date;   // bytes 4 to 5
+  UINT8 source_id[6];    // bytes 6 to 11
+  UINT8 text[100];       // bytes 12 to 111
+} TextMessage;
+
+// ---- Request For Quote Message: 15 bytes -------------------------------------
+
+// This message is disseminated for anonymous Request for Quotes (RFQs) from the market
+entrypoint typedef struct _RequestForQuoteMessage {
+  UINT32BE nanoseconds;              // bytes 0 to 3
+  UINT16BE trade_date;               // bytes 4 to 5
+  UINT32BE tradeable_instrument_id;  // bytes 6 to 9
+  UINT8 rfq_side;                    // byte 10
+  UINT32BE quantity;                 // bytes 11 to 14
+} RequestForQuoteMessage;
+
+// ---- Anomalous Order Threshold Publish Message: 58 bytes ---------------------
+
+// This message disseminates price band information to the market advising the setting, zeroing or adjusting of the Extreme Trade Range price, the Anomalous Order Threshold price and the associated ranges for a contract that requires Market Integrity Rules enforcement
+entrypoint typedef struct _AnomalousOrderThresholdPublishMessage {
+  UINT32BE nanoseconds;              // bytes 0 to 3
+  UINT16BE trade_date;               // bytes 4 to 5
+  UINT32BE tradeable_instrument_id;  // bytes 6 to 9
+  UINT64BE aot_price;                // bytes 10 to 17, signed, read here as unsigned
+  UINT64BE aot_upper_price;          // bytes 18 to 25, signed, read here as unsigned
+  UINT64BE aot_lower_price;          // bytes 26 to 33, signed, read here as unsigned
+  UINT64BE etr_price;                // bytes 34 to 41, signed, read here as unsigned
+  UINT64BE etr_upper_price;          // bytes 42 to 49, signed, read here as unsigned
+  UINT64BE etr_lower_price;          // bytes 50 to 57, signed, read here as unsigned
+} AnomalousOrderThresholdPublishMessage;
+
+// ---- Volume And Open Interest Message: 28 bytes ------------------------------
+
+// This message disseminates Volume and Open Interest (VOI) information for each trade date
+entrypoint typedef struct _VolumeAndOpenInterestMessage {
+  UINT32BE nanoseconds;              // bytes 0 to 3
+  UINT16BE trade_date;               // bytes 4 to 5
+  UINT32BE tradeable_instrument_id;  // bytes 6 to 9
+  UINT64BE cumulative_volume;        // bytes 10 to 17
+  UINT64BE open_interest;            // bytes 18 to 25
+  UINT16BE voi_trade_date;           // bytes 26 to 27
+} VolumeAndOpenInterestMessage;
+

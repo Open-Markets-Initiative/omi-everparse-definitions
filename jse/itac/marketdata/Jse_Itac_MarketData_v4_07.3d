@@ -1,0 +1,264 @@
+// JSE Limited Market Data
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out Jse_Itac_MarketData_v4_07.3d
+//
+// What this definition does not state, and the model does:
+// - a run counted by a field
+// - a field read in bits
+//
+// License: MIT No Attribution
+
+// ---- Unit Header: 8 bytes ----------------------------------------------------
+
+// Jse Mitch Udp Unit Header
+entrypoint typedef struct _UnitHeader {
+  UINT16 length;            // bytes 0 to 1
+  UINT8 message_count;      // byte 2
+  UINT8 market_data_group;  // byte 3
+  UINT32 sequence_number;   // bytes 4 to 7
+} UnitHeader;
+
+// ---- Message Header: 3 bytes -------------------------------------------------
+
+// Jse Mitch Udp Message Header
+entrypoint typedef struct _MessageHeader {
+  UINT16 message_length;  // bytes 0 to 1
+  UINT8 message_type;     // byte 2
+} MessageHeader;
+
+// ---- Login Request Message: 16 bytes -----------------------------------------
+
+// Sent by the client to log in to the market data gateway.
+entrypoint typedef struct _LoginRequestMessage {
+  UINT8 username[6];   // bytes 0 to 5
+  UINT8 password[10];  // bytes 6 to 15
+} LoginRequestMessage;
+
+// ---- Replay Request Message: 7 bytes -----------------------------------------
+
+// Sent by the client on the replay channel to request retransmission of a range of messages.
+entrypoint typedef struct _ReplayRequestMessage {
+  UINT8 market_data_group;  // byte 0
+  UINT32 first_message;     // bytes 1 to 4
+  UINT16 count;             // bytes 5 to 6
+} ReplayRequestMessage;
+
+// ---- Login Response Message: 1 byte ------------------------------------------
+
+// Sent by the server in response to a Login Request.
+entrypoint typedef struct _LoginResponseMessage {
+  UINT8 status;  // byte 0
+} LoginResponseMessage;
+
+// ---- Replay Response Message: 8 bytes ----------------------------------------
+
+// Sent by the server in response to a Replay Request.
+entrypoint typedef struct _ReplayResponseMessage {
+  UINT8 market_data_group;  // byte 0
+  UINT32 first_message;     // bytes 1 to 4
+  UINT16 count;             // bytes 5 to 6
+  UINT8 status;             // byte 7
+} ReplayResponseMessage;
+
+// ---- Snapshot Response Message: 14 bytes -------------------------------------
+
+// Sent by the server in response to a Snapshot Request.
+entrypoint typedef struct _SnapshotResponseMessage {
+  UINT32 sequence_number;  // bytes 0 to 3
+  UINT32 order_count;      // bytes 4 to 7
+  UINT8 status;            // byte 8
+  UINT8 snapshot_type;     // byte 9
+  UINT32 request_id;       // bytes 10 to 13
+} SnapshotResponseMessage;
+
+// ---- Time Message: 4 bytes ---------------------------------------------------
+
+// Sent for every second in which at least one application message is generated. All subsequent messages carry a nanosecond offset from this time.
+entrypoint typedef struct _TimeMessage {
+  UINT32 seconds;  // bytes 0 to 3
+} TimeMessage;
+
+// ---- System Event Message: 5 bytes -------------------------------------------
+
+// Sent to signal the start and end of the trading day.
+entrypoint typedef struct _SystemEventMessage {
+  UINT32 nanosecond;  // bytes 0 to 3
+  UINT8 event_code;   // byte 4
+} SystemEventMessage;
+
+// ---- Order Deleted Message: 12 bytes -----------------------------------------
+
+// Sent when an order is removed from the order book.
+entrypoint typedef struct _OrderDeletedMessage {
+  UINT32 nanosecond;  // bytes 0 to 3
+  UINT64 order_id;    // bytes 4 to 11
+} OrderDeletedMessage;
+
+// ---- Order Book Clear Message: 10 bytes --------------------------------------
+
+// Sent to instruct the recipient to discard every order held for an instrument on the named book.
+entrypoint typedef struct _OrderBookClearMessage {
+  UINT32 nanosecond;     // bytes 0 to 3
+  UINT32 instrument_id;  // bytes 4 to 7
+  UINT8 sub_book;        // byte 8
+  UINT8 book_level;      // byte 9
+} OrderBookClearMessage;
+
+// ---- Order Executed Message: 52 bytes ----------------------------------------
+
+// Sent when an order on the book executes in full or in part at its display price.
+entrypoint typedef struct _OrderExecutedMessage {
+  UINT32 nanosecond;                  // bytes 0 to 3
+  UINT64 order_id;                    // bytes 4 to 11
+  UINT32 executed_quantity;           // bytes 12 to 15
+  UINT64 trade_id;                    // bytes 16 to 23
+  UINT64 last_opt_px;                 // bytes 24 to 31, signed, read here as unsigned
+  UINT64 volatility;                  // bytes 32 to 39, signed, read here as unsigned
+  UINT64 underlying_reference_price;  // bytes 40 to 47, signed, read here as unsigned
+  UINT8 venue_of_execution[4];        // bytes 48 to 51
+} OrderExecutedMessage;
+
+// ---- Order Executed With Price Size Message: 65 bytes ------------------------
+
+// Sent when an order on the book executes at a price other than its display price, or when the execution is not printable.
+entrypoint typedef struct _OrderExecutedWithPriceSizeMessage {
+  UINT32 nanosecond;                  // bytes 0 to 3
+  UINT64 order_id;                    // bytes 4 to 11
+  UINT32 executed_quantity;           // bytes 12 to 15
+  UINT32 display_quantity;            // bytes 16 to 19
+  UINT64 trade_id;                    // bytes 20 to 27
+  UINT8 printable;                    // byte 28
+  UINT64 price;                       // bytes 29 to 36, signed, read here as unsigned
+  UINT64 last_opt_px;                 // bytes 37 to 44, signed, read here as unsigned
+  UINT64 volatility;                  // bytes 45 to 52, signed, read here as unsigned
+  UINT64 underlying_reference_price;  // bytes 53 to 60, signed, read here as unsigned
+  UINT8 venue_of_execution[4];        // bytes 61 to 64
+} OrderExecutedWithPriceSizeMessage;
+
+// ---- Auction Trade Message: 67 bytes -----------------------------------------
+
+// Sent for a trade that results from an auction uncrossing.
+entrypoint typedef struct _AuctionTradeMessage {
+  UINT32 nanosecond;                  // bytes 0 to 3
+  UINT32 quantity;                    // bytes 4 to 7
+  UINT32 instrument_id;               // bytes 8 to 11
+  UINT8 reserved_a;                   // byte 12
+  UINT8 reserved_b;                   // byte 13
+  UINT64 price;                       // bytes 14 to 21, signed, read here as unsigned
+  UINT64 trade_id;                    // bytes 22 to 29
+  UINT8 auction_type;                 // byte 30
+  UINT64 last_opt_px;                 // bytes 31 to 38, signed, read here as unsigned
+  UINT64 volatility;                  // bytes 39 to 46, signed, read here as unsigned
+  UINT64 underlying_reference_price;  // bytes 47 to 54, signed, read here as unsigned
+  UINT8 pt_cancellation_flag[4];      // bytes 55 to 58
+  UINT8 pt_amendment_flag[4];         // bytes 59 to 62
+  UINT8 venue_of_execution[4];        // bytes 63 to 66
+} AuctionTradeMessage;
+
+// ---- Off Book Trade Message: 78 bytes ----------------------------------------
+
+// Sent for a trade agreed away from the order book and reported to the exchange.
+entrypoint typedef struct _OffBookTradeMessage {
+  UINT32 nanosecond;                  // bytes 0 to 3
+  UINT32 executed_quantity;           // bytes 4 to 7
+  UINT32 instrument_id;               // bytes 8 to 11
+  UINT8 reserved_a;                   // byte 12
+  UINT8 reserved_b;                   // byte 13
+  UINT64 price;                       // bytes 14 to 21, signed, read here as unsigned
+  UINT64 trade_id;                    // bytes 22 to 29
+  UINT8 off_book_trade_type[4];       // bytes 30 to 33
+  UINT8 trade_time[8];                // bytes 34 to 41
+  UINT8 trade_date[8];                // bytes 42 to 49
+  UINT64 last_opt_px;                 // bytes 50 to 57, signed, read here as unsigned
+  UINT64 volatility;                  // bytes 58 to 65, signed, read here as unsigned
+  UINT64 underlying_reference_price;  // bytes 66 to 73, signed, read here as unsigned
+  UINT8 pt_cancellation_flag[4];      // bytes 74 to 77
+} OffBookTradeMessage;
+
+// ---- Auction Info Message: 28 bytes ------------------------------------------
+
+// Disseminates the indicative price and paired quantity of an instrument in an auction call.
+entrypoint typedef struct _AuctionInfoMessage {
+  UINT32 nanosecond;          // bytes 0 to 3
+  UINT32 paired_quantity;     // bytes 4 to 7
+  UINT8 reserved_4[4];        // bytes 8 to 11
+  UINT8 imbalance_direction;  // byte 12
+  UINT32 instrument_id;       // bytes 13 to 16
+  UINT8 reserved_a;           // byte 17
+  UINT8 reserved_b;           // byte 18
+  UINT64 price;               // bytes 19 to 26, signed, read here as unsigned
+  UINT8 auction_type;         // byte 27
+} AuctionInfoMessage;
+
+// ---- Statistics Message: 21 bytes --------------------------------------------
+
+// Disseminates the opening or closing price of an instrument.
+entrypoint typedef struct _StatisticsMessage {
+  UINT32 nanosecond;           // bytes 0 to 3
+  UINT32 instrument_id;        // bytes 4 to 7
+  UINT8 reserved_a;            // byte 8
+  UINT8 reserved_b;            // byte 9
+  UINT8 statistic_type;        // byte 10
+  UINT64 price;                // bytes 11 to 18, signed, read here as unsigned
+  UINT8 open_close_indicator;  // byte 19
+  UINT8 sub_book;              // byte 20
+} StatisticsMessage;
+
+// ---- Extended Statistics Message: 137 bytes ----------------------------------
+
+// Disseminates the intraday statistics of an instrument. Values that are not set or have been withdrawn are negative, except Volume and Number of Trades which are zero.
+entrypoint typedef struct _ExtendedStatisticsMessage {
+  UINT32 nanosecond;               // bytes 0 to 3
+  UINT32 instrument_id;            // bytes 4 to 7
+  UINT64 high_price;               // bytes 8 to 15, signed, read here as unsigned
+  UINT64 low_price;                // bytes 16 to 23, signed, read here as unsigned
+  UINT64 vwap;                     // bytes 24 to 31, signed, read here as unsigned
+  UINT32 volume;                   // bytes 32 to 35
+  UINT64 turnover;                 // bytes 36 to 43, signed, read here as unsigned
+  UINT32 number_of_trades;         // bytes 44 to 47
+  UINT8 reserved_8[8];             // bytes 48 to 55
+  UINT8 sub_book;                  // byte 56
+  UINT64 notional_exposure;        // bytes 57 to 64, signed, read here as unsigned
+  UINT64 notional_delta_exposure;  // bytes 65 to 72, signed, read here as unsigned
+  UINT64 open_interest;            // bytes 73 to 80, signed, read here as unsigned
+  UINT64 theoretical_price;        // bytes 81 to 88, signed, read here as unsigned
+  UINT64 delta;                    // bytes 89 to 96, signed, read here as unsigned
+  UINT64 gamma;                    // bytes 97 to 104, signed, read here as unsigned
+  UINT64 vega;                     // bytes 105 to 112, signed, read here as unsigned
+  UINT64 theta;                    // bytes 113 to 120, signed, read here as unsigned
+  UINT64 rho;                      // bytes 121 to 128, signed, read here as unsigned
+  UINT64 volatility;               // bytes 129 to 136, signed, read here as unsigned
+} ExtendedStatisticsMessage;
+
+// ---- News Message: 1063 bytes ------------------------------------------------
+
+// Carries an exchange announcement and the instruments it relates to.
+entrypoint typedef struct _NewsMessage {
+  UINT32 nanosecond;       // bytes 0 to 3
+  UINT8 time[8];           // bytes 4 to 11
+  UINT8 urgency;           // byte 12
+  UINT8 headline[100];     // bytes 13 to 112
+  UINT8 text[750];         // bytes 113 to 862
+  UINT8 instruments[100];  // bytes 863 to 962
+  UINT8 underlyings[100];  // bytes 963 to 1062
+} NewsMessage;
+
+// ---- Indicative Quote Info Message: 34 bytes ---------------------------------
+
+// Disseminates the indicative bid and offer of a request for quote.
+entrypoint typedef struct _IndicativeQuoteInfoMessage {
+  UINT32 nanosecond;              // bytes 0 to 3
+  UINT32 instrument_id;           // bytes 4 to 7
+  UINT8 rfq_id[10];               // bytes 8 to 17
+  UINT64 indicative_bid_price;    // bytes 18 to 25, signed, read here as unsigned
+  UINT64 indicative_offer_price;  // bytes 26 to 33, signed, read here as unsigned
+} IndicativeQuoteInfoMessage;
+

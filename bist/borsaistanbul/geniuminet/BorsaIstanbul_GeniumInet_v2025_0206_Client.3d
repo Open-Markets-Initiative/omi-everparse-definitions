@@ -1,0 +1,93 @@
+// Borsa stanbul A. . Genium Inet
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out BorsaIstanbul_GeniumInet_v2025_0206_Client.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a length prefix framing what follows
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Client Packet Header: 3 bytes -------------------------------------------
+
+// Packet header of a packet sent by the client
+entrypoint typedef struct _ClientPacketHeader {
+  UINT16BE packet_length;    // bytes 0 to 1
+  UINT8 client_packet_type;  // byte 2
+} ClientPacketHeader;
+
+// ---- Login Request Packet: 46 bytes ------------------------------------------
+
+// The SoupBinTCP client must send a Login Request Packet immediately upon establishing a new TCP/IP socket connection to the server
+entrypoint typedef struct _LoginRequestPacket {
+  UINT8 username[6];                    // bytes 0 to 5
+  UINT8 password[10];                   // bytes 6 to 15
+  UINT8 requested_session[10];          // bytes 16 to 25
+  UINT8 requested_sequence_number[20];  // bytes 26 to 45
+} LoginRequestPacket;
+
+// ---- Enter Order: 113 bytes --------------------------------------------------
+
+// Enters a new order into the system. The response to a successful Enter Order is an Order Accepted message. If the order is rejected, the Order Rejected message will be returned.
+entrypoint typedef struct _EnterOrder {
+  UINT8 order_token[14];                 // bytes 0 to 13
+  UINT32BE order_book_id;                // bytes 14 to 17
+  UINT8 side;                            // byte 18
+  UINT64BE quantity;                     // bytes 19 to 26
+  UINT32BE price;                        // bytes 27 to 30, signed, read here as unsigned
+  UINT8 time_in_force;                   // byte 31
+  UINT8 open_close;                      // byte 32
+  UINT8 client_account[16];              // bytes 33 to 48
+  UINT8 customer_info[15];               // bytes 49 to 63
+  UINT8 exchange_info_alpha_32[32];      // bytes 64 to 95
+  UINT64BE display_quantity;             // bytes 96 to 103
+  UINT8 client_category;                 // byte 104
+  UINT8 off_hours;                       // byte 105
+  UINT8 smp_level;                       // byte 106
+  UINT8 smp_method;                      // byte 107
+  UINT8 smp_id[3];                       // bytes 108 to 110
+  UINT16BE reserved_numeric_unsigned_2;  // bytes 111 to 112
+} EnterOrder;
+
+// ---- Replace Order: 121 bytes ------------------------------------------------
+
+// Modifies an existing order entered via OUCH. The response is an Order Replaced message if the modification was successful, or an Order Rejected message if the replace failed.
+entrypoint typedef struct _ReplaceOrder {
+  UINT8 existing_order_token[14];        // bytes 0 to 13
+  UINT8 replacement_order_token[14];     // bytes 14 to 27
+  UINT64BE quantity;                     // bytes 28 to 35
+  UINT32BE price;                        // bytes 36 to 39, signed, read here as unsigned
+  UINT8 replace_open_close;              // byte 40
+  UINT8 client_account[16];              // bytes 41 to 56
+  UINT8 customer_info[15];               // bytes 57 to 71
+  UINT8 exchange_info_alpha_32[32];      // bytes 72 to 103
+  UINT64BE display_quantity;             // bytes 104 to 111
+  UINT8 client_category;                 // byte 112
+  UINT64BE reserved_numeric_unsigned_8;  // bytes 113 to 120
+} ReplaceOrder;
+
+// ---- Cancel Order: 14 bytes --------------------------------------------------
+
+// Cancels an existing order entered via OUCH. Partial cancels are not supported; use Replace Order to modify an existing order. The response to a successful Cancel Order is an Order Canceled message. Failed Cancel Order messages are rejected with the Order Rejected message.
+entrypoint typedef struct _CancelOrder {
+  UINT8 order_token[14];  // bytes 0 to 13
+} CancelOrder;
+
+// ---- Cancel By Order Id: 13 bytes --------------------------------------------
+
+// Cancels any order in the book, regardless of which session it was inserted over, using the system-generated Order ID. The response to a successful Cancel by Order Id is an Order Canceled message. Failed requests are rejected with the Order Rejected message.
+entrypoint typedef struct _CancelByOrderId {
+  UINT32BE order_book_id;  // bytes 0 to 3
+  UINT8 side;              // byte 4
+  UINT64BE order_id;       // bytes 5 to 12
+} CancelByOrderId;
+

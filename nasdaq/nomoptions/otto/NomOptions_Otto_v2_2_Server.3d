@@ -1,0 +1,376 @@
+// National Association of Securities Dealers Automated Quotations (Nasdaq) Ouch to Trade Options
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out NomOptions_Otto_v2_2_Server.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a length prefix framing what follows
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Server Packet Header: 3 bytes -------------------------------------------
+
+// Packet header of a packet sent by the server
+entrypoint typedef struct _ServerPacketHeader {
+  UINT16BE packet_length;    // bytes 0 to 1
+  UINT8 server_packet_type;  // byte 2
+} ServerPacketHeader;
+
+// ---- Login Accepted Packet: 30 bytes -----------------------------------------
+
+// The SoupBinTCP server sends a Login Accepted Packet in response to receiving a valid Login Request from the client
+entrypoint typedef struct _LoginAcceptedPacket {
+  UINT8 accepted_session[10];          // bytes 0 to 9
+  UINT8 accepted_sequence_number[20];  // bytes 10 to 29
+} LoginAcceptedPacket;
+
+// ---- Login Rejected Packet: 1 byte -------------------------------------------
+
+// The SoupBinTCP server sends this packet in response to an invalid Login Request Packet from the client
+entrypoint typedef struct _LoginRejectedPacket {
+  UINT8 reject_reason_code;  // byte 0
+} LoginRejectedPacket;
+
+// ---- System Event Message: 9 bytes -------------------------------------------
+
+// System Event message informs of a market or a session-level event.
+entrypoint typedef struct _SystemEventMessage {
+  UINT64BE timestamp;  // bytes 0 to 7
+  UINT8 event_code;    // byte 8
+} SystemEventMessage;
+
+// ---- Simple Instrument Directory Message: 51 bytes ---------------------------
+
+// At the start of each trading day and during intra-day market state changes, the system disseminates directory messages for all symbols trading on the system.
+entrypoint typedef struct _SimpleInstrumentDirectoryMessage {
+  UINT64BE timestamp;        // bytes 0 to 7
+  UINT16BE product_id;       // bytes 8 to 9
+  UINT8 product_name[13];    // bytes 10 to 22
+  UINT32BE instrument_id;    // bytes 23 to 26
+  UINT8 expir_year;          // byte 27
+  UINT8 expir_mon;           // byte 28
+  UINT8 expir_day;           // byte 29
+  UINT64BE strike_price;     // bytes 30 to 37, signed, read here as unsigned
+  UINT8 option_type;         // byte 38
+  UINT8 closing_type;        // byte 39
+  UINT8 tradable;            // byte 40
+  UINT8 closing_only;        // byte 41
+  UINT16BE contract_size;    // bytes 42 to 43
+  UINT8 mpv;                 // byte 44
+  UINT8 system_partition;    // byte 45
+  UINT8 security_symbol[5];  // bytes 46 to 50
+} SimpleInstrumentDirectoryMessage;
+
+// ---- Instrument Trading Action Message: 15 bytes -----------------------------
+
+// This message notifies of changes to the trading status of an instrument.
+entrypoint typedef struct _InstrumentTradingActionMessage {
+  UINT64BE timestamp;      // bytes 0 to 7
+  UINT16BE product_id;     // bytes 8 to 9
+  UINT32BE instrument_id;  // bytes 10 to 13
+  UINT8 trading_state;     // byte 14
+} InstrumentTradingActionMessage;
+
+// ---- Auction Notification Message: 59 bytes ----------------------------------
+
+// Auction Notification message announces that a new Auction has started in the market for Nasdasq ISE (ISE), Nasdaq GEMX (GEMX), Nasdaq MRX (MRX) and Nasdaq BX (BX).
+entrypoint typedef struct _AuctionNotificationMessage {
+  UINT64BE timestamp;            // bytes 0 to 7
+  UINT8 instrument_type;         // byte 8
+  UINT32BE instrument_id;        // bytes 9 to 12
+  UINT32BE auction_id;           // bytes 13 to 16
+  UINT8 order_type;              // byte 17
+  UINT8 side;                    // byte 18
+  UINT64BE price;                // bytes 19 to 26, signed, read here as unsigned
+  UINT32BE quantity;             // bytes 27 to 30
+  UINT8 exec_flag;               // byte 31
+  UINT8 order_capacity;          // byte 32
+  UINT8 firm_id[4];              // bytes 33 to 36
+  UINT32BE occ_account;          // bytes 37 to 40
+  UINT32BE cmta;                 // bytes 41 to 44
+  UINT8 auction_event;           // byte 45
+  UINT8 auction_type;            // byte 46
+  UINT64BE best_response_price;  // bytes 47 to 54, signed, read here as unsigned
+  UINT32BE best_response_size;   // bytes 55 to 58
+} AuctionNotificationMessage;
+
+// ---- Order Accepted Long Form Message: 110 bytes -----------------------------
+
+// This message is used to acknowledge a valid order submitted via New Order (Long Form).
+entrypoint typedef struct _OrderAcceptedLongFormMessage {
+  UINT64BE timestamp;             // bytes 0 to 7
+  UINT8 firm_id[4];               // bytes 8 to 11
+  UINT32BE instrument_id;         // bytes 12 to 15
+  UINT64BE order_id;              // bytes 16 to 23
+  UINT8 cl_ord_id[16];            // bytes 24 to 39
+  UINT32BE cmta;                  // bytes 40 to 43
+  UINT8 clearing_account[4];      // bytes 44 to 47
+  UINT32BE occ_account;           // bytes 48 to 51
+  UINT8 cust_acct[10];            // bytes 52 to 61
+  UINT8 preferred_party[3];       // bytes 62 to 64
+  UINT8 alo_inst;                 // byte 65
+  UINT8 iso;                      // byte 66
+  UINT8 side;                     // byte 67
+  UINT8 order_type;               // byte 68
+  UINT64BE price;                 // bytes 69 to 76, signed, read here as unsigned
+  UINT32BE quantity;              // bytes 77 to 80
+  UINT32BE min_qty;               // bytes 81 to 84
+  UINT8 tif;                      // byte 85
+  UINT8 capacity;                 // byte 86
+  UINT8 auction_type;             // byte 87
+  UINT32BE auction_id;            // bytes 88 to 91
+  UINT8 flash_inst;               // byte 92
+  UINT8 disclosure_mask;          // byte 93
+  UINT16BE display_qty;           // bytes 94 to 95
+  UINT8 display_when;             // byte 96
+  UINT8 display_method;           // byte 97
+  UINT16BE display_low_qty;       // bytes 98 to 99
+  UINT16BE display_high_qty;      // bytes 100 to 101
+  UINT16BE position_effect_mask;  // bytes 102 to 103
+  UINT8 stock_leg_short_sale;     // byte 104
+  UINT8 stock_leg_mpid[4];        // bytes 105 to 108
+  UINT8 persist_inst;             // byte 109
+} OrderAcceptedLongFormMessage;
+
+// ---- Order Accepted Short Form Message: 64 bytes -----------------------------
+
+// This message is used to acknowledge a valid order submitted via New Order (Short Form).
+entrypoint typedef struct _OrderAcceptedShortFormMessage {
+  UINT64BE timestamp;             // bytes 0 to 7
+  UINT8 firm_id[4];               // bytes 8 to 11
+  UINT32BE instrument_id;         // bytes 12 to 15
+  UINT64BE order_id;              // bytes 16 to 23
+  UINT8 cl_ord_id[16];            // bytes 24 to 39
+  UINT8 alo_inst;                 // byte 40
+  UINT8 iso;                      // byte 41
+  UINT8 side;                     // byte 42
+  UINT8 order_type;               // byte 43
+  UINT64BE price;                 // bytes 44 to 51, signed, read here as unsigned
+  UINT16BE quantity_short;        // bytes 52 to 53
+  UINT8 tif;                      // byte 54
+  UINT8 capacity;                 // byte 55
+  UINT8 auction_type;             // byte 56
+  UINT32BE auction_id;            // bytes 57 to 60
+  UINT8 price_protection;         // byte 61
+  UINT16BE position_effect_mask;  // bytes 62 to 63
+} OrderAcceptedShortFormMessage;
+
+// ---- Order Replaced Message: 84 bytes ----------------------------------------
+
+// This message acknowledges the receipt and acceptance of a valid Replace Order Message. Like Order Accepted Message, Order Replaced Message always comes before any Order Executed Messages or Order Cancelled Messages for the replacement.
+entrypoint typedef struct _OrderReplacedMessage {
+  UINT64BE timestamp;             // bytes 0 to 7
+  UINT8 firm_id[4];               // bytes 8 to 11
+  UINT32BE instrument_id;         // bytes 12 to 15
+  UINT64BE orig_order_id;         // bytes 16 to 23
+  UINT64BE order_id;              // bytes 24 to 31
+  UINT8 orig_cl_ord_id[16];       // bytes 32 to 47
+  UINT8 alo_inst;                 // byte 48
+  UINT8 iso;                      // byte 49
+  UINT8 side;                     // byte 50
+  UINT8 order_type;               // byte 51
+  UINT64BE price;                 // bytes 52 to 59, signed, read here as unsigned
+  UINT32BE quantity;              // bytes 60 to 63
+  UINT8 tif;                      // byte 64
+  UINT8 cust_acct[10];            // bytes 65 to 74
+  UINT8 capacity;                 // byte 75
+  UINT8 auction_type;             // byte 76
+  UINT32BE auction_id;            // bytes 77 to 80
+  UINT16BE position_effect_mask;  // bytes 81 to 82
+  UINT8 price_protection;         // byte 83
+} OrderReplacedMessage;
+
+// ---- Order Cancelled Message: 25 bytes ---------------------------------------
+
+// An Order Cancelled Message informs you that an order has been fully cancelled. This could be acknowledging a Cancel Order Message, or it could be the result of the order being cancelled automatically by the system.
+entrypoint typedef struct _OrderCancelledMessage {
+  UINT64BE timestamp;      // bytes 0 to 7
+  UINT8 firm_id[4];        // bytes 8 to 11
+  UINT32BE instrument_id;  // bytes 12 to 15
+  UINT64BE order_id;       // bytes 16 to 23
+  UINT8 cancel_reason;     // byte 24
+} OrderCancelledMessage;
+
+// ---- Order Executed Message: 56 bytes ----------------------------------------
+
+// Order Executed Message informs you that all or part of an order has been executed. This message is used for simple as well as complex instruments.
+entrypoint typedef struct _OrderExecutedMessage {
+  UINT64BE timestamp;          // bytes 0 to 7
+  UINT8 firm_id[4];            // bytes 8 to 11
+  UINT16BE product_id;         // bytes 12 to 13
+  UINT8 ord_exec_type;         // byte 14
+  UINT32BE instrument_id;      // bytes 15 to 18
+  UINT32BE leg_instrument_id;  // bytes 19 to 22
+  UINT8 leg_id;                // byte 23
+  UINT8 auction_type;          // byte 24
+  UINT64BE order_id;           // bytes 25 to 32
+  UINT32BE cross_id;           // bytes 33 to 36
+  UINT32BE match_id;           // bytes 37 to 40
+  UINT8 side;                  // byte 41
+  UINT8 stock_leg_short_sale;  // byte 42
+  UINT64BE price;              // bytes 43 to 50, signed, read here as unsigned
+  UINT32BE quantity;           // bytes 51 to 54
+  UINT8 liquidity_ind;         // byte 55
+} OrderExecutedMessage;
+
+// ---- Trade Details Message: 107 bytes ----------------------------------------
+
+// A Trade Details message contains additional details, specifically clearing information. This message is sent out with a nominal delay after Order Executed message.
+entrypoint typedef struct _TradeDetailsMessage {
+  UINT64BE timestamp;          // bytes 0 to 7
+  UINT8 firm_id[4];            // bytes 8 to 11
+  UINT16BE product_id;         // bytes 12 to 13
+  UINT8 ord_exec_type;         // byte 14
+  UINT32BE instrument_id;      // bytes 15 to 18
+  UINT32BE leg_instrument_id;  // bytes 19 to 22
+  UINT8 leg_id;                // byte 23
+  UINT8 trans_type;            // byte 24
+  UINT8 event_source;          // byte 25
+  UINT8 auction_type;          // byte 26
+  UINT64BE order_id;           // bytes 27 to 34
+  UINT8 cl_ord_id[16];         // bytes 35 to 50
+  UINT32BE cross_id;           // bytes 51 to 54
+  UINT32BE match_id;           // bytes 55 to 58
+  UINT32BE ref_match_id;       // bytes 59 to 62
+  UINT8 side;                  // byte 63
+  UINT8 stock_leg_short_sale;  // byte 64
+  UINT64BE price;              // bytes 65 to 72, signed, read here as unsigned
+  UINT32BE quantity;           // bytes 73 to 76
+  UINT8 liquidity_ind;         // byte 77
+  UINT32BE cmta;               // bytes 78 to 81
+  UINT8 clearing_account[4];   // bytes 82 to 85
+  UINT32BE occ_account;        // bytes 86 to 89
+  UINT8 cust_acct[10];         // bytes 90 to 99
+  UINT8 stock_venue;           // byte 100
+  UINT8 stock_leg_mpid[4];     // bytes 101 to 104
+  UINT8 capacity;              // byte 105
+  UINT8 open_close;            // byte 106
+} TradeDetailsMessage;
+
+// ---- Cross Order Accepted Message: 168 bytes ---------------------------------
+
+// This message acknowledges the receipt and acceptance of a valid New Cross Order.
+entrypoint typedef struct _CrossOrderAcceptedMessage {
+  UINT64BE timestamp;                     // bytes 0 to 7
+  UINT8 firm_id[4];                       // bytes 8 to 11
+  UINT32BE instrument_id;                 // bytes 12 to 15
+  UINT8 cross_type;                       // byte 16
+  UINT8 auction_type;                     // byte 17
+  UINT32BE auction_id;                    // bytes 18 to 21
+  UINT8 auction_alloc_pct;                // byte 22
+  UINT8 side;                             // byte 23
+  UINT8 iso;                              // byte 24
+  UINT8 price_protection;                 // byte 25
+  UINT64BE effective_time;                // bytes 26 to 33
+  UINT8 disclosure_mask;                  // byte 34
+  UINT64BE primary_order_id;              // bytes 35 to 42
+  UINT8 primary_cl_ord_id[16];            // bytes 43 to 58
+  UINT32BE primary_cmta;                  // bytes 59 to 62
+  UINT8 primary_clearing_account[4];      // bytes 63 to 66
+  UINT32BE primary_occ_account;           // bytes 67 to 70
+  UINT8 primary_cust_acct[10];            // bytes 71 to 80
+  UINT64BE primary_price;                 // bytes 81 to 88, signed, read here as unsigned
+  UINT32BE primary_quantity;              // bytes 89 to 92
+  UINT8 primary_capacity;                 // byte 93
+  UINT16BE primary_position_effect_mask;  // bytes 94 to 95
+  UINT8 primary_stock_leg_short_sale;     // byte 96
+  UINT8 primary_stock_leg_mpid[4];        // bytes 97 to 100
+  UINT64BE contra_order_id;               // bytes 101 to 108
+  UINT8 contra_cl_ord_id[16];             // bytes 109 to 124
+  UINT32BE contra_cmta;                   // bytes 125 to 128
+  UINT8 contra_clearing_account[4];       // bytes 129 to 132
+  UINT32BE contra_occ_account;            // bytes 133 to 136
+  UINT8 contra_cust_acct[10];             // bytes 137 to 146
+  UINT8 contra_order_type;                // byte 147
+  UINT64BE contra_price;                  // bytes 148 to 155, signed, read here as unsigned
+  UINT32BE contra_quantity;               // bytes 156 to 159
+  UINT8 contra_capacity;                  // byte 160
+  UINT16BE contra_position_effect_mask;   // bytes 161 to 162
+  UINT8 contra_stock_leg_short_sale;      // byte 163
+  UINT8 contra_stock_leg_mpid[4];         // bytes 164 to 167
+} CrossOrderAcceptedMessage;
+
+// ---- Member Kill Switch Notification Message: 33 bytes -----------------------
+
+// The Member Kill Switch Notification informs of:
+entrypoint typedef struct _MemberKillSwitchNotificationMessage {
+  UINT64BE timestamp;       // bytes 0 to 7
+  UINT8 firm_id[4];         // bytes 8 to 11
+  UINT8 cl_request_id[16];  // bytes 12 to 27
+  UINT8 target_firm_id[4];  // bytes 28 to 31
+  UINT8 kill_action;        // byte 32
+} MemberKillSwitchNotificationMessage;
+
+// ---- Mass Cancel Response Message: 36 bytes ----------------------------------
+
+// Mass Cancel Response is sent out upon completion of processing of a valid Mass Cancel Request.
+entrypoint typedef struct _MassCancelResponseMessage {
+  UINT64BE timestamp;       // bytes 0 to 7
+  UINT8 firm_id[4];         // bytes 8 to 11
+  UINT8 cl_request_id[16];  // bytes 12 to 27
+  UINT32BE num_cancelled;   // bytes 28 to 31
+  UINT32BE num_pending;     // bytes 32 to 35
+} MassCancelResponseMessage;
+
+// ---- Add Complex Instrument Response Message: 32 bytes -----------------------
+
+// Add Complex Instrument Response is sent out when new or existing complex strategy requested via Add Complex Instrument Request is successfully created.
+entrypoint typedef struct _AddComplexInstrumentResponseMessage {
+  UINT64BE timestamp;       // bytes 0 to 7
+  UINT8 firm_id[4];         // bytes 8 to 11
+  UINT8 cl_request_id[16];  // bytes 12 to 27
+  UINT32BE instrument_id;   // bytes 28 to 31
+} AddComplexInstrumentResponseMessage;
+
+// ---- Modify Trade Response Message: 52 bytes ---------------------------------
+
+// Modify Trade Response is sent when a valid Modify Trade Request is accepted.
+entrypoint typedef struct _ModifyTradeResponseMessage {
+  UINT64BE timestamp;       // bytes 0 to 7
+  UINT8 firm_id[4];         // bytes 8 to 11
+  UINT8 cl_request_id[16];  // bytes 12 to 27
+  UINT8 cl_ord_id[16];      // bytes 28 to 43
+  UINT32BE cross_id;        // bytes 44 to 47
+  UINT32BE match_id;        // bytes 48 to 51
+} ModifyTradeResponseMessage;
+
+// ---- Subscription Response Message: 28 bytes ---------------------------------
+
+// Subscription Response is sent after a valid Subscription Request has been processed.
+entrypoint typedef struct _SubscriptionResponseMessage {
+  UINT64BE timestamp;       // bytes 0 to 7
+  UINT8 firm_id[4];         // bytes 8 to 11
+  UINT8 cl_request_id[16];  // bytes 12 to 27
+} SubscriptionResponseMessage;
+
+// ---- Reject Message: 27 bytes ------------------------------------------------
+
+// Reject is sent in response to a Request that is deemed invalid. Reject message contains error code explaining the reason for rejection
+entrypoint typedef struct _RejectMessage {
+  UINT64BE timestamp;     // bytes 0 to 7
+  UINT8 reject_msg_type;  // byte 8
+  UINT8 cl_ord_id[16];    // bytes 9 to 24
+  UINT16BE reject_code;   // bytes 25 to 26
+} RejectMessage;
+
+// ---- Pending Response Message: 34 bytes --------------------------------------
+
+// A Pending Response is sent when a request cannot be immediately, fully processed or validated, and indicates that the final status of the request is not yet known.
+entrypoint typedef struct _PendingResponseMessage {
+  UINT64BE timestamp;      // bytes 0 to 7
+  UINT8 firm_id[4];        // bytes 8 to 11
+  UINT32BE instrument_id;  // bytes 12 to 15
+  UINT8 pending_msg_type;  // byte 16
+  UINT8 cl_ord_id[16];     // bytes 17 to 32
+  UINT8 pending_reason;    // byte 33
+} PendingResponseMessage;
+

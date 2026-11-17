@@ -1,0 +1,182 @@
+// National Association of Securities Dealers Automated Quotations (Nasdaq) Top Of Market
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out PhlxOptions_TopOfMarket_v3_4_Udp.3d
+//
+// What this definition does not state, and the model does:
+// - the dispatch that chooses a message by its type
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Packet Header: 20 bytes -------------------------------------------------
+
+// Itch Mold Udp 64 Packet Header
+entrypoint typedef struct _PacketHeader {
+  UINT8 session[10];         // bytes 0 to 9
+  UINT64BE sequence_number;  // bytes 10 to 17
+  UINT16BE message_count;    // bytes 18 to 19
+} PacketHeader;
+
+// ---- Message Header: 3 bytes -------------------------------------------------
+
+// Mold Udp 64 Message Header
+entrypoint typedef struct _MessageHeader {
+  UINT16BE message_length;  // bytes 0 to 1
+  UINT8 message_type;       // byte 2
+} MessageHeader;
+
+// ---- Timestamp Message: 4 bytes ----------------------------------------------
+
+// The system event message type is used to signal a market or data feed handler event.
+entrypoint typedef struct _TimestampMessage {
+  UINT32BE second;  // bytes 0 to 3
+} TimestampMessage;
+
+// ---- System Event Message: 7 bytes -------------------------------------------
+
+// The system event message type is used to signal a market or data feed handler event.
+entrypoint typedef struct _SystemEventMessage {
+  UINT32BE nanoseconds;  // bytes 0 to 3
+  UINT8 event_code;      // byte 4
+  UINT8 version;         // byte 5
+  UINT8 sub_version;     // byte 6
+} SystemEventMessage;
+
+// ---- Options Directory Message: 39 bytes -------------------------------------
+
+// At the start of each trading day, the options system disseminates directory messages for all symbols eligible for the auction process in the options system.
+entrypoint typedef struct _OptionsDirectoryMessage {
+  UINT32BE nanoseconds;         // bytes 0 to 3
+  UINT32BE option_id;           // bytes 4 to 7
+  UINT8 security_symbol[6];     // bytes 8 to 13
+  UINT8 expiration_year;        // byte 14
+  UINT8 expiration_month;       // byte 15
+  UINT8 expiration_day;         // byte 16
+  UINT32BE strike_price;        // bytes 17 to 20, signed, read here as unsigned
+  UINT8 option_type;            // byte 21
+  UINT8 source;                 // byte 22
+  UINT8 underlying_symbol[13];  // bytes 23 to 35
+  UINT8 option_closing_type;    // byte 36
+  UINT8 tradable;               // byte 37
+  UINT8 mpv;                    // byte 38
+} OptionsDirectoryMessage;
+
+// ---- Trading Action Message: 9 bytes -----------------------------------------
+
+// The options system uses this administrative message to indicate the current trading status of an index or equity option within the options market.
+entrypoint typedef struct _TradingActionMessage {
+  UINT32BE nanoseconds;         // bytes 0 to 3
+  UINT32BE option_id;           // bytes 4 to 7
+  UINT8 current_trading_state;  // byte 8
+} TradingActionMessage;
+
+// ---- Security Open Closed Message: 9 bytes -----------------------------------
+
+// The options system uses this administrative message to indicate when an option has completed the opening process and is now available for auto execution or when the option has closed and is no longer available for auto execution.
+entrypoint typedef struct _SecurityOpenClosedMessage {
+  UINT32BE nanoseconds;  // bytes 0 to 3
+  UINT32BE option_id;    // bytes 4 to 7
+  UINT8 open_state;      // byte 8
+} SecurityOpenClosedMessage;
+
+// ---- Short Best Bid And Ask Update Message: 17 bytes -------------------------
+
+// Whenever the best bid and ask position changes on both sides, the options system will send its best bid and ask update via the data feed for the affected security.
+entrypoint typedef struct _ShortBestBidAndAskUpdateMessage {
+  UINT32BE nanoseconds;   // bytes 0 to 3
+  UINT32BE option_id;     // bytes 4 to 7
+  UINT8 quote_condition;  // byte 8
+  UINT16BE bid_price_2;   // bytes 9 to 10
+  UINT16BE bid_size_2;    // bytes 11 to 12
+  UINT16BE ask_price_2;   // bytes 13 to 14
+  UINT16BE ask_size_2;    // bytes 15 to 16
+} ShortBestBidAndAskUpdateMessage;
+
+// ---- Long Best Bid And Ask Update Message: 25 bytes --------------------------
+
+// This message is the same as the Best Bid AND Ask Update Message Short Form described above except that Prices and Sizes are 4 byte Integers, the prices having 4 implied decimal places.
+entrypoint typedef struct _LongBestBidAndAskUpdateMessage {
+  UINT32BE nanoseconds;   // bytes 0 to 3
+  UINT32BE option_id;     // bytes 4 to 7
+  UINT8 quote_condition;  // byte 8
+  UINT32BE bid_price_4;   // bytes 9 to 12, signed, read here as unsigned
+  UINT32BE bid_size_4;    // bytes 13 to 16
+  UINT32BE ask_price_4;   // bytes 17 to 20, signed, read here as unsigned
+  UINT32BE ask_size_4;    // bytes 21 to 24
+} LongBestBidAndAskUpdateMessage;
+
+// ---- Short Best Ask Update Message: 13 bytes ---------------------------------
+
+// The options system will continuously calculate its best bid and offer position for active options contracts on the options market during the trading day. Whenever the best bid or ask position changes on one side but not the other side, the options system will send its best bid or ask update via this feed for the affected security.
+entrypoint typedef struct _ShortBestAskUpdateMessage {
+  UINT32BE nanoseconds;   // bytes 0 to 3
+  UINT32BE option_id;     // bytes 4 to 7
+  UINT8 quote_condition;  // byte 8
+  UINT16BE price_2;       // bytes 9 to 10
+  UINT16BE size_2;        // bytes 11 to 12
+} ShortBestAskUpdateMessage;
+
+// ---- Short Best Bid Update Message: 13 bytes ---------------------------------
+
+// The options system will continuously calculate its best bid and offer position for active options contracts on the options market during the trading day. Whenever the best bid or ask position changes on one side but not the other side, the options system will send its best bid or ask update via this feed for the affected security.
+entrypoint typedef struct _ShortBestBidUpdateMessage {
+  UINT32BE nanoseconds;   // bytes 0 to 3
+  UINT32BE option_id;     // bytes 4 to 7
+  UINT8 quote_condition;  // byte 8
+  UINT16BE price_2;       // bytes 9 to 10
+  UINT16BE size_2;        // bytes 11 to 12
+} ShortBestBidUpdateMessage;
+
+// ---- Long Best Ask Update Message: 17 bytes ----------------------------------
+
+// This message is the same as the Best Bid OR Ask Update Message Short Form described above except that Prices and Sizes are 4 byte Integers, the price having 4 implied decimal places.
+entrypoint typedef struct _LongBestAskUpdateMessage {
+  UINT32BE nanoseconds;   // bytes 0 to 3
+  UINT32BE option_id;     // bytes 4 to 7
+  UINT8 quote_condition;  // byte 8
+  UINT32BE price_4;       // bytes 9 to 12, signed, read here as unsigned
+  UINT32BE size_4;        // bytes 13 to 16
+} LongBestAskUpdateMessage;
+
+// ---- Long Best Bid Update Message: 17 bytes ----------------------------------
+
+// This message is the same as the Best Bid OR Ask Update Message Short Form described above except that Prices and Sizes are 4 byte Integers, the price having 4 implied decimal places.
+entrypoint typedef struct _LongBestBidUpdateMessage {
+  UINT32BE nanoseconds;   // bytes 0 to 3
+  UINT32BE option_id;     // bytes 4 to 7
+  UINT8 quote_condition;  // byte 8
+  UINT32BE price_4;       // bytes 9 to 12, signed, read here as unsigned
+  UINT32BE size_4;        // bytes 13 to 16
+} LongBestBidUpdateMessage;
+
+// ---- Trade Report Message: 21 bytes ------------------------------------------
+
+// The Trade Report message will be used to relay execution system transactions that are reported during the current business day. The options system only reports one-side of a trade execution on the feed and other data feed products.
+entrypoint typedef struct _TradeReportMessage {
+  UINT32BE nanoseconds;   // bytes 0 to 3
+  UINT32BE option_id;     // bytes 4 to 7
+  UINT32BE cross_id;      // bytes 8 to 11
+  UINT8 trade_condition;  // byte 12
+  UINT32BE price_4;       // bytes 13 to 16, signed, read here as unsigned
+  UINT32BE volume;        // bytes 17 to 20
+} TradeReportMessage;
+
+// ---- Broken Trade Report Message: 20 bytes -----------------------------------
+
+// The following message is used in the event that an options trade transaction is broken on the same business day that it is reported.
+entrypoint typedef struct _BrokenTradeReportMessage {
+  UINT32BE nanoseconds;        // bytes 0 to 3
+  UINT32BE option_id;          // bytes 4 to 7
+  UINT32BE original_cross_id;  // bytes 8 to 11
+  UINT32BE original_price;     // bytes 12 to 15, signed, read here as unsigned
+  UINT32BE original_volume;    // bytes 16 to 19
+} BrokenTradeReportMessage;
+

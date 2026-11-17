@@ -1,0 +1,341 @@
+// Taiwan Futures Exchange Order Entry
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out TaifexDerivatives_OrderEntry_v2_18_7.3d
+//
+// What this definition does not state, and the model does:
+// - a Reassemble rule
+// - a length prefix framing what follows
+// - the dispatch that chooses a message by its type
+// - a run of a stated number of entries
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Header Time: 6 bytes ----------------------------------------------------
+
+// Message time, the Tmp time format of section 2.1 carried by the common message header
+entrypoint typedef struct _HeaderTime {
+  UINT32BE header_epoch_s;  // bytes 0 to 3, signed, read here as unsigned
+  UINT16BE header_ms;       // bytes 4 to 5
+} HeaderTime;
+
+// ---- Hdr: 17 bytes -----------------------------------------------------------
+
+// Tmp Common message header, carried by every Tmp message
+entrypoint typedef struct _Hdr {
+  UINT16BE msg_length;     // bytes 0 to 1
+  UINT32BE msg_seq_num;    // bytes 2 to 5
+  HeaderTime header_time;  // bytes 6 to 11
+  UINT8 message_type;      // byte 12
+  UINT16BE fcm_id;         // bytes 13 to 14
+  UINT16BE session_id;     // bytes 15 to 16
+} Hdr;
+
+// ---- Wake Up Call Message: 5 bytes -------------------------------------------
+
+// Wake up call message, which either Taifex or the futures commission merchant may initiate in the logon phase of the Link Subsystem.
+entrypoint typedef struct _WakeUpCallMessage {
+  UINT8 status_code;            // byte 0
+  UINT32BE start_in_bound_num;  // bytes 1 to 4
+} WakeUpCallMessage;
+
+// ---- Wake Up Call Confirmed Message: 1 byte ----------------------------------
+
+// Wake up call confirmed message, sent by the futures commission merchant to Taifex.
+entrypoint typedef struct _WakeUpCallConfirmedMessage {
+  UINT8 version;  // byte 0
+} WakeUpCallConfirmedMessage;
+
+// ---- Logon Notice Message: 9 bytes -------------------------------------------
+
+// Logon notice message, carrying the sequence No of the last message Taifex sent the futures commission merchant in the session.
+entrypoint typedef struct _LogonNoticeMessage {
+  UINT8 status_code;           // byte 0
+  UINT16BE append_no;          // bytes 1 to 2
+  UINT32BE end_out_bound_num;  // bytes 3 to 6
+  UINT8 system_type;           // byte 7
+  UINT8 encrypt_method;        // byte 8
+} LogonNoticeMessage;
+
+// ---- Sub Hdr: 6 bytes --------------------------------------------------------
+
+// Tmp Expanded Message Header, which assigns different functionalities to a MessageType by defining additional subcategories for it
+entrypoint typedef struct _SubHdr {
+  UINT8 msg_type_ext;    // byte 0
+  UINT8 preserve;        // byte 1
+  UINT32BE msg_time_ns;  // bytes 2 to 5
+} SubHdr;
+
+// ---- Final Sequential Number Notification For Group Message: 21 bytes --------
+
+// Final Sequential Number Notification Message for Group, transmitting the group's last report sequence number to the futures commission merchant.
+entrypoint typedef struct _FinalSequentialNumberNotificationForGroupMessage {
+  SubHdr sub_hdr;              // bytes 0 to 5
+  UINT16BE wide_status_code;   // bytes 6 to 7
+  UINT8 part_id;               // byte 8
+  UINT32BE end_out_bound_num;  // bytes 9 to 12
+  UINT8 reserved_8[8];         // bytes 13 to 20
+} FinalSequentialNumberNotificationForGroupMessage;
+
+// ---- Request Logon Message: 15 bytes -----------------------------------------
+
+// Request logon, sent by the futures commission merchant to Taifex with the start sequence of the messages it requests Taifex to resend.
+entrypoint typedef struct _RequestLogonMessage {
+  UINT8 status_code;           // byte 0
+  UINT16BE append_no;          // bytes 1 to 2
+  UINT16BE fcm_id;             // bytes 3 to 4
+  UINT16BE session_id;         // bytes 5 to 6
+  UINT8 system_type;           // byte 7
+  UINT8 ap_code;               // byte 8
+  UINT8 key_value;             // byte 9
+  UINT32BE request_start_seq;  // bytes 10 to 13
+  UINT8 cancel_order_sec;      // byte 14
+} RequestLogonMessage;
+
+// ---- Resend Report Confirmed Message: 1 byte ---------------------------------
+
+// Resend report message confirmed, sent by the futures commission merchant to Taifex.
+entrypoint typedef struct _ResendReportConfirmedMessage {
+  UINT8 status_code;  // byte 0
+} ResendReportConfirmedMessage;
+
+// ---- Activate Application System Message: 4 bytes ----------------------------
+
+// Activate application system, sent by Taifex to the futures commission merchant.
+entrypoint typedef struct _ActivateApplicationSystemMessage {
+  UINT8 status_code;           // byte 0
+  UINT8 heart_bt_int;          // byte 1
+  UINT16BE max_flow_ctrl_cnt;  // bytes 2 to 3
+} ActivateApplicationSystemMessage;
+
+// ---- Activate Application System Confirmed Message: 1 byte -------------------
+
+// Activate application system confirmed, from which Taifex calculates the round trip time of the L50 message to determine the maximum peak flow per second.
+entrypoint typedef struct _ActivateApplicationSystemConfirmedMessage {
+  UINT8 status_code;  // byte 0
+} ActivateApplicationSystemConfirmedMessage;
+
+// ---- Logout Confirmed Message: 1 byte ----------------------------------------
+
+// Logout confirmed message, sent by Taifex to the futures commission merchant.
+entrypoint typedef struct _LogoutConfirmedMessage {
+  UINT8 status_code;  // byte 0
+} LogoutConfirmedMessage;
+
+// ---- Confirm Connection Message: 1 byte --------------------------------------
+
+// Confirm connection message, which either party sends when no new message has arrived from the other after the number of seconds set in the HeartBtInt field of L50.
+entrypoint typedef struct _ConfirmConnectionMessage {
+  UINT8 status_code;  // byte 0
+} ConfirmConnectionMessage;
+
+// ---- Connection Confirmed Message: 1 byte ------------------------------------
+
+// Connection confirmed message, with which a party answers the confirm connection message of the other.
+entrypoint typedef struct _ConnectionConfirmedMessage {
+  UINT8 status_code;  // byte 0
+} ConnectionConfirmedMessage;
+
+// ---- Trade Session Status Request Message: 5 bytes ---------------------------
+
+// Trade session status request, with which a futures commission merchant queries the trade session status and determines whether the trading system is halted.
+entrypoint typedef struct _TradeSessionStatusRequestMessage {
+  UINT8 status_code;                // byte 0
+  UINT16BE trade_req_id;            // bytes 1 to 2
+  UINT8 flow_group_no;              // byte 3
+  UINT8 subscription_request_type;  // byte 4
+} TradeSessionStatusRequestMessage;
+
+// ---- Trade Session Status Report Message: 5 bytes ----------------------------
+
+// Trade session status report, with which Taifex answers a trade session status request and reports each subsequent change of status.
+entrypoint typedef struct _TradeSessionStatusReportMessage {
+  UINT8 status_code;      // byte 0
+  UINT16BE trade_req_id;  // bytes 1 to 2
+  UINT8 flow_group_no;    // byte 3
+  UINT8 trade_status;     // byte 4
+} TradeSessionStatusReportMessage;
+
+// ---- Symbol Text: 20 bytes ---------------------------------------------------
+
+// Text product ID, naming a product by its Ascii character string symbol
+entrypoint typedef struct _SymbolText {
+  UINT8 symbol[20];  // bytes 0 to 19
+} SymbolText;
+
+// ---- Long Symbol Text: 40 bytes ----------------------------------------------
+
+// Text product ID in the long product format, naming a product by its Ascii character string symbol
+entrypoint typedef struct _LongSymbolText {
+  UINT8 long_symbol[40];  // bytes 0 to 39
+} LongSymbolText;
+
+// ---- Org Trans Time Msg Time: 6 bytes ----------------------------------------
+
+// Tmp time format, the seconds since the epoch and the thousandth of a second
+entrypoint typedef struct _OrgTransTimeMsgTime {
+  UINT32BE msg_time_epoch_s;  // bytes 0 to 3, signed, read here as unsigned
+  UINT16BE ms;                // bytes 4 to 5
+} OrgTransTimeMsgTime;
+
+// ---- Transact Time Msg Time: 6 bytes -----------------------------------------
+
+// Tmp time format, the seconds since the epoch and the thousandth of a second
+entrypoint typedef struct _TransactTimeMsgTime {
+  UINT32BE msg_time_epoch_s;  // bytes 0 to 3, signed, read here as unsigned
+  UINT16BE ms;                // bytes 4 to 5
+} TransactTimeMsgTime;
+
+// ---- Error Report Message: 26 bytes ------------------------------------------
+
+// Error report, with which Taifex rejects an order, quote or inquiry the futures commission merchant sent.
+entrypoint typedef struct _ErrorReportMessage {
+  UINT8 status_code;     // byte 0
+  UINT8 exec_type;       // byte 1
+  UINT16BE fcm_id;       // bytes 2 to 3
+  UINT8 order_no[5];     // bytes 4 to 8
+  UINT32BE ord_id;       // bytes 9 to 12
+  UINT8 user_define[8];  // bytes 13 to 20
+  UINT32BE rpt_seq;      // bytes 21 to 24
+  UINT8 side;            // byte 25
+} ErrorReportMessage;
+
+// ---- Bulletin Time Msg Time: 6 bytes -----------------------------------------
+
+// Tmp time format, the seconds since the epoch and the thousandth of a second
+entrypoint typedef struct _BulletinTimeMsgTime {
+  UINT32BE msg_time_epoch_s;  // bytes 0 to 3, signed, read here as unsigned
+  UINT16BE ms;                // bytes 4 to 5
+} BulletinTimeMsgTime;
+
+// ---- Symbol Num X: 4 bytes ---------------------------------------------------
+
+// FLEX Numeric Single Product Serial number, naming a FLEX product by the serial number of the XP08 product and time flow group definition file
+entrypoint typedef struct _SymbolNumX {
+  UINT32BE pseq;  // bytes 0 to 3
+} SymbolNumX;
+
+// ---- Symbol Txt X: 20 bytes --------------------------------------------------
+
+// FLEX Textual Single Product Symbol, naming a FLEX product by the product symbol of the XP08 product and time flow group definition file
+entrypoint typedef struct _SymbolTxtX {
+  UINT8 prod_id[20];  // bytes 0 to 19
+} SymbolTxtX;
+
+// ---- Leg Sym Symbol Num X: 4 bytes -------------------------------------------
+
+// FLEX Numeric Single Product Serial number, naming a FLEX product by the serial number of the XP08 product and time flow group definition file
+entrypoint typedef struct _LegSymSymbolNumX {
+  UINT32BE pseq;  // bytes 0 to 3
+} LegSymSymbolNumX;
+
+// ---- Leg Sym Symbol Txt X: 20 bytes ------------------------------------------
+
+// FLEX Textual Single Product Symbol, naming a FLEX product by the product symbol of the XP08 product and time flow group definition file
+entrypoint typedef struct _LegSymSymbolTxtX {
+  UINT8 prod_id[20];  // bytes 0 to 19
+} LegSymSymbolTxtX;
+
+// ---- Request For Supplementary Flex Group Report Message: 11 bytes -----------
+
+// Request for supplementary FLEX group report message, with which the futures commission merchant requests the group messages from request_start_seq plus one to end_out_bound_num.
+entrypoint typedef struct _RequestForSupplementaryFlexGroupReportMessage {
+  SubHdr sub_hdr;              // bytes 0 to 5
+  UINT8 part_id;               // byte 6
+  UINT32BE request_start_seq;  // bytes 7 to 10
+} RequestForSupplementaryFlexGroupReportMessage;
+
+// ---- Temporary Suspension Of Supplementary Flex Group Report Message: 7 bytes ----
+
+// Temporary suspension of supplementary FLEX group report message, with which the futures commission merchant pauses the supplementation of a partition.
+entrypoint typedef struct _TemporarySuspensionOfSupplementaryFlexGroupReportMessage {
+  SubHdr sub_hdr;  // bytes 0 to 5
+  UINT8 part_id;   // byte 6
+} TemporarySuspensionOfSupplementaryFlexGroupReportMessage;
+
+// ---- Flex Product Definition Request Message: 56 bytes -----------------------
+
+// FLEX Product Definition request message, which the futures commission merchant submits through the order and execution report line and Taifex answers with RX20.
+entrypoint typedef struct _FlexProductDefinitionRequestMessage {
+  SubHdr sub_hdr;               // bytes 0 to 5
+  UINT8 security_request_type;  // byte 6
+  UINT32BE security_req_id;     // bytes 7 to 10
+  UINT8 type_;                  // byte 11
+  UINT16BE fcm_id;              // bytes 12 to 13
+  UINT32BE investor_acno;       // bytes 14 to 17
+  UINT8 application_type;       // byte 18
+  UINT8 root_symbol[3];         // bytes 19 to 21
+  UINT8 expiry_type;            // byte 22
+  UINT8 contract_date[8];       // bytes 23 to 30
+  UINT32BE strike_price;        // bytes 31 to 34
+  UINT8 call_put_code;          // byte 35
+  UINT8 reserved_20[20];        // bytes 36 to 55
+} FlexProductDefinitionRequestMessage;
+
+// ---- Org Trans Time Msg Time X: 8 bytes --------------------------------------
+
+// Tmp Expanded Time Format, the seconds since the epoch and the billionth of a second, which the FLEX reports carry in place of msg_time
+entrypoint typedef struct _OrgTransTimeMsgTimeX {
+  UINT32BE msg_time_x_epoch_s;  // bytes 0 to 3
+  UINT32BE nanosecond;          // bytes 4 to 7
+} OrgTransTimeMsgTimeX;
+
+// ---- Transact Time Msg Time X: 8 bytes ---------------------------------------
+
+// Tmp Expanded Time Format, the seconds since the epoch and the billionth of a second, which the FLEX reports carry in place of msg_time
+entrypoint typedef struct _TransactTimeMsgTimeX {
+  UINT32BE msg_time_x_epoch_s;  // bytes 0 to 3
+  UINT32BE nanosecond;          // bytes 4 to 7
+} TransactTimeMsgTimeX;
+
+// ---- Flex Error Report Message: 47 bytes -------------------------------------
+
+// FLEX Error Report, with which Taifex rejects a FLEX order, quote or inquiry.
+entrypoint typedef struct _FlexErrorReportMessage {
+  SubHdr sub_hdr;             // bytes 0 to 5
+  UINT8 part_id;              // byte 6
+  UINT8 ori_message_type;     // byte 7
+  UINT16BE wide_status_code;  // bytes 8 to 9
+  UINT8 exec_type;            // byte 10
+  UINT16BE fcm_id;            // bytes 11 to 12
+  UINT8 order_no[5];          // bytes 13 to 17
+  UINT32BE ord_id;            // bytes 18 to 21
+  UINT8 user_define[8];       // bytes 22 to 29
+  UINT32BE rpt_seq;           // bytes 30 to 33
+  UINT8 side;                 // byte 34
+  UINT8 reserved_12[12];      // bytes 35 to 46
+} FlexErrorReportMessage;
+
+// ---- Flex Product Definition Message: 13 bytes -------------------------------
+
+// FLEX Product Definition message, with which Taifex answers a FLEX Product Definition request.
+entrypoint typedef struct _FlexProductDefinitionMessage {
+  SubHdr sub_hdr;               // bytes 0 to 5
+  UINT8 security_request_type;  // byte 6
+  UINT32BE security_req_id;     // bytes 7 to 10
+  UINT16BE wide_status_code;    // bytes 11 to 12
+} FlexProductDefinitionMessage;
+
+// ---- Bulletin Time Msg Time X: 8 bytes ---------------------------------------
+
+// Tmp Expanded Time Format, the seconds since the epoch and the billionth of a second, which the FLEX reports carry in place of msg_time
+entrypoint typedef struct _BulletinTimeMsgTimeX {
+  UINT32BE msg_time_x_epoch_s;  // bytes 0 to 3
+  UINT32BE nanosecond;          // bytes 4 to 7
+} BulletinTimeMsgTimeX;
+
+// ---- Message Tail: 1 byte ----------------------------------------------------
+
+// Tmp Message Tail, carrying the check sum of a message
+entrypoint typedef struct _MessageTail {
+  UINT8 check_sum;  // byte 0
+} MessageTail;
+

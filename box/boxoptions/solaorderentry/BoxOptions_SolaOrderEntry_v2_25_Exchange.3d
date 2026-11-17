@@ -1,0 +1,494 @@
+// Box Options Market Sola Order Entry
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out BoxOptions_SolaOrderEntry_v2_25_Exchange.3d
+//
+// What this definition does not state, and the model does:
+// - a Reassemble rule
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Outgoing Header: 30 bytes -----------------------------------------------
+
+// The header on all outgoing exchange messages
+entrypoint typedef struct _OutgoingHeader {
+  UINT8 message_type[2];         // bytes 0 to 1
+  UINT8 message_timestamp[6];    // bytes 2 to 7
+  UINT8 user_sequence_i_d[8];    // bytes 8 to 15
+  UINT8 exchange_message_id[6];  // bytes 16 to 21
+  UINT8 gap_sequence_i_d[2];     // bytes 22 to 23
+  UINT8 system_sequence_i_d[6];  // bytes 24 to 29
+} OutgoingHeader;
+
+// ---- Heartbeat Question: 20 bytes --------------------------------------------
+
+entrypoint typedef struct _HeartbeatQuestion {
+  UINT8 first_user_sequence_i_d[8];                       // bytes 0 to 7
+  UINT8 last_exchange_message_id_sent_to_participant[6];  // bytes 8 to 13
+  UINT8 time_local[6];                                    // bytes 14 to 19
+} HeartbeatQuestion;
+
+// ---- Out Of Sequence: 22 bytes -----------------------------------------------
+
+entrypoint typedef struct _OutOfSequence {
+  UINT8 received_user_sequence_id[8];       // bytes 0 to 7
+  UINT8 expected_last_user_sequence_id[8];  // bytes 8 to 15
+  UINT8 message_time_local[6];              // bytes 16 to 21
+} OutOfSequence;
+
+// ---- Technical Error Notice: 218 bytes ---------------------------------------
+
+entrypoint typedef struct _TechnicalErrorNotice {
+  UINT8 received_message_type[2];                 // bytes 0 to 1
+  UINT8 preceding_user_sequence_i_d_received[8];  // bytes 2 to 9
+  UINT8 error_code[4];                            // bytes 10 to 13
+  UINT8 error_position[4];                        // bytes 14 to 17
+  UINT8 error_message[100];                       // bytes 18 to 117
+  UINT8 start_of_message_in_error[100];           // bytes 118 to 217
+} TechnicalErrorNotice;
+
+// ---- Disconnection Instruction Acknowledgement: 12 bytes ---------------------
+
+entrypoint typedef struct _DisconnectionInstructionAcknowledgement {
+  UINT8 current_session_id[4];              // bytes 0 to 3
+  UINT8 last_user_sequence_id_received[8];  // bytes 4 to 11
+} DisconnectionInstructionAcknowledgement;
+
+// ---- Connection Acknowledgement: 12 bytes ------------------------------------
+
+// Stated by the guide as having the same number of bytes and format as TM, whose fields are written out here.
+entrypoint typedef struct _ConnectionAcknowledgement {
+  UINT8 current_session_id[4];              // bytes 0 to 3
+  UINT8 last_user_sequence_id_received[8];  // bytes 4 to 11
+} ConnectionAcknowledgement;
+
+// ---- Disconnection Acknowledgement: 12 bytes ---------------------------------
+
+// Stated by the guide as having the same number of bytes and format as TM, whose fields are written out here.
+entrypoint typedef struct _DisconnectionAcknowledgement {
+  UINT8 current_session_id[4];              // bytes 0 to 3
+  UINT8 last_user_sequence_id_received[8];  // bytes 4 to 11
+} DisconnectionAcknowledgement;
+
+// ---- End Of Transmission: 18 bytes -------------------------------------------
+
+entrypoint typedef struct _EndOfTransmission {
+  UINT8 ended_session_id[4];                // bytes 0 to 3
+  UINT8 last_user_sequence_id_received[8];  // bytes 4 to 11
+  UINT8 time[6];                            // bytes 12 to 17
+} EndOfTransmission;
+
+// ---- Error Notice: 358 bytes -------------------------------------------------
+
+entrypoint typedef struct _ErrorNotice {
+  UINT8 error_code[4];              // bytes 0 to 3
+  UINT8 error_description[100];     // bytes 4 to 103
+  UINT8 group[2];                   // bytes 104 to 105
+  UINT8 instrument_optional[4];     // bytes 106 to 109
+  UINT8 order_id_error_notice[20];  // bytes 110 to 129
+  UINT8 auction_i_d_optional[6];    // bytes 130 to 135
+  UINT8 original_message_type[2];   // bytes 136 to 137
+  UINT8 error_detail[200];          // bytes 138 to 337
+  UINT8 client_order_id[20];        // bytes 338 to 357
+} ErrorNotice;
+
+// ---- Bulk Quote Data Acknowledgement: 18 bytes -------------------------------
+
+entrypoint typedef struct _BulkQuoteDataAcknowledgement {
+  UINT8 group[2];      // bytes 0 to 1
+  UINT8 trader_id[8];  // bytes 2 to 9
+  UINT8 quote_i_d[8];  // bytes 10 to 17
+} BulkQuoteDataAcknowledgement;
+
+// ---- Clearing Data: 20 bytes -------------------------------------------------
+
+// The guide states these fields once, as Clearing Data, for every message that carries them.
+entrypoint typedef struct _ClearingData {
+  UINT8 clearing_instruction[12];  // bytes 0 to 11
+  UINT8 account_type;              // byte 12
+  UINT8 open_close;                // byte 13
+  UINT8 hedge_spec;                // byte 14
+  UINT8 clearing_operation_mode;   // byte 15
+  UINT8 clearing_destination[4];   // bytes 16 to 19
+} ClearingData;
+
+// ---- Owner Data: 71 bytes ----------------------------------------------------
+
+// The guide states these fields once, as Owner Data, for every message that carries them.
+entrypoint typedef struct _OwnerData {
+  UINT8 client_order_id[20];  // bytes 0 to 19
+  UINT8 pound_sign;           // byte 20
+  UINT8 memo[50];             // bytes 21 to 70
+} OwnerData;
+
+// ---- Order Acknowledgement: 167 bytes ----------------------------------------
+
+entrypoint typedef struct _OrderAcknowledgement {
+  UINT8 group[2];                    // bytes 0 to 1
+  UINT8 instrument_optional[4];      // bytes 2 to 5
+  UINT8 trader_id[8];                // bytes 6 to 13
+  UINT8 order_id[8];                 // bytes 14 to 21
+  UINT8 status;                      // byte 22
+  UINT8 verb_side;                   // byte 23
+  UINT8 quantity[8];                 // bytes 24 to 31
+  UINT8 assigned_price[10];          // bytes 32 to 41
+  ClearingData clearing_data;        // bytes 42 to 61
+  OwnerData owner_data;              // bytes 62 to 132
+  UINT8 original_order_id[8];        // bytes 133 to 140
+  UINT8 reserved_6[6];               // bytes 141 to 146
+  UINT8 additional_client_memo[16];  // bytes 147 to 162
+  UINT8 reserved_4[4];               // bytes 163 to 166
+} OrderAcknowledgement;
+
+// ---- Global Cancellation Confirmation: 11 bytes ------------------------------
+
+entrypoint typedef struct _GlobalCancellationConfirmation {
+  UINT8 group[2];              // bytes 0 to 1
+  UINT8 trader_id[8];          // bytes 2 to 9
+  UINT8 type_of_cancellation;  // byte 10
+} GlobalCancellationConfirmation;
+
+// ---- Improvement Order Acknowlegment: 167 bytes ------------------------------
+
+entrypoint typedef struct _ImprovementOrderAcknowlegment {
+  UINT8 group[2];                    // bytes 0 to 1
+  UINT8 instrument_optional[4];      // bytes 2 to 5
+  UINT8 trader_id[8];                // bytes 6 to 13
+  UINT8 order_id[8];                 // bytes 14 to 21
+  UINT8 status;                      // byte 22
+  UINT8 verb_side;                   // byte 23
+  UINT8 quantity[8];                 // bytes 24 to 31
+  UINT8 assigned_price[10];          // bytes 32 to 41
+  ClearingData clearing_data;        // bytes 42 to 61
+  OwnerData owner_data;              // bytes 62 to 132
+  UINT8 original_order_id[8];        // bytes 133 to 140
+  UINT8 auction_i_d[6];              // bytes 141 to 146
+  UINT8 additional_client_memo[16];  // bytes 147 to 162
+  UINT8 reserved_4[4];               // bytes 163 to 166
+} ImprovementOrderAcknowlegment;
+
+// ---- Order Modification Acknowledgement: 167 bytes ---------------------------
+
+entrypoint typedef struct _OrderModificationAcknowledgement {
+  UINT8 group[2];                    // bytes 0 to 1
+  UINT8 instrument_optional[4];      // bytes 2 to 5
+  UINT8 trader_id[8];                // bytes 6 to 13
+  UINT8 order_id[8];                 // bytes 14 to 21
+  UINT8 status;                      // byte 22
+  UINT8 verb_side;                   // byte 23
+  UINT8 quantity[8];                 // bytes 24 to 31
+  UINT8 assigned_price[10];          // bytes 32 to 41
+  ClearingData clearing_data;        // bytes 42 to 61
+  OwnerData owner_data;              // bytes 62 to 132
+  UINT8 original_order_id[8];        // bytes 133 to 140
+  UINT8 reserved_6[6];               // bytes 141 to 146
+  UINT8 additional_client_memo[16];  // bytes 147 to 162
+  UINT8 reserved_4[4];               // bytes 163 to 166
+} OrderModificationAcknowledgement;
+
+// ---- Standard Acknowledgement: 10 bytes --------------------------------------
+
+entrypoint typedef struct _StandardAcknowledgement {
+  UINT8 trader_id[8];              // bytes 0 to 7
+  UINT8 original_message_type[2];  // bytes 8 to 9
+} StandardAcknowledgement;
+
+// ---- Complex Order Auction Acknowledgement: 167 bytes ------------------------
+
+entrypoint typedef struct _ComplexOrderAuctionAcknowledgement {
+  UINT8 group[2];                    // bytes 0 to 1
+  UINT8 instrument_optional[4];      // bytes 2 to 5
+  UINT8 trader_id[8];                // bytes 6 to 13
+  UINT8 order_id[8];                 // bytes 14 to 21
+  UINT8 status;                      // byte 22
+  UINT8 verb_side;                   // byte 23
+  UINT8 quantity[8];                 // bytes 24 to 31
+  UINT8 assigned_price[10];          // bytes 32 to 41
+  ClearingData clearing_data;        // bytes 42 to 61
+  OwnerData owner_data;              // bytes 62 to 132
+  UINT8 original_order_id[8];        // bytes 133 to 140
+  UINT8 auction_i_d_optional[6];     // bytes 141 to 146
+  UINT8 additional_client_memo[16];  // bytes 147 to 162
+  UINT8 reserved_4[4];               // bytes 163 to 166
+} ComplexOrderAuctionAcknowledgement;
+
+// ---- Auction Or Improvement Cancellation Acknowledgement: 147 bytes ----------
+
+entrypoint typedef struct _AuctionOrImprovementCancellationAcknowledgement {
+  UINT8 group[2];                // bytes 0 to 1
+  UINT8 instrument_optional[4];  // bytes 2 to 5
+  UINT8 trader_id[8];            // bytes 6 to 13
+  UINT8 order_id[8];             // bytes 14 to 21
+  UINT8 status;                  // byte 22
+  UINT8 verb_side;               // byte 23
+  UINT8 quantity[8];             // bytes 24 to 31
+  UINT8 assigned_price[10];      // bytes 32 to 41
+  ClearingData clearing_data;    // bytes 42 to 61
+  OwnerData owner_data;          // bytes 62 to 132
+  UINT8 original_order_id[8];    // bytes 133 to 140
+  UINT8 auction_i_d[6];          // bytes 141 to 146
+} AuctionOrImprovementCancellationAcknowledgement;
+
+// ---- Order Cancellation Acknowledgement: 167 bytes ---------------------------
+
+entrypoint typedef struct _OrderCancellationAcknowledgement {
+  UINT8 group[2];                    // bytes 0 to 1
+  UINT8 instrument_optional[4];      // bytes 2 to 5
+  UINT8 trader_id[8];                // bytes 6 to 13
+  UINT8 order_id[8];                 // bytes 14 to 21
+  UINT8 status;                      // byte 22
+  UINT8 verb_side;                   // byte 23
+  UINT8 quantity[8];                 // bytes 24 to 31
+  UINT8 assigned_price[10];          // bytes 32 to 41
+  ClearingData clearing_data;        // bytes 42 to 61
+  OwnerData owner_data;              // bytes 62 to 132
+  UINT8 original_order_id[8];        // bytes 133 to 140
+  UINT8 auction_i_d[6];              // bytes 141 to 146
+  UINT8 additional_client_memo[16];  // bytes 147 to 162
+  UINT8 reserved_4[4];               // bytes 163 to 166
+} OrderCancellationAcknowledgement;
+
+// ---- Trader Status: 10 bytes -------------------------------------------------
+
+entrypoint typedef struct _TraderStatus {
+  UINT8 trader_id[8];        // bytes 0 to 7
+  UINT8 trader_lock_out;     // byte 8
+  UINT8 risk_team_lock_out;  // byte 9
+} TraderStatus;
+
+// ---- Directed Order Cancellation Notice: 41 bytes ----------------------------
+
+entrypoint typedef struct _DirectedOrderCancellationNotice {
+  UINT8 group[2];                // bytes 0 to 1
+  UINT8 instrument_optional[4];  // bytes 2 to 5
+  UINT8 trader_id[8];            // bytes 6 to 13
+  UINT8 verb_side;               // byte 14
+  UINT8 quantity[8];             // bytes 15 to 22
+  UINT8 price[10];               // bytes 23 to 32
+  UINT8 referenced_order_id[8];  // bytes 33 to 40
+} DirectedOrderCancellationNotice;
+
+// ---- Directed Order Notice: 41 bytes -----------------------------------------
+
+entrypoint typedef struct _DirectedOrderNotice {
+  UINT8 group[2];                // bytes 0 to 1
+  UINT8 instrument_optional[4];  // bytes 2 to 5
+  UINT8 trader_id[8];            // bytes 6 to 13
+  UINT8 verb_side;               // byte 14
+  UINT8 quantity[8];             // bytes 15 to 22
+  UINT8 price[10];               // bytes 23 to 32
+  UINT8 referenced_order_id[8];  // bytes 33 to 40
+} DirectedOrderNotice;
+
+// ---- Excluded Instrument Notice: 22 bytes ------------------------------------
+
+entrypoint typedef struct _ExcludedInstrumentNotice {
+  UINT8 group[2];              // bytes 0 to 1
+  UINT8 reserved_2[2];         // bytes 2 to 3
+  UINT8 trader_id[8];          // bytes 4 to 11
+  UINT8 second_reserved_2[2];  // bytes 12 to 13
+  UINT8 nb_of_instruments[4];  // bytes 14 to 17
+  UINT8 instrument[4];         // bytes 18 to 21
+} ExcludedInstrumentNotice;
+
+// ---- Group State Change: 3 bytes ---------------------------------------------
+
+entrypoint typedef struct _GroupStateChange {
+  UINT8 group[2];     // bytes 0 to 1
+  UINT8 group_state;  // byte 2
+} GroupStateChange;
+
+// ---- Leg Execution Notice: 257 bytes -----------------------------------------
+
+entrypoint typedef struct _LegExecutionNotice {
+  UINT8 group[2];                                    // bytes 0 to 1
+  UINT8 instrument_optional[4];                      // bytes 2 to 5
+  UINT8 trader_id[8];                                // bytes 6 to 13
+  UINT8 reference_id[8];                             // bytes 14 to 21
+  UINT8 verb_side;                                   // byte 22
+  UINT8 quantity_traded[8];                          // bytes 23 to 30
+  UINT8 trade_price[10];                             // bytes 31 to 40
+  UINT8 time_trade_hhmmss[6];                        // bytes 41 to 46
+  ClearingData clearing_data;                        // bytes 47 to 66
+  OwnerData owner_data;                              // bytes 67 to 137
+  UINT8 special_trade_indicator;                     // byte 138
+  UINT8 price_type;                                  // byte 139
+  UINT8 trade_type;                                  // byte 140
+  UINT8 auction_i_d_optional[6];                     // bytes 141 to 146
+  UINT8 trade_number[8];                             // bytes 147 to 154
+  UINT8 trade_memo[50];                              // bytes 155 to 204
+  UINT8 original_reference_id[8];                    // bytes 205 to 212
+  UINT8 id_code_for_the_counterpart_participant[4];  // bytes 213 to 216
+  UINT8 liquidity_status;                            // byte 217
+  UINT8 strategy_group[2];                           // bytes 218 to 219
+  UINT8 strategy_instrument_id[4];                   // bytes 220 to 223
+  UINT8 strategy_verb_side;                          // byte 224
+  UINT8 strategy_trade_number[8];                    // bytes 225 to 232
+  UINT8 leg_number[2];                               // bytes 233 to 234
+  UINT8 counterpart_account_type;                    // byte 235
+  UINT8 additional_client_memo[16];                  // bytes 236 to 251
+  UINT8 reserved_1;                                  // byte 252
+  UINT8 reserved_4[4];                               // bytes 253 to 256
+} LegExecutionNotice;
+
+// ---- Cancellation Of All Quotes Notices: 15 bytes ----------------------------
+
+entrypoint typedef struct _CancellationOfAllQuotesNotices {
+  UINT8 group[2];                // bytes 0 to 1
+  UINT8 instrument_optional[4];  // bytes 2 to 5
+  UINT8 trader_id[8];            // bytes 6 to 13
+  UINT8 quote_cancel_reason;     // byte 14
+} CancellationOfAllQuotesNotices;
+
+// ---- Quality Market Maker Notification: 65 bytes -----------------------------
+
+entrypoint typedef struct _QualityMarketMakerNotification {
+  UINT8 group[2];                 // bytes 0 to 1
+  UINT8 instrument_optional[4];   // bytes 2 to 5
+  UINT8 trader_id[8];             // bytes 6 to 13
+  UINT8 auction_i_d_optional[6];  // bytes 14 to 19
+  UINT8 verb;                     // byte 20
+  UINT8 auction_quantity[8];      // bytes 21 to 28
+  UINT8 auction_price[10];        // bytes 29 to 38
+  UINT8 quote_quantity[8];        // bytes 39 to 46
+  UINT8 quote_price[10];          // bytes 47 to 56
+  UINT8 qualified_quantity[8];    // bytes 57 to 64
+} QualityMarketMakerNotification;
+
+// ---- Execution Notice: 240 bytes ---------------------------------------------
+
+entrypoint typedef struct _ExecutionNotice {
+  UINT8 group[2];                                    // bytes 0 to 1
+  UINT8 instrument_optional[4];                      // bytes 2 to 5
+  UINT8 trader_id[8];                                // bytes 6 to 13
+  UINT8 reference_id[8];                             // bytes 14 to 21
+  UINT8 verb_side;                                   // byte 22
+  UINT8 quantity_traded[8];                          // bytes 23 to 30
+  UINT8 trade_price[10];                             // bytes 31 to 40
+  UINT8 time_of_the_trade_hhmmss[6];                 // bytes 41 to 46
+  ClearingData clearing_data;                        // bytes 47 to 66
+  OwnerData owner_data;                              // bytes 67 to 137
+  UINT8 special_trade_indicator;                     // byte 138
+  UINT8 price_type;                                  // byte 139
+  UINT8 trade_type;                                  // byte 140
+  UINT8 auction_i_d_optional[6];                     // bytes 141 to 146
+  UINT8 trade_number[8];                             // bytes 147 to 154
+  UINT8 trade_memo[50];                              // bytes 155 to 204
+  UINT8 original_reference_id[8];                    // bytes 205 to 212
+  UINT8 id_code_for_the_counterpart_participant[4];  // bytes 213 to 216
+  UINT8 liquidity_status;                            // byte 217
+  UINT8 counterpart_account_type;                    // byte 218
+  UINT8 additional_client_memo[16];                  // bytes 219 to 234
+  UINT8 reserved_1;                                  // byte 235
+  UINT8 reserved_4[4];                               // bytes 236 to 239
+} ExecutionNotice;
+
+// ---- Quote Notice: 75 bytes --------------------------------------------------
+
+entrypoint typedef struct _QuoteNotice {
+  UINT8 group[2];                                    // bytes 0 to 1
+  UINT8 instrument_optional[4];                      // bytes 2 to 5
+  UINT8 trader_id[8];                                // bytes 6 to 13
+  UINT8 reference_id_quote[8];                       // bytes 14 to 21
+  UINT8 verb_side;                                   // byte 22
+  UINT8 order_type;                                  // byte 23
+  UINT8 action;                                      // byte 24
+  UINT8 new_quantity[8];                             // bytes 25 to 32
+  UINT8 new_price[10];                               // bytes 33 to 42
+  UINT8 previous_quantity[8];                        // bytes 43 to 50
+  UINT8 previous_price[10];                          // bytes 51 to 60
+  UINT8 auction_i_d_optional[6];                     // bytes 61 to 66
+  UINT8 original_reference_id_quote_or_order_id[8];  // bytes 67 to 74
+} QuoteNotice;
+
+// ---- Execution Cancellation Notice: 240 bytes --------------------------------
+
+// Stated by the guide as having the same number of bytes and format as NT, whose fields are written out here.
+entrypoint typedef struct _ExecutionCancellationNotice {
+  UINT8 group[2];                                    // bytes 0 to 1
+  UINT8 instrument_optional[4];                      // bytes 2 to 5
+  UINT8 trader_id[8];                                // bytes 6 to 13
+  UINT8 reference_id[8];                             // bytes 14 to 21
+  UINT8 verb_side;                                   // byte 22
+  UINT8 quantity_traded[8];                          // bytes 23 to 30
+  UINT8 trade_price[10];                             // bytes 31 to 40
+  UINT8 time_of_the_trade_hhmmss[6];                 // bytes 41 to 46
+  ClearingData clearing_data;                        // bytes 47 to 66
+  OwnerData owner_data;                              // bytes 67 to 137
+  UINT8 special_trade_indicator;                     // byte 138
+  UINT8 price_type;                                  // byte 139
+  UINT8 trade_type;                                  // byte 140
+  UINT8 auction_i_d_optional[6];                     // bytes 141 to 146
+  UINT8 trade_number[8];                             // bytes 147 to 154
+  UINT8 trade_memo[50];                              // bytes 155 to 204
+  UINT8 original_reference_id[8];                    // bytes 205 to 212
+  UINT8 id_code_for_the_counterpart_participant[4];  // bytes 213 to 216
+  UINT8 liquidity_status;                            // byte 217
+  UINT8 counterpart_account_type;                    // byte 218
+  UINT8 additional_client_memo[16];                  // bytes 219 to 234
+  UINT8 reserved_1;                                  // byte 235
+  UINT8 reserved_4[4];                               // bytes 236 to 239
+} ExecutionCancellationNotice;
+
+// ---- Leg Execution Cancellation Notice: 257 bytes ----------------------------
+
+// Stated by the guide as having the same number of bytes and format as NL, whose fields are written out here.
+entrypoint typedef struct _LegExecutionCancellationNotice {
+  UINT8 group[2];                                    // bytes 0 to 1
+  UINT8 instrument_optional[4];                      // bytes 2 to 5
+  UINT8 trader_id[8];                                // bytes 6 to 13
+  UINT8 reference_id[8];                             // bytes 14 to 21
+  UINT8 verb_side;                                   // byte 22
+  UINT8 quantity_traded[8];                          // bytes 23 to 30
+  UINT8 trade_price[10];                             // bytes 31 to 40
+  UINT8 time_trade_hhmmss[6];                        // bytes 41 to 46
+  ClearingData clearing_data;                        // bytes 47 to 66
+  OwnerData owner_data;                              // bytes 67 to 137
+  UINT8 special_trade_indicator;                     // byte 138
+  UINT8 price_type;                                  // byte 139
+  UINT8 trade_type;                                  // byte 140
+  UINT8 auction_i_d_optional[6];                     // bytes 141 to 146
+  UINT8 trade_number[8];                             // bytes 147 to 154
+  UINT8 trade_memo[50];                              // bytes 155 to 204
+  UINT8 original_reference_id[8];                    // bytes 205 to 212
+  UINT8 id_code_for_the_counterpart_participant[4];  // bytes 213 to 216
+  UINT8 liquidity_status;                            // byte 217
+  UINT8 strategy_group[2];                           // bytes 218 to 219
+  UINT8 strategy_instrument_id[4];                   // bytes 220 to 223
+  UINT8 strategy_verb_side;                          // byte 224
+  UINT8 strategy_trade_number[8];                    // bytes 225 to 232
+  UINT8 leg_number[2];                               // bytes 233 to 234
+  UINT8 counterpart_account_type;                    // byte 235
+  UINT8 additional_client_memo[16];                  // bytes 236 to 251
+  UINT8 reserved_1;                                  // byte 252
+  UINT8 reserved_4[4];                               // bytes 253 to 256
+} LegExecutionCancellationNotice;
+
+// ---- Order Cancellation Notice By System: 167 bytes --------------------------
+
+// Stated by the guide as having the same number of bytes and format as KZ, whose fields are written out here.
+entrypoint typedef struct _OrderCancellationNoticeBySystem {
+  UINT8 group[2];                    // bytes 0 to 1
+  UINT8 instrument_optional[4];      // bytes 2 to 5
+  UINT8 trader_id[8];                // bytes 6 to 13
+  UINT8 order_id[8];                 // bytes 14 to 21
+  UINT8 status;                      // byte 22
+  UINT8 verb_side;                   // byte 23
+  UINT8 quantity[8];                 // bytes 24 to 31
+  UINT8 assigned_price[10];          // bytes 32 to 41
+  ClearingData clearing_data;        // bytes 42 to 61
+  OwnerData owner_data;              // bytes 62 to 132
+  UINT8 original_order_id[8];        // bytes 133 to 140
+  UINT8 auction_i_d[6];              // bytes 141 to 146
+  UINT8 additional_client_memo[16];  // bytes 147 to 162
+  UINT8 reserved_4[4];               // bytes 163 to 166
+} OrderCancellationNoticeBySystem;
+

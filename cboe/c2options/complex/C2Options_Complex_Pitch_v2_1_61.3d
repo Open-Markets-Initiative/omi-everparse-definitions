@@ -1,0 +1,300 @@
+// Chicago Board Options Exchange Complex
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out C2Options_Complex_Pitch_v2_1_61.3d
+//
+// What this definition does not state, and the model does:
+// - the dispatch that chooses a message by its type
+// - a run filling what frames it
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Packet Header: 8 bytes --------------------------------------------------
+
+entrypoint typedef struct _PacketHeader {
+  UINT16 length;        // bytes 0 to 1
+  UINT8 message_count;  // byte 2
+  UINT8 unit_;          // byte 3
+  UINT32 sequence;      // bytes 4 to 7
+} PacketHeader;
+
+// ---- Message Header: 2 bytes -------------------------------------------------
+
+entrypoint typedef struct _MessageHeader {
+  UINT8 message_length;  // byte 0
+  UINT8 message_type;    // byte 1
+} MessageHeader;
+
+// ---- Time Message: 4 bytes ---------------------------------------------------
+
+// A Time message is immediately generated and sent when there is a PITCH event for a given clock second. If there is no PITCH event for a given clock second, then no Time message is sent for that second. All subsequent time offset fields for the same unit will use the new Time value as the base until another Time message is received for the same unit.
+entrypoint typedef struct _TimeMessage {
+  UINT32 time;  // bytes 0 to 3
+} TimeMessage;
+
+// ---- Unit Clear Message: 4 bytes ---------------------------------------------
+
+// The Unit Clear message instructs feed recipients to clear all orders for the Cboe complex book in the unit specified in the Sequenced Unit Header. For Equities only, this message will be sent at startup each day. It would also be distributed in certain recovery events such as a data center fail-over.
+entrypoint typedef struct _UnitClearMessage {
+  UINT32 time_offset;  // bytes 0 to 3
+} UnitClearMessage;
+
+// ---- Transaction Begin Message: 4 bytes --------------------------------------
+
+// The Transaction Begin message indicates any subsequent messages, up to the accompanying Transaction End message, are all part of the same transaction block. All PITCH messages corresponding to such an event would be included between a Transaction Begin and Transaction End. Any PITCH Message Type may be included in a transaction block and there is no guarantee that the messages apply to the same price level or even the same Symbol. Transaction Begin messages do not alter the book and can be ignored if messages are being used solely to build a book.
+entrypoint typedef struct _TransactionBeginMessage {
+  UINT32 time_offset;  // bytes 0 to 3
+} TransactionBeginMessage;
+
+// ---- Transaction End Message: 4 bytes ----------------------------------------
+
+// The Transaction End message indicates that a transaction indicated by a previous Transaction Begin message has completed. Transaction End messages do not alter the book and can be ignored if messages are being used solely to build a book.
+entrypoint typedef struct _TransactionEndMessage {
+  UINT32 time_offset;  // bytes 0 to 3
+} TransactionEndMessage;
+
+// ---- Symbol Mapping Message: 36 bytes ----------------------------------------
+
+// A Symbol Mapping message is used to map the 6 character multicast feed symbol field to an OSI symbol and Underlying. These messages are not sequenced (sequence = 0) and are sent continuously through the day at variable rates as bandwidth allows.
+entrypoint typedef struct _SymbolMappingMessage {
+  UINT8 feed_symbol[6];    // bytes 0 to 5
+  UINT8 osi_symbol[21];    // bytes 6 to 26
+  UINT8 symbol_condition;  // byte 27
+  UINT8 underlying[8];     // bytes 28 to 35
+} SymbolMappingMessage;
+
+// ---- Add Order Long Message: 32 bytes ----------------------------------------
+
+// An Add Order message represents a newly accepted visible order on the Cboe complex book. It includes a day-specific Order Id assigned by Cboe to the complex order.
+entrypoint typedef struct _AddOrderLongMessage {
+  UINT32 time_offset;                    // bytes 0 to 3
+  UINT64 order_id;                       // bytes 4 to 11
+  UINT8 side_indicator;                  // byte 12
+  UINT32 quantity_long;                  // bytes 13 to 16
+  UINT8 complex_instrument_id_short[6];  // bytes 17 to 22
+  UINT64 signed_price_long;              // bytes 23 to 30, signed, read here as unsigned
+  UINT8 reserved_1;                      // byte 31
+} AddOrderLongMessage;
+
+// ---- Add Order Short Message: 24 bytes ---------------------------------------
+
+// An Add Order Short message represents a newly accepted visible order on the Cboe complex book whose Price fits in a Binary Signed Short Price and Quantity fits in an unsigned 16-bit integer.
+entrypoint typedef struct _AddOrderShortMessage {
+  UINT32 time_offset;                    // bytes 0 to 3
+  UINT64 order_id;                       // bytes 4 to 11
+  UINT8 side_indicator;                  // byte 12
+  UINT16 quantity_short;                 // bytes 13 to 14
+  UINT8 complex_instrument_id_short[6];  // bytes 15 to 20
+  UINT16 signed_price_short;             // bytes 21 to 22, signed, read here as unsigned
+  UINT8 reserved_1;                      // byte 23
+} AddOrderShortMessage;
+
+// ---- Add Order Expanded Message: 48 bytes ------------------------------------
+
+// An Add Order Expanded message represents a newly accepted visible order on the Cboe complex book and carries additional attribution fields (Participant ID, Customer Indicator, Client ID).
+entrypoint typedef struct _AddOrderExpandedMessage {
+  UINT32 time_offset;                   // bytes 0 to 3
+  UINT64 order_id;                      // bytes 4 to 11
+  UINT8 side_indicator;                 // byte 12
+  UINT32 quantity_long;                 // bytes 13 to 16
+  UINT8 complex_instrument_id_long[8];  // bytes 17 to 24
+  UINT64 signed_price_long;             // bytes 25 to 32, signed, read here as unsigned
+  UINT8 reserved_1;                     // byte 33
+  UINT8 participant_id[4];              // bytes 34 to 37
+  UINT8 customer_indicator;             // byte 38
+  UINT8 client_id[4];                   // bytes 39 to 42
+  UINT8 reserved_5[5];                  // bytes 43 to 47
+} AddOrderExpandedMessage;
+
+// ---- Order Executed Message: 25 bytes ----------------------------------------
+
+// Order Executed messages are sent when a visible complex order on the Cboe complex book is executed in whole or in part. The execution price equals the limit order price found in the original Add Order message or the limit order price in the latest Modify Order message referencing the Order Id.
+entrypoint typedef struct _OrderExecutedMessage {
+  UINT32 time_offset;        // bytes 0 to 3
+  UINT64 order_id;           // bytes 4 to 11
+  UINT32 executed_quantity;  // bytes 12 to 15
+  UINT64 execution_id;       // bytes 16 to 23
+  UINT8 trade_condition;     // byte 24
+} OrderExecutedMessage;
+
+// ---- Order Executed At Price Size Message: 37 bytes --------------------------
+
+// Order Execution at Price/Size messages are sent when a complex order on the Cboe complex book is executed in whole or in part at a different price than the limit price on the original Add Order message or the limit order price in the latest Modify Order message referencing the Order Id. If the Remaining Quantity field contains a 0 the complex order should be completely removed from the complex book. Order Execution at Price/Size messages may also be sent in the event the existing size for Order Id is not equal to Executed Quantity + Remaining Quantity. In this case the complex order should be prioritized the same as a new complex order.
+entrypoint typedef struct _OrderExecutedAtPriceSizeMessage {
+  UINT32 time_offset;         // bytes 0 to 3
+  UINT64 order_id;            // bytes 4 to 11
+  UINT32 executed_quantity;   // bytes 12 to 15
+  UINT32 remaining_quantity;  // bytes 16 to 19
+  UINT64 execution_id;        // bytes 20 to 27
+  UINT64 signed_price_long;   // bytes 28 to 35, signed, read here as unsigned
+  UINT8 trade_condition;      // byte 36
+} OrderExecutedAtPriceSizeMessage;
+
+// ---- Reduce Size Long Message: 16 bytes --------------------------------------
+
+// Reduce Size messages are sent when a complex order on the Cboe complex book is partially reduced.
+entrypoint typedef struct _ReduceSizeLongMessage {
+  UINT32 time_offset;             // bytes 0 to 3
+  UINT64 order_id;                // bytes 4 to 11
+  UINT32 canceled_quantity_long;  // bytes 12 to 15
+} ReduceSizeLongMessage;
+
+// ---- Reduce Size Short Message: 14 bytes -------------------------------------
+
+// Reduce Size Short messages are sent when a complex order on the Cboe complex book is partially reduced and the canceled quantity fits in an unsigned 16-bit integer.
+entrypoint typedef struct _ReduceSizeShortMessage {
+  UINT32 time_offset;              // bytes 0 to 3
+  UINT64 order_id;                 // bytes 4 to 11
+  UINT16 canceled_quantity_short;  // bytes 12 to 13
+} ReduceSizeShortMessage;
+
+// ---- Modify Order Long Message: 25 bytes -------------------------------------
+
+// The Modify Order message is sent whenever an open complex order is visibly modified. The Order Id refers to the Order Id of the original Add Order message. Note that Modify Order messages that appear to be no ops (i.e. they do not appear to modify any relevant fields) will still lose priority.
+entrypoint typedef struct _ModifyOrderLongMessage {
+  UINT32 time_offset;        // bytes 0 to 3
+  UINT64 order_id;           // bytes 4 to 11
+  UINT32 quantity_long;      // bytes 12 to 15
+  UINT64 signed_price_long;  // bytes 16 to 23, signed, read here as unsigned
+  UINT8 reserved_1;          // byte 24
+} ModifyOrderLongMessage;
+
+// ---- Modify Order Short Message: 17 bytes ------------------------------------
+
+// The Modify Order Short message is sent whenever an open complex order is visibly modified and both the new price and quantity fit in short fields.
+entrypoint typedef struct _ModifyOrderShortMessage {
+  UINT32 time_offset;         // bytes 0 to 3
+  UINT64 order_id;            // bytes 4 to 11
+  UINT16 quantity_short;      // bytes 12 to 13
+  UINT16 signed_price_short;  // bytes 14 to 15, signed, read here as unsigned
+  UINT8 reserved_1;           // byte 16
+} ModifyOrderShortMessage;
+
+// ---- Delete Order Message: 12 bytes ------------------------------------------
+
+// The Delete Order message is sent whenever a booked order is cancelled or leaves the order book. The Order Id refers to the Order Id of the original Add Order message. An order that is deleted from the book may return to the book later under certain circumstances. Therefore, a Delete Order message does not indicate that a given Order Id will not be sent again on a subsequent Add Order message.
+entrypoint typedef struct _DeleteOrderMessage {
+  UINT32 time_offset;  // bytes 0 to 3
+  UINT64 order_id;     // bytes 4 to 11
+} DeleteOrderMessage;
+
+// ---- Trade Long Message: 40 bytes --------------------------------------------
+
+// The Trade message provides information about executions of complex order auctions on the Cboe complex book. A Trade message can also be sent when an auction executes against a non-displayed order, such as a contra response. Trade messages are necessary to calculate Cboe execution-based data. Trade messages do not alter the complex book and can be ignored if messages are being used solely to build a complex book. No Add Order message is sent for complex auction orders, and thus, no order modification messages may be sent when complex auctions are executed. Instead, a Trade message is sent whenever a complex auction is executed in whole or in part.
+entrypoint typedef struct _TradeLongMessage {
+  UINT32 time_offset;                    // bytes 0 to 3
+  UINT64 order_id;                       // bytes 4 to 11
+  UINT8 side_indicator;                  // byte 12
+  UINT32 quantity_long;                  // bytes 13 to 16
+  UINT8 complex_instrument_id_short[6];  // bytes 17 to 22
+  UINT64 signed_price_long;              // bytes 23 to 30, signed, read here as unsigned
+  UINT64 execution_id;                   // bytes 31 to 38
+  UINT8 trade_condition;                 // byte 39
+} TradeLongMessage;
+
+// ---- Trade Short Message: 32 bytes -------------------------------------------
+
+// The Trade Short message is the short-price/short-quantity variant of the Trade message, used when both the execution price and quantity fit in short fields.
+entrypoint typedef struct _TradeShortMessage {
+  UINT32 time_offset;                    // bytes 0 to 3
+  UINT64 order_id;                       // bytes 4 to 11
+  UINT8 side_indicator;                  // byte 12
+  UINT16 quantity_short;                 // bytes 13 to 14
+  UINT8 complex_instrument_id_short[6];  // bytes 15 to 20
+  UINT16 signed_price_short;             // bytes 21 to 22, signed, read here as unsigned
+  UINT64 execution_id;                   // bytes 23 to 30
+  UINT8 trade_condition;                 // byte 31
+} TradeShortMessage;
+
+// ---- Auction Notification Message: 45 bytes ----------------------------------
+
+// Auction Notification messages are used to disseminate order details of a complex auction. Auctions will be available for a defined period of time known as the exposure period.
+entrypoint typedef struct _AuctionNotificationMessage {
+  UINT32 time_offset;                    // bytes 0 to 3
+  UINT8 complex_instrument_id_short[6];  // bytes 4 to 9
+  UINT64 auction_id;                     // bytes 10 to 17
+  UINT8 notification_auction_type;       // byte 18
+  UINT8 side;                            // byte 19
+  UINT64 signed_price_long;              // bytes 20 to 27, signed, read here as unsigned
+  UINT32 quantity_long;                  // bytes 28 to 31
+  UINT8 customer_indicator;              // byte 32
+  UINT8 participant_id[4];               // bytes 33 to 36
+  UINT32 auction_end_offset;             // bytes 37 to 40
+  UINT8 client_id[4];                    // bytes 41 to 44
+} AuctionNotificationMessage;
+
+// ---- Auction Cancel Message: 12 bytes ----------------------------------------
+
+// Auction Cancel messages are used to disseminate the cancelation of an earlier Auction Notification message as a result of a user cancelation of the original complex auction, a user modification request to change the complex auction price or increase the original complex auction quantity, a fading of the NBBO or to cancel any remaining complex auction quantity from the original Auction Notification following the complex auction termination. A user request to modify the complex auction price or to increase the original complex auction quantity will result in a cancelation of the complex auction followed by a new Auction Notification message. Auction Cancel messages will not be issued for complex auction quantity decrements.
+entrypoint typedef struct _AuctionCancelMessage {
+  UINT32 time_offset;  // bytes 0 to 3
+  UINT64 auction_id;   // bytes 4 to 11
+} AuctionCancelMessage;
+
+// ---- Auction Trade Message: 32 bytes -----------------------------------------
+
+// Auction Trade messages are used to disseminate executions resulting from a complex auction.
+entrypoint typedef struct _AuctionTradeMessage {
+  UINT32 time_offset;        // bytes 0 to 3
+  UINT64 auction_id;         // bytes 4 to 11
+  UINT64 execution_id;       // bytes 12 to 19
+  UINT64 signed_price_long;  // bytes 20 to 27, signed, read here as unsigned
+  UINT32 quantity_long;      // bytes 28 to 31
+} AuctionTradeMessage;
+
+// ---- Trading Status Message: 16 bytes ----------------------------------------
+
+// The Trading Status message is used to indicate the current trading status of a complex instrument. A Trading Status message will be sent whenever a complex instrument trading status changes. The Trading Status field will be used to represent the status of the RTH (9:30 a.m. ET - 4:15 p.m. ET) and Curb sessions. The GTH Trading Status field will be used to represent the status of series that trade during the GTH session (C1 Only). The GTH session runs from 8:15 p.m. to 9:25 a.m. ET for SPX and VIX series (C1 only).
+entrypoint typedef struct _TradingStatusMessage {
+  UINT32 time_offset;          // bytes 0 to 3
+  UINT8 complex_symbol_id[6];  // bytes 4 to 9
+  UINT8 reserved_2[2];         // bytes 10 to 11
+  UINT8 trading_status;        // byte 12
+  UINT8 reserved_1;            // byte 13
+  UINT8 gth_trading_status;    // byte 14
+  UINT8 second_reserved_1;     // byte 15
+} TradingStatusMessage;
+
+// ---- Options Auction Update Message: 62 bytes --------------------------------
+
+// Options Auction Update messages are used to disseminate price and size information during the Opening and Re-Opening (halt) process for complex instruments. The Options Auction Update messages are sent every 5 seconds during an opening period.
+entrypoint typedef struct _OptionsAuctionUpdateMessage {
+  UINT32 time_offset;                   // bytes 0 to 3
+  UINT8 complex_instrument_id_long[8];  // bytes 4 to 11
+  UINT8 auction_type;                   // byte 12
+  UINT64 reference_price;               // bytes 13 to 20
+  UINT32 buy_contracts;                 // bytes 21 to 24
+  UINT32 sell_contracts;                // bytes 25 to 28
+  UINT64 indicative_price;              // bytes 29 to 36, signed, read here as unsigned
+  UINT64 auction_only_price;            // bytes 37 to 44, signed, read here as unsigned
+  UINT8 opening_condition;              // byte 45
+  UINT64 composite_market_bid_price;    // bytes 46 to 53, signed, read here as unsigned
+  UINT64 composite_market_offer_price;  // bytes 54 to 61, signed, read here as unsigned
+} OptionsAuctionUpdateMessage;
+
+// ---- Auction Summary Message: 25 bytes ---------------------------------------
+
+// Auction Summary messages are used to disseminate the results of an auction of a complex instrument. An Opening or Re-Opening Auction Summary message for each complex instrument is sent at the conclusion of its Opening or Re-Opening auction and represents Cboe opening price.
+entrypoint typedef struct _AuctionSummaryMessage {
+  UINT32 time_offset;                   // bytes 0 to 3
+  UINT8 complex_instrument_id_long[8];  // bytes 4 to 11
+  UINT8 auction_type;                   // byte 12
+  UINT64 signed_price_long;             // bytes 13 to 20, signed, read here as unsigned
+  UINT32 quantity_long;                 // bytes 21 to 24
+} AuctionSummaryMessage;
+
+// ---- End Of Session Message: 4 bytes -----------------------------------------
+
+// The End of Session message is sent for each unit when the unit shuts down. No more sequenced messages will be delivered for this unit, but heartbeats from the unit may be received.
+entrypoint typedef struct _EndOfSessionMessage {
+  UINT32 time_offset;  // bytes 0 to 3
+} EndOfSessionMessage;
+

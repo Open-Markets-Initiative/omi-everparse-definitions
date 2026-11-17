@@ -1,0 +1,611 @@
+// Gie da Papier w Warto ciowych w Warszawie Warsaw Stock Exchange Full Depth Replay
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out Wse_ReplayFullDepth_v1_7_6_20_Tcp.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a run of a stated number of entries
+// - a field read in bits
+//
+// License: MIT No Attribution
+
+// ---- Message Header: 42 bytes ------------------------------------------------
+
+// Every market data message opens with the same 42 byte header
+entrypoint typedef struct _MessageHeader {
+  UINT16 message_length;     // bytes 0 to 1
+  UINT16 message_type;       // bytes 2 to 3
+  UINT16 message_version;    // bytes 4 to 5
+  UINT32 sequence_number;    // bytes 6 to 9
+  UINT64 timestamp;          // bytes 10 to 17
+  UINT64 source_timestamp;   // bytes 18 to 25
+  UINT8 is_encrypted;        // byte 26
+  UINT64 encryption_offset;  // bytes 27 to 34
+  UINT32 encryption_key_id;  // bytes 35 to 38
+  UINT16 session_id;         // bytes 39 to 40
+  UINT8 stream_id;           // byte 41
+} MessageHeader;
+
+// ---- Calendar Exception: 9 bytes ---------------------------------------------
+
+// Upcoming calendar day exception
+entrypoint typedef struct _CalendarException {
+  UINT32 calendar_id;              // bytes 0 to 3
+  UINT32 calendar_exception_date;  // bytes 4 to 7
+  UINT8 calendar_exception_type;   // byte 8
+} CalendarException;
+
+// ---- Tick Table Entry: 20 bytes ----------------------------------------------
+
+// Tick size definition
+entrypoint typedef struct _TickTableEntry {
+  UINT64 tick_size;      // bytes 0 to 7, signed, read here as unsigned
+  UINT64 lower_bound;    // bytes 8 to 15, signed, read here as unsigned
+  UINT32 tick_table_id;  // bytes 16 to 19
+} TickTableEntry;
+
+// ---- Collar Table Entry: 54 bytes --------------------------------------------
+
+// Collar table definition
+entrypoint typedef struct _CollarTableEntry {
+  UINT32 collar_table_id;     // bytes 0 to 3
+  UINT8 collar_mode;          // byte 4
+  UINT8 collar_expression;    // byte 5
+  UINT64 collar_lower_bound;  // bytes 6 to 13, signed, read here as unsigned
+  UINT64 collar_value;        // bytes 14 to 21, signed, read here as unsigned
+  UINT64 collar_lower_bid;    // bytes 22 to 29, signed, read here as unsigned
+  UINT64 collar_upper_bid;    // bytes 30 to 37, signed, read here as unsigned
+  UINT64 collar_upper_ask;    // bytes 38 to 45, signed, read here as unsigned
+  UINT64 collar_lower_ask;    // bytes 46 to 53, signed, read here as unsigned
+} CollarTableEntry;
+
+// ---- Trading Phase Schedule Entry: 40 bytes ----------------------------------
+
+// Trading phase definition
+entrypoint typedef struct _TradingPhaseScheduleEntry {
+  UINT32 trading_schedule_id;                       // bytes 0 to 3
+  UINT32 trading_phase_id;                          // bytes 4 to 7
+  UINT8 trading_phase_settlement_cycle;             // byte 8
+  UINT8 trading_phase_max_block_settlement_cycle;   // byte 9
+  UINT32 static_collar_volatility_auction_id;       // bytes 10 to 13
+  UINT32 dynamic_collar_volatility_auction_id;      // bytes 14 to 17
+  UINT64 trading_phase_start_time;                  // bytes 18 to 25
+  UINT8 trading_phase_type;                         // byte 26
+  UINT8 uncrossing;                                 // byte 27
+  UINT32 ext_static_collar_volatility_auction_id;   // bytes 28 to 31
+  UINT32 ext_dynamic_collar_volatility_auction_id;  // bytes 32 to 35
+  UINT32 clat_id;                                   // bytes 36 to 39
+} TradingPhaseScheduleEntry;
+
+// ---- Market Structure: 63 bytes ----------------------------------------------
+
+// Messages defining the Trading Venue s market structure
+entrypoint typedef struct _MarketStructure {
+  UINT32 id;                // bytes 0 to 3
+  UINT32 parent_id;         // bytes 4 to 7
+  UINT8 mic[4];             // bytes 8 to 11
+  UINT8 name[50];           // bytes 12 to 61
+  UINT8 market_model_type;  // byte 62
+} MarketStructure;
+
+// ---- Collar Group: 20 bytes --------------------------------------------------
+
+// Message defining a collar group
+entrypoint typedef struct _CollarGroup {
+  UINT32 id;                             // bytes 0 to 3
+  UINT32 order_static_collar_table_id;   // bytes 4 to 7
+  UINT32 order_dynamic_collar_table_id;  // bytes 8 to 11
+  UINT32 trade_static_collar_table_id;   // bytes 12 to 15
+  UINT32 trade_dynamic_collar_table_id;  // bytes 16 to 19
+} CollarGroup;
+
+// ---- External Underlying: 113 bytes ------------------------------------------
+
+// The message contains a list of underlyings not traded in WATS. It concerns underlyings for derivatives and structured products
+entrypoint typedef struct _ExternalUnderlying {
+  UINT32 external_underlying_id;      // bytes 0 to 3
+  UINT8 product_identification[30];   // bytes 4 to 33
+  UINT8 product_identification_type;  // byte 34
+  UINT8 product_code[20];             // bytes 35 to 54
+  UINT8 product_name[50];             // bytes 55 to 104
+  UINT8 mic[4];                       // bytes 105 to 108
+  UINT16 nominal_currency;            // bytes 109 to 110
+  UINT16 trading_currency;            // bytes 111 to 112
+} ExternalUnderlying;
+
+// ---- Instrument: 699 bytes ---------------------------------------------------
+
+// Definition of a financial instrument
+entrypoint typedef struct _Instrument {
+  UINT32 instrument_id;                 // bytes 0 to 3
+  UINT8 product_type;                   // byte 4
+  UINT8 product_subtype;                // byte 5
+  UINT32 first_trading_date;            // bytes 6 to 9
+  UINT32 last_trading_date;             // bytes 10 to 13
+  UINT32 product_id;                    // bytes 14 to 17
+  UINT16 currency;                      // bytes 18 to 19
+  UINT64 iceberg_min_value;             // bytes 20 to 27, signed, read here as unsigned
+  UINT32 lot_size;                      // bytes 28 to 31
+  UINT8 price_expression_type;          // byte 32
+  UINT32 calendar_id;                   // bytes 33 to 36
+  UINT32 market_structure_id;           // bytes 37 to 40
+  UINT32 tick_table_id;                 // bytes 41 to 44
+  UINT32 reference_instrument_id;       // bytes 45 to 48
+  UINT32 collar_group_id;               // bytes 49 to 52
+  UINT32 trading_schedule_id;           // bytes 53 to 56
+  UINT8 description[64];                // bytes 57 to 120
+  UINT8 mic[4];                         // bytes 121 to 124
+  UINT64 nominal_value;                 // bytes 125 to 132, signed, read here as unsigned
+  UINT8 nominal_value_type;             // byte 133
+  UINT64 multiplier;                    // bytes 134 to 141, signed, read here as unsigned
+  UINT64 strike_price;                  // bytes 142 to 149, signed, read here as unsigned
+  UINT16 strike_price_currency;         // bytes 150 to 151
+  UINT8 product_identification[30];     // bytes 152 to 181
+  UINT8 product_identification_type;    // byte 182
+  UINT32 settlement_calendar_id;        // bytes 183 to 186
+  UINT8 bond_coupon_type;               // byte 187
+  UINT64 pre_trade_check_min_price;     // bytes 188 to 195, signed, read here as unsigned
+  UINT64 pre_trade_check_max_price;     // bytes 196 to 203, signed, read here as unsigned
+  UINT64 pre_trade_check_min_quantity;  // bytes 204 to 211
+  UINT64 pre_trade_check_max_quantity;  // bytes 212 to 219
+  UINT64 pre_trade_check_max_value;     // bytes 220 to 227, signed, read here as unsigned
+  UINT64 pre_trade_check_min_value;     // bytes 228 to 235, signed, read here as unsigned
+  UINT8 liquidity;                      // byte 236
+  UINT8 market_model_type;              // byte 237
+  UINT8 issuer[150];                    // bytes 238 to 387
+  UINT16 issuer_reg_country;            // bytes 388 to 389
+  UINT32 underlying_instrument_id;      // bytes 390 to 393
+  UINT8 product_code[20];               // bytes 394 to 413
+  UINT8 cfi[6];                         // bytes 414 to 419
+  UINT8 fisn[35];                       // bytes 420 to 454
+  UINT64 issue_size;                    // bytes 455 to 462
+  UINT16 nominal_currency;              // bytes 463 to 464
+  UINT8 us_indicator;                   // byte 465
+  UINT32 expiry_date;                   // bytes 466 to 469
+  UINT8 version_number;                 // byte 470
+  UINT8 settlement_type;                // byte 471
+  UINT8 option_type;                    // byte 472
+  UINT8 exercise_type;                  // byte 473
+  UINT8 product_name[50];               // bytes 474 to 523
+  UINT64 reference_price;               // bytes 524 to 531, signed, read here as unsigned
+  UINT8 status;                         // byte 532
+  UINT32 initial_phase_id;              // bytes 533 to 536
+  UINT64 threshold_max;                 // bytes 537 to 544, signed, read here as unsigned
+  UINT64 threshold_min;                 // bytes 545 to 552, signed, read here as unsigned
+  UINT8 is_leverage;                    // byte 553
+  UINT64 accrued_interest_value;        // bytes 554 to 561, signed, read here as unsigned
+  UINT8 kid[128];                       // bytes 562 to 689
+  UINT32 kid_issue_date;                // bytes 690 to 693
+  UINT8 value_at_risk;                  // byte 694
+  UINT32 external_underlying_id;        // bytes 695 to 698
+} Instrument;
+
+// ---- Accrued Interest Table Entry: 16 bytes ----------------------------------
+
+// Message describing an accrued interest table entry
+entrypoint typedef struct _AccruedInterestTableEntry {
+  UINT32 product_id;                          // bytes 0 to 3
+  UINT32 accrued_interest_table_entry_date;   // bytes 4 to 7
+  UINT64 accrued_interest_table_entry_value;  // bytes 8 to 15, signed, read here as unsigned
+} AccruedInterestTableEntry;
+
+// ---- Indexation Table Entry: 16 bytes ----------------------------------------
+
+// Message describing an indexation table entry
+entrypoint typedef struct _IndexationTableEntry {
+  UINT32 product_id;                    // bytes 0 to 3
+  UINT32 indexation_table_entry_date;   // bytes 4 to 7
+  UINT64 indexation_table_entry_value;  // bytes 8 to 15, signed, read here as unsigned
+} IndexationTableEntry;
+
+// ---- Product Identification Public Product Identification: 31 bytes ----------
+
+// PublicProductIdentification
+entrypoint typedef struct _ProductIdentificationPublicProductIdentification {
+  UINT8 product_identification[30];   // bytes 0 to 29
+  UINT8 product_identification_type;  // byte 30
+} ProductIdentificationPublicProductIdentification;
+
+// ---- Index Underlying: 32 bytes ----------------------------------------------
+
+// IndexUnderlying
+entrypoint typedef struct _IndexUnderlying {
+  ProductIdentificationPublicProductIdentification product_identification_public_product_identification;  // bytes 0 to 30
+  UINT8 index_underlying_type;                                                                            // byte 31
+} IndexUnderlying;
+
+// ---- Public Product Identification: 31 bytes ---------------------------------
+
+// PublicProductIdentification
+entrypoint typedef struct _PublicProductIdentification {
+  UINT8 product_identification[30];   // bytes 0 to 29
+  UINT8 product_identification_type;  // byte 30
+} PublicProductIdentification;
+
+// ---- Auction Summary: 21 bytes -----------------------------------------------
+
+// Auction summary, including auction price and quantity
+entrypoint typedef struct _AuctionSummary {
+  UINT32 instrument_id;  // bytes 0 to 3
+  UINT64 price;          // bytes 4 to 11, signed, read here as unsigned
+  UINT64 quantity;       // bytes 12 to 19
+  UINT8 auction_type;    // byte 20
+} AuctionSummary;
+
+// ---- Auction Update: 68 bytes ------------------------------------------------
+
+// Updates IMP/IMV and BBO during an auction
+entrypoint typedef struct _AuctionUpdate {
+  UINT32 instrument_id;               // bytes 0 to 3
+  UINT64 indicative_matching_price;   // bytes 4 to 11, signed, read here as unsigned
+  UINT64 indicative_matching_volume;  // bytes 12 to 19
+  UINT64 total_sell_quantity_at_imp;  // bytes 20 to 27
+  UINT64 total_buy_quantity_at_imp;   // bytes 28 to 35
+  UINT64 best_sell_level;             // bytes 36 to 43, signed, read here as unsigned
+  UINT64 best_sell_level_quantity;    // bytes 44 to 51
+  UINT64 best_buy_level;              // bytes 52 to 59, signed, read here as unsigned
+  UINT64 best_buy_level_quantity;     // bytes 60 to 67
+} AuctionUpdate;
+
+// ---- Price Level: 31 bytes ---------------------------------------------------
+
+// PriceLevel
+entrypoint typedef struct _PriceLevel {
+  UINT8 is_encrypted;        // byte 0
+  UINT64 encryption_offset;  // bytes 1 to 8
+  UINT32 encryption_key_id;  // bytes 9 to 12
+  UINT64 price;              // bytes 13 to 20, signed, read here as unsigned
+  UINT64 quantity;           // bytes 21 to 28
+  UINT16 order_count;        // bytes 29 to 30
+} PriceLevel;
+
+// ---- Top Price Level Update: 23 bytes ----------------------------------------
+
+// BBO Level 1
+entrypoint typedef struct _TopPriceLevelUpdate {
+  UINT32 instrument_id;  // bytes 0 to 3
+  UINT64 price;          // bytes 4 to 11, signed, read here as unsigned
+  UINT64 quantity;       // bytes 12 to 19
+  UINT8 side;            // byte 20
+  UINT16 order_count;    // bytes 21 to 22
+} TopPriceLevelUpdate;
+
+// ---- Trade: 178 bytes --------------------------------------------------------
+
+// Enriched trade report
+entrypoint typedef struct _Trade {
+  UINT32 instrument_id;                                       // bytes 0 to 3
+  UINT64 trade_settlement_value;                              // bytes 4 to 11, signed, read here as unsigned
+  UINT32 settlement_date;                                     // bytes 12 to 15
+  UINT64 trading_timestamp;                                   // bytes 16 to 23
+  PublicProductIdentification public_product_identification;  // bytes 24 to 54
+  UINT64 price;                                               // bytes 55 to 62, signed, read here as unsigned
+  UINT16 price_currency;                                      // bytes 63 to 64
+  UINT8 price_notation;                                       // byte 65
+  UINT64 quantity;                                            // bytes 66 to 73
+  UINT64 trade_nominal_value;                                 // bytes 74 to 81, signed, read here as unsigned
+  UINT16 nominal_currency;                                    // bytes 82 to 83
+  UINT8 mic[4];                                               // bytes 84 to 87
+  UINT64 publication_timestamp;                               // bytes 88 to 95
+  UINT32 trade_id;                                            // bytes 96 to 99
+  UINT8 trade_to_be_cleared;                                  // byte 100
+  UINT64 pct_change;                                          // bytes 101 to 108, signed, read here as unsigned
+  UINT64 vwap;                                                // bytes 109 to 116, signed, read here as unsigned
+  UINT64 no_trades;                                           // bytes 117 to 124
+  UINT64 total_volume;                                        // bytes 125 to 132
+  UINT64 total_value;                                         // bytes 133 to 140, signed, read here as unsigned
+  UINT64 opening_price;                                       // bytes 141 to 148, signed, read here as unsigned
+  UINT64 max_price;                                           // bytes 149 to 156, signed, read here as unsigned
+  UINT64 min_price;                                           // bytes 157 to 164, signed, read here as unsigned
+  UINT8 mmt_market_mechanism;                                 // byte 165
+  UINT8 mmt_trading_mode;                                     // byte 166
+  UINT8 mmt_transaction_category;                             // byte 167
+  UINT8 mmt_negotiation_indicator;                            // byte 168
+  UINT8 mmt_agency_cross_trade_indicator;                     // byte 169
+  UINT8 mmt_modification_indicator;                           // byte 170
+  UINT8 mmt_benchmark_reference_price_indicator;              // byte 171
+  UINT8 mmt_special_dividend_indicator;                       // byte 172
+  UINT8 mmt_off_book_automated_indicator;                     // byte 173
+  UINT8 mmt_ordinary_trade_indicator;                         // byte 174
+  UINT8 mmt_algorithmic_indicator;                            // byte 175
+  UINT8 mmt_post_trade_deferral_reason;                       // byte 176
+  UINT8 mmt_post_trade_deferral_type;                         // byte 177
+} Trade;
+
+// ---- Position Report: 40 bytes -----------------------------------------------
+
+// Report of open positions
+entrypoint typedef struct _PositionReport {
+  PublicProductIdentification public_product_identification;  // bytes 0 to 30
+  UINT8 pos_type;                                             // byte 31
+  UINT32 open_positions;                                      // bytes 32 to 35
+  UINT32 trade_id;                                            // bytes 36 to 39
+} PositionReport;
+
+// ---- Instrument Status Change: 11 bytes --------------------------------------
+
+// Start of a new trading phase
+entrypoint typedef struct _InstrumentStatusChange {
+  UINT32 instrument_id;      // bytes 0 to 3
+  UINT32 trading_phase_id;   // bytes 4 to 7
+  UINT8 trading_phase_type;  // byte 8
+  UINT8 status;              // byte 9
+  UINT8 stressed_market;     // byte 10
+} InstrumentStatusChange;
+
+// ---- Order Collars: 45 bytes -------------------------------------------------
+
+// New order price collars
+entrypoint typedef struct _OrderCollars {
+  UINT32 instrument_id;  // bytes 0 to 3
+  UINT8 collar_type;     // byte 4
+  UINT64 price;          // bytes 5 to 12, signed, read here as unsigned
+  UINT64 lower_bid;      // bytes 13 to 20, signed, read here as unsigned
+  UINT64 upper_bid;      // bytes 21 to 28, signed, read here as unsigned
+  UINT64 lower_ask;      // bytes 29 to 36, signed, read here as unsigned
+  UINT64 upper_ask;      // bytes 37 to 44, signed, read here as unsigned
+} OrderCollars;
+
+// ---- Trade Collars: 29 bytes -------------------------------------------------
+
+// New trade price collars
+entrypoint typedef struct _TradeCollars {
+  UINT32 instrument_id;  // bytes 0 to 3
+  UINT8 collar_type;     // byte 4
+  UINT64 price;          // bytes 5 to 12, signed, read here as unsigned
+  UINT64 lower;          // bytes 13 to 20, signed, read here as unsigned
+  UINT64 upper;          // bytes 21 to 28, signed, read here as unsigned
+} TradeCollars;
+
+// ---- Instrument Summary: 95 bytes --------------------------------------------
+
+// Provides brief instrument summary
+entrypoint typedef struct _InstrumentSummary {
+  UINT32 instrument_id;                 // bytes 0 to 3
+  UINT64 last_traded_price;             // bytes 4 to 11, signed, read here as unsigned
+  UINT64 closing_price;                 // bytes 12 to 19, signed, read here as unsigned
+  UINT8 closing_price_type;             // byte 20
+  UINT64 adjusted_closing_price;        // bytes 21 to 28, signed, read here as unsigned
+  UINT8 adjusted_closing_price_reason;  // byte 29
+  UINT64 pct_change;                    // bytes 30 to 37, signed, read here as unsigned
+  UINT64 vwap;                          // bytes 38 to 45, signed, read here as unsigned
+  UINT64 no_trades;                     // bytes 46 to 53
+  UINT64 total_volume;                  // bytes 54 to 61
+  UINT64 total_value;                   // bytes 62 to 69, signed, read here as unsigned
+  UINT64 opening_price;                 // bytes 70 to 77, signed, read here as unsigned
+  UINT64 max_price;                     // bytes 78 to 85, signed, read here as unsigned
+  UINT64 min_price;                     // bytes 86 to 93, signed, read here as unsigned
+  UINT8 is_correction;                  // byte 94
+} InstrumentSummary;
+
+// ---- Clob Instrument: 119 bytes ----------------------------------------------
+
+// SingleInstrumentSummary
+entrypoint typedef struct _ClobInstrument {
+  UINT32 instrument_id;                 // bytes 0 to 3
+  UINT8 market_model_type;              // byte 4
+  UINT64 last_traded_price;             // bytes 5 to 12, signed, read here as unsigned
+  UINT64 closing_price;                 // bytes 13 to 20, signed, read here as unsigned
+  UINT8 closing_price_type;             // byte 21
+  UINT64 adjusted_closing_price;        // bytes 22 to 29, signed, read here as unsigned
+  UINT8 adjusted_closing_price_reason;  // byte 30
+  UINT64 pct_change;                    // bytes 31 to 38, signed, read here as unsigned
+  UINT64 vwap;                          // bytes 39 to 46, signed, read here as unsigned
+  UINT64 no_trades;                     // bytes 47 to 54
+  UINT64 total_volume;                  // bytes 55 to 62
+  UINT64 total_value;                   // bytes 63 to 70, signed, read here as unsigned
+  UINT64 opening_price;                 // bytes 71 to 78, signed, read here as unsigned
+  UINT64 max_price;                     // bytes 79 to 86, signed, read here as unsigned
+  UINT64 min_price;                     // bytes 87 to 94, signed, read here as unsigned
+  UINT64 settlement_price;              // bytes 95 to 102, signed, read here as unsigned
+  UINT64 settlement_value;              // bytes 103 to 110, signed, read here as unsigned
+  UINT32 end_trading_date;              // bytes 111 to 114
+  UINT32 last_trade_date;               // bytes 115 to 118
+} ClobInstrument;
+
+// ---- Cross Instrument: 119 bytes ---------------------------------------------
+
+// SingleInstrumentSummary
+entrypoint typedef struct _CrossInstrument {
+  UINT32 instrument_id;                 // bytes 0 to 3
+  UINT8 market_model_type;              // byte 4
+  UINT64 last_traded_price;             // bytes 5 to 12, signed, read here as unsigned
+  UINT64 closing_price;                 // bytes 13 to 20, signed, read here as unsigned
+  UINT8 closing_price_type;             // byte 21
+  UINT64 adjusted_closing_price;        // bytes 22 to 29, signed, read here as unsigned
+  UINT8 adjusted_closing_price_reason;  // byte 30
+  UINT64 pct_change;                    // bytes 31 to 38, signed, read here as unsigned
+  UINT64 vwap;                          // bytes 39 to 46, signed, read here as unsigned
+  UINT64 no_trades;                     // bytes 47 to 54
+  UINT64 total_volume;                  // bytes 55 to 62
+  UINT64 total_value;                   // bytes 63 to 70, signed, read here as unsigned
+  UINT64 opening_price;                 // bytes 71 to 78, signed, read here as unsigned
+  UINT64 max_price;                     // bytes 79 to 86, signed, read here as unsigned
+  UINT64 min_price;                     // bytes 87 to 94, signed, read here as unsigned
+  UINT64 settlement_price;              // bytes 95 to 102, signed, read here as unsigned
+  UINT64 settlement_value;              // bytes 103 to 110, signed, read here as unsigned
+  UINT32 end_trading_date;              // bytes 111 to 114
+  UINT32 last_trade_date;               // bytes 115 to 118
+} CrossInstrument;
+
+// ---- Block Instrument: 119 bytes ---------------------------------------------
+
+// SingleInstrumentSummary
+entrypoint typedef struct _BlockInstrument {
+  UINT32 instrument_id;                 // bytes 0 to 3
+  UINT8 market_model_type;              // byte 4
+  UINT64 last_traded_price;             // bytes 5 to 12, signed, read here as unsigned
+  UINT64 closing_price;                 // bytes 13 to 20, signed, read here as unsigned
+  UINT8 closing_price_type;             // byte 21
+  UINT64 adjusted_closing_price;        // bytes 22 to 29, signed, read here as unsigned
+  UINT8 adjusted_closing_price_reason;  // byte 30
+  UINT64 pct_change;                    // bytes 31 to 38, signed, read here as unsigned
+  UINT64 vwap;                          // bytes 39 to 46, signed, read here as unsigned
+  UINT64 no_trades;                     // bytes 47 to 54
+  UINT64 total_volume;                  // bytes 55 to 62
+  UINT64 total_value;                   // bytes 63 to 70, signed, read here as unsigned
+  UINT64 opening_price;                 // bytes 71 to 78, signed, read here as unsigned
+  UINT64 max_price;                     // bytes 79 to 86, signed, read here as unsigned
+  UINT64 min_price;                     // bytes 87 to 94, signed, read here as unsigned
+  UINT64 settlement_price;              // bytes 95 to 102, signed, read here as unsigned
+  UINT64 settlement_value;              // bytes 103 to 110, signed, read here as unsigned
+  UINT32 end_trading_date;              // bytes 111 to 114
+  UINT32 last_trade_date;               // bytes 115 to 118
+} BlockInstrument;
+
+// ---- Hybrid Instrument: 119 bytes --------------------------------------------
+
+// SingleInstrumentSummary
+entrypoint typedef struct _HybridInstrument {
+  UINT32 instrument_id;                 // bytes 0 to 3
+  UINT8 market_model_type;              // byte 4
+  UINT64 last_traded_price;             // bytes 5 to 12, signed, read here as unsigned
+  UINT64 closing_price;                 // bytes 13 to 20, signed, read here as unsigned
+  UINT8 closing_price_type;             // byte 21
+  UINT64 adjusted_closing_price;        // bytes 22 to 29, signed, read here as unsigned
+  UINT8 adjusted_closing_price_reason;  // byte 30
+  UINT64 pct_change;                    // bytes 31 to 38, signed, read here as unsigned
+  UINT64 vwap;                          // bytes 39 to 46, signed, read here as unsigned
+  UINT64 no_trades;                     // bytes 47 to 54
+  UINT64 total_volume;                  // bytes 55 to 62
+  UINT64 total_value;                   // bytes 63 to 70, signed, read here as unsigned
+  UINT64 opening_price;                 // bytes 71 to 78, signed, read here as unsigned
+  UINT64 max_price;                     // bytes 79 to 86, signed, read here as unsigned
+  UINT64 min_price;                     // bytes 87 to 94, signed, read here as unsigned
+  UINT64 settlement_price;              // bytes 95 to 102, signed, read here as unsigned
+  UINT64 settlement_value;              // bytes 103 to 110, signed, read here as unsigned
+  UINT32 end_trading_date;              // bytes 111 to 114
+  UINT32 last_trade_date;               // bytes 115 to 118
+} HybridInstrument;
+
+// ---- Product Summary: 629 bytes ----------------------------------------------
+
+// Session day product summary
+entrypoint typedef struct _ProductSummary {
+  ClobInstrument clob_instrument;      // bytes 0 to 118
+  CrossInstrument cross_instrument;    // bytes 119 to 237
+  BlockInstrument block_instrument;    // bytes 238 to 356
+  HybridInstrument hybrid_instrument;  // bytes 357 to 475
+  UINT8 product_identification_type;   // byte 476
+  UINT8 product_identification[30];    // bytes 477 to 506
+  UINT32 product_id;                   // bytes 507 to 510
+  UINT8 mic[4];                        // bytes 511 to 514
+  UINT64 accumulated_interest;         // bytes 515 to 522, signed, read here as unsigned
+  UINT64 interest_rate;                // bytes 523 to 530, signed, read here as unsigned
+  UINT16 currency;                     // bytes 531 to 532
+  UINT32 session_date;                 // bytes 533 to 536
+  UINT64 trading_value_currency;       // bytes 537 to 544, signed, read here as unsigned
+  UINT8 status;                        // byte 545
+  UINT16 sector;                       // bytes 546 to 547
+  UINT8 market;                        // byte 548
+  UINT8 marker_price_change;           // byte 549
+  UINT8 lower_liquidity;               // byte 550
+  UINT64 product_summary_multiplier;   // bytes 551 to 558, signed, read here as unsigned
+  UINT64 dividend_rate;                // bytes 559 to 566, signed, read here as unsigned
+  UINT64 delta;                        // bytes 567 to 574, signed, read here as unsigned
+  UINT64 gamma;                        // bytes 575 to 582, signed, read here as unsigned
+  UINT64 rho;                          // bytes 583 to 590, signed, read here as unsigned
+  UINT64 theta;                        // bytes 591 to 598, signed, read here as unsigned
+  UINT64 vega;                         // bytes 599 to 606, signed, read here as unsigned
+  UINT64 volatility;                   // bytes 607 to 614, signed, read here as unsigned
+  UINT64 options_strike_price;         // bytes 615 to 622, signed, read here as unsigned
+  UINT8 dividend;                      // byte 623
+  UINT8 subscription_right;            // byte 624
+  UINT8 interim_dividend_right;        // byte 625
+  UINT8 split;                         // byte 626
+  UINT8 quotation_system;              // byte 627
+  UINT8 liquidity_support_pge;         // byte 628
+} ProductSummary;
+
+// ---- News: 890 bytes ---------------------------------------------------------
+
+// News message
+entrypoint typedef struct _News {
+  UINT32 market_structure_id;  // bytes 0 to 3
+  UINT32 news_id;              // bytes 4 to 7
+  UINT8 title[80];             // bytes 8 to 87
+  UINT8 entry_number;          // byte 88
+  UINT8 total_;                // byte 89
+  UINT8 text[800];             // bytes 90 to 889
+} News;
+
+// ---- Trading Session Status: 13 bytes ----------------------------------------
+
+// The Trading Session Status provides information on the status of a market and on a trading day events
+entrypoint typedef struct _TradingSessionStatus {
+  UINT8 market_id[4];           // bytes 0 to 3
+  UINT32 market_structure_id;   // bytes 4 to 7
+  UINT8 trading_session_event;  // byte 8
+  UINT32 date;                  // bytes 9 to 12
+} TradingSessionStatus;
+
+// ---- Test Event: 201 bytes ---------------------------------------------------
+
+// Test event
+entrypoint typedef struct _TestEvent {
+  UINT8 scenario_name[200];  // bytes 0 to 199
+  UINT8 event_type;          // byte 200
+} TestEvent;
+
+// ---- Order Add: 30 bytes -----------------------------------------------------
+
+// New (limit) order added to order book
+entrypoint typedef struct _OrderAdd {
+  UINT64 public_order_id;  // bytes 0 to 7
+  UINT32 instrument_id;    // bytes 8 to 11
+  UINT8 side;              // byte 12
+  UINT64 price;            // bytes 13 to 20, signed, read here as unsigned
+  UINT64 quantity;         // bytes 21 to 28
+  UINT8 mm_quote;          // byte 29
+} OrderAdd;
+
+// ---- Order Modify: 30 bytes --------------------------------------------------
+
+// Order modified
+entrypoint typedef struct _OrderModify {
+  UINT32 instrument_id;    // bytes 0 to 3
+  UINT64 public_order_id;  // bytes 4 to 11
+  UINT64 price;            // bytes 12 to 19, signed, read here as unsigned
+  UINT64 quantity;         // bytes 20 to 27
+  UINT8 priority_flag;     // byte 28
+  UINT8 side;              // byte 29
+} OrderModify;
+
+// ---- Order Cancel: 13 bytes --------------------------------------------------
+
+// Order deleted
+entrypoint typedef struct _OrderCancel {
+  UINT32 instrument_id;    // bytes 0 to 3
+  UINT64 public_order_id;  // bytes 4 to 11
+  UINT8 side;              // byte 12
+} OrderCancel;
+
+// ---- Order Execute: 41 bytes -------------------------------------------------
+
+// Execution report
+entrypoint typedef struct _OrderExecute {
+  UINT64 quantity;            // bytes 0 to 7
+  UINT32 instrument_id;       // bytes 8 to 11
+  UINT64 public_order_id;     // bytes 12 to 19
+  UINT32 trade_id;            // bytes 20 to 23
+  UINT64 execution_price;     // bytes 24 to 31, signed, read here as unsigned
+  UINT64 execution_quantity;  // bytes 32 to 39
+  UINT8 side;                 // byte 40
+} OrderExecute;
+
+// ---- Order Book Event: 5 bytes -----------------------------------------------
+
+// Order book event for given instrument
+entrypoint typedef struct _OrderBookEvent {
+  UINT32 instrument_id;         // bytes 0 to 3
+  UINT8 order_book_event_type;  // byte 4
+} OrderBookEvent;
+

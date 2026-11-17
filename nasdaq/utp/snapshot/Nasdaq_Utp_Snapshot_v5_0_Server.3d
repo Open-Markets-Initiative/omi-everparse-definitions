@@ -1,0 +1,259 @@
+// National Association of Securities Dealers Automated Quotations (Nasdaq) Snapshot
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out Nasdaq_Utp_Snapshot_v5_0_Server.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - the dispatch that chooses a message by its type
+// - a field present only on a condition
+// - a length prefix framing what follows
+//
+// License: MIT No Attribution
+
+// ---- Server Tcp Packet Header: 3 bytes ---------------------------------------
+
+// Packet header of a packet sent by the server
+entrypoint typedef struct _ServerTcpPacketHeader {
+  UINT16BE packet_length;    // bytes 0 to 1
+  UINT8 server_packet_type;  // byte 2
+} ServerTcpPacketHeader;
+
+// ---- Message Header: 2 bytes -------------------------------------------------
+
+// UTP Snap-Shot message header fixed Version + Message Category prefix
+entrypoint typedef struct _MessageHeader {
+  UINT8 version;           // byte 0
+  UINT8 message_category;  // byte 1
+} MessageHeader;
+
+// ---- Issue Symbol Directory Message: 87 bytes --------------------------------
+
+// Issue Symbol Directory Message providing reference data for NASDAQ-listed securities. To be retired in Q1 2027 in favor of the Enhanced Issue Symbol Directory Message (Type F).
+entrypoint typedef struct _IssueSymbolDirectoryMessage {
+  UINT8 market_center_originator;        // byte 0
+  UINT8 sub_market_center_id;            // byte 1
+  UINT64BE sip_timestamp;                // bytes 2 to 9
+  UINT64BE timestamp_1;                  // bytes 10 to 17
+  UINT64BE participant_token;            // bytes 18 to 25
+  UINT8 symbol[11];                      // bytes 26 to 36
+  UINT8 old_symbol[11];                  // bytes 37 to 47
+  UINT8 issue_name[30];                  // bytes 48 to 77
+  UINT8 issue_type;                      // byte 78
+  UINT8 issue_subtype[2];                // bytes 79 to 80
+  UINT8 market_tier;                     // byte 81
+  UINT8 authenticity;                    // byte 82
+  UINT8 short_sale_threshold_indicator;  // byte 83
+  UINT16BE round_lot_size;               // bytes 84 to 85
+  UINT8 financial_status_indicator;      // byte 86
+} IssueSymbolDirectoryMessage;
+
+// ---- Enhanced Issue Symbol Directory Message: 114 bytes ----------------------
+
+// Enhanced Issue Symbol Directory Message sent alongside the Issue Symbol Directory Message (Type B) in support of the SEC MPI Tick Rule and Extended Operational Hours.
+entrypoint typedef struct _EnhancedIssueSymbolDirectoryMessage {
+  UINT8 market_center_originator;                          // byte 0
+  UINT8 sub_market_center_id;                              // byte 1
+  UINT64BE sip_timestamp;                                  // bytes 2 to 9
+  UINT64BE timestamp_1;                                    // bytes 10 to 17
+  UINT64BE participant_token;                              // bytes 18 to 25
+  UINT8 symbol[11];                                        // bytes 26 to 36
+  UINT8 old_symbol[11];                                    // bytes 37 to 47
+  UINT8 issue_name[30];                                    // bytes 48 to 77
+  UINT8 issue_type;                                        // byte 78
+  UINT8 issue_subtype[2];                                  // bytes 79 to 80
+  UINT8 market_tier;                                       // byte 81
+  UINT8 authenticity;                                      // byte 82
+  UINT8 short_sale_threshold_indicator;                    // byte 83
+  UINT16BE round_lot_size;                                 // bytes 84 to 85
+  UINT8 financial_status_indicator;                        // byte 86
+  UINT8 etp_indicator;                                     // byte 87
+  UINT8 new_issue_indicator;                               // byte 88
+  UINT8 mpi_tick;                                          // byte 89
+  UINT8 trading_state;                                     // byte 90
+  UINT8 halt_reason[6];                                    // bytes 91 to 96
+  UINT8 reg_sho_action;                                    // byte 97
+  UINT64BE consolidated_prior_day_close_price;             // bytes 98 to 105
+  UINT64BE listing_market_official_prior_day_close_price;  // bytes 106 to 113
+} EnhancedIssueSymbolDirectoryMessage;
+
+// ---- Reg Sho Short Sale Price Test Restricted Indicator Message: 38 bytes ----
+
+// Reg SHO Restriction Indicator Message indicating the Rule 201 status for NASDAQ-listed securities. Snap-Shot sends a full spin of all active securities reflecting the current Reg SHO Action.
+entrypoint typedef struct _RegShoShortSalePriceTestRestrictedIndicatorMessage {
+  UINT8 market_center_originator;  // byte 0
+  UINT8 sub_market_center_id;      // byte 1
+  UINT64BE sip_timestamp;          // bytes 2 to 9
+  UINT64BE timestamp_1;            // bytes 10 to 17
+  UINT64BE participant_token;      // bytes 18 to 25
+  UINT8 symbol[11];                // bytes 26 to 36
+  UINT8 reg_sho_action;            // byte 37
+} RegShoShortSalePriceTestRestrictedIndicatorMessage;
+
+// ---- Cross Sro Trading Action Message: 56 bytes ------------------------------
+
+// Cross SRO Trading Action message. In Snap-Shot, sent only for NASDAQ-listed issues currently halted, in a Quote Resumption, or in a LULD pause. Absence implies the issue is eligible for normal quoting and trading.
+entrypoint typedef struct _CrossSroTradingActionMessage {
+  UINT8 market_center_originator;           // byte 0
+  UINT8 sub_market_center_id;               // byte 1
+  UINT64BE sip_timestamp;                   // bytes 2 to 9
+  UINT64BE timestamp_1;                     // bytes 10 to 17
+  UINT64BE participant_token;               // bytes 18 to 25
+  UINT8 symbol[11];                         // bytes 26 to 36
+  UINT8 trading_action_code;                // byte 37
+  UINT32BE trading_action_sequence_number;  // bytes 38 to 41
+  UINT64BE action_time;                     // bytes 42 to 49
+  UINT8 reason_for_the_trading_action[6];   // bytes 50 to 55
+} CrossSroTradingActionMessage;
+
+// ---- Market Center Trading Action Message: 47 bytes --------------------------
+
+// Market Center Trading Action message sent when a UTP participant invokes or releases a market center-specific trading halt for a NASDAQ-listed security. Other participants may continue to quote and trade.
+entrypoint typedef struct _MarketCenterTradingActionMessage {
+  UINT8 market_center_originator;  // byte 0
+  UINT8 sub_market_center_id;      // byte 1
+  UINT64BE sip_timestamp;          // bytes 2 to 9
+  UINT64BE timestamp_1;            // bytes 10 to 17
+  UINT64BE participant_token;      // bytes 18 to 25
+  UINT8 symbol[11];                // bytes 26 to 36
+  UINT8 trading_action_code;       // byte 37
+  UINT64BE action_time;            // bytes 38 to 45
+  UINT8 market_center_identifier;  // byte 46
+} MarketCenterTradingActionMessage;
+
+// ---- Market Wide Circuit Breaker Decline Level Message: 50 bytes -------------
+
+// MWCB Decline Message. Communicates the daily MWCB breach points (Levels 1/2/3) set based on the prior day's closing value of the S P 500 index. May be re-sent if levels are reset due to erroneous activity; participants should use the most recently disseminated values.
+entrypoint typedef struct _MarketWideCircuitBreakerDeclineLevelMessage {
+  UINT8 market_center_originator;  // byte 0
+  UINT8 sub_market_center_id;      // byte 1
+  UINT64BE sip_timestamp;          // bytes 2 to 9
+  UINT64BE timestamp_1;            // bytes 10 to 17
+  UINT64BE participant_token;      // bytes 18 to 25
+  UINT64BE mwcb_level_1;           // bytes 26 to 33
+  UINT64BE mwcb_level_2;           // bytes 34 to 41
+  UINT64BE mwcb_level_3;           // bytes 42 to 49
+} MarketWideCircuitBreakerDeclineLevelMessage;
+
+// ---- Limit Up Limit Down Price Band Message: 62 bytes ------------------------
+
+// Limit Up Limit Down Price Band Message. Reflects the current LULD band for LULD-eligible securities. Designed to prevent trades outside specified Upper and Lower Limit Price Bands.
+entrypoint typedef struct _LimitUpLimitDownPriceBandMessage {
+  UINT8 market_center_originator;           // byte 0
+  UINT8 sub_market_center_id;               // byte 1
+  UINT64BE sip_timestamp;                   // bytes 2 to 9
+  UINT64BE timestamp_1;                     // bytes 10 to 17
+  UINT64BE participant_token;               // bytes 18 to 25
+  UINT8 symbol[11];                         // bytes 26 to 36
+  UINT8 luld_price_band_indicator;          // byte 37
+  UINT64BE luld_price_band_effective_time;  // bytes 38 to 45
+  UINT64BE limit_down_price;                // bytes 46 to 53
+  UINT64BE limit_up_price;                  // bytes 54 to 61
+} LimitUpLimitDownPriceBandMessage;
+
+// ---- Auction Collar Message: 66 bytes ----------------------------------------
+
+// Auction Collar Message published by primary markets using an automated reopening after a LULD Trading Pause. Snap-Shot sends only the most recent Auction Collar message per security.
+entrypoint typedef struct _AuctionCollarMessage {
+  UINT8 market_center_originator;           // byte 0
+  UINT8 sub_market_center_id;               // byte 1
+  UINT64BE sip_timestamp;                   // bytes 2 to 9
+  UINT64BE timestamp_1;                     // bytes 10 to 17
+  UINT64BE participant_token;               // bytes 18 to 25
+  UINT8 symbol[11];                         // bytes 26 to 36
+  UINT32BE trading_action_sequence_number;  // bytes 37 to 40
+  UINT64BE collar_reference_price;          // bytes 41 to 48
+  UINT64BE collar_up_price;                 // bytes 49 to 56
+  UINT64BE collar_down_price;               // bytes 57 to 64
+  UINT8 collar_extension_indicator;         // byte 65
+} AuctionCollarMessage;
+
+// ---- Snapshot Sequence Message: 34 bytes -------------------------------------
+
+// Snapshot Sequence Number Message. Reflects the UTP Data Service sequence number at the time the UTP Snap-Shot spin was requested. To stay current, firms should process real-time UTP Data Service messages beginning with the next sequence number after this value.
+entrypoint typedef struct _SnapshotSequenceMessage {
+  UINT8 market_center_originator;  // byte 0
+  UINT8 sub_market_center_id;      // byte 1
+  UINT64BE sip_timestamp;          // bytes 2 to 9
+  UINT64BE timestamp_1;            // bytes 10 to 17
+  UINT64BE participant_token;      // bytes 18 to 25
+  UINT64BE sequence_number;        // bytes 26 to 33
+} SnapshotSequenceMessage;
+
+// ---- Start Of Day Message: 26 bytes ------------------------------------------
+
+// Start of Day Control Message. Each day, signals that all subsequent data transmitted will be real-time updates. Prior to 03:58 the data feed handler may be broadcasting heartbeats.
+entrypoint typedef struct _StartOfDayMessage {
+  UINT8 market_center_originator;  // byte 0
+  UINT8 sub_market_center_id;      // byte 1
+  UINT64BE sip_timestamp;          // bytes 2 to 9
+  UINT64BE timestamp_1;            // bytes 10 to 17
+  UINT64BE participant_token;      // bytes 18 to 25
+} StartOfDayMessage;
+
+// ---- Market Session Open Message: 26 bytes -----------------------------------
+
+// Market Session Open Control Message. Signifies the opening of market systems for the Normal Market Session. Each UTP participant may choose to provide its own Market Session Open control message.
+entrypoint typedef struct _MarketSessionOpenMessage {
+  UINT8 market_center_originator;  // byte 0
+  UINT8 sub_market_center_id;      // byte 1
+  UINT64BE sip_timestamp;          // bytes 2 to 9
+  UINT64BE timestamp_1;            // bytes 10 to 17
+  UINT64BE participant_token;      // bytes 18 to 25
+} MarketSessionOpenMessage;
+
+// ---- Market Session Close Message: 26 bytes ----------------------------------
+
+// Market Session Close Control Message. Signals the closing of market systems for the Normal Market Session.
+entrypoint typedef struct _MarketSessionCloseMessage {
+  UINT8 market_center_originator;  // byte 0
+  UINT8 sub_market_center_id;      // byte 1
+  UINT64BE sip_timestamp;          // bytes 2 to 9
+  UINT64BE timestamp_1;            // bytes 10 to 17
+  UINT64BE participant_token;      // bytes 18 to 25
+} MarketSessionCloseMessage;
+
+// ---- End Of Day Message: 26 bytes --------------------------------------------
+
+// End of Day Control Message. Signals the end of active message dissemination for the UTP SIP operational cycle.
+entrypoint typedef struct _EndOfDayMessage {
+  UINT8 market_center_originator;  // byte 0
+  UINT8 sub_market_center_id;      // byte 1
+  UINT64BE sip_timestamp;          // bytes 2 to 9
+  UINT64BE timestamp_1;            // bytes 10 to 17
+  UINT64BE participant_token;      // bytes 18 to 25
+} EndOfDayMessage;
+
+// ---- End Of Transmissions Message: 26 bytes ----------------------------------
+
+// End of Transmissions Control Message. Last production message of the day; signals no further transmissions through the UTP SIP line.
+entrypoint typedef struct _EndOfTransmissionsMessage {
+  UINT8 market_center_originator;  // byte 0
+  UINT8 sub_market_center_id;      // byte 1
+  UINT64BE sip_timestamp;          // bytes 2 to 9
+  UINT64BE timestamp_1;            // bytes 10 to 17
+  UINT64BE participant_token;      // bytes 18 to 25
+} EndOfTransmissionsMessage;
+
+// ---- Login Accepted Packet: 30 bytes -----------------------------------------
+
+// SoupBinTCP Login Accepted Packet
+entrypoint typedef struct _LoginAcceptedPacket {
+  UINT8 accepted_session[10];          // bytes 0 to 9
+  UINT8 accepted_sequence_number[20];  // bytes 10 to 29
+} LoginAcceptedPacket;
+
+// ---- Login Rejected Packet: 1 byte -------------------------------------------
+
+// SoupBinTCP Login Rejected Packet
+entrypoint typedef struct _LoginRejectedPacket {
+  UINT8 reject_reason_code;  // byte 0
+} LoginRejectedPacket;
+

@@ -1,0 +1,299 @@
+// Chicago Board Options Exchange Multicast Depth Of Book
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out C1Options_MulticastDepthOfBook_v2_41_64.3d
+//
+// What this definition does not state, and the model does:
+// - the dispatch that chooses a message by its type
+// - a run filling what frames it
+// - a field read in bits
+//
+// License: MIT No Attribution
+
+// ---- Packet Header: 8 bytes --------------------------------------------------
+
+entrypoint typedef struct _PacketHeader {
+  UINT16 length;        // bytes 0 to 1
+  UINT8 message_count;  // byte 2
+  UINT8 unit_;          // byte 3
+  UINT32 sequence;      // bytes 4 to 7
+} PacketHeader;
+
+// ---- Message Header: 2 bytes -------------------------------------------------
+
+entrypoint typedef struct _MessageHeader {
+  UINT8 message_length;  // byte 0
+  UINT8 message_type;    // byte 1
+} MessageHeader;
+
+// ---- Ox Time Reference Message: 16 bytes -------------------------------------
+
+// The Time Reference message is used to provide a midnight reference point for recipients of the feed. It is sent whenever the system starts up and when the system crosses a midnight boundary.
+entrypoint typedef struct _OxTimeReferenceMessage {
+  UINT32 midnight_reference;  // bytes 0 to 3
+  UINT32 time;                // bytes 4 to 7
+  UINT32 time_offset;         // bytes 8 to 11
+  UINT32 trade_date;          // bytes 12 to 15
+} OxTimeReferenceMessage;
+
+// ---- Ox Time Message: 8 bytes ------------------------------------------------
+
+// A Time message is immediately generated and sent when there is a PITCH event for a given clock second
+entrypoint typedef struct _OxTimeMessage {
+  UINT32 time;        // bytes 0 to 3
+  UINT32 epoch_time;  // bytes 4 to 7
+} OxTimeMessage;
+
+// ---- Ox Unit Clear Message: 4 bytes ------------------------------------------
+
+// The Unit Clear message instructs feed recipients to clear all orders for the Cboe book in the unit specified in the Sequenced Unit Header
+entrypoint typedef struct _OxUnitClearMessage {
+  UINT32 time_offset;  // bytes 0 to 3
+} OxUnitClearMessage;
+
+// ---- Ox Transaction Begin Message: 4 bytes -----------------------------------
+
+// The Transaction Begin message indicates any subsequent messages, up to the accompanying Transaction End message, are all part of the same transaction block.
+entrypoint typedef struct _OxTransactionBeginMessage {
+  UINT32 time_offset;  // bytes 0 to 3
+} OxTransactionBeginMessage;
+
+// ---- Ox Transaction End Message: 4 bytes -------------------------------------
+
+// The Transaction End message indicates that a transaction indicated by a previous Transaction Begin message has completed.
+entrypoint typedef struct _OxTransactionEndMessage {
+  UINT32 time_offset;  // bytes 0 to 3
+} OxTransactionEndMessage;
+
+// ---- Ox Order Executed Message: 25 bytes -------------------------------------
+
+// Order Executed messages are sent when a visible order on the Cboe book is executed in whole or in part
+entrypoint typedef struct _OxOrderExecutedMessage {
+  UINT32 time_offset;        // bytes 0 to 3
+  UINT64 order_id;           // bytes 4 to 11
+  UINT32 executed_quantity;  // bytes 12 to 15
+  UINT64 execution_id;       // bytes 16 to 23
+  UINT8 trade_condition;     // byte 24
+} OxOrderExecutedMessage;
+
+// ---- Ox Order Executed At Price Size Message: 37 bytes -----------------------
+
+// Order Executed at Price/Size messages are sent when a visible order on the Cboe book is executed in whole or in part at a different price than the limit price on the original Add Order message or the limit order price in the latest Modify Order message referencing the Order Id
+entrypoint typedef struct _OxOrderExecutedAtPriceSizeMessage {
+  UINT32 time_offset;         // bytes 0 to 3
+  UINT64 order_id;            // bytes 4 to 11
+  UINT32 executed_quantity;   // bytes 12 to 15
+  UINT32 remaining_quantity;  // bytes 16 to 19
+  UINT64 execution_id;        // bytes 20 to 27
+  UINT64 price_long;          // bytes 28 to 35
+  UINT8 trade_condition;      // byte 36
+} OxOrderExecutedAtPriceSizeMessage;
+
+// ---- Ox Reduce Size Long Message: 16 bytes -----------------------------------
+
+// Reduce Size messages are sent when a visible order on the Cboe book is partially reduced
+entrypoint typedef struct _OxReduceSizeLongMessage {
+  UINT32 time_offset;             // bytes 0 to 3
+  UINT64 order_id;                // bytes 4 to 11
+  UINT32 canceled_quantity_long;  // bytes 12 to 15
+} OxReduceSizeLongMessage;
+
+// ---- Ox Reduce Size Short Message: 14 bytes ----------------------------------
+
+// Reduce Size messages are sent when a visible order on the Cboe book is partially reduced
+entrypoint typedef struct _OxReduceSizeShortMessage {
+  UINT32 time_offset;              // bytes 0 to 3
+  UINT64 order_id;                 // bytes 4 to 11
+  UINT16 canceled_quantity_short;  // bytes 12 to 13
+} OxReduceSizeShortMessage;
+
+// ---- Ox Delete Order Message: 12 bytes ---------------------------------------
+
+// The Delete Order message is sent whenever a booked order is cancelled or leaves the order book
+entrypoint typedef struct _OxDeleteOrderMessage {
+  UINT32 time_offset;  // bytes 0 to 3
+  UINT64 order_id;     // bytes 4 to 11
+} OxDeleteOrderMessage;
+
+// ---- Ox Trade Long Message: 40 bytes -----------------------------------------
+
+// The Trade message provides information about executions of non-displayed orders on the Cboe book and routed executions to other trading centers
+entrypoint typedef struct _OxTradeLongMessage {
+  UINT32 time_offset;     // bytes 0 to 3
+  UINT64 order_id;        // bytes 4 to 11
+  UINT8 side_indicator;   // byte 12
+  UINT32 quantity_long;   // bytes 13 to 16
+  UINT8 symbol[6];        // bytes 17 to 22
+  UINT64 price_long;      // bytes 23 to 30
+  UINT64 execution_id;    // bytes 31 to 38
+  UINT8 trade_condition;  // byte 39
+} OxTradeLongMessage;
+
+// ---- Ox Trade Short Message: 32 bytes ----------------------------------------
+
+// The Trade message provides information about executions of non-displayed orders on the Cboe book and routed executions to other trading centers
+entrypoint typedef struct _OxTradeShortMessage {
+  UINT32 time_offset;     // bytes 0 to 3
+  UINT64 order_id;        // bytes 4 to 11
+  UINT8 side_indicator;   // byte 12
+  UINT16 quantity_short;  // bytes 13 to 14
+  UINT8 symbol[6];        // bytes 15 to 20
+  UINT16 price_short;     // bytes 21 to 22
+  UINT64 execution_id;    // bytes 23 to 30
+  UINT8 trade_condition;  // byte 31
+} OxTradeShortMessage;
+
+// ---- Ox Trade Expanded Message: 42 bytes -------------------------------------
+
+// The Trade message provides information about executions of non-displayed orders on the Cboe book and routed executions to other trading centers. Expanded version accommodates larger symbol sizes possible through the ISRA plan.
+entrypoint typedef struct _OxTradeExpandedMessage {
+  UINT32 time_offset;        // bytes 0 to 3
+  UINT64 order_id;           // bytes 4 to 11
+  UINT8 side_indicator;      // byte 12
+  UINT32 quantity_long;      // bytes 13 to 16
+  UINT8 expanded_symbol[8];  // bytes 17 to 24
+  UINT64 price_long;         // bytes 25 to 32
+  UINT64 execution_id;       // bytes 33 to 40
+  UINT8 trade_condition;     // byte 41
+} OxTradeExpandedMessage;
+
+// ---- Ox Trade Break Message: 12 bytes ----------------------------------------
+
+// The Trade Break message is sent whenever an execution on Cboe is broken
+entrypoint typedef struct _OxTradeBreakMessage {
+  UINT32 time_offset;   // bytes 0 to 3
+  UINT64 execution_id;  // bytes 4 to 11
+} OxTradeBreakMessage;
+
+// ---- Ox End Of Session: 4 bytes ----------------------------------------------
+
+// The End of Session message is sent for each unit when the unit shuts down
+entrypoint typedef struct _OxEndOfSession {
+  UINT32 time_offset;  // bytes 0 to 3
+} OxEndOfSession;
+
+// ---- Ox Symbol Mapping Message: 36 bytes -------------------------------------
+
+// A Symbol Mapping message is used to map the 6 character multicast feed symbol field to an OSI symbol and Underlying. These messages are not sequenced and are sent continuously through the day at variable rates as bandwidth allows.
+entrypoint typedef struct _OxSymbolMappingMessage {
+  UINT8 feed_symbol[6];    // bytes 0 to 5
+  UINT8 osi_symbol[21];    // bytes 6 to 26
+  UINT8 symbol_condition;  // byte 27
+  UINT8 underlying[8];     // bytes 28 to 35
+} OxSymbolMappingMessage;
+
+// ---- Ox Trading Status Message: 16 bytes -------------------------------------
+
+// The Trading Status message is used to indicate the current trading status of a security
+entrypoint typedef struct _OxTradingStatusMessage {
+  UINT32 time_offset;        // bytes 0 to 3
+  UINT8 symbol[6];           // bytes 4 to 9
+  UINT8 reserved_2[2];       // bytes 10 to 11
+  UINT8 trading_status;      // byte 12
+  UINT8 reserved_1;          // byte 13
+  UINT8 gth_trading_status;  // byte 14
+  UINT8 second_reserved_1;   // byte 15
+} OxTradingStatusMessage;
+
+// ---- Ox Width Update Message: 17 bytes ---------------------------------------
+
+// The Width Update message is used to communicate opening quote width multiplier. This message will be sent in the event that the exchange decides to change the quote width multiplier on a per underlying basis.
+entrypoint typedef struct _OxWidthUpdateMessage {
+  UINT32 time_offset;   // bytes 0 to 3
+  UINT8 underlying[8];  // bytes 4 to 11
+  UINT8 width_type;     // byte 12
+  UINT32 multiplier;    // bytes 13 to 16
+} OxWidthUpdateMessage;
+
+// ---- Ox Options Auction Update Message: 62 bytes -----------------------------
+
+// Options Auction Update messages are used to disseminate price and size information and Composite Market bid and offer prices during Opening and Re-Opening (halt) auctions on the Cboe Options Exchange.
+entrypoint typedef struct _OxOptionsAuctionUpdateMessage {
+  UINT32 time_offset;                   // bytes 0 to 3
+  UINT8 expanded_symbol[8];             // bytes 4 to 11
+  UINT8 auction_type;                   // byte 12
+  UINT64 reference_price;               // bytes 13 to 20
+  UINT32 buy_contracts;                 // bytes 21 to 24
+  UINT32 sell_contracts;                // bytes 25 to 28
+  UINT64 indicative_price;              // bytes 29 to 36
+  UINT64 auction_only_price;            // bytes 37 to 44
+  UINT8 opening_condition;              // byte 45
+  UINT64 composite_market_bid_price;    // bytes 46 to 53
+  UINT64 composite_market_offer_price;  // bytes 54 to 61
+} OxOptionsAuctionUpdateMessage;
+
+// ---- Ox Auction Summary Message: 25 bytes ------------------------------------
+
+// Auction Summary messages are used to disseminate the results of an auction, including Opening and Re-Opening on the Cboe Options Exchange
+entrypoint typedef struct _OxAuctionSummaryMessage {
+  UINT32 time_offset;       // bytes 0 to 3
+  UINT8 stock_symbol[8];    // bytes 4 to 11
+  UINT8 auction_type;       // byte 12
+  UINT64 price_long;        // bytes 13 to 20
+  UINT32 shares_contracts;  // bytes 21 to 24
+} OxAuctionSummaryMessage;
+
+// ---- Ox Auction Notification Message: 45 bytes -------------------------------
+
+// Auction Notification messages are used to disseminate order details of an auction. Auctions will be available for a defined period of time known as the exposure period.
+entrypoint typedef struct _OxAuctionNotificationMessage {
+  UINT32 time_offset;         // bytes 0 to 3
+  UINT8 symbol[6];            // bytes 4 to 9
+  UINT64 auction_id;          // bytes 10 to 17
+  UINT8 auction_type;         // byte 18
+  UINT8 side;                 // byte 19
+  UINT64 price_long;          // bytes 20 to 27
+  UINT32 contracts;           // bytes 28 to 31
+  UINT8 customer_indicator;   // byte 32
+  UINT8 participant_id[4];    // bytes 33 to 36
+  UINT32 auction_end_offset;  // bytes 37 to 40
+  UINT8 client_id[4];         // bytes 41 to 44
+} OxAuctionNotificationMessage;
+
+// ---- Ox Auction Cancel Message: 12 bytes -------------------------------------
+
+// Auction Cancel messages are used to disseminate the cancelation of an earlier Auction Notification message.
+entrypoint typedef struct _OxAuctionCancelMessage {
+  UINT32 time_offset;  // bytes 0 to 3
+  UINT64 auction_id;   // bytes 4 to 11
+} OxAuctionCancelMessage;
+
+// ---- Ox Auction Trade Message: 32 bytes --------------------------------------
+
+// Auction Trade messages are used to disseminate executions resulting from an options auction.
+entrypoint typedef struct _OxAuctionTradeMessage {
+  UINT32 time_offset;   // bytes 0 to 3
+  UINT64 auction_id;    // bytes 4 to 11
+  UINT64 execution_id;  // bytes 12 to 19
+  UINT64 price_long;    // bytes 20 to 27
+  UINT32 contracts;     // bytes 28 to 31
+} OxAuctionTradeMessage;
+
+// ---- Ox Soq Strike Range Update Message: 40 bytes ----------------------------
+
+// The SOQ Strike Range Update message is only available on the C1 Exchange. This message disseminates the minimum and maximum strike prices of the strike price range used to calculate the Special Opening Quote (SOQ) on a Volatility Settlement date.
+entrypoint typedef struct _OxSoqStrikeRangeUpdateMessage {
+  UINT32 time_offset;         // bytes 0 to 3
+  UINT8 soq_identifier[20];   // bytes 4 to 23
+  UINT64 lower_strike_price;  // bytes 24 to 31
+  UINT64 upper_strike_price;  // bytes 32 to 39
+} OxSoqStrikeRangeUpdateMessage;
+
+// ---- Ox Constituent Symbol Mapping Message: 56 bytes -------------------------
+
+// The Constituent Symbol Mapping message is only available on the C1 Exchange. This message is used to communicate which options series are Constituent Series in a Volatility Settlement Special Opening Quote (SOQ).
+entrypoint typedef struct _OxConstituentSymbolMappingMessage {
+  UINT8 feed_symbol[6];      // bytes 0 to 5
+  UINT8 osi_symbol[21];      // bytes 6 to 26
+  UINT8 symbol_condition;    // byte 27
+  UINT8 underlying[8];       // bytes 28 to 35
+  UINT8 soq_identifier[20];  // bytes 36 to 55
+} OxConstituentSymbolMappingMessage;
+

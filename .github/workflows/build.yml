@@ -1,0 +1,28 @@
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [ 0, 1, 2, 3, 4, 5, 6, 7 ]
+
+    steps:
+    - uses: actions/checkout@v5
+
+    - name: Install EverParse
+      run: |
+        curl -sSL --fail --retry 5 --retry-delay 5 --retry-all-errors -o "$RUNNER_TEMP/everparse.tar.gz" https://github.com/project-everest/everparse/releases/download/v2026.08.21/everparse_v2026.08.21_Linux_x86_64.tar.gz
+        tar xzf "$RUNNER_TEMP/everparse.tar.gz" -C "$RUNNER_TEMP"
+        echo "EVERPARSE=$RUNNER_TEMP/everparse/everparse.sh" >> "$GITHUB_ENV"
+
+    - name: Verify Definitions
+      run: JOBS=1 SHARD=${{ matrix.shard }}/8 sh ./check.sh

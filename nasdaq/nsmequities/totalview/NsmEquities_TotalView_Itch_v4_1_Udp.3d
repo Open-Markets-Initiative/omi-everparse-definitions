@@ -1,0 +1,227 @@
+// National Association of Securities Dealers Automated Quotations (Nasdaq) TotalView Itch
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out NsmEquities_TotalView_Itch_v4_1_Udp.3d
+//
+// What this definition does not state, and the model does:
+// - the dispatch that chooses a message by its type
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Packet Header: 20 bytes -------------------------------------------------
+
+// Itch Mold Udp 64 Packet Header
+entrypoint typedef struct _PacketHeader {
+  UINT8 session[10];         // bytes 0 to 9
+  UINT64BE sequence_number;  // bytes 10 to 17
+  UINT16BE message_count;    // bytes 18 to 19
+} PacketHeader;
+
+// ---- Message Header: 3 bytes -------------------------------------------------
+
+// Mold Udp 64 Message Header
+entrypoint typedef struct _MessageHeader {
+  UINT16BE message_length;  // bytes 0 to 1
+  UINT8 message_type;       // byte 2
+} MessageHeader;
+
+// ---- Timestamp Message: 4 bytes ----------------------------------------------
+
+// Reflects the number of seconds past midnight that the Timestamp message was generated.
+entrypoint typedef struct _TimestampMessage {
+  UINT32BE second;  // bytes 0 to 3
+} TimestampMessage;
+
+// ---- System Event Message: 5 bytes -------------------------------------------
+
+// The system event message type is used to signal a market or data feed handler event. The format is as follows:
+entrypoint typedef struct _SystemEventMessage {
+  UINT32BE nanoseconds;  // bytes 0 to 3
+  UINT8 event_code;      // byte 4
+} SystemEventMessage;
+
+// ---- Stock Directory Message: 19 bytes ---------------------------------------
+
+// Market data redistributors should process this message to populate the Financial Status Indicator (required display field) and the Market Category (recommended display field) for NASDAQ-listed issues.
+entrypoint typedef struct _StockDirectoryMessage {
+  UINT32BE nanoseconds;              // bytes 0 to 3
+  UINT8 stock[8];                    // bytes 4 to 11
+  UINT8 market_category;             // byte 12
+  UINT8 financial_status_indicator;  // byte 13
+  UINT32BE round_lot_size;           // bytes 14 to 17
+  UINT8 round_lots_only;             // byte 18
+} StockDirectoryMessage;
+
+// ---- Stock Trading Action Message: 18 bytes ----------------------------------
+
+// NASDAQ uses this administrative message to indicate the current trading status of a security to the trading community.
+entrypoint typedef struct _StockTradingActionMessage {
+  UINT32BE nanoseconds;  // bytes 0 to 3
+  UINT8 stock[8];        // bytes 4 to 11
+  UINT8 trading_state;   // byte 12
+  UINT8 reserved;        // byte 13
+  UINT8 reason[4];       // bytes 14 to 17
+} StockTradingActionMessage;
+
+// ---- Reg Sho Short Sale Price Test Restricted Indicator Message: 13 bytes ----
+
+// For NASDAQ-listed issues, NASDAQ will support a full pre-opening spin of Reg SHO Short Sale Price Test Restricted Indicator messages indicating the Rule 201 status for all active issues.
+entrypoint typedef struct _RegShoShortSalePriceTestRestrictedIndicatorMessage {
+  UINT32BE nanoseconds;  // bytes 0 to 3
+  UINT8 stock[8];        // bytes 4 to 11
+  UINT8 reg_sho_action;  // byte 12
+} RegShoShortSalePriceTestRestrictedIndicatorMessage;
+
+// ---- Market Participant Position Message: 19 bytes ---------------------------
+
+// NASDAQ will send out this message only if NASDAQ Operations changes the status of a market participant firm in an issue.
+entrypoint typedef struct _MarketParticipantPositionMessage {
+  UINT32BE nanoseconds;            // bytes 0 to 3
+  UINT8 mpid[4];                   // bytes 4 to 7
+  UINT8 stock[8];                  // bytes 8 to 15
+  UINT8 primary_market_maker;      // byte 16
+  UINT8 market_maker_mode;         // byte 17
+  UINT8 market_participant_state;  // byte 18
+} MarketParticipantPositionMessage;
+
+// ---- Add Order Message: 29 bytes ---------------------------------------------
+
+// This message will be generated for unattributed orders accepted by the NASDAQ system.
+entrypoint typedef struct _AddOrderMessage {
+  UINT32BE nanoseconds;             // bytes 0 to 3
+  UINT64BE order_reference_number;  // bytes 4 to 11
+  UINT8 side;                       // byte 12
+  UINT32BE shares;                  // bytes 13 to 16
+  UINT8 stock[8];                   // bytes 17 to 24
+  UINT32BE price;                   // bytes 25 to 28
+} AddOrderMessage;
+
+// ---- Add Order With Mpid Message: 33 bytes -----------------------------------
+
+// This message will be generated for attributed orders and quotations accepted by the NASDAQ system.
+entrypoint typedef struct _AddOrderWithMpidMessage {
+  UINT32BE nanoseconds;             // bytes 0 to 3
+  UINT64BE order_reference_number;  // bytes 4 to 11
+  UINT8 side;                       // byte 12
+  UINT32BE shares;                  // bytes 13 to 16
+  UINT8 stock[8];                   // bytes 17 to 24
+  UINT32BE price;                   // bytes 25 to 28
+  UINT8 attribution[4];             // bytes 29 to 32
+} AddOrderWithMpidMessage;
+
+// ---- Order Executed Message: 24 bytes ----------------------------------------
+
+// This message is sent whenever an order on the book is executed in whole or in part.
+entrypoint typedef struct _OrderExecutedMessage {
+  UINT32BE nanoseconds;             // bytes 0 to 3
+  UINT64BE order_reference_number;  // bytes 4 to 11
+  UINT32BE executed_shares;         // bytes 12 to 15
+  UINT64BE match_number;            // bytes 16 to 23
+} OrderExecutedMessage;
+
+// ---- Order Executed With Price Message: 29 bytes -----------------------------
+
+// This message is sent whenever an order on the book is executed in whole or in part at a price different from the initial display price.
+entrypoint typedef struct _OrderExecutedWithPriceMessage {
+  UINT32BE nanoseconds;             // bytes 0 to 3
+  UINT64BE order_reference_number;  // bytes 4 to 11
+  UINT32BE executed_shares;         // bytes 12 to 15
+  UINT64BE match_number;            // bytes 16 to 23
+  UINT8 printable;                  // byte 24
+  UINT32BE execution_price;         // bytes 25 to 28
+} OrderExecutedWithPriceMessage;
+
+// ---- Order Cancel Message: 16 bytes ------------------------------------------
+
+// This message is sent whenever an order on the book is modified as a result of a partial cancellation.
+entrypoint typedef struct _OrderCancelMessage {
+  UINT32BE nanoseconds;             // bytes 0 to 3
+  UINT64BE order_reference_number;  // bytes 4 to 11
+  UINT32BE canceled_shares;         // bytes 12 to 15
+} OrderCancelMessage;
+
+// ---- Order Delete Message: 12 bytes ------------------------------------------
+
+// This message is sent whenever an order on the book is being canceled.
+entrypoint typedef struct _OrderDeleteMessage {
+  UINT32BE nanoseconds;             // bytes 0 to 3
+  UINT64BE order_reference_number;  // bytes 4 to 11
+} OrderDeleteMessage;
+
+// ---- Order Replace Message: 28 bytes -----------------------------------------
+
+// This message is sent whenever an order on the book has been cancel-replaced.
+entrypoint typedef struct _OrderReplaceMessage {
+  UINT32BE nanoseconds;                      // bytes 0 to 3
+  UINT64BE original_order_reference_number;  // bytes 4 to 11
+  UINT64BE new_order_reference_number;       // bytes 12 to 19
+  UINT32BE shares;                           // bytes 20 to 23
+  UINT32BE price;                            // bytes 24 to 27
+} OrderReplaceMessage;
+
+// ---- Trade Message: 37 bytes -------------------------------------------------
+
+// The Trade Message is designed to provide execution details for normal match events involving non-displayable order types.
+entrypoint typedef struct _TradeMessage {
+  UINT32BE nanoseconds;             // bytes 0 to 3
+  UINT64BE order_reference_number;  // bytes 4 to 11
+  UINT8 side;                       // byte 12
+  UINT32BE shares;                  // bytes 13 to 16
+  UINT8 stock[8];                   // bytes 17 to 24
+  UINT32BE price;                   // bytes 25 to 28
+  UINT64BE match_number;            // bytes 29 to 36
+} TradeMessage;
+
+// ---- Cross Trade Message: 33 bytes -------------------------------------------
+
+// Cross Trade message indicates that NASDAQ has completed its cross process for a specific security.
+entrypoint typedef struct _CrossTradeMessage {
+  UINT32BE nanoseconds;   // bytes 0 to 3
+  UINT64BE cross_shares;  // bytes 4 to 11
+  UINT8 stock[8];         // bytes 12 to 19
+  UINT32BE cross_price;   // bytes 20 to 23
+  UINT64BE match_number;  // bytes 24 to 31
+  UINT8 cross_type;       // byte 32
+} CrossTradeMessage;
+
+// ---- Broken Trade Message: 12 bytes ------------------------------------------
+
+// The Broken Trade Message is sent whenever an execution on NASDAQ is broken.
+entrypoint typedef struct _BrokenTradeMessage {
+  UINT32BE nanoseconds;   // bytes 0 to 3
+  UINT64BE match_number;  // bytes 4 to 11
+} BrokenTradeMessage;
+
+// ---- Net Order Imbalance Indicator Message: 43 bytes -------------------------
+
+// NASDAQ disseminates NOII data at 5-second intervals in the minutes leading up to the NASDAQ Opening Cross and NASDAQ Closing Cross
+entrypoint typedef struct _NetOrderImbalanceIndicatorMessage {
+  UINT32BE nanoseconds;              // bytes 0 to 3
+  UINT64BE paired_shares;            // bytes 4 to 11
+  UINT64BE imbalance_shares;         // bytes 12 to 19
+  UINT8 imbalance_direction;         // byte 20
+  UINT8 stock[8];                    // bytes 21 to 28
+  UINT32BE far_price;                // bytes 29 to 32
+  UINT32BE near_price;               // bytes 33 to 36
+  UINT32BE current_reference_price;  // bytes 37 to 40
+  UINT8 cross_type;                  // byte 41
+  UINT8 price_variation_indicator;   // byte 42
+} NetOrderImbalanceIndicatorMessage;
+
+// ---- Retail Price Improvement Indicator Message: 13 bytes --------------------
+
+// Identifies a retail interest indication of the Bid, Ask or both the Bid and Ask for NASDAQ-listed securities.
+entrypoint typedef struct _RetailPriceImprovementIndicatorMessage {
+  UINT32BE nanoseconds;  // bytes 0 to 3
+  UINT8 stock[8];        // bytes 4 to 11
+  UINT8 interest_flag;   // byte 12
+} RetailPriceImprovementIndicatorMessage;
+

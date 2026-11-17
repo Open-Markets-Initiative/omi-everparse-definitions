@@ -1,0 +1,256 @@
+// BSE Limited Enhanced Order Book Interface
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out BseIndia_Eobi_v1_4.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Eobi Header: 8 bytes ----------------------------------------------------
+
+// Body Len, Template Id, and Msg Seq Num opening the Packet Header
+entrypoint typedef struct _EobiHeader {
+  UINT16 body_len;     // bytes 0 to 1
+  UINT16 template_id;  // bytes 2 to 3
+  UINT32 msg_seq_num;  // bytes 4 to 7
+} EobiHeader;
+
+// ---- Packet Header: 32 bytes -------------------------------------------------
+
+// Technical header delivered in every Udp datagram, identifying the product, the partition, and the send time
+entrypoint typedef struct _PacketHeader {
+  EobiHeader eobi_header;          // bytes 0 to 7
+  UINT32 appl_seq_num;             // bytes 8 to 11
+  UINT32 market_segment_id;        // bytes 12 to 15, signed, read here as unsigned
+  UINT8 partition_id;              // byte 16
+  UINT8 completion_indicator;      // byte 17
+  UINT8 appl_seq_reset_indicator;  // byte 18
+  UINT8 pad_5[5];                  // bytes 19 to 23
+  UINT64 transact_time;            // bytes 24 to 31
+} PacketHeader;
+
+// ---- Message Header: 8 bytes -------------------------------------------------
+
+// Body Len, Template Id, and Msg Seq Num opening every message behind the Packet Header
+entrypoint typedef struct _MessageHeader {
+  UINT16 body_len;     // bytes 0 to 1
+  UINT16 template_id;  // bytes 2 to 3
+  UINT32 msg_seq_num;  // bytes 4 to 7
+} MessageHeader;
+
+// ---- Heartbeat Message: 8 bytes ----------------------------------------------
+
+// Published regularly when there is no activity on the snapshot or the incremental channel.
+entrypoint typedef struct _HeartbeatMessage {
+  UINT32 last_msg_seq_num_processed;  // bytes 0 to 3
+  UINT8 pad_4[4];                     // bytes 4 to 7
+} HeartbeatMessage;
+
+// ---- Product Summary Message: 8 bytes ----------------------------------------
+
+// Published once each snapshot cycle, carrying attributes that are equal for all instruments in the product.
+entrypoint typedef struct _ProductSummaryMessage {
+  UINT32 last_msg_seq_num_processed;  // bytes 0 to 3
+  UINT8 trading_session_id;           // byte 4
+  UINT8 trading_session_sub_id;       // byte 5
+  UINT8 trad_ses_status;              // byte 6
+  UINT8 fast_market_indicator;        // byte 7
+} ProductSummaryMessage;
+
+// ---- Order Details: 32 bytes -------------------------------------------------
+
+// OrderDetails
+entrypoint typedef struct _OrderDetails {
+  UINT64 trd_reg_ts_time_priority;  // bytes 0 to 7
+  UINT64 display_qty;               // bytes 8 to 15, signed, read here as unsigned
+  UINT8 side;                       // byte 16
+  UINT8 pad_7[7];                   // bytes 17 to 23
+  UINT64 price;                     // bytes 24 to 31, signed, read here as unsigned
+} OrderDetails;
+
+// ---- Snapshot Order Message: 32 bytes ----------------------------------------
+
+// Represents each individual order or quote in a snapshot cycle on the snapshot channel.
+entrypoint typedef struct _SnapshotOrderMessage {
+  OrderDetails order_details;  // bytes 0 to 31
+} SnapshotOrderMessage;
+
+// ---- Auction Best Bid Offer Message: 32 bytes --------------------------------
+
+// Carries the best bid and offer of a non crossed order book during an auction call phase.
+entrypoint typedef struct _AuctionBestBidOfferMessage {
+  UINT64 transact_time;  // bytes 0 to 7
+  UINT64 security_id;    // bytes 8 to 15, signed, read here as unsigned
+  UINT64 bid_px;         // bytes 16 to 23, signed, read here as unsigned
+  UINT64 offer_px;       // bytes 24 to 31, signed, read here as unsigned
+} AuctionBestBidOfferMessage;
+
+// ---- Auction Clearing Price Message: 32 bytes --------------------------------
+
+// Published for a crossed order book in an auction, indicating the potential auction price.
+entrypoint typedef struct _AuctionClearingPriceMessage {
+  UINT64 transact_time;  // bytes 0 to 7
+  UINT64 security_id;    // bytes 8 to 15, signed, read here as unsigned
+  UINT64 last_px;        // bytes 16 to 23, signed, read here as unsigned
+  UINT64 last_qty;       // bytes 24 to 31, signed, read here as unsigned
+} AuctionClearingPriceMessage;
+
+// ---- Top Of Book Message: 32 bytes -------------------------------------------
+
+// Carries the best bid and offer of an order book outside continuous trading.
+entrypoint typedef struct _TopOfBookMessage {
+  UINT64 transact_time;  // bytes 0 to 7
+  UINT64 security_id;    // bytes 8 to 15, signed, read here as unsigned
+  UINT64 bid_px;         // bytes 16 to 23, signed, read here as unsigned
+  UINT64 offer_px;       // bytes 24 to 31, signed, read here as unsigned
+} TopOfBookMessage;
+
+// ---- Order Add Message: 48 bytes ---------------------------------------------
+
+// Published for each new order that was entered in the order book.
+entrypoint typedef struct _OrderAddMessage {
+  UINT64 trd_reg_ts_time_in;   // bytes 0 to 7
+  UINT64 security_id;          // bytes 8 to 15, signed, read here as unsigned
+  OrderDetails order_details;  // bytes 16 to 47
+} OrderAddMessage;
+
+// ---- Order Modify Message: 72 bytes ------------------------------------------
+
+// Published if an existing order in the book is modified, whereby the new parameters might cause a change in time priority.
+entrypoint typedef struct _OrderModifyMessage {
+  UINT64 trd_reg_ts_time_in;             // bytes 0 to 7
+  UINT64 trd_reg_ts_prev_time_priority;  // bytes 8 to 15
+  UINT64 prev_price;                     // bytes 16 to 23, signed, read here as unsigned
+  UINT64 prev_display_qty;               // bytes 24 to 31, signed, read here as unsigned
+  UINT64 security_id;                    // bytes 32 to 39, signed, read here as unsigned
+  OrderDetails order_details;            // bytes 40 to 71
+} OrderModifyMessage;
+
+// ---- Order Modify Same Priority Message: 64 bytes ----------------------------
+
+// Published if the time priority of an existing order is not changed.
+entrypoint typedef struct _OrderModifySamePriorityMessage {
+  UINT64 trd_reg_ts_time_in;   // bytes 0 to 7
+  UINT64 transact_time;        // bytes 8 to 15
+  UINT64 prev_display_qty;     // bytes 16 to 23, signed, read here as unsigned
+  UINT64 security_id;          // bytes 24 to 31, signed, read here as unsigned
+  OrderDetails order_details;  // bytes 32 to 63
+} OrderModifySamePriorityMessage;
+
+// ---- Order Delete Message: 56 bytes ------------------------------------------
+
+// Published whenever an existing order is deleted from the order book.
+entrypoint typedef struct _OrderDeleteMessage {
+  UINT64 trd_reg_ts_time_in;   // bytes 0 to 7
+  UINT64 transact_time;        // bytes 8 to 15
+  UINT64 security_id;          // bytes 16 to 23, signed, read here as unsigned
+  OrderDetails order_details;  // bytes 24 to 55
+} OrderDeleteMessage;
+
+// ---- Order Mass Delete Message: 16 bytes -------------------------------------
+
+// Published when the order book is expected to be emptied.
+entrypoint typedef struct _OrderMassDeleteMessage {
+  UINT64 security_id;    // bytes 0 to 7, signed, read here as unsigned
+  UINT64 transact_time;  // bytes 8 to 15
+} OrderMassDeleteMessage;
+
+// ---- Partial Order Execution Message: 56 bytes -------------------------------
+
+// Published whenever a visible order is partially executed at its displayed price.
+entrypoint typedef struct _PartialOrderExecutionMessage {
+  UINT8 side;                       // byte 0
+  UINT8 pad_7[7];                   // bytes 1 to 7
+  UINT64 price;                     // bytes 8 to 15, signed, read here as unsigned
+  UINT64 trd_reg_ts_time_priority;  // bytes 16 to 23
+  UINT64 security_id;               // bytes 24 to 31, signed, read here as unsigned
+  UINT32 trd_match_id;              // bytes 32 to 35
+  UINT8 pad_4[4];                   // bytes 36 to 39
+  UINT64 last_qty;                  // bytes 40 to 47, signed, read here as unsigned
+  UINT64 last_px;                   // bytes 48 to 55, signed, read here as unsigned
+} PartialOrderExecutionMessage;
+
+// ---- Full Order Execution Message: 56 bytes ----------------------------------
+
+// Published whenever a visible order is fully executed at its displayed price.
+entrypoint typedef struct _FullOrderExecutionMessage {
+  UINT8 side;                       // byte 0
+  UINT8 pad_7[7];                   // bytes 1 to 7
+  UINT64 price;                     // bytes 8 to 15, signed, read here as unsigned
+  UINT64 trd_reg_ts_time_priority;  // bytes 16 to 23
+  UINT64 security_id;               // bytes 24 to 31, signed, read here as unsigned
+  UINT32 trd_match_id;              // bytes 32 to 35
+  UINT8 pad_4[4];                   // bytes 36 to 39
+  UINT64 last_qty;                  // bytes 40 to 47, signed, read here as unsigned
+  UINT64 last_px;                   // bytes 48 to 55, signed, read here as unsigned
+} FullOrderExecutionMessage;
+
+// ---- Execution Summary Message: 56 bytes -------------------------------------
+
+// Published whenever an incoming order is executed, carrying information on the execution of that incoming order.
+entrypoint typedef struct _ExecutionSummaryMessage {
+  UINT64 security_id;          // bytes 0 to 7, signed, read here as unsigned
+  UINT64 aggressor_timestamp;  // bytes 8 to 15
+  UINT64 exec_id;              // bytes 16 to 23
+  UINT64 last_qty;             // bytes 24 to 31, signed, read here as unsigned
+  UINT8 aggressor_side;        // byte 32
+  UINT8 trade_condition;       // byte 33
+  UINT8 pad_6[6];              // bytes 34 to 39
+  UINT64 last_px;              // bytes 40 to 47, signed, read here as unsigned
+  UINT64 resting_hidden_qty;   // bytes 48 to 55, signed, read here as unsigned
+} ExecutionSummaryMessage;
+
+// ---- Instrument Info Message: 40 bytes ---------------------------------------
+
+// Published whenever there is a change in the daily price range of the instrument.
+entrypoint typedef struct _InstrumentInfoMessage {
+  UINT64 security_id;       // bytes 0 to 7, signed, read here as unsigned
+  UINT64 close_price;       // bytes 8 to 15, signed, read here as unsigned
+  UINT64 prev_close_price;  // bytes 16 to 23, signed, read here as unsigned
+  UINT64 upper_ckt_limit;   // bytes 24 to 31, signed, read here as unsigned
+  UINT64 lower_ckt_limit;   // bytes 32 to 39, signed, read here as unsigned
+} InstrumentInfoMessage;
+
+// ---- Lpp Range Message: 24 bytes ---------------------------------------------
+
+// Published whenever there is a change in the limit price protection range of the instrument.
+entrypoint typedef struct _LppRangeMessage {
+  UINT64 security_id;       // bytes 0 to 7, signed, read here as unsigned
+  UINT64 upper_exec_limit;  // bytes 8 to 15, signed, read here as unsigned
+  UINT64 lower_exec_limit;  // bytes 16 to 23, signed, read here as unsigned
+} LppRangeMessage;
+
+// ---- Product State Change Message: 16 bytes ----------------------------------
+
+// Provides updates on the trading state for all instruments in a particular product.
+entrypoint typedef struct _ProductStateChangeMessage {
+  UINT8 trading_session_id;      // byte 0
+  UINT8 trading_session_sub_id;  // byte 1
+  UINT8 trad_ses_status;         // byte 2
+  UINT8 fast_market_indicator;   // byte 3
+  UINT8 pad_4[4];                // bytes 4 to 7
+  UINT64 transact_time;          // bytes 8 to 15
+} ProductStateChangeMessage;
+
+// ---- Instrument State Change Message: 24 bytes -------------------------------
+
+// Provides state information for a single instrument.
+entrypoint typedef struct _InstrumentStateChangeMessage {
+  UINT64 security_id;             // bytes 0 to 7, signed, read here as unsigned
+  UINT8 security_status;          // byte 8
+  UINT8 security_trading_status;  // byte 9
+  UINT8 fast_market_indicator;    // byte 10
+  UINT8 pad_5[5];                 // bytes 11 to 15
+  UINT64 transact_time;           // bytes 16 to 23
+} InstrumentStateChangeMessage;
+

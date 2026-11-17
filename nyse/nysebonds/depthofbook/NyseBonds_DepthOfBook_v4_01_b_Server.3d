@@ -1,0 +1,153 @@
+// New York Stock Exchange DepthOfBook
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out NyseBonds_DepthOfBook_v4_01_b_Server.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+//
+// License: MIT No Attribution
+
+// ---- Message Header: 4 bytes -------------------------------------------------
+
+// Nyse Arca Binary Protocol message header
+entrypoint typedef struct _MessageHeader {
+  UINT16BE message_body_length;  // bytes 0 to 1
+  UINT8 message_type;            // byte 2
+  UINT8 padding;                 // byte 3
+} MessageHeader;
+
+// ---- Login Accepted Message: 6 bytes -----------------------------------------
+
+// Sent to indicate a successful login. Carries the current version of the Nyse ArcaBook protocol.
+entrypoint typedef struct _LoginAcceptedMessage {
+  UINT8 version_id[5];    // bytes 0 to 4
+  UINT8 padding_ascii_1;  // byte 5
+} LoginAcceptedMessage;
+
+// ---- Login Rejected Message: 2 bytes -----------------------------------------
+
+// Sent when login fails authentication, the client does not log in within 5 seconds, no order data feed was subscribed to, the sequence number was invalid, no connections are available, or a timeout occurred. The socket is closed afterwards.
+entrypoint typedef struct _LoginRejectedMessage {
+  UINT8 reject_code;      // byte 0
+  UINT8 padding_ascii_1;  // byte 1
+} LoginRejectedMessage;
+
+// ---- Test Response Message: 20 bytes -----------------------------------------
+
+// Sent in response to a Test Request, echoing back any text the request carried.
+entrypoint typedef struct _TestResponseMessage {
+  UINT8 test_message[20];  // bytes 0 to 19
+} TestResponseMessage;
+
+// ---- Add Order Message: 76 bytes ---------------------------------------------
+
+// Sent for a new open order. The Order Reference Number is unique per order book, while the Sequence Number is unique across all order books.
+entrypoint typedef struct _AddOrderMessage {
+  UINT32BE time;                    // bytes 0 to 3
+  UINT32BE sequence_number;         // bytes 4 to 7
+  UINT32BE order_reference_number;  // bytes 8 to 11
+  UINT32BE quantity;                // bytes 12 to 15
+  UINT32BE price;                   // bytes 16 to 19
+  UINT8 price_scale_code;           // byte 20
+  UINT8 exchange_code;              // byte 21
+  UINT8 system_code;                // byte 22
+  UINT8 buy_sell_indicator;         // byte 23
+  UINT8 flat_pricing;               // byte 24
+  UINT8 trading_action;             // byte 25
+  UINT8 security_type;              // byte 26
+  UINT8 order_type;                 // byte 27
+  UINT8 nyse_bond_symbol[22];       // bytes 28 to 49
+  UINT8 cusip_isin[14];             // bytes 50 to 63
+  UINT8 quote_id[5];                // bytes 64 to 68
+  UINT8 padding_ascii_3[3];         // bytes 69 to 71
+  UINT32BE minimum_quantity;        // bytes 72 to 75
+} AddOrderMessage;
+
+// ---- Modify Order Message: 76 bytes ------------------------------------------
+
+// Sent when an order in a Nyse Bonds book is modified: its price or size changes, it is partially filled, or it is routed away with shares remaining. The Order Reference Number refers to the original Add Order.
+entrypoint typedef struct _ModifyOrderMessage {
+  UINT32BE time;                    // bytes 0 to 3
+  UINT32BE sequence_number;         // bytes 4 to 7
+  UINT32BE order_reference_number;  // bytes 8 to 11
+  UINT32BE quantity;                // bytes 12 to 15
+  UINT32BE price;                   // bytes 16 to 19
+  UINT8 price_scale_code;           // byte 20
+  UINT8 exchange_code;              // byte 21
+  UINT8 system_code;                // byte 22
+  UINT8 buy_sell_indicator;         // byte 23
+  UINT8 flat_pricing;               // byte 24
+  UINT8 trading_action;             // byte 25
+  UINT8 security_type;              // byte 26
+  UINT8 order_type;                 // byte 27
+  UINT8 nyse_bond_symbol[22];       // bytes 28 to 49
+  UINT8 cusip_isin[14];             // bytes 50 to 63
+  UINT8 quote_id[5];                // bytes 64 to 68
+  UINT8 padding_ascii_3[3];         // bytes 69 to 71
+  UINT32BE minimum_quantity;        // bytes 72 to 75
+} ModifyOrderMessage;
+
+// ---- Delete Order Message: 60 bytes ------------------------------------------
+
+// Sent when an order is taken off the open order book because it was cancelled, expired, routed to an away market, or filled.
+entrypoint typedef struct _DeleteOrderMessage {
+  UINT32BE time;                    // bytes 0 to 3
+  UINT32BE sequence_number;         // bytes 4 to 7
+  UINT32BE order_reference_number;  // bytes 8 to 11
+  UINT8 exchange_code;              // byte 12
+  UINT8 system_code;                // byte 13
+  UINT8 buy_sell_indicator;         // byte 14
+  UINT8 flat_pricing;               // byte 15
+  UINT8 trading_action;             // byte 16
+  UINT8 security_type;              // byte 17
+  UINT8 order_type;                 // byte 18
+  UINT8 nyse_bond_symbol[22];       // bytes 19 to 40
+  UINT8 cusip_isin[14];             // bytes 41 to 54
+  UINT8 quote_id[5];                // bytes 55 to 59
+} DeleteOrderMessage;
+
+// ---- Imbalance Message: 72 bytes ---------------------------------------------
+
+// Sent in response to orders submitted during pending auctions, at the conclusion of the Opening, Market Order and Closing Auctions, and for Halt Auctions. Total and market imbalance volumes are negative for a sell imbalance.
+entrypoint typedef struct _ImbalanceMessage {
+  UINT32BE time;               // bytes 0 to 3
+  UINT32BE sequence_number;    // bytes 4 to 7
+  UINT32BE match_quantity;     // bytes 8 to 11
+  UINT32BE total_imbalance;    // bytes 12 to 15
+  UINT32BE market_imbalance;   // bytes 16 to 19
+  UINT32BE price;              // bytes 20 to 23
+  UINT8 price_scale_code;      // byte 24
+  UINT8 exchange_code;         // byte 25
+  UINT8 system_code;           // byte 26
+  UINT8 auction_type;          // byte 27
+  UINT8 flat_pricing;          // byte 28
+  UINT8 trading_action;        // byte 29
+  UINT8 security_type;         // byte 30
+  UINT8 quote_condition;       // byte 31
+  UINT8 nyse_bond_symbol[22];  // bytes 32 to 53
+  UINT8 cusip_isin[14];        // bytes 54 to 67
+  UINT8 auction_time[4];       // bytes 68 to 71
+} ImbalanceMessage;
+
+// ---- System Event Message: 52 bytes ------------------------------------------
+
+// Sent to indicate a special system event to an order book. The Event Code says what happened and the System Code which book is affected. Also carries the next sequence number subscribers should expect, which is generally the current one plus one but may restart at 1.
+entrypoint typedef struct _SystemEventMessage {
+  UINT32BE time;                           // bytes 0 to 3
+  UINT32BE sequence_number;                // bytes 4 to 7
+  UINT32BE next_expected_sequence_number;  // bytes 8 to 11
+  UINT8 event_code;                        // byte 12
+  UINT8 system_code;                       // byte 13
+  UINT8 nyse_bond_symbol[22];              // bytes 14 to 35
+  UINT8 cusip_isin[14];                    // bytes 36 to 49
+  UINT8 padding_ascii_2[2];                // bytes 50 to 51
+} SystemEventMessage;
+

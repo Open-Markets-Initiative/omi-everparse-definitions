@@ -1,0 +1,156 @@
+// National Association of Securities Dealers Automated Quotations (Nasdaq) Nordic Pre-Trade Risk Management
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out NordicEquities_RiskControl_v1_00_1_Server.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a length prefix framing what follows
+//
+// License: MIT No Attribution
+
+// ---- Server Packet Header: 3 bytes -------------------------------------------
+
+// Packet header of a packet sent by the server
+entrypoint typedef struct _ServerPacketHeader {
+  UINT16BE packet_length;    // bytes 0 to 1
+  UINT8 server_packet_type;  // byte 2
+} ServerPacketHeader;
+
+// ---- Login Accepted Packet: 30 bytes -----------------------------------------
+
+// The SoupBinTCP server sends a Login Accepted Packet in response to receiving a valid Login Request from the client
+entrypoint typedef struct _LoginAcceptedPacket {
+  UINT8 accepted_session[10];          // bytes 0 to 9
+  UINT8 accepted_sequence_number[20];  // bytes 10 to 29
+} LoginAcceptedPacket;
+
+// ---- Login Rejected Packet: 1 byte -------------------------------------------
+
+// The SoupBinTCP server sends this packet in response to an invalid Login Request Packet from the client
+entrypoint typedef struct _LoginRejectedPacket {
+  UINT8 reject_reason_code;  // byte 0
+} LoginRejectedPacket;
+
+// ---- Account Query Response Message: 4 bytes ---------------------------------
+
+// Provides the PRM API port's next expected user reference number
+entrypoint typedef struct _AccountQueryResponseMessage {
+  UINT32BE user_ref_num;  // bytes 0 to 3
+} AccountQueryResponseMessage;
+
+// ---- Account Settings Response Message: 19 bytes -----------------------------
+
+// Indicates that the settings for a given PRM Account have been updated
+entrypoint typedef struct _AccountSettingsResponseMessage {
+  UINT32BE user_ref_num;                                       // bytes 0 to 3
+  UINT8 prm_account[6];                                        // bytes 4 to 9
+  UINT32BE repeated_order_generation;                          // bytes 10 to 13, signed, read here as unsigned
+  UINT8 trigger_restrict_symbol_on_repeated_order_generation;  // byte 14
+  UINT8 in_auction_market_order_prevention;                    // byte 15
+  UINT8 in_auction_fat_finger_protection;                      // byte 16
+  UINT8 in_auction_market_order_protection;                    // byte 17
+  UINT8 block_and_cancel;                                      // byte 18
+} AccountSettingsResponseMessage;
+
+// ---- Order Book Restriction Response Message: 23 bytes -----------------------
+
+// Indicates that an Order Book has been restricted or non-restricted for a given PRM Account
+entrypoint typedef struct _OrderBookRestrictionResponseMessage {
+  UINT32BE user_ref_num;  // bytes 0 to 3
+  UINT64BE timestamp;     // bytes 4 to 11
+  UINT8 prm_account[6];   // bytes 12 to 17
+  UINT32BE order_book;    // bytes 18 to 21
+  UINT8 state;            // byte 22
+} OrderBookRestrictionResponseMessage;
+
+// ---- Market Segment Restriction Response Message: 21 bytes -------------------
+
+// Indicates that a Market Segment has been restricted or non-restricted for a given PRM Account
+entrypoint typedef struct _MarketSegmentRestrictionResponseMessage {
+  UINT32BE user_ref_num;    // bytes 0 to 3
+  UINT64BE timestamp;       // bytes 4 to 11
+  UINT8 prm_account[6];     // bytes 12 to 17
+  UINT16BE market_segment;  // bytes 18 to 19
+  UINT8 state;              // byte 20
+} MarketSegmentRestrictionResponseMessage;
+
+// ---- Limit Settings Response Message: 109 bytes ------------------------------
+
+// Indicates that the Limit settings for a given PRM Account and Currency have been updated
+entrypoint typedef struct _LimitSettingsResponseMessage {
+  UINT32BE user_ref_num;           // bytes 0 to 3
+  UINT8 prm_account[6];            // bytes 4 to 9
+  UINT8 currency[3];               // bytes 10 to 12
+  UINT64BE max_quantity;           // bytes 13 to 20, signed, read here as unsigned
+  UINT64BE max_value;              // bytes 21 to 28, signed, read here as unsigned
+  UINT64BE unused;                 // bytes 29 to 36
+  UINT64BE total_risk_value;       // bytes 37 to 44, signed, read here as unsigned
+  UINT64BE trade_buy_value;        // bytes 45 to 52, signed, read here as unsigned
+  UINT64BE trade_sell_value;       // bytes 53 to 60, signed, read here as unsigned
+  UINT64BE trade_net_value;        // bytes 61 to 68, signed, read here as unsigned
+  UINT64BE open_order_buy_value;   // bytes 69 to 76, signed, read here as unsigned
+  UINT64BE open_order_sell_value;  // bytes 77 to 84, signed, read here as unsigned
+  UINT64BE open_order_net_value;   // bytes 85 to 92, signed, read here as unsigned
+  UINT64BE max_quantity_auction;   // bytes 93 to 100, signed, read here as unsigned
+  UINT64BE max_value_auction;      // bytes 101 to 108, signed, read here as unsigned
+} LimitSettingsResponseMessage;
+
+// ---- Account Currency Setting Response Message: 15 bytes ---------------------
+
+// Indicates that the settings for a given PRM Account's currency have been updated
+entrypoint typedef struct _AccountCurrencySettingResponseMessage {
+  UINT32BE user_ref_num;          // bytes 0 to 3
+  UINT8 prm_account[6];           // bytes 4 to 9
+  UINT8 currency[3];              // bytes 10 to 12
+  UINT8 reject_all_flag;          // byte 13
+  UINT8 blow_through_protection;  // byte 14
+} AccountCurrencySettingResponseMessage;
+
+// ---- Reject Message: 5 bytes -------------------------------------------------
+
+// Indicates that an inbound message has been rejected
+entrypoint typedef struct _RejectMessage {
+  UINT32BE user_ref_num;  // bytes 0 to 3
+  UINT8 reason;           // byte 4
+} RejectMessage;
+
+// ---- Api Port Rate Breach Message: 8 bytes -----------------------------------
+
+// Indicates that the port's rate limit has been breached
+entrypoint typedef struct _ApiPortRateBreachMessage {
+  UINT64BE timestamp;  // bytes 0 to 7
+} ApiPortRateBreachMessage;
+
+// ---- Account Rate Breach Message: 15 bytes -----------------------------------
+
+// Indicates that a PRM Account's rate limit has been breached
+entrypoint typedef struct _AccountRateBreachMessage {
+  UINT64BE timestamp;    // bytes 0 to 7
+  UINT8 state;           // byte 8
+  UINT8 prm_account[6];  // bytes 9 to 14
+} AccountRateBreachMessage;
+
+// ---- Accumulated Values Message: 73 bytes ------------------------------------
+
+// Indicates the current Accumulated Values for a PRM Account and Currency, sent after order or trade updates
+entrypoint typedef struct _AccumulatedValuesMessage {
+  UINT8 prm_account[6];         // bytes 0 to 5
+  UINT8 currency[3];            // bytes 6 to 8
+  UINT64BE last_update_time;    // bytes 9 to 16
+  UINT64BE risk_total_value;    // bytes 17 to 24
+  UINT64BE trades_buy_value;    // bytes 25 to 32
+  UINT64BE trades_sell_value;   // bytes 33 to 40
+  UINT64BE trades_total_value;  // bytes 41 to 48
+  UINT64BE orders_buy_value;    // bytes 49 to 56
+  UINT64BE orders_sell_value;   // bytes 57 to 64
+  UINT64BE orders_total_value;  // bytes 65 to 72
+} AccumulatedValuesMessage;
+

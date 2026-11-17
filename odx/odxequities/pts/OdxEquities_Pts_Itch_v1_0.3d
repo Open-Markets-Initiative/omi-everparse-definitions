@@ -1,0 +1,153 @@
+// Osaka Digital Exchange Proprietary Trading System
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out OdxEquities_Pts_Itch_v1_0.3d
+//
+// What this definition does not state, and the model does:
+// - the dispatch that chooses a message by its type
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Packet Header: 20 bytes -------------------------------------------------
+
+// Itch Mold Udp 64 Packet Header
+entrypoint typedef struct _PacketHeader {
+  UINT8 session[10];         // bytes 0 to 9
+  UINT64BE sequence_number;  // bytes 10 to 17
+  UINT16BE message_count;    // bytes 18 to 19
+} PacketHeader;
+
+// ---- Message Header: 3 bytes -------------------------------------------------
+
+// Mold Udp 64 Message Header
+entrypoint typedef struct _MessageHeader {
+  UINT16BE message_length;  // bytes 0 to 1
+  UINT8 message_type;       // byte 2
+} MessageHeader;
+
+// ---- Seconds Message: 4 bytes ------------------------------------------------
+
+// Reflects the number of seconds past midnight
+entrypoint typedef struct _SecondsMessage {
+  UINT32BE seconds;  // bytes 0 to 3
+} SecondsMessage;
+
+// ---- System Event Message: 9 bytes -------------------------------------------
+
+// System Event Messages signal data feed, system and market events
+entrypoint typedef struct _SystemEventMessage {
+  UINT32BE nanoseconds;  // bytes 0 to 3
+  UINT8 group[4];        // bytes 4 to 7
+  UINT8 system_event;    // byte 8
+} SystemEventMessage;
+
+// ---- Price Tick Size Message: 16 bytes ---------------------------------------
+
+// The Price Tick Size Message is used to communicate tick size information for a given price range
+entrypoint typedef struct _PriceTickSizeMessage {
+  UINT32BE nanoseconds;               // bytes 0 to 3
+  UINT32BE price_tick_size_table_id;  // bytes 4 to 7
+  UINT32BE price_tick_size;           // bytes 8 to 11
+  UINT32BE price_start;               // bytes 12 to 15
+} PriceTickSizeMessage;
+
+// ---- Orderbook Directory Message: 44 bytes -----------------------------------
+
+// The Orderbook Directory Message is used to disseminate orderbook information for all active orderbooks
+entrypoint typedef struct _OrderbookDirectoryMessage {
+  UINT32BE nanoseconds;               // bytes 0 to 3
+  UINT32BE orderbook_id;              // bytes 4 to 7
+  UINT8 orderbook_code[12];           // bytes 8 to 19
+  UINT8 group[4];                     // bytes 20 to 23
+  UINT32BE round_lot_size;            // bytes 24 to 27
+  UINT32BE price_tick_size_table_id;  // bytes 28 to 31
+  UINT32BE price_decimals;            // bytes 32 to 35
+  UINT32BE upper_price_limit;         // bytes 36 to 39
+  UINT32BE lower_price_limit;         // bytes 40 to 43
+} OrderbookDirectoryMessage;
+
+// ---- Trading State Message: 13 bytes -----------------------------------------
+
+// The Trading State Message is used to indicate the current trading state of an orderbook
+entrypoint typedef struct _TradingStateMessage {
+  UINT32BE nanoseconds;   // bytes 0 to 3
+  UINT32BE orderbook_id;  // bytes 4 to 7
+  UINT8 group[4];         // bytes 8 to 11
+  UINT8 trading_state;    // byte 12
+} TradingStateMessage;
+
+// ---- Short Selling Price Restriction State Message: 13 bytes -----------------
+
+// The Short Selling Price Restriction State Message is used to indicate the current short selling price restriction state of an orderbook
+entrypoint typedef struct _ShortSellingPriceRestrictionStateMessage {
+  UINT32BE nanoseconds;       // bytes 0 to 3
+  UINT32BE orderbook_id;      // bytes 4 to 7
+  UINT8 group[4];             // bytes 8 to 11
+  UINT8 short_selling_state;  // byte 12
+} ShortSellingPriceRestrictionStateMessage;
+
+// ---- Order Added Message: 29 bytes -------------------------------------------
+
+// An Order Added Message is generated each time a new order is accepted by the ODX PTS execution system
+entrypoint typedef struct _OrderAddedMessage {
+  UINT32BE nanoseconds;      // bytes 0 to 3
+  UINT64BE order_number;     // bytes 4 to 11
+  UINT8 buy_sell_indicator;  // byte 12
+  UINT32BE quantity;         // bytes 13 to 16
+  UINT32BE orderbook_id;     // bytes 17 to 20
+  UINT8 group[4];            // bytes 21 to 24
+  UINT32BE price;            // bytes 25 to 28
+} OrderAddedMessage;
+
+// ---- Order Added With Attributes Message: 34 bytes ---------------------------
+
+// An Order Added with Attributes Message is generated for orders with market specific attributes accepted by the ODX PTS execution system
+entrypoint typedef struct _OrderAddedWithAttributesMessage {
+  UINT32BE nanoseconds;      // bytes 0 to 3
+  UINT64BE order_number;     // bytes 4 to 11
+  UINT8 buy_sell_indicator;  // byte 12
+  UINT32BE quantity;         // bytes 13 to 16
+  UINT32BE orderbook_id;     // bytes 17 to 20
+  UINT8 group[4];            // bytes 21 to 24
+  UINT32BE price;            // bytes 25 to 28
+  UINT8 attribution[4];      // bytes 29 to 32
+  UINT8 order_type;          // byte 33
+} OrderAddedWithAttributesMessage;
+
+// ---- Order Executed Message: 24 bytes ----------------------------------------
+
+// An Order Executed Message is sent whenever an order on the book is executed in whole or in part
+entrypoint typedef struct _OrderExecutedMessage {
+  UINT32BE nanoseconds;        // bytes 0 to 3
+  UINT64BE order_number;       // bytes 4 to 11
+  UINT32BE executed_quantity;  // bytes 12 to 15
+  UINT64BE match_number;       // bytes 16 to 23
+} OrderExecutedMessage;
+
+// ---- Order Deleted Message: 12 bytes -----------------------------------------
+
+// An Order Deleted Message is sent whenever an order on the book is cancelled
+entrypoint typedef struct _OrderDeletedMessage {
+  UINT32BE nanoseconds;   // bytes 0 to 3
+  UINT64BE order_number;  // bytes 4 to 11
+} OrderDeletedMessage;
+
+// ---- Order Replaced Message: 28 bytes ----------------------------------------
+
+// An Order Replaced Message is sent whenever an order on the book is replaced
+entrypoint typedef struct _OrderReplacedMessage {
+  UINT32BE nanoseconds;            // bytes 0 to 3
+  UINT64BE original_order_number;  // bytes 4 to 11
+  UINT64BE new_order_number;       // bytes 12 to 19
+  UINT32BE quantity;               // bytes 20 to 23
+  UINT32BE price;                  // bytes 24 to 27
+} OrderReplacedMessage;
+

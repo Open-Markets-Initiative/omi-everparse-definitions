@@ -1,0 +1,205 @@
+// Gie da Papier w Warto ciowych w Warszawie Warsaw Stock Exchange Native Order Gateway
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out Wse_OrderEntry_v1_7_6_20.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a field read in bits
+// - a run of a stated number of entries
+//
+// License: MIT No Attribution
+
+// ---- Message Header: 24 bytes ------------------------------------------------
+
+// Every order gateway message opens with the same 24 byte header
+entrypoint typedef struct _MessageHeader {
+  UINT16 message_length;    // bytes 0 to 1
+  UINT16 message_type;      // bytes 2 to 3
+  UINT32 sequence_number;   // bytes 4 to 7
+  UINT64 timestamp;         // bytes 8 to 15
+  UINT64 source_timestamp;  // bytes 16 to 23
+} MessageHeader;
+
+// ---- Login: 20 bytes ---------------------------------------------------------
+
+// The login message authenticates a user establishing a connection to the trading port service. The login message must be the first message sent by the client application to request the initiation of a trading port session
+entrypoint typedef struct _Login {
+  UINT16 version;                // bytes 0 to 1
+  UINT8 token[8];                // bytes 2 to 9
+  UINT16 connection_id;          // bytes 10 to 11
+  UINT32 next_expected_seq_num;  // bytes 12 to 15
+  UINT32 last_sent_seq_num;      // bytes 16 to 19
+} Login;
+
+// ---- Login Response: 11 bytes ------------------------------------------------
+
+// The login response message. The result field describes the login status, indicating whether the login was successful or not (i.e. successful login)
+entrypoint typedef struct _LoginResponse {
+  UINT8 login_result;            // byte 0
+  UINT32 next_expected_seq_num;  // bytes 1 to 4
+  UINT32 last_replay_seq_num;    // bytes 5 to 8
+  UINT16 session_id;             // bytes 9 to 10
+} LoginResponse;
+
+// ---- Connection Close: 1 byte ------------------------------------------------
+
+// The ConnectionClose message confirms the termination of a session through the trading port service
+entrypoint typedef struct _ConnectionClose {
+  UINT8 connection_close_reason;  // byte 0
+} ConnectionClose;
+
+// ---- Reject: 5 bytes ---------------------------------------------------------
+
+// The reject message is sent by the trading port service when receiving an erroneous message that cannot be further processed
+entrypoint typedef struct _Reject {
+  UINT32 ref_seq_num;   // bytes 0 to 3
+  UINT8 reject_reason;  // byte 4
+} Reject;
+
+// ---- Test: 8 bytes -----------------------------------------------------------
+
+// The internal message for a test purpose
+entrypoint typedef struct _Test {
+  UINT64 target_timestamp;  // bytes 0 to 7
+} Test;
+
+// ---- Test Event: 201 bytes ---------------------------------------------------
+
+// Test event
+entrypoint typedef struct _TestEvent {
+  UINT8 scenario_name[200];  // bytes 0 to 199
+  UINT8 event_type;          // byte 200
+} TestEvent;
+
+// ---- Trading Session Status: 9 bytes -----------------------------------------
+
+// The Trading Session Status provides information on the status of a trading session
+entrypoint typedef struct _TradingSessionStatus {
+  UINT8 market_id[4];           // bytes 0 to 3
+  UINT32 date;                  // bytes 4 to 7
+  UINT8 trading_session_event;  // byte 8
+} TradingSessionStatus;
+
+// ---- Client: 5 bytes ---------------------------------------------------------
+
+// MifidField
+entrypoint typedef struct _Client {
+  UINT32 short_code;  // bytes 0 to 3
+  UINT8 qualifier;    // byte 4
+} Client;
+
+// ---- Executing Trader: 5 bytes -----------------------------------------------
+
+// MifidField
+entrypoint typedef struct _ExecutingTrader {
+  UINT32 short_code;  // bytes 0 to 3
+  UINT8 qualifier;    // byte 4
+} ExecutingTrader;
+
+// ---- Investment Decision Maker: 5 bytes --------------------------------------
+
+// MifidField
+entrypoint typedef struct _InvestmentDecisionMaker {
+  UINT32 short_code;  // bytes 0 to 3
+  UINT8 qualifier;    // byte 4
+} InvestmentDecisionMaker;
+
+// ---- Mifid Fields: 15 bytes --------------------------------------------------
+
+// MifidFields
+entrypoint typedef struct _MifidFields {
+  Client client;                                      // bytes 0 to 4
+  ExecutingTrader executing_trader;                   // bytes 5 to 9
+  InvestmentDecisionMaker investment_decision_maker;  // bytes 10 to 14
+} MifidFields;
+
+// ---- Order Mass Cancel: 39 bytes ---------------------------------------------
+
+// Message used to cancel multiple existing orders
+entrypoint typedef struct _OrderMassCancel {
+  UINT8 mass_cancel_request_type;    // byte 0
+  UINT8 target_party_role;           // byte 1
+  UINT32 target_party_id;            // bytes 2 to 5
+  UINT32 market_segment_id;          // bytes 6 to 9
+  UINT32 instrument_id;              // bytes 10 to 13
+  ExecutingTrader executing_trader;  // bytes 14 to 18
+  UINT8 client_order_id[20];         // bytes 19 to 38
+} OrderMassCancel;
+
+// ---- Bid: 16 bytes -----------------------------------------------------------
+
+// QuoteOrder
+entrypoint typedef struct _Bid {
+  UINT64 price;     // bytes 0 to 7, signed, read here as unsigned
+  UINT64 quantity;  // bytes 8 to 15
+} Bid;
+
+// ---- Ask: 16 bytes -----------------------------------------------------------
+
+// QuoteOrder
+entrypoint typedef struct _Ask {
+  UINT64 price;     // bytes 0 to 7, signed, read here as unsigned
+  UINT64 quantity;  // bytes 8 to 15
+} Ask;
+
+// ---- Quote: 36 bytes ---------------------------------------------------------
+
+// Quote
+entrypoint typedef struct _Quote {
+  UINT32 instrument_id;  // bytes 0 to 3
+  Bid bid;               // bytes 4 to 19
+  Ask ask;               // bytes 20 to 35
+} Quote;
+
+// ---- Market Maker Command: 5 bytes -------------------------------------------
+
+// Market Maker command request
+entrypoint typedef struct _MarketMakerCommand {
+  UINT32 instrument_id;  // bytes 0 to 3
+  UINT8 action;          // byte 4
+} MarketMakerCommand;
+
+// ---- Market Maker Command Response: 7 bytes ----------------------------------
+
+// The response to the Market Maker command
+entrypoint typedef struct _MarketMakerCommandResponse {
+  UINT32 ref_id;          // bytes 0 to 3
+  UINT8 command_result;   // byte 4
+  UINT16 rejection_code;  // bytes 5 to 6
+} MarketMakerCommandResponse;
+
+// ---- Request For Execution: 5 bytes ------------------------------------------
+
+// The information for the MM that one of the quotes has been crossed
+entrypoint typedef struct _RequestForExecution {
+  UINT32 instrument_id;                // bytes 0 to 3
+  UINT8 request_for_execution_reason;  // byte 4
+} RequestForExecution;
+
+// ---- Bid Offer Update: 29 bytes ----------------------------------------------
+
+// Message send during the IPO to the sell side or during the Tender Offer to the buy side
+entrypoint typedef struct _BidOfferUpdate {
+  UINT32 instrument_id;     // bytes 0 to 3
+  UINT8 update_type;        // byte 4
+  UINT64 total_bid_size;    // bytes 5 to 12
+  UINT64 total_offer_size;  // bytes 13 to 20
+  UINT32 bid_orders;        // bytes 21 to 24
+  UINT32 offer_orders;      // bytes 25 to 28
+} BidOfferUpdate;
+
+// ---- Trade Bust: 4 bytes -----------------------------------------------------
+
+// Message used to inform about cancellation of previously accepted Trade
+entrypoint typedef struct _TradeBust {
+  UINT32 trade_id;  // bytes 0 to 3
+} TradeBust;
+

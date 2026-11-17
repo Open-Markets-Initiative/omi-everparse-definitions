@@ -1,0 +1,180 @@
+// National Association of Securities Dealers Automated Quotations (Nasdaq) CHIXMD Market Data
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out NasdaqCanada_Chixmd_v3_4_1_23_Server.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a field filling what is left of what holds it
+// - the dispatch that chooses a message by its type
+//
+// License: MIT No Attribution
+
+// ---- Server Packet Header: 1 byte --------------------------------------------
+
+// SoupTcp Packet Header sent by the server
+entrypoint typedef struct _ServerPacketHeader {
+  UINT8 server_packet_type;  // byte 0
+} ServerPacketHeader;
+
+// ---- Login Accepted Packet: 31 bytes -----------------------------------------
+
+// The SoupTcp server sends a Login Accepted Packet in response to receiving a valid Login Request from the client.
+entrypoint typedef struct _LoginAcceptedPacket {
+  UINT8 accepted_session[10];          // bytes 0 to 9
+  UINT8 accepted_sequence_number[10];  // bytes 10 to 19
+  UINT8 comma;                         // byte 20
+  UINT8 messages_total[10];            // bytes 21 to 30
+} LoginAcceptedPacket;
+
+// ---- Login Rejected Packet: 1 byte -------------------------------------------
+
+// The SoupTcp server sends this packet in response to an invalid Login Request Packet from the client.
+entrypoint typedef struct _LoginRejectedPacket {
+  UINT8 reject_reason_code;  // byte 0
+} LoginRejectedPacket;
+
+// ---- Sequenced Message Header: 9 bytes ---------------------------------------
+
+// Time and type carried ahead of every sequenced Itch message
+entrypoint typedef struct _SequencedMessageHeader {
+  UINT8 timestamp[8];  // bytes 0 to 7
+  UINT8 message_type;  // byte 8
+} SequencedMessageHeader;
+
+// ---- Add Order Message: 39 bytes ---------------------------------------------
+
+// An Add Order Message indicates that CXC or CX2 has accepted a visible order into the book. It includes a day-unique Order Reference key assigned to the order. The issuing of an Add Order Message is not necessarily always for a new order (see Modification of Existing Orders). Not applicable to CXD.
+entrypoint typedef struct _AddOrderMessage {
+  UINT8 order_reference[9];  // bytes 0 to 8
+  UINT8 buy_sell_indicator;  // byte 9
+  UINT8 shares[6];           // bytes 10 to 15
+  UINT8 stock[10];           // bytes 16 to 25
+  UINT8 price[10];           // bytes 26 to 35
+  UINT8 broker[3];           // bytes 36 to 38
+} AddOrderMessage;
+
+// ---- Long Form Add Order Message: 52 bytes -----------------------------------
+
+// An Add Order Message indicates that CXC or CX2 has accepted a visible order into the book. It includes a day-unique Order Reference key assigned to the order. The issuing of an Add Order Message is not necessarily always for a new order (see Modification of Existing Orders). Not applicable to CXD. Long form messages are used when either the price or size is larger than the standard messages can permit.
+entrypoint typedef struct _LongFormAddOrderMessage {
+  UINT8 order_reference[9];  // bytes 0 to 8
+  UINT8 buy_sell_indicator;  // byte 9
+  UINT8 long_shares[10];     // bytes 10 to 19
+  UINT8 stock[10];           // bytes 20 to 29
+  UINT8 long_price[19];      // bytes 30 to 48
+  UINT8 broker[3];           // bytes 49 to 51
+} LongFormAddOrderMessage;
+
+// ---- Order Execution Message: 40 bytes ---------------------------------------
+
+// An Order Execution Message is sent whenever an order on the book is executed in whole or in part. Not applicable to CXD.
+entrypoint typedef struct _OrderExecutionMessage {
+  UINT8 order_reference[9];         // bytes 0 to 8
+  UINT8 executed_shares[6];         // bytes 9 to 14
+  UINT8 trade_reference[9];         // bytes 15 to 23
+  UINT8 contra_order_reference[9];  // bytes 24 to 32
+  UINT8 trade_attribute;            // byte 33
+  UINT8 broker[3];                  // bytes 34 to 36
+  UINT8 contra_broker[3];           // bytes 37 to 39
+} OrderExecutionMessage;
+
+// ---- Long Form Order Execution Message: 44 bytes -----------------------------
+
+// An Order Execution Message is sent whenever an order on the book is executed in whole or in part. Not applicable to CXD. Long form messages are used when either the price or size is larger than the standard messages can permit.
+entrypoint typedef struct _LongFormOrderExecutionMessage {
+  UINT8 order_reference[9];         // bytes 0 to 8
+  UINT8 long_executed_shares[10];   // bytes 9 to 18
+  UINT8 trade_reference[9];         // bytes 19 to 27
+  UINT8 contra_order_reference[9];  // bytes 28 to 36
+  UINT8 trade_attribute;            // byte 37
+  UINT8 broker[3];                  // bytes 38 to 40
+  UINT8 contra_broker[3];           // bytes 41 to 43
+} LongFormOrderExecutionMessage;
+
+// ---- Order Cancel Message: 15 bytes ------------------------------------------
+
+// An Order Cancel Message is sent whenever an order on the book is fully canceled, its quantity revised down or when a pegged order is re-priced. Not applicable to CXD.
+entrypoint typedef struct _OrderCancelMessage {
+  UINT8 order_reference[9];  // bytes 0 to 8
+  UINT8 canceled_shares[6];  // bytes 9 to 14
+} OrderCancelMessage;
+
+// ---- Long Form Order Cancel Message: 19 bytes --------------------------------
+
+// An Order Cancel Message is sent whenever an order on the book is fully canceled, its quantity revised down or when a pegged order is re-priced. Not applicable to CXD. Long form messages are used when either the price or size is larger than the standard messages can permit.
+entrypoint typedef struct _LongFormOrderCancelMessage {
+  UINT8 order_reference[9];        // bytes 0 to 8
+  UINT8 long_canceled_shares[10];  // bytes 9 to 18
+} LongFormOrderCancelMessage;
+
+// ---- Trade Message: 63 bytes -------------------------------------------------
+
+// A Trade Message is sent when a trade occurs against order quantity not visible on the book (i.e. a fully or partially hidden order). They do not affect the book. The Order Reference is always 0 and the Buy/Sell indicator B.
+entrypoint typedef struct _TradeMessage {
+  UINT8 order_reference[9];         // bytes 0 to 8
+  UINT8 buy_sell_indicator;         // byte 9
+  UINT8 shares[6];                  // bytes 10 to 15
+  UINT8 stock[10];                  // bytes 16 to 25
+  UINT8 price[10];                  // bytes 26 to 35
+  UINT8 trade_reference[9];         // bytes 36 to 44
+  UINT8 contra_order_reference[9];  // bytes 45 to 53
+  UINT8 broker[3];                  // bytes 54 to 56
+  UINT8 contra_broker[3];           // bytes 57 to 59
+  UINT8 trade_attribute;            // byte 60
+  UINT8 cross_type;                 // byte 61
+  UINT8 settlement_terms;           // byte 62
+} TradeMessage;
+
+// ---- Long Form Trade Message: 76 bytes ---------------------------------------
+
+// A Trade Message is sent when a trade occurs against order quantity not visible on the book (i.e. a fully or partially hidden order). They do not affect the book. The Order Reference is always 0 and the Buy/Sell indicator B. Long form messages are used when either the price or size is larger than the standard messages can permit.
+entrypoint typedef struct _LongFormTradeMessage {
+  UINT8 order_reference[9];         // bytes 0 to 8
+  UINT8 buy_sell_indicator;         // byte 9
+  UINT8 long_shares[10];            // bytes 10 to 19
+  UINT8 stock[10];                  // bytes 20 to 29
+  UINT8 long_price[19];             // bytes 30 to 48
+  UINT8 trade_reference[9];         // bytes 49 to 57
+  UINT8 contra_order_reference[9];  // bytes 58 to 66
+  UINT8 broker[3];                  // bytes 67 to 69
+  UINT8 contra_broker[3];           // bytes 70 to 72
+  UINT8 trade_attribute;            // byte 73
+  UINT8 cross_type;                 // byte 74
+  UINT8 settlement_terms;           // byte 75
+} LongFormTradeMessage;
+
+// ---- Broken Trade Message: 9 bytes -------------------------------------------
+
+// A Broken Trade message is sent whenever an execution is broken. A Broken Trade is final; once a trade is broken it cannot be reinstated.
+entrypoint typedef struct _BrokenTradeMessage {
+  UINT8 trade_reference[9];  // bytes 0 to 8
+} BrokenTradeMessage;
+
+// ---- System Event Message: 1 byte --------------------------------------------
+
+// The system event message type is used to indicate a market state event.
+entrypoint typedef struct _SystemEventMessage {
+  UINT8 event_code;  // byte 0
+} SystemEventMessage;
+
+// ---- Stock Status Message: 21 bytes ------------------------------------------
+
+// This message indicates the current trading status of a stock. At the start of day, the feed will send out a stock status message for each of the symbols trading on CXC, CX2 and CXD. Subsequently, stock status messages will be sent when a stock is halted or is released for trading.
+entrypoint typedef struct _StockStatusMessage {
+  UINT8 stock[10];          // bytes 0 to 9
+  UINT8 trading_state;      // byte 10
+  UINT8 reserved_1;         // byte 11
+  UINT8 listing_market;     // byte 12
+  UINT8 board_lot_size[4];  // bytes 13 to 16
+  UINT8 currency[3];        // bytes 17 to 19
+  UINT8 gef_eligible;       // byte 20
+} StockStatusMessage;
+

@@ -1,0 +1,264 @@
+// Nation Stock Exchange of Australia NSX Market Data Feed
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out NsxAustralia_Nets_MarketDataFeed_v4_2_55_Server.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a length prefix framing what follows
+//
+// License: MIT No Attribution
+
+// ---- Server Packet Header: 3 bytes -------------------------------------------
+
+// Packet header of a packet sent by the server
+entrypoint typedef struct _ServerPacketHeader {
+  UINT16BE packet_length;    // bytes 0 to 1
+  UINT8 server_packet_type;  // byte 2
+} ServerPacketHeader;
+
+// ---- Login Accepted Packet: 30 bytes -----------------------------------------
+
+// The SoupBinTCP server sends a Login Accepted Packet in response to receiving a valid Login Request from the client
+entrypoint typedef struct _LoginAcceptedPacket {
+  UINT8 accepted_session[10];          // bytes 0 to 9
+  UINT8 accepted_sequence_number[20];  // bytes 10 to 29
+} LoginAcceptedPacket;
+
+// ---- Login Rejected Packet: 1 byte -------------------------------------------
+
+// The SoupBinTCP server sends this packet in response to an invalid Login Request Packet from the client
+entrypoint typedef struct _LoginRejectedPacket {
+  UINT8 reject_reason_code;  // byte 0
+} LoginRejectedPacket;
+
+// ---- Timestamp Message: 8 bytes ----------------------------------------------
+
+// This message is sent to provide the time since Epoch. It should be used in combination with the Timestamp field of individual messages to determine the exact time for each message.
+entrypoint typedef struct _TimestampMessage {
+  UINT64BE nanosecond;  // bytes 0 to 7
+} TimestampMessage;
+
+// ---- System Event Message: 61 bytes ------------------------------------------
+
+// This message will be sent to provide information about events that are scheduled or triggered by the system. Events may occur at Orderbook, Board, Board+Product or System level.
+entrypoint typedef struct _SystemEventMessage {
+  UINT32BE timestamp;       // bytes 0 to 3
+  UINT8 group[20];          // bytes 4 to 23
+  UINT8 product[12];        // bytes 24 to 35
+  UINT32BE orderbook;       // bytes 36 to 39
+  UINT8 event_code[12];     // bytes 40 to 51
+  UINT8 event_status;       // byte 52
+  UINT64BE scheduled_time;  // bytes 53 to 60
+} SystemEventMessage;
+
+// ---- Price Tick Size Message: 24 bytes ---------------------------------------
+
+// This message provides the price ticks (steps) for the orderbooks in the system. It should be used as a lookup from Orderbook Directory R messages.
+entrypoint typedef struct _PriceTickSizeMessage {
+  UINT32BE timestamp;           // bytes 0 to 3
+  UINT32BE tick_size_table_id;  // bytes 4 to 7
+  UINT64BE tick_size;           // bytes 8 to 15
+  UINT64BE price_start;         // bytes 16 to 23
+} PriceTickSizeMessage;
+
+// ---- Quantity Tick Size Message: 24 bytes ------------------------------------
+
+// This message provides the quantity ticks (steps) for the orderbooks in the system. It should be used as a lookup from Orderbook Directory R messages.
+entrypoint typedef struct _QuantityTickSizeMessage {
+  UINT32BE timestamp;           // bytes 0 to 3
+  UINT32BE tick_size_table_id;  // bytes 4 to 7
+  UINT64BE tick_size;           // bytes 8 to 15
+  UINT64BE quantity_start;      // bytes 16 to 23
+} QuantityTickSizeMessage;
+
+// ---- Orderbook Directory Message: 320 bytes ----------------------------------
+
+// Orderbook Directory Messages are transmitted during the reference data spin. Static data messages are sent at the beginning of the feed and contain exchange reference information.
+entrypoint typedef struct _OrderbookDirectoryMessage {
+  UINT32BE timestamp;                    // bytes 0 to 3
+  UINT32BE orderbook;                    // bytes 4 to 7
+  UINT8 isin[12];                        // bytes 8 to 19
+  UINT8 security_code[100];              // bytes 20 to 119
+  UINT8 security_name[100];              // bytes 120 to 219
+  UINT8 currency[3];                     // bytes 220 to 222
+  UINT8 board[20];                       // bytes 223 to 242
+  UINT8 product[12];                     // bytes 243 to 254
+  UINT64BE minimum_quantity;             // bytes 255 to 262
+  UINT32BE quantity_tick_size_table_id;  // bytes 263 to 266
+  UINT32BE quantity_decimals;            // bytes 267 to 270
+  UINT32BE price_tick_size_table_id;     // bytes 271 to 274
+  UINT32BE price_decimals;               // bytes 275 to 278
+  UINT64BE listing;                      // bytes 279 to 286
+  UINT64BE expiry;                       // bytes 287 to 294
+  UINT8 asset_type;                      // byte 295
+  UINT32BE settle_date;                  // bytes 296 to 299
+  UINT8 reference_alpha_12[12];          // bytes 300 to 311
+  UINT8 remarks[8];                      // bytes 312 to 319
+} OrderbookDirectoryMessage;
+
+// ---- Orderbook Trading Action Message: 10 bytes ------------------------------
+
+// This message indicates the current trading state of an orderbook.
+entrypoint typedef struct _OrderbookTradingActionMessage {
+  UINT32BE timestamp;   // bytes 0 to 3
+  UINT32BE orderbook;   // bytes 4 to 7
+  UINT8 trading_state;  // byte 8
+  UINT8 reason;         // byte 9
+} OrderbookTradingActionMessage;
+
+// ---- Orderbook Attribute Message: 18 bytes -----------------------------------
+
+// This message provides dynamic reference values for an orderbook.
+entrypoint typedef struct _OrderbookAttributeMessage {
+  UINT32BE timestamp;        // bytes 0 to 3
+  UINT32BE orderbook;        // bytes 4 to 7
+  UINT64BE attribute_value;  // bytes 8 to 15, signed, read here as unsigned
+  UINT8 attribute_type;      // byte 16
+  UINT8 reason;              // byte 17
+} OrderbookAttributeMessage;
+
+// ---- Firm Directory Message: 38 bytes ----------------------------------------
+
+// This message provides reference information about system participants.
+entrypoint typedef struct _FirmDirectoryMessage {
+  UINT32BE timestamp;   // bytes 0 to 3
+  UINT32BE firm_id;     // bytes 4 to 7
+  UINT8 firm_code[30];  // bytes 8 to 37
+} FirmDirectoryMessage;
+
+// ---- Add Order Message: 37 bytes ---------------------------------------------
+
+// This message is sent when an order is added to the orderbook.
+entrypoint typedef struct _AddOrderMessage {
+  UINT32BE timestamp;     // bytes 0 to 3
+  UINT64BE order_number;  // bytes 4 to 11
+  UINT8 order_verb;       // byte 12
+  UINT64BE quantity;      // bytes 13 to 20
+  UINT32BE orderbook;     // bytes 21 to 24
+  UINT64BE price;         // bytes 25 to 32, signed, read here as unsigned
+  UINT32BE firm_id;       // bytes 33 to 36
+} AddOrderMessage;
+
+// ---- Order Executed Message: 33 bytes ----------------------------------------
+
+// This message is sent when an order on the book is executed in whole or in part.
+entrypoint typedef struct _OrderExecutedMessage {
+  UINT32BE timestamp;          // bytes 0 to 3
+  UINT64BE order_number;       // bytes 4 to 11
+  UINT64BE executed_quantity;  // bytes 12 to 19
+  UINT64BE match_number;       // bytes 20 to 27
+  UINT8 printable;             // byte 28
+  UINT32BE aggressor_firm_id;  // bytes 29 to 32
+} OrderExecutedMessage;
+
+// ---- Order Executed With Price Message: 37 bytes -----------------------------
+
+// This message is sent when an order on the book is executed in whole or in part at a negotiated price different from the order price.
+entrypoint typedef struct _OrderExecutedWithPriceMessage {
+  UINT32BE timestamp;          // bytes 0 to 3
+  UINT64BE order_number;       // bytes 4 to 11
+  UINT64BE executed_quantity;  // bytes 12 to 19
+  UINT64BE match_number;       // bytes 20 to 27
+  UINT8 printable;             // byte 28
+  UINT64BE execution_price;    // bytes 29 to 36, signed, read here as unsigned
+} OrderExecutedWithPriceMessage;
+
+// ---- Broken Trade Message: 13 bytes ------------------------------------------
+
+// This message is sent when a trade is cancelled.
+entrypoint typedef struct _BrokenTradeMessage {
+  UINT32BE timestamp;     // bytes 0 to 3
+  UINT64BE match_number;  // bytes 4 to 11
+  UINT8 reason;           // byte 12
+} BrokenTradeMessage;
+
+// ---- Order Delete Message: 12 bytes ------------------------------------------
+
+// This message indicates when an order has been removed from the orderbook.
+entrypoint typedef struct _OrderDeleteMessage {
+  UINT32BE timestamp;     // bytes 0 to 3
+  UINT64BE order_number;  // bytes 4 to 11
+} OrderDeleteMessage;
+
+// ---- Order Replace Message: 36 bytes -----------------------------------------
+
+// This message indicates when an order in the orderbook has been modified.
+entrypoint typedef struct _OrderReplaceMessage {
+  UINT32BE timestamp;              // bytes 0 to 3
+  UINT64BE original_order_number;  // bytes 4 to 11
+  UINT64BE new_order_number;       // bytes 12 to 19
+  UINT64BE quantity;               // bytes 20 to 27
+  UINT64BE price;                  // bytes 28 to 35, signed, read here as unsigned
+} OrderReplaceMessage;
+
+// ---- Indicative Price Quantity Message: 57 bytes -----------------------------
+
+// This message provides auction information including the theoretical opening price and quantity.
+entrypoint typedef struct _IndicativePriceQuantityMessage {
+  UINT32BE timestamp;                     // bytes 0 to 3
+  UINT64BE theoretical_opening_quantity;  // bytes 4 to 11
+  UINT32BE orderbook;                     // bytes 12 to 15
+  UINT64BE best_bid;                      // bytes 16 to 23, signed, read here as unsigned
+  UINT64BE best_offer;                    // bytes 24 to 31, signed, read here as unsigned
+  UINT64BE theoretical_opening_price;     // bytes 32 to 39, signed, read here as unsigned
+  UINT8 cross_type;                       // byte 40
+  UINT64BE best_bid_size;                 // bytes 41 to 48
+  UINT64BE best_offer_size;               // bytes 49 to 56
+} IndicativePriceQuantityMessage;
+
+// ---- Trade Message: 43 bytes -------------------------------------------------
+
+// This message is sent to provide information about off-book matching.
+entrypoint typedef struct _TradeMessage {
+  UINT32BE timestamp;          // bytes 0 to 3
+  UINT64BE executed_quantity;  // bytes 4 to 11
+  UINT32BE orderbook;          // bytes 12 to 15
+  UINT8 printable;             // byte 16
+  UINT64BE execution_price;    // bytes 17 to 24, signed, read here as unsigned
+  UINT64BE match_number;       // bytes 25 to 32
+  UINT8 trade_indicator;       // byte 33
+  UINT32BE buy_firm_id;        // bytes 34 to 37
+  UINT32BE sell_firm_id;       // bytes 38 to 41
+  UINT8 trade_source;          // byte 42
+} TradeMessage;
+
+// ---- News Message: 891 bytes -------------------------------------------------
+
+// This message disseminates exchange news.
+entrypoint typedef struct _NewsMessage {
+  UINT32BE timestamp;                             // bytes 0 to 3
+  UINT32BE orderbook;                             // bytes 4 to 7
+  UINT32BE news_id;                               // bytes 8 to 11
+  UINT8 firm_code[30];                            // bytes 12 to 41
+  UINT8 title[81];                                // bytes 42 to 122
+  UINT8 reference_null_terminated_char_256[256];  // bytes 123 to 378
+  UINT8 news_text[512];                           // bytes 379 to 890
+} NewsMessage;
+
+// ---- Index Member Directory Message: 20 bytes --------------------------------
+
+// This message provides details about index members and their respective weightings within an index.
+entrypoint typedef struct _IndexMemberDirectoryMessage {
+  UINT32BE timestamp;         // bytes 0 to 3
+  UINT32BE index_orderbook;   // bytes 4 to 7
+  UINT32BE member_orderbook;  // bytes 8 to 11
+  UINT64BE weight;            // bytes 12 to 19
+} IndexMemberDirectoryMessage;
+
+// ---- Index Value Message: 16 bytes -------------------------------------------
+
+// This message disseminates index values to market participants.
+entrypoint typedef struct _IndexValueMessage {
+  UINT32BE timestamp;        // bytes 0 to 3
+  UINT32BE index_orderbook;  // bytes 4 to 7
+  UINT64BE index_value;      // bytes 8 to 15
+} IndexValueMessage;
+

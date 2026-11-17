@@ -1,0 +1,325 @@
+// National Association of Securities Dealers Automated Quotations (Nasdaq) Output
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out Nasdaq_Utdf_Output_v1_5.3d
+//
+// What this definition does not state, and the model does:
+// - a run counted by a field
+// - the dispatch that chooses a message by its type
+// - a length prefix framing what follows
+//
+// License: MIT No Attribution
+
+// ---- Packet Header: 20 bytes -------------------------------------------------
+
+entrypoint typedef struct _PacketHeader {
+  UINT8 session[10];         // bytes 0 to 9
+  UINT64BE sequence_number;  // bytes 10 to 17
+  UINT16BE message_count;    // bytes 18 to 19
+} PacketHeader;
+
+// ---- Message Header: 4 bytes -------------------------------------------------
+
+// Mold Udp Message Header
+entrypoint typedef struct _MessageHeader {
+  UINT16BE message_length;  // bytes 0 to 1
+  UINT8 version;            // byte 2
+  UINT8 message_category;   // byte 3
+} MessageHeader;
+
+// ---- Message Info: 26 bytes --------------------------------------------------
+
+// Message Info
+entrypoint typedef struct _MessageInfo {
+  UINT8 market_center_originator_id;  // byte 0
+  UINT8 sub_market_center_id;         // byte 1
+  UINT64BE sip_timestamp;             // bytes 2 to 9
+  UINT64BE participant_timestamp;     // bytes 10 to 17
+  UINT64BE participant_token;         // bytes 18 to 25
+} MessageInfo;
+
+// ---- Sale Condition: 4 bytes -------------------------------------------------
+
+// Sale Condition
+entrypoint typedef struct _SaleCondition {
+  UINT8 level_1;  // byte 0
+  UINT8 level_2;  // byte 1
+  UINT8 level_3;  // byte 2
+  UINT8 level_4;  // byte 3
+} SaleCondition;
+
+// ---- Trade Report Message Short Form Message: 58 bytes -----------------------
+
+// Used to disseminate Trade Reports
+entrypoint typedef struct _TradeReportMessageShortFormMessage {
+  MessageInfo message_info;                   // bytes 0 to 25
+  UINT64BE finra_timestamp;                   // bytes 26 to 33
+  UINT8 symbol_short[5];                      // bytes 34 to 38
+  UINT64BE trade_id;                          // bytes 39 to 46
+  UINT16BE trade_price_short;                 // bytes 47 to 48
+  UINT16BE trade_volume_short;                // bytes 49 to 50
+  SaleCondition sale_condition;               // bytes 51 to 54
+  UINT8 trade_through_exempt_flag;            // byte 55
+  UINT8 consolidated_price_change_indicator;  // byte 56
+  UINT8 participant_price_change_indicator;   // byte 57
+} TradeReportMessageShortFormMessage;
+
+// ---- Trade Report Message Long Form Message: 74 bytes ------------------------
+
+// Used to disseminate Trade Reports
+entrypoint typedef struct _TradeReportMessageLongFormMessage {
+  MessageInfo message_info;                   // bytes 0 to 25
+  UINT64BE finra_timestamp;                   // bytes 26 to 33
+  UINT8 symbol_long[11];                      // bytes 34 to 44
+  UINT64BE trade_id;                          // bytes 45 to 52
+  UINT64BE trade_price;                       // bytes 53 to 60
+  UINT32BE trade_volume;                      // bytes 61 to 64
+  SaleCondition sale_condition;               // bytes 65 to 68
+  UINT8 trade_through_exempt_flag;            // byte 69
+  UINT16BE sellers_sale_days;                 // bytes 70 to 71
+  UINT8 consolidated_price_change_indicator;  // byte 72
+  UINT8 participant_price_change_indicator;   // byte 73
+} TradeReportMessageLongFormMessage;
+
+// ---- Original Sale Condition: 4 bytes ----------------------------------------
+
+// Original Sale Condition
+entrypoint typedef struct _OriginalSaleCondition {
+  UINT8 level_1;  // byte 0
+  UINT8 level_2;  // byte 1
+  UINT8 level_3;  // byte 2
+  UINT8 level_4;  // byte 3
+} OriginalSaleCondition;
+
+// ---- Trade Cancel Error Message: 139 bytes -----------------------------------
+
+// Used to disseminate trade cancels or errors
+entrypoint typedef struct _TradeCancelErrorMessage {
+  MessageInfo message_info;                       // bytes 0 to 25
+  UINT64BE finra_timestamp;                       // bytes 26 to 33
+  UINT8 symbol_long[11];                          // bytes 34 to 44
+  UINT8 trade_cancellation_type;                  // byte 45
+  UINT64BE original_trade_id;                     // bytes 46 to 53
+  UINT64BE original_trade_price;                  // bytes 54 to 61
+  UINT32BE original_volume;                       // bytes 62 to 65
+  OriginalSaleCondition original_sale_condition;  // bytes 66 to 69
+  UINT8 original_trade_through_exempt_flag;       // byte 70
+  UINT16BE original_sellers_sale_days;            // bytes 71 to 72
+  UINT64BE consolidated_high_price;               // bytes 73 to 80
+  UINT64BE consolidated_low_price;                // bytes 81 to 88
+  UINT64BE consolidated_last_price;               // bytes 89 to 96
+  UINT64BE consolidated_volume;                   // bytes 97 to 104
+  UINT8 consolidated_price_change_indicator;      // byte 105
+  UINT8 market_center_originator_id;              // byte 106
+  UINT64BE market_participant_high_price;         // bytes 107 to 114
+  UINT64BE market_participant_low_price;          // bytes 115 to 122
+  UINT64BE market_participant_last_price;         // bytes 123 to 130
+  UINT64BE market_participant_volume;             // bytes 131 to 138
+} TradeCancelErrorMessage;
+
+// ---- Corrected Sale Condition: 4 bytes ---------------------------------------
+
+// Corrected Sale Condition
+entrypoint typedef struct _CorrectedSaleCondition {
+  UINT8 level_1;  // byte 0
+  UINT8 level_2;  // byte 1
+  UINT8 level_3;  // byte 2
+  UINT8 level_4;  // byte 3
+} CorrectedSaleCondition;
+
+// ---- Trade Correction Message: 165 bytes -------------------------------------
+
+// Used to disseminate trade corrections
+entrypoint typedef struct _TradeCorrectionMessage {
+  MessageInfo message_info;                         // bytes 0 to 25
+  UINT64BE finra_timestamp;                         // bytes 26 to 33
+  UINT8 symbol_long[11];                            // bytes 34 to 44
+  UINT64BE original_trade_id;                       // bytes 45 to 52
+  UINT64BE original_trade_price;                    // bytes 53 to 60
+  UINT32BE original_volume;                         // bytes 61 to 64
+  OriginalSaleCondition original_sale_condition;    // bytes 65 to 68
+  UINT8 original_trade_through_exempt_flag;         // byte 69
+  UINT16BE original_sellers_sale_days;              // bytes 70 to 71
+  UINT64BE corrected_trade_id;                      // bytes 72 to 79
+  UINT64BE corrected_trade_price;                   // bytes 80 to 87
+  UINT32BE corrected_volume;                        // bytes 88 to 91
+  CorrectedSaleCondition corrected_sale_condition;  // bytes 92 to 95
+  UINT8 corrected_trade_through_exempt_flag;        // byte 96
+  UINT16BE corrected_sellers_sale_days;             // bytes 97 to 98
+  UINT64BE consolidated_high_price;                 // bytes 99 to 106
+  UINT64BE consolidated_low_price;                  // bytes 107 to 114
+  UINT64BE consolidated_last_price;                 // bytes 115 to 122
+  UINT64BE consolidated_volume;                     // bytes 123 to 130
+  UINT8 consolidated_price_change_indicator;        // byte 131
+  UINT8 market_center_originator_id;                // byte 132
+  UINT64BE market_participant_high_price;           // bytes 133 to 140
+  UINT64BE market_participant_low_price;            // bytes 141 to 148
+  UINT64BE market_participant_last_price;           // bytes 149 to 156
+  UINT64BE market_participant_volume;               // bytes 157 to 164
+} TradeCorrectionMessage;
+
+// ---- Prior Day As Of Trade Message: 81 bytes ---------------------------------
+
+// Used to disseminate trade prior day as of action
+entrypoint typedef struct _PriorDayAsOfTradeMessage {
+  MessageInfo message_info;         // bytes 0 to 25
+  UINT64BE finra_timestamp;         // bytes 26 to 33
+  UINT8 symbol_long[11];            // bytes 34 to 44
+  UINT64BE trade_id;                // bytes 45 to 52
+  UINT64BE trade_price;             // bytes 53 to 60
+  UINT32BE trade_volume;            // bytes 61 to 64
+  SaleCondition sale_condition;     // bytes 65 to 68
+  UINT8 trade_through_exempt_flag;  // byte 69
+  UINT16BE sellers_sale_days;       // bytes 70 to 71
+  UINT8 as_of_action;               // byte 72
+  UINT64BE timestamp_of_trade;      // bytes 73 to 80
+} PriorDayAsOfTradeMessage;
+
+// ---- Cross Sro Trading Action Message: 56 bytes ------------------------------
+
+// This fixed format message will be used to inform subscribers of trading actions such as halts, pauses, quotation resumptions and trading resumptions
+entrypoint typedef struct _CrossSroTradingActionMessage {
+  MessageInfo message_info;                 // bytes 0 to 25
+  UINT8 symbol_long[11];                    // bytes 26 to 36
+  UINT8 trading_action_code;                // byte 37
+  UINT32BE trading_action_sequence_number;  // bytes 38 to 41
+  UINT64BE action_timestamp;                // bytes 42 to 49
+  UINT8 trading_action_reason[6];           // bytes 50 to 55
+} CrossSroTradingActionMessage;
+
+// ---- Market Center Trading Action Message: 47 bytes --------------------------
+
+// This fixed format message will inform UTP data feed subscribers of when a UTP participant invokes or releases a market center-specific trading halt for a NASDAQ-listed security.
+entrypoint typedef struct _MarketCenterTradingActionMessage {
+  MessageInfo message_info;        // bytes 0 to 25
+  UINT8 symbol_long[11];           // bytes 26 to 36
+  UINT8 trading_action_code;       // byte 37
+  UINT64BE action_timestamp;       // bytes 38 to 45
+  UINT8 market_center_identifier;  // byte 46
+} MarketCenterTradingActionMessage;
+
+// ---- Issue Symbol Directory Message: 87 bytes --------------------------------
+
+// General Administrative
+entrypoint typedef struct _IssueSymbolDirectoryMessage {
+  MessageInfo message_info;              // bytes 0 to 25
+  UINT8 symbol_long[11];                 // bytes 26 to 36
+  UINT8 old_symbol[11];                  // bytes 37 to 47
+  UINT8 issue_name[30];                  // bytes 48 to 77
+  UINT8 issue_type;                      // byte 78
+  UINT8 issue_subtype[2];                // bytes 79 to 80
+  UINT8 market_tier;                     // byte 81
+  UINT8 authenticity;                    // byte 82
+  UINT8 short_sale_threshold_indicator;  // byte 83
+  UINT16BE round_lot_size;               // bytes 84 to 85
+  UINT8 financial_status_indicator;      // byte 86
+} IssueSymbolDirectoryMessage;
+
+// ---- Regulation Sho Short Sale Price Test Restricted Indicator Message: 32 bytes ----
+
+// Used to disseminate quotation data for NASDAQ listed securities
+entrypoint typedef struct _RegulationShoShortSalePriceTestRestrictedIndicatorMessage {
+  MessageInfo message_info;  // bytes 0 to 25
+  UINT8 symbol_short[5];     // bytes 26 to 30
+  UINT8 reg_sho_action;      // byte 31
+} RegulationShoShortSalePriceTestRestrictedIndicatorMessage;
+
+// ---- Limit Up Limit Down Price Band Message: 62 bytes ------------------------
+
+// Designed to prevent trades in individual NMS Stocks from occurring outside of specified Upper and Lower Limit Price Bands
+entrypoint typedef struct _LimitUpLimitDownPriceBandMessage {
+  MessageInfo message_info;         // bytes 0 to 25
+  UINT8 symbol_long[11];            // bytes 26 to 36
+  UINT8 luld_price_band_indicator;  // byte 37
+  UINT64BE luld_timestamp;          // bytes 38 to 45
+  UINT64BE limit_down_price;        // bytes 46 to 53
+  UINT64BE limit_up_price;          // bytes 54 to 61
+} LimitUpLimitDownPriceBandMessage;
+
+// ---- Market Wide Circuit Breaker Decline Level Message: 50 bytes -------------
+
+// A Market Wide Circuit Breaker (MWCB) Level message will inform participants and the UTP data recipients what the daily MWCB breach points are set to for the current trading day
+entrypoint typedef struct _MarketWideCircuitBreakerDeclineLevelMessage {
+  MessageInfo message_info;  // bytes 0 to 25
+  UINT64BE mwcb_level_1;     // bytes 26 to 33
+  UINT64BE mwcb_level_2;     // bytes 34 to 41
+  UINT64BE mwcb_level_3;     // bytes 42 to 49
+} MarketWideCircuitBreakerDeclineLevelMessage;
+
+// ---- Market Wide Circuit Breaker Status Message: 27 bytes --------------------
+
+// A Market Wide Circuit Breaker (MWCB) Status message will inform participants and the UTP data recipients when a MWCB has breached one of the established levels.
+entrypoint typedef struct _MarketWideCircuitBreakerStatusMessage {
+  MessageInfo message_info;           // bytes 0 to 25
+  UINT8 mwcb_status_level_indicator;  // byte 26
+} MarketWideCircuitBreakerStatusMessage;
+
+// ---- Auction Collar Message: 66 bytes ----------------------------------------
+
+// Primary markets using an automated reopening will calculate new Auction Collars, in compliance with rules around prices for re-opening, when applicable and publish this new Auction Collar Message
+entrypoint typedef struct _AuctionCollarMessage {
+  MessageInfo message_info;                 // bytes 0 to 25
+  UINT8 symbol_long[11];                    // bytes 26 to 36
+  UINT32BE trading_action_sequence_number;  // bytes 37 to 40
+  UINT64BE collar_reference_price;          // bytes 41 to 48
+  UINT64BE collar_up_price;                 // bytes 49 to 56
+  UINT64BE collar_down_price;               // bytes 57 to 64
+  UINT8 collar_extension_indicator;         // byte 65
+} AuctionCollarMessage;
+
+// ---- Start Of Day Message: 26 bytes ------------------------------------------
+
+// The Start of Day control message signifies the beginning of each operational cycle for SIP Processing
+entrypoint typedef struct _StartOfDayMessage {
+  MessageInfo message_info;  // bytes 0 to 25
+} StartOfDayMessage;
+
+// ---- End Of Day Message: 26 bytes --------------------------------------------
+
+// The End of Day control message signals the end of active message dissemination for the UTP SIP operational cycle
+entrypoint typedef struct _EndOfDayMessage {
+  MessageInfo message_info;  // bytes 0 to 25
+} EndOfDayMessage;
+
+// ---- Market Session Open Message: 26 bytes -----------------------------------
+
+// The Market Session Open Control Message signifies the opening of market systems for the session indicated in the Message Header
+entrypoint typedef struct _MarketSessionOpenMessage {
+  MessageInfo message_info;  // bytes 0 to 25
+} MarketSessionOpenMessage;
+
+// ---- Market Session Close Message: 26 bytes ----------------------------------
+
+// The Session Close Control Message signals the closing of market systems for the session indicated in the Message Header
+entrypoint typedef struct _MarketSessionCloseMessage {
+  MessageInfo message_info;  // bytes 0 to 25
+} MarketSessionCloseMessage;
+
+// ---- End Of Transmissions Message: 26 bytes ----------------------------------
+
+// The End of Transmissions Message signals that there will be no further transmissions of data sent through the UTP SIP line
+entrypoint typedef struct _EndOfTransmissionsMessage {
+  MessageInfo message_info;  // bytes 0 to 25
+} EndOfTransmissionsMessage;
+
+// ---- End Of Trade Reporting Message: 26 bytes --------------------------------
+
+// The End of Trade Reporting Control Message signals that SIP has completed its trade entry eligibility and that no further data will be accepted by the UTP SIP for the market session
+entrypoint typedef struct _EndOfTradeReportingMessage {
+  MessageInfo message_info;  // bytes 0 to 25
+} EndOfTradeReportingMessage;
+
+// ---- End Of Consolidated Last Sale Eligibility: 26 bytes ---------------------
+
+// The End of Consolidated Last Sale Eligibility control message signals the closing of the trade-reporting window for consolidated last sale calculation eligibility
+entrypoint typedef struct _EndOfConsolidatedLastSaleEligibility {
+  MessageInfo message_info;  // bytes 0 to 25
+} EndOfConsolidatedLastSaleEligibility;
+

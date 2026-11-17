@@ -1,0 +1,302 @@
+// New York Stock Exchange Top Feed
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out ArcaOptions_TopFeed_v1_3_a.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+//
+// License: MIT No Attribution
+
+// ---- Send Time: 8 bytes ------------------------------------------------------
+
+// The time when this packet was published to the multicast channel
+entrypoint typedef struct _SendTime {
+  UINT32 seconds;      // bytes 0 to 3
+  UINT32 nanoseconds;  // bytes 4 to 7
+} SendTime;
+
+// ---- Packet Header: 16 bytes -------------------------------------------------
+
+entrypoint typedef struct _PacketHeader {
+  UINT16 packet_size;      // bytes 0 to 1
+  UINT8 delivery_flag;     // byte 2
+  UINT8 message_count;     // byte 3
+  UINT32 sequence_number;  // bytes 4 to 7
+  SendTime send_time;      // bytes 8 to 15
+} PacketHeader;
+
+// ---- Message Header: 4 bytes -------------------------------------------------
+
+entrypoint typedef struct _MessageHeader {
+  UINT16 message_size;  // bytes 0 to 1
+  UINT16 message_type;  // bytes 2 to 3
+} MessageHeader;
+
+// ---- Outright Quote Message: 36 bytes ----------------------------------------
+
+// The Outright Quote message provides the price and aggregated volume for the best bid and best offer. Volumes aggregate quote and order interest. The message also indicates aggregated Customer volumes within the overall volumes.
+entrypoint typedef struct _OutrightQuoteMessage {
+  UINT32 source_time;          // bytes 0 to 3
+  UINT32 source_time_ns;       // bytes 4 to 7
+  UINT32 series_index;         // bytes 8 to 11
+  UINT32 symbol_seq_num;       // bytes 12 to 15
+  UINT32 ask_price;            // bytes 16 to 19, signed, read here as unsigned
+  UINT32 bid_price;            // bytes 20 to 23, signed, read here as unsigned
+  UINT16 ask_volume;           // bytes 24 to 25
+  UINT16 bid_volume;           // bytes 26 to 27
+  UINT16 ask_customer_volume;  // bytes 28 to 29
+  UINT16 bid_customer_volume;  // bytes 30 to 31
+  UINT8 quote_condition;       // byte 32
+  UINT8 reserved_1;            // byte 33
+  UINT8 reserved_2[2];         // bytes 34 to 35
+} OutrightQuoteMessage;
+
+// ---- Outright Trade Message: 32 bytes ----------------------------------------
+
+// The Outright Trade message is used to publish all Last Sales for outright symbols.
+entrypoint typedef struct _OutrightTradeMessage {
+  UINT32 source_time;     // bytes 0 to 3
+  UINT32 source_time_ns;  // bytes 4 to 7
+  UINT32 series_index;    // bytes 8 to 11
+  UINT32 symbol_seq_num;  // bytes 12 to 15
+  UINT32 trade_id;        // bytes 16 to 19
+  UINT32 price;           // bytes 20 to 23, signed, read here as unsigned
+  UINT32 volume_4;        // bytes 24 to 27
+  UINT8 trade_cond_1;     // byte 28
+  UINT8 trade_cond_2;     // byte 29
+  UINT8 reserved_2[2];    // bytes 30 to 31
+} OutrightTradeMessage;
+
+// ---- Outright Trade Cancel Message: 20 bytes ---------------------------------
+
+// The Trade Cancel message is used to cancel or bust a trade.
+entrypoint typedef struct _OutrightTradeCancelMessage {
+  UINT32 source_time;        // bytes 0 to 3
+  UINT32 source_time_ns;     // bytes 4 to 7
+  UINT32 series_index;       // bytes 8 to 11
+  UINT32 symbol_seq_num;     // bytes 12 to 15
+  UINT32 original_trade_id;  // bytes 16 to 19
+} OutrightTradeCancelMessage;
+
+// ---- Outright Trade Correction Message: 36 bytes -----------------------------
+
+// The Trade Correction message is used to correct a trade.
+entrypoint typedef struct _OutrightTradeCorrectionMessage {
+  UINT32 source_time;        // bytes 0 to 3
+  UINT32 source_time_ns;     // bytes 4 to 7
+  UINT32 series_index;       // bytes 8 to 11
+  UINT32 symbol_seq_num;     // bytes 12 to 15
+  UINT32 original_trade_id;  // bytes 16 to 19
+  UINT32 trade_id;           // bytes 20 to 23
+  UINT32 price;              // bytes 24 to 27, signed, read here as unsigned
+  UINT32 volume_4;           // bytes 28 to 31
+  UINT8 trade_cond_1;        // byte 32
+  UINT8 trade_cond_2;        // byte 33
+  UINT8 reserved_2[2];       // bytes 34 to 35
+} OutrightTradeCorrectionMessage;
+
+// ---- Outright Imbalance Message: 32 bytes ------------------------------------
+
+// The Outright Imbalance message is sent during the Pre-opening phase or a symbol Halt to provide indicative opening price and net imbalance of all orders at that price which are orders eligible for next Auction.
+entrypoint typedef struct _OutrightImbalanceMessage {
+  UINT32 source_time;           // bytes 0 to 3
+  UINT32 source_time_ns;        // bytes 4 to 7
+  UINT32 series_index;          // bytes 8 to 11
+  UINT32 symbol_seq_num;        // bytes 12 to 15
+  UINT32 reference_price;       // bytes 16 to 19, signed, read here as unsigned
+  UINT16 paired_qty;            // bytes 20 to 21
+  UINT16 total_imbalance_qty;   // bytes 22 to 23
+  UINT16 market_imbalance_qty;  // bytes 24 to 25
+  UINT8 auction_type;           // byte 26
+  UINT8 imbalance_side;         // byte 27
+  UINT8 market_imbalance_side;  // byte 28
+  UINT8 reserved_3[3];          // bytes 29 to 31
+} OutrightImbalanceMessage;
+
+// ---- Outright Crossing Rfq Message: 24 bytes ---------------------------------
+
+// The Outright Crossing RFQ (Request for Quote) message is sent out in the event of an auction on an outright order.
+entrypoint typedef struct _OutrightCrossingRfqMessage {
+  UINT32 source_time;     // bytes 0 to 3
+  UINT32 source_ns;       // bytes 4 to 7
+  UINT32 series_index;    // bytes 8 to 11
+  UINT32 symbol_seq_num;  // bytes 12 to 15
+  UINT8 side;             // byte 16
+  UINT8 reserved_1;       // byte 17
+  UINT16 volume_2;        // bytes 18 to 19
+  UINT32 price;           // bytes 20 to 23, signed, read here as unsigned
+} OutrightCrossingRfqMessage;
+
+// ---- Outright Bold Rfq Message: 28 bytes -------------------------------------
+
+// The Outright BOLD RFQ (Request for Quote) message notifies clients of a special exposure order (a BOLD order) available for execution on a first-come first-served basis.
+entrypoint typedef struct _OutrightBoldRfqMessage {
+  UINT32 source_time;     // bytes 0 to 3
+  UINT32 source_ns;       // bytes 4 to 7
+  UINT32 series_index;    // bytes 8 to 11
+  UINT32 symbol_seq_num;  // bytes 12 to 15
+  UINT8 side;             // byte 16
+  UINT8 capacity;         // byte 17
+  UINT16 contracts;       // bytes 18 to 19
+  UINT32 price;           // bytes 20 to 23, signed, read here as unsigned
+  UINT8 participant[4];   // bytes 24 to 27
+} OutrightBoldRfqMessage;
+
+// ---- Outright Summary Message: 36 bytes --------------------------------------
+
+// The Outright summary message provides trading highlights of the day. It is sent out once at the end of the trading day as soon as a symbol closes.
+entrypoint typedef struct _OutrightSummaryMessage {
+  UINT32 source_time;     // bytes 0 to 3
+  UINT32 source_time_ns;  // bytes 4 to 7
+  UINT32 series_index;    // bytes 8 to 11
+  UINT32 symbol_seq_num;  // bytes 12 to 15
+  UINT32 high_price;      // bytes 16 to 19, signed, read here as unsigned
+  UINT32 low_price;       // bytes 20 to 23, signed, read here as unsigned
+  UINT32 open_;           // bytes 24 to 27, signed, read here as unsigned
+  UINT32 close;           // bytes 28 to 31, signed, read here as unsigned
+  UINT32 total_volume;    // bytes 32 to 35
+} OutrightSummaryMessage;
+
+// ---- Underlying Status Message: 20 bytes -------------------------------------
+
+// The Underlying Status message is used to inform the subscribers of changes in the status of an Underlying symbol.
+entrypoint typedef struct _UnderlyingStatusMessage {
+  UINT32 source_time;         // bytes 0 to 3
+  UINT32 source_time_ns;      // bytes 4 to 7
+  UINT32 underlying_index;    // bytes 8 to 11
+  UINT32 underlying_seq_num;  // bytes 12 to 15
+  UINT8 security_status;      // byte 16
+  UINT8 halt_condition;       // byte 17
+  UINT8 reserved_2[2];        // bytes 18 to 19
+} UnderlyingStatusMessage;
+
+// ---- Outright Series Status Message: 20 bytes --------------------------------
+
+// The Series Status message is used to inform the subscribers of changes in symbol status of an outright symbol.
+entrypoint typedef struct _OutrightSeriesStatusMessage {
+  UINT32 source_time;     // bytes 0 to 3
+  UINT32 source_time_ns;  // bytes 4 to 7
+  UINT32 series_index;    // bytes 8 to 11
+  UINT32 symbol_seq_num;  // bytes 12 to 15
+  UINT8 security_status;  // byte 16
+  UINT8 halt_condition;   // byte 17
+  UINT8 reserved_2[2];    // bytes 18 to 19
+} OutrightSeriesStatusMessage;
+
+// ---- Refresh Outright Quote Message: 36 bytes --------------------------------
+
+// The Refresh Quote message is sent in the event no quote messages are published for the symbol for 2 consecutive minutes.
+entrypoint typedef struct _RefreshOutrightQuoteMessage {
+  UINT32 source_time;          // bytes 0 to 3
+  UINT32 source_time_ns;       // bytes 4 to 7
+  UINT32 series_index;         // bytes 8 to 11
+  UINT32 symbol_seq_num;       // bytes 12 to 15
+  UINT32 ask_price;            // bytes 16 to 19, signed, read here as unsigned
+  UINT32 bid_price;            // bytes 20 to 23, signed, read here as unsigned
+  UINT16 ask_volume;           // bytes 24 to 25
+  UINT16 bid_volume;           // bytes 26 to 27
+  UINT16 ask_customer_volume;  // bytes 28 to 29
+  UINT16 bid_customer_volume;  // bytes 30 to 31
+  UINT8 quote_condition;       // byte 32
+  UINT8 reserved_1;            // byte 33
+  UINT8 reserved_2[2];         // bytes 34 to 35
+} RefreshOutrightQuoteMessage;
+
+// ---- Refresh Outright Trade Message: 32 bytes --------------------------------
+
+// The Refresh Outright Trade message is sent in the event no Outright Trade messages are published for the symbol for 2 consecutive minutes.
+entrypoint typedef struct _RefreshOutrightTradeMessage {
+  UINT32 source_time;     // bytes 0 to 3
+  UINT32 source_time_ns;  // bytes 4 to 7
+  UINT32 series_index;    // bytes 8 to 11
+  UINT32 symbol_seq_num;  // bytes 12 to 15
+  UINT32 trade_id;        // bytes 16 to 19
+  UINT32 price;           // bytes 20 to 23, signed, read here as unsigned
+  UINT32 volume_4;        // bytes 24 to 27
+  UINT8 trade_cond_1;     // byte 28
+  UINT8 trade_cond_2;     // byte 29
+  UINT8 reserved_2[2];    // bytes 30 to 31
+} RefreshOutrightTradeMessage;
+
+// ---- Refresh Outright Imbalance Message: 32 bytes ----------------------------
+
+// The Refresh Outright Imbalance message is sent in the event no Outright Imbalance messages are published for the symbol for 2 consecutive minutes during Pre-opening or a symbol Halt.
+entrypoint typedef struct _RefreshOutrightImbalanceMessage {
+  UINT32 source_time;           // bytes 0 to 3
+  UINT32 source_time_ns;        // bytes 4 to 7
+  UINT32 series_index;          // bytes 8 to 11
+  UINT32 symbol_seq_num;        // bytes 12 to 15
+  UINT32 reference_price;       // bytes 16 to 19, signed, read here as unsigned
+  UINT16 paired_qty;            // bytes 20 to 21
+  UINT16 total_imbalance_qty;   // bytes 22 to 23
+  UINT16 market_imbalance_qty;  // bytes 24 to 25
+  UINT8 auction_type;           // byte 26
+  UINT8 imbalance_side;         // byte 27
+  UINT8 market_imbalance_side;  // byte 28
+  UINT8 reserved_3[3];          // bytes 29 to 31
+} RefreshOutrightImbalanceMessage;
+
+// ---- Underlying Index Mapping Message: 24 bytes ------------------------------
+
+// On system startup, each multicast channel sends all the symbols on its channel. Underlying Index Mapping messages are published first, followed by all Series Index Mapping messages, and for the Complex feed, Complex Symbol Definitions last of all.
+entrypoint typedef struct _UnderlyingIndexMappingMessage {
+  UINT32 underlying_index;      // bytes 0 to 3
+  UINT8 underlying_symbol[11];  // bytes 4 to 14
+  UINT8 channel_id;             // byte 15
+  UINT16 market_id;             // bytes 16 to 17
+  UINT8 system_id;              // byte 18
+  UINT8 exchange_code;          // byte 19
+  UINT8 price_scale_code;       // byte 20
+  UINT8 security_type;          // byte 21
+  UINT8 price_resolution;       // byte 22
+  UINT8 reserved_1;             // byte 23
+} UnderlyingIndexMappingMessage;
+
+// ---- Series Index Mapping Message: 56 bytes ----------------------------------
+
+// On system startup, each multicast channel sends all the symbols on its channel. Underlying Index Mapping messages are published first, followed by all Series Index Mapping messages, and for the Complex feed, Complex Symbol Definitions last of all.
+entrypoint typedef struct _SeriesIndexMappingMessage {
+  UINT32 series_index;          // bytes 0 to 3
+  UINT8 channel_id;             // byte 4
+  UINT8 reserved_a_1;           // byte 5
+  UINT16 market_id;             // bytes 6 to 7
+  UINT8 system_id;              // byte 8
+  UINT8 reserved_b_1;           // byte 9
+  UINT16 stream_id;             // bytes 10 to 11
+  UINT32 underlying_index;      // bytes 12 to 15
+  UINT16 contract_multiplier;   // bytes 16 to 17
+  UINT8 maturity_date[6];       // bytes 18 to 23
+  UINT8 put_or_call;            // byte 24
+  UINT8 strike_price[10];       // bytes 25 to 34
+  UINT8 price_scale_code;       // byte 35
+  UINT8 underlying_symbol[11];  // bytes 36 to 46
+  UINT8 option_symbol_root[5];  // bytes 47 to 51
+  UINT32 group_id;              // bytes 52 to 55
+} SeriesIndexMappingMessage;
+
+// ---- Stream Id Message: 4 bytes ----------------------------------------------
+
+// In all multicast channels, a Stream ID Message is sent immediately after each packet header to uniquely identify the source or Stream ID of the data in the packet.
+entrypoint typedef struct _StreamIdMessage {
+  UINT16 stream_id;     // bytes 0 to 1
+  UINT8 reserved_2[2];  // bytes 2 to 3
+} StreamIdMessage;
+
+// ---- Sequence Number Reset Message: 10 bytes ---------------------------------
+
+// This message is sent to reset the Message Sequence Number at start of day, or in response to failures.
+entrypoint typedef struct _SequenceNumberResetMessage {
+  UINT32 source_time;     // bytes 0 to 3
+  UINT32 source_time_ns;  // bytes 4 to 7
+  UINT8 product_id;       // byte 8
+  UINT8 channel_id;       // byte 9
+} SequenceNumberResetMessage;
+

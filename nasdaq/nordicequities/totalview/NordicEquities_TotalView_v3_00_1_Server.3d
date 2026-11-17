@@ -1,0 +1,97 @@
+// National Association of Securities Dealers Automated Quotations (Nasdaq) Nordic Equity TotalView
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out NordicEquities_TotalView_v3_00_1_Server.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a length prefix framing what follows
+// - a field read in bits
+//
+// License: MIT No Attribution
+
+// ---- Server Packet Header: 3 bytes -------------------------------------------
+
+// Packet header of a packet sent by the server
+entrypoint typedef struct _ServerPacketHeader {
+  UINT16BE packet_length;    // bytes 0 to 1
+  UINT8 server_packet_type;  // byte 2
+} ServerPacketHeader;
+
+// ---- Login Accepted Packet: 30 bytes -----------------------------------------
+
+// The SoupBinTCP server sends a Login Accepted Packet in response to receiving a valid Login Request from the client
+entrypoint typedef struct _LoginAcceptedPacket {
+  UINT8 accepted_session[10];          // bytes 0 to 9
+  UINT8 accepted_sequence_number[20];  // bytes 10 to 29
+} LoginAcceptedPacket;
+
+// ---- Login Rejected Packet: 1 byte -------------------------------------------
+
+// The SoupBinTCP server sends this packet in response to an invalid Login Request Packet from the client
+entrypoint typedef struct _LoginRejectedPacket {
+  UINT8 reject_reason_code;  // byte 0
+} LoginRejectedPacket;
+
+// ---- System Event Message: 11 bytes ------------------------------------------
+
+// Signals a market or data feed handler event
+entrypoint typedef struct _SystemEventMessage {
+  UINT64BE timestamp;        // bytes 0 to 7
+  UINT16BE tracking_number;  // bytes 8 to 9
+  UINT8 event_code;          // byte 10
+} SystemEventMessage;
+
+// ---- Order Book Trading Action Message: 20 bytes -----------------------------
+
+// Indicates the current trading status of a security
+entrypoint typedef struct _OrderBookTradingActionMessage {
+  UINT64BE timestamp;        // bytes 0 to 7
+  UINT16BE tracking_number;  // bytes 8 to 9
+  UINT32BE order_book;       // bytes 10 to 13
+  UINT8 symbol_state;        // byte 14
+  UINT8 extension;           // byte 15
+  UINT8 reason[4];           // bytes 16 to 19
+} OrderBookTradingActionMessage;
+
+// ---- Add Order Message: 31 bytes ---------------------------------------------
+
+// An order added to the book without Mpid attribution
+entrypoint typedef struct _AddOrderMessage {
+  UINT64BE timestamp;               // bytes 0 to 7
+  UINT16BE tracking_number;         // bytes 8 to 9
+  UINT64BE order_reference_number;  // bytes 10 to 17
+  UINT8 buy_sell_indicator;         // byte 18
+  UINT32BE quantity;                // bytes 19 to 22
+  UINT32BE order_book;              // bytes 23 to 26
+  UINT32BE price;                   // bytes 27 to 30
+} AddOrderMessage;
+
+// ---- Add Order Mpid Attribution Message: 35 bytes ----------------------------
+
+// An order added to the book with Mpid attribution
+entrypoint typedef struct _AddOrderMpidAttributionMessage {
+  UINT64BE timestamp;               // bytes 0 to 7
+  UINT16BE tracking_number;         // bytes 8 to 9
+  UINT64BE order_reference_number;  // bytes 10 to 17
+  UINT8 buy_sell_indicator;         // byte 18
+  UINT32BE quantity;                // bytes 19 to 22
+  UINT32BE order_book;              // bytes 23 to 26
+  UINT32BE price;                   // bytes 27 to 30
+  UINT8 attribution[4];             // bytes 31 to 34
+} AddOrderMpidAttributionMessage;
+
+// ---- End Of Snapshot Message: 20 bytes ---------------------------------------
+
+// Denotes the TotalView Itch sequence number to begin real time processing from
+entrypoint typedef struct _EndOfSnapshotMessage {
+  UINT8 sequence_number[20];  // bytes 0 to 19
+} EndOfSnapshotMessage;
+

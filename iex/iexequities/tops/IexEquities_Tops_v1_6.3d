@@ -1,0 +1,149 @@
+// Investors Exchange Tops
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out IexEquities_Tops_v1_6.3d
+//
+// What this definition does not state, and the model does:
+// - a length prefix framing what follows
+// - a field read in bits
+//
+// License: MIT No Attribution
+
+// ---- Message Header: 3 bytes -------------------------------------------------
+
+// Snap message header
+entrypoint typedef struct _MessageHeader {
+  UINT16 message_length;  // bytes 0 to 1
+  UINT8 message_type;     // byte 2
+} MessageHeader;
+
+// ---- Snapshot Request Message: 56 bytes --------------------------------------
+
+// The Snapshot Request message is sent from the client to the Tops Snap server to authenticate and request a Snapshot Response
+entrypoint typedef struct _SnapshotRequestMessage {
+  UINT8 authentication_token[40];  // bytes 0 to 39
+  UINT32 channel_id;               // bytes 40 to 43
+  UINT32 session_id;               // bytes 44 to 47
+  UINT64 minimum_sequence_number;  // bytes 48 to 55
+} SnapshotRequestMessage;
+
+// ---- Error Response Message: 1 byte ------------------------------------------
+
+// Sent by the Tops Snap server to the client when a Snapshot Request is rejected
+entrypoint typedef struct _ErrorResponseMessage {
+  UINT8 reject_reason_code;  // byte 0
+} ErrorResponseMessage;
+
+// ---- Snapshot Start Message: 8 bytes -----------------------------------------
+
+// First message of a Snapshot Response sent from the Tops Snap server when a Snapshot Request is successful
+entrypoint typedef struct _SnapshotStartMessage {
+  UINT64 snapshot_length;  // bytes 0 to 7
+} SnapshotStartMessage;
+
+// ---- Iextp Header: 40 bytes --------------------------------------------------
+
+// IexTp header of the wrapped feed message
+entrypoint typedef struct _IextpHeader {
+  UINT8 version;                         // byte 0
+  UINT8 reserved;                        // byte 1
+  UINT16 message_protocol_id;            // bytes 2 to 3
+  UINT32 channel_id;                     // bytes 4 to 7
+  UINT32 session_id;                     // bytes 8 to 11
+  UINT16 payload_length;                 // bytes 12 to 13
+  UINT16 message_count;                  // bytes 14 to 15
+  UINT64 stream_offset;                  // bytes 16 to 23
+  UINT64 first_message_sequence_number;  // bytes 24 to 31
+  UINT64 send_time;                      // bytes 32 to 39, signed, read here as unsigned
+} IextpHeader;
+
+// ---- System Event Message: 9 bytes -------------------------------------------
+
+// The System Event Message is used to indicate events that apply to the market or the data feed
+entrypoint typedef struct _SystemEventMessage {
+  UINT8 system_event;  // byte 0
+  UINT64 timestamp;    // bytes 1 to 8, signed, read here as unsigned
+} SystemEventMessage;
+
+// ---- Trading Status Message: 21 bytes ----------------------------------------
+
+// The Trading Status Message is used to indicate the current trading status of a security.
+entrypoint typedef struct _TradingStatusMessage {
+  UINT8 trading_status;  // byte 0
+  UINT64 timestamp;      // bytes 1 to 8, signed, read here as unsigned
+  UINT8 symbol[8];       // bytes 9 to 16
+  UINT8 reason[4];       // bytes 17 to 20
+} TradingStatusMessage;
+
+// ---- Retail Liquidity Indicator Message: 17 bytes ----------------------------
+
+// broadcasts a real-time Retail Liquidity Indicator Message each time there is an update to IEX's eligible retail liquidity interest during the trading day
+entrypoint typedef struct _RetailLiquidityIndicatorMessage {
+  UINT8 retail_liquidity_indicator;  // byte 0
+  UINT64 timestamp;                  // bytes 1 to 8, signed, read here as unsigned
+  UINT8 symbol[8];                   // bytes 9 to 16
+} RetailLiquidityIndicatorMessage;
+
+// ---- Operational Halt Status Message: 17 bytes -------------------------------
+
+// The Exchange may suspend trading of one or more securities on IEX for operational reasons and indicates such operational halt using the Operational Halt Status Message.
+entrypoint typedef struct _OperationalHaltStatusMessage {
+  UINT8 operational_halt_status;  // byte 0
+  UINT64 timestamp;               // bytes 1 to 8, signed, read here as unsigned
+  UINT8 symbol[8];                // bytes 9 to 16
+} OperationalHaltStatusMessage;
+
+// ---- Short Sale Price Test Status Message: 18 bytes --------------------------
+
+// The Short Sale Price Test Message is used to indicate when a short sale price test restriction is in effect for a security.
+entrypoint typedef struct _ShortSalePriceTestStatusMessage {
+  UINT8 short_sale_price_test_status;  // byte 0
+  UINT64 timestamp;                    // bytes 1 to 8, signed, read here as unsigned
+  UINT8 symbol[8];                     // bytes 9 to 16
+  UINT8 detail;                        // byte 17
+} ShortSalePriceTestStatusMessage;
+
+// ---- Official Price Message: 25 bytes ----------------------------------------
+
+// Official Price Messages are sent for each IEX-listed security to indicate the IEX Official Opening Price and IEX Official Closing Price.
+entrypoint typedef struct _OfficialPriceMessage {
+  UINT8 price_type;       // byte 0
+  UINT64 timestamp;       // bytes 1 to 8, signed, read here as unsigned
+  UINT8 symbol[8];        // bytes 9 to 16
+  UINT64 official_price;  // bytes 17 to 24, signed, read here as unsigned
+} OfficialPriceMessage;
+
+// ---- Auction Information Message: 79 bytes -----------------------------------
+
+// Broadcasts an Auction Information Message every one second between the Lock-in Time and the auction match for Opening and Closing Auctions, and during the Display Only Period for IPO, Halt, and Volatility Auctions.
+entrypoint typedef struct _AuctionInformationMessage {
+  UINT8 auction_type;                  // byte 0
+  UINT64 timestamp;                    // bytes 1 to 8, signed, read here as unsigned
+  UINT8 symbol[8];                     // bytes 9 to 16
+  UINT32 paired_shares;                // bytes 17 to 20
+  UINT64 reference_price;              // bytes 21 to 28, signed, read here as unsigned
+  UINT64 indicative_clearing_price;    // bytes 29 to 36, signed, read here as unsigned
+  UINT32 imbalance_shares;             // bytes 37 to 40
+  UINT8 imbalance_side;                // byte 41
+  UINT8 extension_number;              // byte 42
+  UINT32 scheduled_auction_time;       // bytes 43 to 46
+  UINT64 auction_book_clearing_price;  // bytes 47 to 54, signed, read here as unsigned
+  UINT64 collar_reference_price;       // bytes 55 to 62, signed, read here as unsigned
+  UINT64 lower_auction_collar;         // bytes 63 to 70, signed, read here as unsigned
+  UINT64 upper_auction_collar;         // bytes 71 to 78, signed, read here as unsigned
+} AuctionInformationMessage;
+
+// ---- Snapshot End Message: 8 bytes -------------------------------------------
+
+// Final message of a Snapshot Response, carries the sequence number at which the snapshot was created
+entrypoint typedef struct _SnapshotEndMessage {
+  UINT64 snapshot_sequence_number;  // bytes 0 to 7
+} SnapshotEndMessage;
+

@@ -1,0 +1,120 @@
+// National Association of Securities Dealers Automated Quotations (Nasdaq) TotalView Itch
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out NsmEquities_TotalView_Glimpse_v3_1_Server.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a field filling what is left of what holds it
+// - the dispatch that chooses a message by its type
+//
+// License: MIT No Attribution
+
+// ---- Server Packet Header: 1 byte --------------------------------------------
+
+// SoupTcp Packet Header sent by the server
+entrypoint typedef struct _ServerPacketHeader {
+  UINT8 server_packet_type;  // byte 0
+} ServerPacketHeader;
+
+// ---- Login Accepted Packet: 30 bytes -----------------------------------------
+
+// The SoupTcp server sends a Login Accepted Packet in response to receiving a valid Login Request from the client.
+entrypoint typedef struct _LoginAcceptedPacket {
+  UINT8 accepted_session[10];          // bytes 0 to 9
+  UINT8 accepted_sequence_number[20];  // bytes 10 to 29
+} LoginAcceptedPacket;
+
+// ---- Login Rejected Packet: 1 byte -------------------------------------------
+
+// The SoupTcp server sends this packet in response to an invalid Login Request Packet from the client.
+entrypoint typedef struct _LoginRejectedPacket {
+  UINT8 reject_reason_code;  // byte 0
+} LoginRejectedPacket;
+
+// ---- Sequenced Message Header: 1 byte ----------------------------------------
+
+// Time and type carried ahead of every sequenced Itch message
+entrypoint typedef struct _SequencedMessageHeader {
+  UINT8 message_type;  // byte 0
+} SequencedMessageHeader;
+
+// ---- Seconds Message: 5 bytes ------------------------------------------------
+
+// This message is sent every second for which at least one NASDAQ GLIMPSE 3.1 / NASDAQ TotalView-ITCH 3.1 message is being generated.
+entrypoint typedef struct _SecondsMessage {
+  UINT8 second[5];  // bytes 0 to 4
+} SecondsMessage;
+
+// ---- Milliseconds Message: 3 bytes -------------------------------------------
+
+// This message is sent every millisecond for which at least one NASDAQ GLIMPSE 3.1 / NASDAQ TotalView-ITCH 3.1 message is being generated.
+entrypoint typedef struct _MillisecondsMessage {
+  UINT8 millisecond[3];  // bytes 0 to 2
+} MillisecondsMessage;
+
+// ---- System Event Message: 1 byte --------------------------------------------
+
+// NASDAQ GLIMPSE product is designed to support the same system event messages as the NASDAQ TotalView-ITCH feed. On GLIMPSE, NASDAQ will send out system event messages for those events that occurred up to the time of the GLIMPSE snapshot request.
+entrypoint typedef struct _SystemEventMessage {
+  UINT8 event_code;  // byte 0
+} SystemEventMessage;
+
+// ---- Add Order Message: 35 bytes ---------------------------------------------
+
+// Add Order - No MPID Attribution Message. This message will be generated for unattributed orders accepted by the NASDAQ system.
+entrypoint typedef struct _AddOrderMessage {
+  UINT8 order_reference_number[12];  // bytes 0 to 11
+  UINT8 buy_sell_indicator;          // byte 12
+  UINT8 shares[6];                   // bytes 13 to 18
+  UINT8 stock[6];                    // bytes 19 to 24
+  UINT8 price[10];                   // bytes 25 to 34
+} AddOrderMessage;
+
+// ---- Add Order Mpid Attribution Message: 39 bytes ----------------------------
+
+// Add Order - MPID Attribution Message. This message will be generated for attributed orders and quotations accepted by the NASDAQ system.
+entrypoint typedef struct _AddOrderMpidAttributionMessage {
+  UINT8 order_reference_number[12];  // bytes 0 to 11
+  UINT8 buy_sell_indicator;          // byte 12
+  UINT8 shares[6];                   // bytes 13 to 18
+  UINT8 stock[6];                    // bytes 19 to 24
+  UINT8 price[10];                   // bytes 25 to 34
+  UINT8 attribution[4];              // bytes 35 to 38
+} AddOrderMpidAttributionMessage;
+
+// ---- Stock Directory Message: 15 bytes ---------------------------------------
+
+// At the start of each GLIMPSE transmission, NASDAQ will disseminate stock directory messages for all symbols in NASDAQ execution system for the current trading day.
+entrypoint typedef struct _StockDirectoryMessage {
+  UINT8 stock[6];                    // bytes 0 to 5
+  UINT8 market_category;             // byte 6
+  UINT8 financial_status_indicator;  // byte 7
+  UINT8 round_lot_size[6];           // bytes 8 to 13
+  UINT8 round_lots_only;             // byte 14
+} StockDirectoryMessage;
+
+// ---- Stock Trading Action Message: 12 bytes ----------------------------------
+
+// NASDAQ uses this administrative message to indicate the current trading status of a security to the trading community.
+entrypoint typedef struct _StockTradingActionMessage {
+  UINT8 stock[6];       // bytes 0 to 5
+  UINT8 trading_state;  // byte 6
+  UINT8 reserved_1;     // byte 7
+  UINT8 reason[4];      // bytes 8 to 11
+} StockTradingActionMessage;
+
+// ---- End Of Snapshot Message: 20 bytes ---------------------------------------
+
+// The Snapshot message reflects the NASDAQ TotalView-ITCH 3.1 sequence number at the time that the GLIMPSE 3.1 spin was requested.
+entrypoint typedef struct _EndOfSnapshotMessage {
+  UINT8 itch_sequence_number[20];  // bytes 0 to 19
+} EndOfSnapshotMessage;
+

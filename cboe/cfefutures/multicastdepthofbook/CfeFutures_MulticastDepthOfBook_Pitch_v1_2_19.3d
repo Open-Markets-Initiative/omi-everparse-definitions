@@ -1,0 +1,254 @@
+// Chicago Board Options Exchange Futures Multicast Depth Of Book
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out CfeFutures_MulticastDepthOfBook_Pitch_v1_2_19.3d
+//
+// What this definition does not state, and the model does:
+// - the dispatch that chooses a message by its type
+// - a run filling what frames it
+// - a field read in bits
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Packet Header: 8 bytes --------------------------------------------------
+
+entrypoint typedef struct _PacketHeader {
+  UINT16 length;        // bytes 0 to 1
+  UINT8 message_count;  // byte 2
+  UINT8 unit_;          // byte 3
+  UINT32 sequence;      // bytes 4 to 7
+} PacketHeader;
+
+// ---- Message Header: 2 bytes -------------------------------------------------
+
+entrypoint typedef struct _MessageHeader {
+  UINT8 message_length;  // byte 0
+  UINT8 message_type;    // byte 1
+} MessageHeader;
+
+// ---- Time Reference Message: 16 bytes ----------------------------------------
+
+// The Time Reference message is used to provide a midnight reference point for recipients of the feed. It is sent whenever the system starts up and when the system crosses a midnight boundary.
+entrypoint typedef struct _TimeReferenceMessage {
+  UINT32 midnight_reference;  // bytes 0 to 3
+  UINT32 time_reference;      // bytes 4 to 7
+  UINT32 time_offset;         // bytes 8 to 11
+  UINT32 trade_date;          // bytes 12 to 15
+} TimeReferenceMessage;
+
+// ---- Time Message: 8 bytes ---------------------------------------------------
+
+// A Time message is immediately generated and sent when there is a PITCH event for a given clock second.
+entrypoint typedef struct _TimeMessage {
+  UINT32 time_reference;  // bytes 0 to 3
+  UINT32 epoch_time;      // bytes 4 to 7
+} TimeMessage;
+
+// ---- Unit Clear Message: 4 bytes ---------------------------------------------
+
+// The Unit Clear message instructs feed recipients to clear all orders for the CFE book in the unit specified in the Sequenced Unit Header message header.
+entrypoint typedef struct _UnitClearMessage {
+  UINT32 time_offset;  // bytes 0 to 3
+} UnitClearMessage;
+
+// ---- Futures Variance Symbol Mapping Message: 38 bytes -----------------------
+
+// The Futures Variance Symbol Mapping message is used to disseminate symbol reference data for S P 500 Variance Futures (VA Futures) symbols.
+entrypoint typedef struct _FuturesVarianceSymbolMappingMessage {
+  UINT32 time_offset;           // bytes 0 to 3
+  UINT32 unit_timestamp;        // bytes 4 to 7
+  UINT8 feed_symbol[6];         // bytes 8 to 13
+  UINT8 futures_symbol[12];     // bytes 14 to 25
+  UINT64 accrued_day_variance;  // bytes 26 to 33, signed, read here as unsigned
+  UINT16 num_final_returns;     // bytes 34 to 35
+  UINT16 num_elapsed_returns;   // bytes 36 to 37
+} FuturesVarianceSymbolMappingMessage;
+
+// ---- Price Limits Message: 26 bytes ------------------------------------------
+
+// The Price Limits message is sent out at the start of a session for products subject to price limits per the contract specifications.
+entrypoint typedef struct _PriceLimitsMessage {
+  UINT32 time_offset;        // bytes 0 to 3
+  UINT8 symbol[6];           // bytes 4 to 9
+  UINT64 upper_price_limit;  // bytes 10 to 17
+  UINT64 lower_price_limit;  // bytes 18 to 25
+} PriceLimitsMessage;
+
+// ---- Add Order Long Message: 31 bytes ----------------------------------------
+
+// An Add Order message represents a newly accepted visible order on the CFE book.
+entrypoint typedef struct _AddOrderLongMessage {
+  UINT32 time_offset;    // bytes 0 to 3
+  UINT64 order_id;       // bytes 4 to 11
+  UINT8 side_indicator;  // byte 12
+  UINT32 quantity_long;  // bytes 13 to 16
+  UINT8 symbol[6];       // bytes 17 to 22
+  UINT64 price_long;     // bytes 23 to 30
+} AddOrderLongMessage;
+
+// ---- Add Order Short Message: 23 bytes ---------------------------------------
+
+// An Add Order message represents a newly accepted visible order on the CFE book.
+entrypoint typedef struct _AddOrderShortMessage {
+  UINT32 time_offset;     // bytes 0 to 3
+  UINT64 order_id;        // bytes 4 to 11
+  UINT8 side_indicator;   // byte 12
+  UINT16 quantity_short;  // bytes 13 to 14
+  UINT8 symbol[6];        // bytes 15 to 20
+  UINT16 price_short;     // bytes 21 to 22
+} AddOrderShortMessage;
+
+// ---- Order Executed Message: 25 bytes ----------------------------------------
+
+// Order Executed messages are sent when an order on the CFE book is executed in whole or in part.
+entrypoint typedef struct _OrderExecutedMessage {
+  UINT32 time_offset;        // bytes 0 to 3
+  UINT64 order_id;           // bytes 4 to 11
+  UINT32 executed_quantity;  // bytes 12 to 15
+  UINT64 execution_id;       // bytes 16 to 23
+  UINT8 trade_condition;     // byte 24
+} OrderExecutedMessage;
+
+// ---- Reduce Size Long Message: 16 bytes --------------------------------------
+
+// Reduce Size messages are sent when a visible order on the CFE book is partially reduced.
+entrypoint typedef struct _ReduceSizeLongMessage {
+  UINT32 time_offset;             // bytes 0 to 3
+  UINT64 order_id;                // bytes 4 to 11
+  UINT32 canceled_quantity_long;  // bytes 12 to 15
+} ReduceSizeLongMessage;
+
+// ---- Reduce Size Short Message: 14 bytes -------------------------------------
+
+// Reduce Size messages are sent when a visible order on the CFE book is partially reduced.
+entrypoint typedef struct _ReduceSizeShortMessage {
+  UINT32 time_offset;              // bytes 0 to 3
+  UINT64 order_id;                 // bytes 4 to 11
+  UINT16 canceled_quantity_short;  // bytes 12 to 13
+} ReduceSizeShortMessage;
+
+// ---- Modify Order Long Message: 24 bytes -------------------------------------
+
+// The Modify Order message is sent whenever an open order is visibly modified. The Order Id refers to the Order Id of the original Add Order message.
+entrypoint typedef struct _ModifyOrderLongMessage {
+  UINT32 time_offset;    // bytes 0 to 3
+  UINT64 order_id;       // bytes 4 to 11
+  UINT32 quantity_long;  // bytes 12 to 15
+  UINT64 price_long;     // bytes 16 to 23
+} ModifyOrderLongMessage;
+
+// ---- Modify Order Short Message: 16 bytes ------------------------------------
+
+// The Modify Order message is sent whenever an open order is visibly modified. The Order Id refers to the Order Id of the original Add Order message.
+entrypoint typedef struct _ModifyOrderShortMessage {
+  UINT32 time_offset;     // bytes 0 to 3
+  UINT64 order_id;        // bytes 4 to 11
+  UINT16 quantity_short;  // bytes 12 to 13
+  UINT16 price_short;     // bytes 14 to 15
+} ModifyOrderShortMessage;
+
+// ---- Delete Order Message: 12 bytes ------------------------------------------
+
+// The Delete Order message is sent whenever a booked order is cancelled or leaves the order book.
+entrypoint typedef struct _DeleteOrderMessage {
+  UINT32 time_offset;  // bytes 0 to 3
+  UINT64 order_id;     // bytes 4 to 11
+} DeleteOrderMessage;
+
+// ---- Trade Long Message: 40 bytes --------------------------------------------
+
+// The Trade message provides information about executions that occur off of the CFE book (such as ECRP/Block trades). Trade messages are necessary to calculate CFE execution data.
+entrypoint typedef struct _TradeLongMessage {
+  UINT32 time_offset;     // bytes 0 to 3
+  UINT64 order_id;        // bytes 4 to 11
+  UINT8 side_indicator;   // byte 12
+  UINT32 quantity_long;   // bytes 13 to 16
+  UINT8 symbol[6];        // bytes 17 to 22
+  UINT64 price_long;      // bytes 23 to 30
+  UINT64 execution_id;    // bytes 31 to 38
+  UINT8 trade_condition;  // byte 39
+} TradeLongMessage;
+
+// ---- Trade Short Message: 32 bytes -------------------------------------------
+
+// The Trade message provides information about executions that occur off of the CFE book (such as ECRP/Block trades). Trade messages are necessary to calculate CFE execution data.
+entrypoint typedef struct _TradeShortMessage {
+  UINT32 time_offset;     // bytes 0 to 3
+  UINT64 order_id;        // bytes 4 to 11
+  UINT8 side_indicator;   // byte 12
+  UINT16 quantity_short;  // bytes 13 to 14
+  UINT8 symbol[6];        // bytes 15 to 20
+  UINT16 price_short;     // bytes 21 to 22
+  UINT64 execution_id;    // bytes 23 to 30
+  UINT8 trade_condition;  // byte 31
+} TradeShortMessage;
+
+// ---- Transaction Begin Message: 4 bytes --------------------------------------
+
+// The Transaction Begin message indicates any subsequent messages, up to the accompanying Transaction End message, are all part of the same transaction block.
+entrypoint typedef struct _TransactionBeginMessage {
+  UINT32 time_offset;  // bytes 0 to 3
+} TransactionBeginMessage;
+
+// ---- Transaction End Message: 4 bytes ----------------------------------------
+
+// The Transaction End message indicates that a transaction indicated by a previous Transaction Begin message has completed.
+entrypoint typedef struct _TransactionEndMessage {
+  UINT32 time_offset;  // bytes 0 to 3
+} TransactionEndMessage;
+
+// ---- Trade Break Message: 12 bytes -------------------------------------------
+
+// The Trade Break message is sent whenever an execution on CFE is broken.
+entrypoint typedef struct _TradeBreakMessage {
+  UINT32 time_offset;   // bytes 0 to 3
+  UINT64 execution_id;  // bytes 4 to 11
+} TradeBreakMessage;
+
+// ---- Settlement Message: 23 bytes --------------------------------------------
+
+// Settlement messages are used to provide information concerning indicative, approved, or corrected daily and final settlement prices for CFE products.
+entrypoint typedef struct _SettlementMessage {
+  UINT32 time_offset;       // bytes 0 to 3
+  UINT8 symbol[6];          // bytes 4 to 9
+  UINT32 trade_date;        // bytes 10 to 13
+  UINT64 settlement_price;  // bytes 14 to 21
+  UINT8 issue;              // byte 22
+} SettlementMessage;
+
+// ---- Open Interest Message: 18 bytes -----------------------------------------
+
+// The Open Interest message is sent to communicate a symbol's open interest, usually for the prior trading date.
+entrypoint typedef struct _OpenInterestMessage {
+  UINT32 time_offset;    // bytes 0 to 3
+  UINT8 symbol[6];       // bytes 4 to 9
+  UINT32 trade_date;     // bytes 10 to 13
+  UINT32 open_interest;  // bytes 14 to 17
+} OpenInterestMessage;
+
+// ---- Trading Status Message: 16 bytes ----------------------------------------
+
+// The Trading Status message is used to indicate the current trading status of a Futures contract.
+entrypoint typedef struct _TradingStatusMessage {
+  UINT32 time_offset;    // bytes 0 to 3
+  UINT8 symbol[6];       // bytes 4 to 9
+  UINT8 reserved_2[2];   // bytes 10 to 11
+  UINT8 trading_status;  // byte 12
+  UINT8 reserved_3[3];   // bytes 13 to 15
+} TradingStatusMessage;
+
+// ---- End Of Session Message: 4 bytes -----------------------------------------
+
+// The End of Session message is sent for each unit when the unit shuts down. No more sequenced messages will be delivered for this unit, but heartbeats from the unit may be received.
+entrypoint typedef struct _EndOfSessionMessage {
+  UINT32 time_offset;  // bytes 0 to 3
+} EndOfSessionMessage;
+

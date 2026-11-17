@@ -1,0 +1,73 @@
+// Japan Exchange Group Market By Order
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out TseEquities_MarketByOrder_v1_3_Tcp.3d
+//
+// What this definition does not state, and the model does:
+// - a length prefix framing what follows
+// - a field filling what is left of what holds it
+//
+// License: MIT No Attribution
+
+// ---- Tcp Packet Header: 3 bytes ----------------------------------------------
+
+// Jpx Flex Tcp packet header carrying length prefix and packet type discriminator
+entrypoint typedef struct _TcpPacketHeader {
+  UINT16BE packet_length;  // bytes 0 to 1
+  UINT8 packet_type;       // byte 2
+} TcpPacketHeader;
+
+// ---- Login Request Retransmission Message: 15 bytes --------------------------
+
+// Tcp login request selecting retransmission, sent by the user. One of the two Packet Type codes the document gives the 18 byte Login Request.
+entrypoint typedef struct _LoginRequestRetransmissionMessage {
+  UINT8 user_id[6];                  // bytes 0 to 5
+  UINT8 multicast_group_number;      // byte 6
+  UINT8 number_of_system_reboots;    // byte 7
+  UINT32BE sequence_number;          // bytes 8 to 11
+  UINT8 requested_message_count[3];  // bytes 12 to 14
+} LoginRequestRetransmissionMessage;
+
+// ---- Login Request Snapshot Message: 15 bytes --------------------------------
+
+// Tcp login request selecting snapshot, sent by the user. Same layout as the retransmission request; Number of System Reboots, Sequence Number and Requested Message Count are all set to 0.
+entrypoint typedef struct _LoginRequestSnapshotMessage {
+  UINT8 user_id[6];                  // bytes 0 to 5
+  UINT8 multicast_group_number;      // byte 6
+  UINT8 number_of_system_reboots;    // byte 7
+  UINT32BE sequence_number;          // bytes 8 to 11
+  UINT8 requested_message_count[3];  // bytes 12 to 14
+} LoginRequestSnapshotMessage;
+
+// ---- Login Result Accepted Message: 2 bytes ----------------------------------
+
+// Tcp login response accepting the request. Result Code carries A.
+entrypoint typedef struct _LoginResultAcceptedMessage {
+  UINT8 multicast_group_number;  // byte 0
+  UINT8 result_code;             // byte 1
+} LoginResultAcceptedMessage;
+
+// ---- Login Result Rejected Message: 2 bytes ----------------------------------
+
+// Tcp login response rejecting the request. Same layout as the accepted response; Result Code carries the reason the request failed.
+entrypoint typedef struct _LoginResultRejectedMessage {
+  UINT8 multicast_group_number;  // byte 0
+  UINT8 result_code;             // byte 1
+} LoginResultRejectedMessage;
+
+// ---- End Of Message Message: 6 bytes -----------------------------------------
+
+// Tcp end of message marker terminating a retransmission or snapshot session.
+entrypoint typedef struct _EndOfMessageMessage {
+  UINT8 multicast_group_number;    // byte 0
+  UINT8 number_of_system_reboots;  // byte 1
+  UINT32BE next_sequence_number;   // bytes 2 to 5
+} EndOfMessageMessage;
+

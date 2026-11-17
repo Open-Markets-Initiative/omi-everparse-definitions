@@ -1,0 +1,65 @@
+// Aquis Exchange Aquis Market Data Snapshot
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out AquisEquities_Snapshot_v4_1.3d
+//
+// What this definition does not state, and the model does:
+// - a run counted by a field
+// - a field read in bits
+//
+// License: MIT No Attribution
+
+// ---- Packet Header: 1 byte ---------------------------------------------------
+
+// Aquis udp packet header
+entrypoint typedef struct _PacketHeader {
+  UINT8 message_count;  // byte 0
+} PacketHeader;
+
+// ---- Message Header: 6 bytes -------------------------------------------------
+
+// Aquis market data message header
+entrypoint typedef struct _MessageHeader {
+  UINT8 msg_type;    // byte 0
+  UINT8 msg_length;  // byte 1
+  UINT32 seq_no;     // bytes 2 to 5
+} MessageHeader;
+
+// ---- Snapshot Start Message: 14 bytes ----------------------------------------
+
+// A Snapshot Start message is published as the first message in a snapshot to identify the sequence number in the continuous stream that this snapshot relates to. It also states the number of securities being reported in this snapshot.
+entrypoint typedef struct _SnapshotStartMessage {
+  UINT32 stream_seq_no;   // bytes 0 to 3
+  UINT16 security_count;  // bytes 4 to 5
+  UINT64 timestamp;       // bytes 6 to 13
+} SnapshotStartMessage;
+
+// ---- Book Entry Message: 19 bytes --------------------------------------------
+
+// An appropriate number of Book Entry messages is published after each Book Status message to provide details of each order and allow the book to be built.
+entrypoint typedef struct _BookEntryMessage {
+  UINT16 security_id;  // bytes 0 to 1
+  UINT8 side;          // byte 2
+  UINT32 quantity;     // bytes 3 to 6
+  UINT64 price;        // bytes 7 to 14
+  UINT32 order_ref;    // bytes 15 to 18
+} BookEntryMessage;
+
+// ---- Mac Book Entry Message: 19 bytes ----------------------------------------
+
+// During the MaC phase, Aquis will publish the volume of the 5 best bid and offer orders per security in chronological order using the MaC Book Entry Message.
+entrypoint typedef struct _MacBookEntryMessage {
+  UINT16 security_id;  // bytes 0 to 1
+  UINT8 side;          // byte 2
+  UINT32 quantity;     // bytes 3 to 6
+  UINT64 price;        // bytes 7 to 14
+  UINT32 order_ref;    // bytes 15 to 18
+} MacBookEntryMessage;
+

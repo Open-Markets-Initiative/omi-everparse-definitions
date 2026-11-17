@@ -1,0 +1,152 @@
+// London Stock Exchange Level 2 Incremental
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out Lse_Level2Incremental_v26_2.3d
+//
+// What this definition does not state, and the model does:
+// - a run counted by a field
+// - a field read in bits
+//
+// License: MIT No Attribution
+
+// ---- Unit Header: 8 bytes ----------------------------------------------------
+
+entrypoint typedef struct _UnitHeader {
+  UINT16 length;            // bytes 0 to 1
+  UINT8 message_count;      // byte 2
+  UINT8 market_data_group;  // byte 3
+  UINT32 sequence_number;   // bytes 4 to 7
+} UnitHeader;
+
+// ---- Message Header: 3 bytes -------------------------------------------------
+
+// Gtp Udp Message Header
+entrypoint typedef struct _MessageHeader {
+  UINT16 message_length;  // bytes 0 to 1
+  UINT8 message_type;     // byte 2
+} MessageHeader;
+
+// ---- System Event Message: 11 bytes ------------------------------------------
+
+// Sent to indicate the start and end of the day.
+entrypoint typedef struct _SystemEventMessage {
+  UINT64 timestamp;     // bytes 0 to 7
+  UINT8 event_code;     // byte 8
+  UINT16 source_venue;  // bytes 9 to 10
+} SystemEventMessage;
+
+// ---- Instrument Status Message: 27 bytes -------------------------------------
+
+// Used to communicate scheduled and unscheduled session changes. When sent in the recovery channel, used to indicate the current trading status of an instrument.
+entrypoint typedef struct _InstrumentStatusMessage {
+  UINT64 timestamp;             // bytes 0 to 7
+  UINT64 instrument;            // bytes 8 to 15
+  UINT16 source_venue;          // bytes 16 to 17
+  UINT8 trading_status;         // byte 18
+  UINT8 session_change_reason;  // byte 19
+  UINT8 new_end_time[6];        // bytes 20 to 25
+  UINT8 order_book_type;        // byte 26
+} InstrumentStatusMessage;
+
+// ---- Add Order Incremental Message: 74 bytes ---------------------------------
+
+// Sent to instruct recipients to add a new displayable order to the retrospective order book.
+entrypoint typedef struct _AddOrderIncrementalMessage {
+  UINT64 timestamp;         // bytes 0 to 7
+  UINT64 order_id;          // bytes 8 to 15
+  UINT8 side;               // byte 16
+  UINT64 size;              // bytes 17 to 24
+  UINT64 instrument;        // bytes 25 to 32
+  UINT64 price;             // bytes 33 to 40, signed, read here as unsigned
+  UINT64 transaction_time;  // bytes 41 to 48
+  UINT16 source_venue;      // bytes 49 to 50
+  UINT8 order_book_type;    // byte 51
+  UINT8 participant[11];    // bytes 52 to 62
+  UINT8 order_type;         // byte 63
+  UINT8 rfq_id[10];         // bytes 64 to 73
+} AddOrderIncrementalMessage;
+
+// ---- Order Delete Message: 52 bytes ------------------------------------------
+
+// Sent to instruct recipients to delete an order from the retrospective order book.
+entrypoint typedef struct _OrderDeleteMessage {
+  UINT64 timestamp;          // bytes 0 to 7
+  UINT64 order_id;           // bytes 8 to 15
+  UINT64 instrument;         // bytes 16 to 23
+  UINT8 side;                // byte 24
+  UINT8 order_book_type;     // byte 25
+  UINT16 source_venue;       // bytes 26 to 27
+  UINT64 previous_price;     // bytes 28 to 35, signed, read here as unsigned
+  UINT64 previous_quantity;  // bytes 36 to 43
+  UINT64 transaction_time;   // bytes 44 to 51
+} OrderDeleteMessage;
+
+// ---- Order Book Clear Message: 19 bytes --------------------------------------
+
+// Sent to instruct recipients to remove all orders from the order book for the specified instrument.
+entrypoint typedef struct _OrderBookClearMessage {
+  UINT64 timestamp;       // bytes 0 to 7
+  UINT16 source_venue;    // bytes 8 to 9
+  UINT64 instrument;      // bytes 10 to 17
+  UINT8 order_book_type;  // byte 18
+} OrderBookClearMessage;
+
+// ---- Statistics Message: 74 bytes --------------------------------------------
+
+// Contains a set of statistics that are updated frequently, usually as a result of executions.
+entrypoint typedef struct _StatisticsMessage {
+  UINT64 timestamp;                      // bytes 0 to 7
+  UINT64 instrument;                     // bytes 8 to 15
+  UINT16 source_venue;                   // bytes 16 to 17
+  UINT64 volume;                         // bytes 18 to 25
+  UINT64 volume_on_book_only;            // bytes 26 to 33
+  UINT64 vwap;                           // bytes 34 to 41, signed, read here as unsigned
+  UINT64 vwap_on_book_only;              // bytes 42 to 49, signed, read here as unsigned
+  UINT32 number_of_trades;               // bytes 50 to 53
+  UINT32 number_of_trades_on_book_only;  // bytes 54 to 57
+  UINT64 turnover;                       // bytes 58 to 65, signed, read here as unsigned
+  UINT64 turnover_on_book_only;          // bytes 66 to 73, signed, read here as unsigned
+} StatisticsMessage;
+
+// ---- Statistics Update Message: 47 bytes -------------------------------------
+
+// Contains a set of statistics that are not updated frequently.
+entrypoint typedef struct _StatisticsUpdateMessage {
+  UINT64 timestamp;                       // bytes 0 to 7
+  UINT64 instrument;                      // bytes 8 to 15
+  UINT16 source_venue;                    // bytes 16 to 17
+  UINT16 statistic_type;                  // bytes 18 to 19
+  UINT64 statistic_price;                 // bytes 20 to 27, signed, read here as unsigned
+  UINT64 statistic_size;                  // bytes 28 to 35
+  UINT8 auction_type;                     // byte 36
+  UINT64 imbalance_quantity;              // bytes 37 to 44
+  UINT8 auction_info;                     // byte 45
+  UINT8 opening_closing_price_indicator;  // byte 46
+} StatisticsUpdateMessage;
+
+// ---- Trade Summary Message: 91 bytes -----------------------------------------
+
+// Trade Summary message is used to disseminate results of multi- and single-fill trade events.
+entrypoint typedef struct _TradeSummaryMessage {
+  UINT64 timestamp;                       // bytes 0 to 7
+  UINT64 instrument;                      // bytes 8 to 15
+  UINT16 source_venue;                    // bytes 16 to 17
+  UINT64 transaction_time;                // bytes 18 to 25
+  UINT64 far_price;                       // bytes 26 to 33, signed, read here as unsigned
+  UINT64 total_executed_quantity;         // bytes 34 to 41
+  UINT64 total_hidden_executed_quantity;  // bytes 42 to 49
+  UINT64 deleted_order_quantity;          // bytes 50 to 57
+  UINT8 trade_summary_side;               // byte 58
+  UINT64 best_bid_size;                   // bytes 59 to 66, signed, read here as unsigned
+  UINT64 best_bid_price;                  // bytes 67 to 74, signed, read here as unsigned
+  UINT64 best_offer_size;                 // bytes 75 to 82, signed, read here as unsigned
+  UINT64 best_offer_price;                // bytes 83 to 90, signed, read here as unsigned
+} TradeSummaryMessage;
+

@@ -1,0 +1,384 @@
+// Hong Kong Exchanges and Clearing Orion Market Data Derivatives Combined Retransmission
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out HkexDerivatives_CombinedRetrans_v2_0.3d
+//
+// What this definition does not state, and the model does:
+// - a Reassemble rule
+// - a field filling what is left of what holds it
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Packet Header: 16 bytes -------------------------------------------------
+
+// Omd packet header (byte-identical to the Udp form; SeqNum and SendTime set to 0 on Tcp per 3.5)
+entrypoint typedef struct _PacketHeader {
+  UINT16 pkt_size;         // bytes 0 to 1
+  UINT8 msg_count;         // byte 2
+  UINT8 compression_mode;  // byte 3
+  UINT32 seq_num;          // bytes 4 to 7
+  UINT64 send_time;        // bytes 8 to 15
+} PacketHeader;
+
+// ---- Msg Header: 4 bytes -----------------------------------------------------
+
+// Omd message header
+entrypoint typedef struct _MsgHeader {
+  UINT16 msg_size;  // bytes 0 to 1
+  UINT16 msg_type;  // bytes 2 to 3
+} MsgHeader;
+
+// ---- Add Order: 32 bytes -----------------------------------------------------
+
+// Generated when a new order is inserted into the order book.
+entrypoint typedef struct _AddOrder {
+  UINT32 orderbook_id;         // bytes 0 to 3
+  UINT64 order_id;             // bytes 4 to 11
+  UINT64 price;                // bytes 12 to 19, signed, read here as unsigned
+  UINT32 quantity;             // bytes 20 to 23
+  UINT8 side;                  // byte 24
+  UINT8 lot_type;              // byte 25
+  UINT8 order_type;            // byte 26
+  UINT32 order_book_position;  // bytes 27 to 30
+  UINT8 filler_1;              // byte 31
+} AddOrder;
+
+// ---- Aggregate Implied Order: 22 bytes ---------------------------------------
+
+// Generated whenever there is an update on implied order at the given implied price.
+entrypoint typedef struct _AggregateImpliedOrder {
+  UINT32 orderbook_id;      // bytes 0 to 3
+  UINT64 implied_price;     // bytes 4 to 11, signed, read here as unsigned
+  UINT64 implied_quantity;  // bytes 12 to 19
+  UINT8 side;               // byte 20
+  UINT8 filler_1;           // byte 21
+} AggregateImpliedOrder;
+
+// ---- Calculated Opening Price Message: 24 bytes ------------------------------
+
+// The Calculated Opening Price (COP) message indicates an instrument's theoretical opening price during the pre-opening phases of the market prior to an auction
+entrypoint typedef struct _CalculatedOpeningPriceMessage {
+  UINT32 orderbook_id;                 // bytes 0 to 3
+  UINT64 calculated_opening_price;     // bytes 4 to 11, signed, read here as unsigned
+  UINT8 filler_4[4];                   // bytes 12 to 15
+  UINT64 calculated_opening_quantity;  // bytes 16 to 23
+} CalculatedOpeningPriceMessage;
+
+// ---- Sequence Reset: 4 bytes -------------------------------------------------
+
+// The Sequence Reset message is sent on each multicast channel at start of day
+entrypoint typedef struct _SequenceReset {
+  UINT32 new_seq_no;  // bytes 0 to 3
+} SequenceReset;
+
+// ---- Disaster Recovery Signal Message: 4 bytes -------------------------------
+
+// The Disaster Recovery Signal message is sent on a dedicated multicast channel whenever a site failover scenario is triggered
+entrypoint typedef struct _DisasterRecoverySignalMessage {
+  UINT32 dr_status;  // bytes 0 to 3
+} DisasterRecoverySignalMessage;
+
+// ---- Delete Order: 14 bytes --------------------------------------------------
+
+// Generated when an existing order is deleted.
+entrypoint typedef struct _DeleteOrder {
+  UINT32 orderbook_id;  // bytes 0 to 3
+  UINT64 order_id;      // bytes 4 to 11
+  UINT8 side;           // byte 12
+  UINT8 filler_1;       // byte 13
+} DeleteOrder;
+
+// ---- Implied Volatility Message: 8 bytes -------------------------------------
+
+// Contains implied volitility
+entrypoint typedef struct _ImpliedVolatilityMessage {
+  UINT32 orderbook_id;        // bytes 0 to 3
+  UINT32 implied_volatility;  // bytes 4 to 7
+} ImpliedVolatilityMessage;
+
+// ---- Modify Order: 32 bytes --------------------------------------------------
+
+// Generated when an existing order identified by the OrderID is modified.
+entrypoint typedef struct _ModifyOrder {
+  UINT32 orderbook_id;         // bytes 0 to 3
+  UINT64 order_id;             // bytes 4 to 11
+  UINT64 price;                // bytes 12 to 19, signed, read here as unsigned
+  UINT32 quantity;             // bytes 20 to 23
+  UINT8 side;                  // byte 24
+  UINT8 filler_2[2];           // bytes 25 to 26
+  UINT8 order_type;            // byte 27
+  UINT32 order_book_position;  // bytes 28 to 31
+} ModifyOrder;
+
+// ---- Open Interest Message: 24 bytes -----------------------------------------
+
+// Issued to show the Previous Day settlement price and open interest
+entrypoint typedef struct _OpenInterestMessage {
+  UINT16 day_indicator;     // bytes 0 to 1
+  UINT8 filler_6[6];        // bytes 2 to 7
+  UINT32 orderbook_id;      // bytes 8 to 11
+  UINT32 settlement_price;  // bytes 12 to 15, signed, read here as unsigned
+  UINT32 gross_oi;          // bytes 16 to 19, signed, read here as unsigned
+  UINT32 net_oi;            // bytes 20 to 23, signed, read here as unsigned
+} OpenInterestMessage;
+
+// ---- Orderbook Clear Message: 4 bytes ----------------------------------------
+
+// The Orderbook Clear message is used to inform clients that all existing orders should be removed from both the bid and ask sides of the specified orderbook
+entrypoint typedef struct _OrderbookClearMessage {
+  UINT32 orderbook_id;  // bytes 0 to 3
+} OrderbookClearMessage;
+
+// ---- Quote Request: 12 bytes -------------------------------------------------
+
+// The Quote Request message is generated whenever market participants request a new quotation
+entrypoint typedef struct _QuoteRequest {
+  UINT32 orderbook_id;    // bytes 0 to 3
+  UINT32 quote_quantity;  // bytes 4 to 7, signed, read here as unsigned
+  UINT8 bid_ask_flag;     // byte 8
+  UINT8 filler_3[3];      // bytes 9 to 11
+} QuoteRequest;
+
+// ---- Commodity Definition: 82 bytes ------------------------------------------
+
+// Describes individual commodities available from the OMD-D system
+entrypoint typedef struct _CommodityDefinition {
+  UINT32 commodity_code;               // bytes 0 to 3
+  UINT8 commodity_name[40];            // bytes 4 to 43
+  UINT8 commodity_id[6];               // bytes 44 to 49
+  UINT8 underlying_code[20];           // bytes 50 to 69
+  UINT8 underlying_type;               // byte 70
+  UINT16 decimal_in_underlying_price;  // bytes 71 to 72
+  UINT8 base_currency[3];              // bytes 73 to 75
+  UINT8 effective_tomorrow;            // byte 76
+  UINT8 filler_5[5];                   // bytes 77 to 81
+} CommodityDefinition;
+
+// ---- Class Definition: 116 bytes ---------------------------------------------
+
+// Describes individual instrument classes available from the OMD-D system.
+entrypoint typedef struct _ClassDefinition {
+  UINT8 instrument_class_id[14];    // bytes 0 to 13
+  UINT32 instrument_class_key;      // bytes 14 to 17
+  UINT8 key_type;                   // byte 18
+  UINT8 instrument_class_name[40];  // bytes 19 to 58
+  UINT16 exchange;                  // bytes 59 to 60
+  UINT16 market;                    // bytes 61 to 62
+  UINT16 instrument_group;          // bytes 63 to 64
+  UINT32 commodity_code;            // bytes 65 to 68
+  UINT8 instrument_type_id[8];      // bytes 69 to 76
+  UINT32 instrument_type_key;       // bytes 77 to 80
+  UINT8 filler_3[3];                // bytes 81 to 83
+  UINT32 price_quotation_factor;    // bytes 84 to 87
+  UINT32 contract_size;             // bytes 88 to 91
+  UINT16 decimal_in_contract_size;  // bytes 92 to 93
+  UINT16 decimal_in_strike_price;   // bytes 94 to 95
+  UINT16 decimal_in_price;          // bytes 96 to 97
+  UINT64 tick_size;                 // bytes 98 to 105, signed, read here as unsigned
+  UINT8 tradable;                   // byte 106
+  UINT8 base_currency[3];           // bytes 107 to 109
+  UINT8 settlement_currency_id[3];  // bytes 110 to 112
+  UINT8 effective_tomorrow;         // byte 113
+  UINT8 filler_2[2];                // bytes 114 to 115
+} ClassDefinition;
+
+// ---- Instrument Definition: 116 bytes ----------------------------------------
+
+// Describes instrument static data.
+entrypoint typedef struct _InstrumentDefinition {
+  UINT32 orderbook_id;                       // bytes 0 to 3
+  UINT8 symbol[32];                          // bytes 4 to 35
+  UINT32 instrument_class_key;               // bytes 36 to 39
+  UINT16 market;                             // bytes 40 to 41
+  UINT16 instrument_group;                   // bytes 42 to 43
+  UINT16 modifier;                           // bytes 44 to 45
+  UINT32 commodity_code;                     // bytes 46 to 49
+  UINT32 last_trading_date;                  // bytes 50 to 53
+  UINT64 last_trading_time;                  // bytes 54 to 61
+  UINT64 strike_price;                       // bytes 62 to 69, signed, read here as unsigned
+  UINT32 effective_last_trading_date;        // bytes 70 to 73
+  UINT32 first_trading_date;                 // bytes 74 to 77
+  UINT64 first_trading_time;                 // bytes 78 to 85
+  UINT8 filler_3[3];                         // bytes 86 to 88
+  UINT8 instrument_status_code;              // byte 89
+  UINT32 instrument_contract_size;           // bytes 90 to 93, signed, read here as unsigned
+  UINT32 instrument_price_quotation_factor;  // bytes 94 to 97, signed, read here as unsigned
+  UINT8 number_of_legs;                      // byte 98
+  UINT8 vcm_flag;                            // byte 99
+  UINT8 isin_code[12];                       // bytes 100 to 111
+  UINT8 effective_tomorrow;                  // byte 112
+  UINT8 second_filler_3[3];                  // bytes 113 to 115
+} InstrumentDefinition;
+
+// ---- Combination Definition: 16 bytes ----------------------------------------
+
+// Describes the composition of a combination instrument.
+entrypoint typedef struct _CombinationDefinition {
+  UINT32 combo_orderbook_id;  // bytes 0 to 3
+  UINT32 leg_orderbook_id;    // bytes 4 to 7
+  UINT8 filler_3[3];          // bytes 8 to 10
+  UINT8 leg_side;             // byte 11
+  UINT32 leg_ratio;           // bytes 12 to 15, signed, read here as unsigned
+} CombinationDefinition;
+
+// ---- Refresh Complete: 4 bytes -----------------------------------------------
+
+// RefreshComplete
+entrypoint typedef struct _RefreshComplete {
+  UINT32 last_seq_num;  // bytes 0 to 3
+} RefreshComplete;
+
+// ---- Logon: 12 bytes ---------------------------------------------------------
+
+// Logon
+entrypoint typedef struct _Logon {
+  UINT8 username[12];  // bytes 0 to 11
+} Logon;
+
+// ---- Logon Response: 4 bytes -------------------------------------------------
+
+// LogonResponse
+entrypoint typedef struct _LogonResponse {
+  UINT8 session_status;  // byte 0
+  UINT8 filler_3[3];     // bytes 1 to 3
+} LogonResponse;
+
+// ---- Retransmission Request: 12 bytes ----------------------------------------
+
+// RetransmissionRequest
+entrypoint typedef struct _RetransmissionRequest {
+  UINT16 channel_id;     // bytes 0 to 1
+  UINT8 filler_2[2];     // bytes 2 to 3
+  UINT32 begin_seq_num;  // bytes 4 to 7
+  UINT32 end_seq_num;    // bytes 8 to 11
+} RetransmissionRequest;
+
+// ---- Retransmission Response: 12 bytes ---------------------------------------
+
+// RetransmissionResponse
+entrypoint typedef struct _RetransmissionResponse {
+  UINT16 channel_id;     // bytes 0 to 1
+  UINT8 retrans_status;  // byte 2
+  UINT8 filler_1;        // byte 3
+  UINT32 begin_seq_num;  // bytes 4 to 7
+  UINT32 end_seq_num;    // bytes 8 to 11
+} RetransmissionResponse;
+
+// ---- Market Status: 36 bytes -------------------------------------------------
+
+// Indicates the state of the Exchange, Market, Instrument Type, or Class.
+entrypoint typedef struct _MarketStatus {
+  UINT8 state_level;            // byte 0
+  UINT32 status_market;         // bytes 1 to 4
+  UINT32 instrument_type_key;   // bytes 5 to 8
+  UINT32 instrument_class_key;  // bytes 9 to 12
+  UINT8 filler_4[4];            // bytes 13 to 16
+  UINT64 actual_start_time;     // bytes 17 to 24
+  UINT64 planned_start_time;    // bytes 25 to 32
+  UINT16 state;                 // bytes 33 to 34
+  UINT8 filler_1;               // byte 35
+} MarketStatus;
+
+// ---- Instrument Status: 8 bytes ----------------------------------------------
+
+// Generated whenever there is a change to suspension indicator or instrument status.
+entrypoint typedef struct _InstrumentStatus {
+  UINT32 orderbook_id;           // bytes 0 to 3
+  UINT8 suspension_indicator;    // byte 4
+  UINT8 instrument_status_code;  // byte 5
+  UINT8 filler_2[2];             // bytes 6 to 7
+} InstrumentStatus;
+
+// ---- Commodity And Class Status: 10 bytes ------------------------------------
+
+// Generated whenever a commodity and / or instrument class status changes.
+entrypoint typedef struct _CommodityAndClassStatus {
+  UINT32 commodity_code;        // bytes 0 to 3
+  UINT32 instrument_class_key;  // bytes 4 to 7
+  UINT8 suspended;              // byte 8
+  UINT8 filler_1;               // byte 9
+} CommodityAndClassStatus;
+
+// ---- Vcm Trigger: 46 bytes ---------------------------------------------------
+
+// Generated when VCM is triggered on a particular instrument.
+entrypoint typedef struct _VcmTrigger {
+  UINT32 orderbook_id;            // bytes 0 to 3
+  UINT64 cooling_off_start_time;  // bytes 4 to 11
+  UINT64 cooling_off_end_time;    // bytes 12 to 19
+  UINT64 vcm_reference_price;     // bytes 20 to 27, signed, read here as unsigned
+  UINT64 vcm_lower_price;         // bytes 28 to 35, signed, read here as unsigned
+  UINT64 vcm_upper_price;         // bytes 36 to 43, signed, read here as unsigned
+  UINT8 filler_2[2];              // bytes 44 to 45
+} VcmTrigger;
+
+// ---- Vcm End: 20 bytes -------------------------------------------------------
+
+// Generated when VCM is ended on a particular instrument.
+entrypoint typedef struct _VcmEnd {
+  UINT32 orderbook_id;            // bytes 0 to 3
+  UINT64 cooling_off_start_time;  // bytes 4 to 11
+  UINT64 cooling_off_end_time;    // bytes 12 to 19
+} VcmEnd;
+
+// ---- Thm Trigger: 14 bytes ---------------------------------------------------
+
+// Generated when trading halt is triggered on a particular instrument class.
+entrypoint typedef struct _ThmTrigger {
+  UINT32 instrument_class_key;  // bytes 0 to 3
+  UINT8 filler_10[10];          // bytes 4 to 13
+} ThmTrigger;
+
+// ---- Trade: 54 bytes ---------------------------------------------------------
+
+// The trade message is generated each time a trade has been performed
+entrypoint typedef struct _Trade {
+  UINT32 orderbook_id;    // bytes 0 to 3
+  UINT64 order_id;        // bytes 4 to 11
+  UINT64 price;           // bytes 12 to 19, signed, read here as unsigned
+  UINT64 trade_id;        // bytes 20 to 27
+  UINT64 match_id;        // bytes 28 to 35
+  UINT8 side;             // byte 36
+  UINT8 trade_sub_type;   // byte 37
+  UINT8 trade_condition;  // byte 38
+  UINT8 filler_3[3];      // bytes 39 to 41
+  UINT32 quantity;        // bytes 42 to 45
+  UINT64 trade_time;      // bytes 46 to 53
+} Trade;
+
+// ---- Trade Amendment Message: 36 bytes ---------------------------------------
+
+// Represents a trade amendment or cancellation
+entrypoint typedef struct _TradeAmendmentMessage {
+  UINT32 orderbook_id;              // bytes 0 to 3
+  UINT64 trade_id;                  // bytes 4 to 11
+  UINT64 price;                     // bytes 12 to 19, signed, read here as unsigned
+  UINT32 quantity;                  // bytes 20 to 23
+  UINT64 amendment_execution_time;  // bytes 24 to 31
+  UINT8 trade_state;                // byte 32
+  UINT8 filler_3[3];                // bytes 33 to 35
+} TradeAmendmentMessage;
+
+// ---- Trade Statistics Message: 56 bytes --------------------------------------
+
+// Trade information for completed deals
+entrypoint typedef struct _TradeStatisticsMessage {
+  UINT32 orderbook_id;         // bytes 0 to 3
+  UINT64 last_price;           // bytes 4 to 11, signed, read here as unsigned
+  UINT8 session;               // byte 12
+  UINT64 open_price;           // bytes 13 to 20, signed, read here as unsigned
+  UINT64 high_price;           // bytes 21 to 28, signed, read here as unsigned
+  UINT64 low_price;            // bytes 29 to 36, signed, read here as unsigned
+  UINT64 trade_report_volume;  // bytes 37 to 44
+  UINT64 turnover;             // bytes 45 to 52
+  UINT8 filler_3[3];           // bytes 53 to 55
+} TradeStatisticsMessage;
+

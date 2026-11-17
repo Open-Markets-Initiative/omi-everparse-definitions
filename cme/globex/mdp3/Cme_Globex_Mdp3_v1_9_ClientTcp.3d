@@ -1,0 +1,78 @@
+// CME Group Market Data Platform 3
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out Cme_Globex_Mdp3_v1_9_ClientTcp.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - the dispatch that chooses a message by its type
+// - a block whose stated length holds more than its fields
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Client Technical Header: 14 bytes ---------------------------------------
+
+// Cme Technical Header sent by the firm to Cme
+entrypoint typedef struct _ClientTechnicalHeader {
+  UINT16 encoding_type;            // bytes 0 to 1
+  UINT32 message_sequence_number;  // bytes 2 to 5
+  UINT64 tcp_sending_time;         // bytes 6 to 13
+} ClientTechnicalHeader;
+
+// ---- Simple Binary Header: 8 bytes -------------------------------------------
+
+// Template ID and length of message root
+entrypoint typedef struct _SimpleBinaryHeader {
+  UINT16 block_length;  // bytes 0 to 1
+  UINT16 template_id;   // bytes 2 to 3
+  UINT16 schema_id;     // bytes 4 to 5
+  UINT16 version;       // bytes 6 to 7
+} SimpleBinaryHeader;
+
+// ---- Message Header: 10 bytes ------------------------------------------------
+
+// Message Size followed by the Simple Binary Header
+entrypoint typedef struct _MessageHeader {
+  UINT16 message_size;                      // bytes 0 to 1
+  SimpleBinaryHeader simple_binary_header;  // bytes 2 to 9
+} MessageHeader;
+
+// ---- Negotiate: 78 bytes -----------------------------------------------------
+
+// Negotiate
+entrypoint typedef struct _Negotiate {
+  UINT8 hmac_signature[32];  // bytes 0 to 31
+  UINT8 access_key_id[20];   // bytes 32 to 51
+  UINT64 uuid;               // bytes 52 to 59
+  UINT64 request_timestamp;  // bytes 60 to 67
+  UINT8 session[5];          // bytes 68 to 72
+  UINT8 firm[5];             // bytes 73 to 77
+} Negotiate;
+
+// ---- Terminate: 70 bytes -----------------------------------------------------
+
+// Terminate
+entrypoint typedef struct _Terminate {
+  UINT8 reason[48];          // bytes 0 to 47
+  UINT64 uuid;               // bytes 48 to 55
+  UINT64 request_timestamp;  // bytes 56 to 63
+  UINT8 error_codes;         // byte 64
+  UINT8 padding_5[5];        // bytes 65 to 69
+} Terminate;
+
+// ---- Group Size: 3 bytes -----------------------------------------------------
+
+// Repeating group dimensions
+entrypoint typedef struct _GroupSize {
+  UINT16 block_length;  // bytes 0 to 1
+  UINT8 num_in_group;   // byte 2
+} GroupSize;
+

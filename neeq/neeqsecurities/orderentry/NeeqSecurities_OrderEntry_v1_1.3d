@@ -1,0 +1,1268 @@
+// National Equities Exchange and Quotations Neeq Order Entry
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out NeeqSecurities_OrderEntry_v1_1.3d
+//
+// What this definition does not state, and the model does:
+// - the dispatch that chooses a message by its type
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Message Header: 8 bytes -------------------------------------------------
+
+// Bjse Bjtg Message Header, defining the type and body length of a message, transmitted without encryption
+entrypoint typedef struct _MessageHeader {
+  UINT32BE msg_type;     // bytes 0 to 3
+  UINT32BE body_length;  // bytes 4 to 7
+} MessageHeader;
+
+// ---- Logon Message: 92 bytes -------------------------------------------------
+
+// The first message the order management system sends to the trading gateway, which confirms a successful logon with a Logon of its own, so both sides transmit this message type.
+entrypoint typedef struct _LogonMessage {
+  UINT8 sender_comp_id[20];       // bytes 0 to 19
+  UINT8 target_comp_id[20];       // bytes 20 to 39
+  UINT32BE heart_bt_int;          // bytes 40 to 43, signed, read here as unsigned
+  UINT8 password[16];             // bytes 44 to 59
+  UINT8 default_appl_ver_id[32];  // bytes 60 to 91
+} LogonMessage;
+
+// ---- Logout Message: 204 bytes -----------------------------------------------
+
+// Sent by the trading gateway to refuse a logon, and by either side to end the session; the receiver answers with a Logout of its own, so both sides transmit this message type.
+entrypoint typedef struct _LogoutMessage {
+  UINT32BE session_status;  // bytes 0 to 3, signed, read here as unsigned
+  UINT8 text[200];          // bytes 4 to 203
+} LogoutMessage;
+
+// ---- Business Reject Message: 103 bytes --------------------------------------
+
+// Sent by the trading gateway when a submission fails a basic validity check, such as an unknown security code or a submission outside its time window.
+entrypoint typedef struct _BusinessRejectMessage {
+  UINT8 appl_id[3];                  // bytes 0 to 2
+  UINT64BE transact_time;            // bytes 3 to 10, signed, read here as unsigned
+  UINT8 submitting_pbuid[6];         // bytes 11 to 16
+  UINT8 security_id[8];              // bytes 17 to 24
+  UINT8 security_id_source[4];       // bytes 25 to 28
+  UINT64BE ref_seq_num;              // bytes 29 to 36, signed, read here as unsigned
+  UINT32BE ref_msg_type;             // bytes 37 to 40
+  UINT8 business_reject_ref_id[10];  // bytes 41 to 50
+  UINT16BE business_reject_reason;   // bytes 51 to 52
+  UINT8 business_reject_text[50];    // bytes 53 to 102
+} BusinessRejectMessage;
+
+// ---- Platform State Info Message: 4 bytes ------------------------------------
+
+// Sent by the trading gateway after logon and whenever a platform changes state, so the order management system can control when it submits orders.
+entrypoint typedef struct _PlatformStateInfoMessage {
+  UINT16BE platform_id;     // bytes 0 to 1
+  UINT16BE platform_state;  // bytes 2 to 3
+} PlatformStateInfoMessage;
+
+// ---- Report Finished Message: 14 bytes ---------------------------------------
+
+// Sent by the trading gateway when every report of the trading day for a platform partition has been sent; its record number continues the numbering of the partition's reports.
+entrypoint typedef struct _ReportFinishedMessage {
+  UINT32BE partition_no;  // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE report_index;  // bytes 4 to 11, signed, read here as unsigned
+  UINT16BE platform_id;   // bytes 12 to 13
+} ReportFinishedMessage;
+
+// ---- Trading Session Status Message: 42 bytes --------------------------------
+
+// Sent by the trading gateway after logon and whenever the trading session of the connected platform changes; only the fixed income platform currently sends it.
+entrypoint typedef struct _TradingSessionStatusMessage {
+  UINT8 market_id[8];               // bytes 0 to 7
+  UINT8 market_segment_id[8];       // bytes 8 to 15
+  UINT8 trading_session_id[4];      // bytes 16 to 19
+  UINT8 trading_session_sub_id[4];  // bytes 20 to 23
+  UINT16BE trad_ses_status;         // bytes 24 to 25
+  UINT64BE trad_ses_start_time;     // bytes 26 to 33, signed, read here as unsigned
+  UINT64BE trad_ses_end_time;       // bytes 34 to 41, signed, read here as unsigned
+} TradingSessionStatusMessage;
+
+// ---- Bond Spot Matching New Order Message: 131 bytes -------------------------
+
+// New order for spot bond trading by matching, ApplID 010.
+entrypoint typedef struct _BondSpotMatchingNewOrderMessage {
+  UINT8 appl_id[3];             // bytes 0 to 2
+  UINT8 submitting_pbuid[6];    // bytes 3 to 8
+  UINT8 security_id[8];         // bytes 9 to 16
+  UINT8 security_id_source[4];  // bytes 17 to 20
+  UINT16BE owner_type;          // bytes 21 to 22
+  UINT8 clearing_firm[2];       // bytes 23 to 24
+  UINT64BE transact_time;       // bytes 25 to 32, signed, read here as unsigned
+  UINT8 user_info[32];          // bytes 33 to 64
+  UINT8 cl_ord_id[10];          // bytes 65 to 74
+  UINT8 account_id[10];         // bytes 75 to 84
+  UINT8 branch_id[2];           // bytes 85 to 86
+  UINT8 order_restrictions[4];  // bytes 87 to 90
+  UINT8 side;                   // byte 91
+  UINT8 ord_type;               // byte 92
+  UINT64BE order_qty;           // bytes 93 to 100, signed, read here as unsigned
+  UINT64BE price;               // bytes 101 to 108, signed, read here as unsigned
+  UINT64BE stop_px;             // bytes 109 to 116, signed, read here as unsigned
+  UINT64BE min_qty;             // bytes 117 to 124, signed, read here as unsigned
+  UINT16BE max_price_levels;    // bytes 125 to 126
+  UINT8 time_in_force;          // byte 127
+  UINT8 cash_margin;            // byte 128
+  UINT8 settl_type;             // byte 129
+  UINT8 settl_period;           // byte 130
+} BondSpotMatchingNewOrderMessage;
+
+// ---- Centralized Auction New Order Message: 129 bytes ------------------------
+
+// New order for centralized auction stock trading, ApplID 040. Not yet enabled.
+entrypoint typedef struct _CentralizedAuctionNewOrderMessage {
+  UINT8 appl_id[3];             // bytes 0 to 2
+  UINT8 submitting_pbuid[6];    // bytes 3 to 8
+  UINT8 security_id[8];         // bytes 9 to 16
+  UINT8 security_id_source[4];  // bytes 17 to 20
+  UINT16BE owner_type;          // bytes 21 to 22
+  UINT8 clearing_firm[2];       // bytes 23 to 24
+  UINT64BE transact_time;       // bytes 25 to 32, signed, read here as unsigned
+  UINT8 user_info[32];          // bytes 33 to 64
+  UINT8 cl_ord_id[10];          // bytes 65 to 74
+  UINT8 account_id[10];         // bytes 75 to 84
+  UINT8 branch_id[2];           // bytes 85 to 86
+  UINT8 order_restrictions[4];  // bytes 87 to 90
+  UINT8 side;                   // byte 91
+  UINT8 ord_type;               // byte 92
+  UINT64BE order_qty;           // bytes 93 to 100, signed, read here as unsigned
+  UINT64BE price;               // bytes 101 to 108, signed, read here as unsigned
+  UINT64BE stop_px;             // bytes 109 to 116, signed, read here as unsigned
+  UINT64BE min_qty;             // bytes 117 to 124, signed, read here as unsigned
+  UINT16BE max_price_levels;    // bytes 125 to 126
+  UINT8 time_in_force;          // byte 127
+  UINT8 cash_margin;            // byte 128
+} CentralizedAuctionNewOrderMessage;
+
+// ---- Conversion New Order Message: 109 bytes ---------------------------------
+
+// New order for conversion, ApplID 041. Not yet enabled.
+entrypoint typedef struct _ConversionNewOrderMessage {
+  UINT8 appl_id[3];             // bytes 0 to 2
+  UINT8 submitting_pbuid[6];    // bytes 3 to 8
+  UINT8 security_id[8];         // bytes 9 to 16
+  UINT8 security_id_source[4];  // bytes 17 to 20
+  UINT16BE owner_type;          // bytes 21 to 22
+  UINT8 clearing_firm[2];       // bytes 23 to 24
+  UINT64BE transact_time;       // bytes 25 to 32, signed, read here as unsigned
+  UINT8 user_info[32];          // bytes 33 to 64
+  UINT8 cl_ord_id[10];          // bytes 65 to 74
+  UINT8 account_id[10];         // bytes 75 to 84
+  UINT8 branch_id[2];           // bytes 85 to 86
+  UINT8 order_restrictions[4];  // bytes 87 to 90
+  UINT8 side;                   // byte 91
+  UINT8 ord_type;               // byte 92
+  UINT64BE order_qty;           // bytes 93 to 100, signed, read here as unsigned
+  UINT64BE price;               // bytes 101 to 108, signed, read here as unsigned
+} ConversionNewOrderMessage;
+
+// ---- Inquiry New Order Message: 109 bytes ------------------------------------
+
+// New order for inquiry, ApplID 042. Not yet enabled.
+entrypoint typedef struct _InquiryNewOrderMessage {
+  UINT8 appl_id[3];             // bytes 0 to 2
+  UINT8 submitting_pbuid[6];    // bytes 3 to 8
+  UINT8 security_id[8];         // bytes 9 to 16
+  UINT8 security_id_source[4];  // bytes 17 to 20
+  UINT16BE owner_type;          // bytes 21 to 22
+  UINT8 clearing_firm[2];       // bytes 23 to 24
+  UINT64BE transact_time;       // bytes 25 to 32, signed, read here as unsigned
+  UINT8 user_info[32];          // bytes 33 to 64
+  UINT8 cl_ord_id[10];          // bytes 65 to 74
+  UINT8 account_id[10];         // bytes 75 to 84
+  UINT8 branch_id[2];           // bytes 85 to 86
+  UINT8 order_restrictions[4];  // bytes 87 to 90
+  UINT8 side;                   // byte 91
+  UINT8 ord_type;               // byte 92
+  UINT64BE order_qty;           // bytes 93 to 100, signed, read here as unsigned
+  UINT64BE price;               // bytes 101 to 108, signed, read here as unsigned
+} InquiryNewOrderMessage;
+
+// ---- Subscription New Order Message: 109 bytes -------------------------------
+
+// New order for subscription, ApplID 043. Not yet enabled.
+entrypoint typedef struct _SubscriptionNewOrderMessage {
+  UINT8 appl_id[3];             // bytes 0 to 2
+  UINT8 submitting_pbuid[6];    // bytes 3 to 8
+  UINT8 security_id[8];         // bytes 9 to 16
+  UINT8 security_id_source[4];  // bytes 17 to 20
+  UINT16BE owner_type;          // bytes 21 to 22
+  UINT8 clearing_firm[2];       // bytes 23 to 24
+  UINT64BE transact_time;       // bytes 25 to 32, signed, read here as unsigned
+  UINT8 user_info[32];          // bytes 33 to 64
+  UINT8 cl_ord_id[10];          // bytes 65 to 74
+  UINT8 account_id[10];         // bytes 75 to 84
+  UINT8 branch_id[2];           // bytes 85 to 86
+  UINT8 order_restrictions[4];  // bytes 87 to 90
+  UINT8 side;                   // byte 91
+  UINT8 ord_type;               // byte 92
+  UINT64BE order_qty;           // bytes 93 to 100, signed, read here as unsigned
+  UINT64BE price;               // bytes 101 to 108, signed, read here as unsigned
+} SubscriptionNewOrderMessage;
+
+// ---- Put Back New Order Message: 109 bytes -----------------------------------
+
+// New order for put back, ApplID 044. Not yet enabled.
+entrypoint typedef struct _PutBackNewOrderMessage {
+  UINT8 appl_id[3];             // bytes 0 to 2
+  UINT8 submitting_pbuid[6];    // bytes 3 to 8
+  UINT8 security_id[8];         // bytes 9 to 16
+  UINT8 security_id_source[4];  // bytes 17 to 20
+  UINT16BE owner_type;          // bytes 21 to 22
+  UINT8 clearing_firm[2];       // bytes 23 to 24
+  UINT64BE transact_time;       // bytes 25 to 32, signed, read here as unsigned
+  UINT8 user_info[32];          // bytes 33 to 64
+  UINT8 cl_ord_id[10];          // bytes 65 to 74
+  UINT8 account_id[10];         // bytes 75 to 84
+  UINT8 branch_id[2];           // bytes 85 to 86
+  UINT8 order_restrictions[4];  // bytes 87 to 90
+  UINT8 side;                   // byte 91
+  UINT8 ord_type;               // byte 92
+  UINT64BE order_qty;           // bytes 93 to 100, signed, read here as unsigned
+  UINT64BE price;               // bytes 101 to 108, signed, read here as unsigned
+} PutBackNewOrderMessage;
+
+// ---- Tender Offer Acceptance New Order Message: 109 bytes --------------------
+
+// New order for tender offer acceptance, ApplID 045. Not yet enabled.
+entrypoint typedef struct _TenderOfferAcceptanceNewOrderMessage {
+  UINT8 appl_id[3];             // bytes 0 to 2
+  UINT8 submitting_pbuid[6];    // bytes 3 to 8
+  UINT8 security_id[8];         // bytes 9 to 16
+  UINT8 security_id_source[4];  // bytes 17 to 20
+  UINT16BE owner_type;          // bytes 21 to 22
+  UINT8 clearing_firm[2];       // bytes 23 to 24
+  UINT64BE transact_time;       // bytes 25 to 32, signed, read here as unsigned
+  UINT8 user_info[32];          // bytes 33 to 64
+  UINT8 cl_ord_id[10];          // bytes 65 to 74
+  UINT8 account_id[10];         // bytes 75 to 84
+  UINT8 branch_id[2];           // bytes 85 to 86
+  UINT8 order_restrictions[4];  // bytes 87 to 90
+  UINT8 side;                   // byte 91
+  UINT8 ord_type;               // byte 92
+  UINT64BE order_qty;           // bytes 93 to 100, signed, read here as unsigned
+  UINT64BE price;               // bytes 101 to 108, signed, read here as unsigned
+} TenderOfferAcceptanceNewOrderMessage;
+
+// ---- Refinancing Securities Lending Non Agreed New Order Message: 114 bytes ----
+
+// New order for refinancing securities lending without agreement, ApplID 050. Not yet enabled.
+entrypoint typedef struct _RefinancingSecuritiesLendingNonAgreedNewOrderMessage {
+  UINT8 appl_id[3];             // bytes 0 to 2
+  UINT8 submitting_pbuid[6];    // bytes 3 to 8
+  UINT8 security_id[8];         // bytes 9 to 16
+  UINT8 security_id_source[4];  // bytes 17 to 20
+  UINT16BE owner_type;          // bytes 21 to 22
+  UINT8 clearing_firm[2];       // bytes 23 to 24
+  UINT64BE transact_time;       // bytes 25 to 32, signed, read here as unsigned
+  UINT8 user_info[32];          // bytes 33 to 64
+  UINT8 cl_ord_id[10];          // bytes 65 to 74
+  UINT8 account_id[10];         // bytes 75 to 84
+  UINT8 branch_id[2];           // bytes 85 to 86
+  UINT8 order_restrictions[4];  // bytes 87 to 90
+  UINT8 side;                   // byte 91
+  UINT8 ord_type;               // byte 92
+  UINT64BE order_qty;           // bytes 93 to 100, signed, read here as unsigned
+  UINT64BE price;               // bytes 101 to 108, signed, read here as unsigned
+  UINT16BE expiration_days;     // bytes 109 to 110
+  UINT8 expiration_type;        // byte 111
+  UINT8 share_property[2];      // bytes 112 to 113
+} RefinancingSecuritiesLendingNonAgreedNewOrderMessage;
+
+// ---- Order Cancel Request Message: 121 bytes ---------------------------------
+
+// Cancels an order; the exchange does not check the original order quantity it carries.
+entrypoint typedef struct _OrderCancelRequestMessage {
+  UINT8 appl_id[3];             // bytes 0 to 2
+  UINT8 submitting_pbuid[6];    // bytes 3 to 8
+  UINT8 security_id[8];         // bytes 9 to 16
+  UINT8 security_id_source[4];  // bytes 17 to 20
+  UINT16BE owner_type;          // bytes 21 to 22
+  UINT8 clearing_firm[2];       // bytes 23 to 24
+  UINT64BE transact_time;       // bytes 25 to 32, signed, read here as unsigned
+  UINT8 user_info[32];          // bytes 33 to 64
+  UINT8 cl_ord_id[10];          // bytes 65 to 74
+  UINT8 orig_cl_ord_id[10];     // bytes 75 to 84
+  UINT8 account_id[10];         // bytes 85 to 94
+  UINT8 branch_id[2];           // bytes 95 to 96
+  UINT8 order_id[16];           // bytes 97 to 112
+  UINT64BE order_qty;           // bytes 113 to 120, signed, read here as unsigned
+} OrderCancelRequestMessage;
+
+// ---- Cancel Reject Message: 150 bytes ----------------------------------------
+
+// Sent by the trading gateway when an order cancel request fails.
+entrypoint typedef struct _CancelRejectMessage {
+  UINT32BE partition_no;        // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE report_index;        // bytes 4 to 11, signed, read here as unsigned
+  UINT8 appl_id[3];             // bytes 12 to 14
+  UINT8 reporting_pbuid[6];     // bytes 15 to 20
+  UINT8 submitting_pbuid[6];    // bytes 21 to 26
+  UINT8 security_id[8];         // bytes 27 to 34
+  UINT8 security_id_source[4];  // bytes 35 to 38
+  UINT16BE owner_type;          // bytes 39 to 40
+  UINT8 clearing_firm[2];       // bytes 41 to 42
+  UINT64BE transact_time;       // bytes 43 to 50, signed, read here as unsigned
+  UINT8 user_info[32];          // bytes 51 to 82
+  UINT8 cl_ord_id[10];          // bytes 83 to 92
+  UINT8 orig_cl_ord_id[10];     // bytes 93 to 102
+  UINT8 account_id[10];         // bytes 103 to 112
+  UINT8 branch_id[2];           // bytes 113 to 114
+  UINT8 ord_status;             // byte 115
+  UINT16BE cxl_rej_reason;      // bytes 116 to 117
+  UINT8 reject_text[16];        // bytes 118 to 133
+  UINT8 order_id[16];           // bytes 134 to 149
+} CancelRejectMessage;
+
+// ---- Bond Spot Matching Execution Report Message: 209 bytes ------------------
+
+// Order response and cancel execution report for spot bond trading by matching, ApplID 010: confirms or rejects a new order, a successful cancel, or an order the system cancels itself.
+entrypoint typedef struct _BondSpotMatchingExecutionReportMessage {
+  UINT32BE partition_no;        // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE report_index;        // bytes 4 to 11, signed, read here as unsigned
+  UINT8 appl_id[3];             // bytes 12 to 14
+  UINT8 reporting_pbuid[6];     // bytes 15 to 20
+  UINT8 submitting_pbuid[6];    // bytes 21 to 26
+  UINT8 security_id[8];         // bytes 27 to 34
+  UINT8 security_id_source[4];  // bytes 35 to 38
+  UINT16BE owner_type;          // bytes 39 to 40
+  UINT8 clearing_firm[2];       // bytes 41 to 42
+  UINT64BE transact_time;       // bytes 43 to 50, signed, read here as unsigned
+  UINT8 user_info[32];          // bytes 51 to 82
+  UINT8 order_id[16];           // bytes 83 to 98
+  UINT8 cl_ord_id[10];          // bytes 99 to 108
+  UINT8 orig_cl_ord_id[10];     // bytes 109 to 118
+  UINT8 exec_id[16];            // bytes 119 to 134
+  UINT8 exec_type;              // byte 135
+  UINT8 ord_status;             // byte 136
+  UINT16BE ord_rej_reason;      // bytes 137 to 138
+  UINT64BE leaves_qty;          // bytes 139 to 146, signed, read here as unsigned
+  UINT64BE cum_qty;             // bytes 147 to 154, signed, read here as unsigned
+  UINT8 side;                   // byte 155
+  UINT8 ord_type;               // byte 156
+  UINT64BE order_qty;           // bytes 157 to 164, signed, read here as unsigned
+  UINT64BE price;               // bytes 165 to 172, signed, read here as unsigned
+  UINT8 account_id[10];         // bytes 173 to 182
+  UINT8 branch_id[2];           // bytes 183 to 184
+  UINT8 order_restrictions[4];  // bytes 185 to 188
+  UINT64BE stop_px;             // bytes 189 to 196, signed, read here as unsigned
+  UINT64BE min_qty;             // bytes 197 to 204, signed, read here as unsigned
+  UINT16BE max_price_levels;    // bytes 205 to 206
+  UINT8 time_in_force;          // byte 207
+  UINT8 cash_margin;            // byte 208
+} BondSpotMatchingExecutionReportMessage;
+
+// ---- Centralized Auction Execution Report Message: 209 bytes -----------------
+
+// Order response and cancel execution report for centralized auction stock trading, ApplID 040: confirms or rejects a new order, a successful cancel, or an order the system cancels itself. Not yet enabled.
+entrypoint typedef struct _CentralizedAuctionExecutionReportMessage {
+  UINT32BE partition_no;        // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE report_index;        // bytes 4 to 11, signed, read here as unsigned
+  UINT8 appl_id[3];             // bytes 12 to 14
+  UINT8 reporting_pbuid[6];     // bytes 15 to 20
+  UINT8 submitting_pbuid[6];    // bytes 21 to 26
+  UINT8 security_id[8];         // bytes 27 to 34
+  UINT8 security_id_source[4];  // bytes 35 to 38
+  UINT16BE owner_type;          // bytes 39 to 40
+  UINT8 clearing_firm[2];       // bytes 41 to 42
+  UINT64BE transact_time;       // bytes 43 to 50, signed, read here as unsigned
+  UINT8 user_info[32];          // bytes 51 to 82
+  UINT8 order_id[16];           // bytes 83 to 98
+  UINT8 cl_ord_id[10];          // bytes 99 to 108
+  UINT8 orig_cl_ord_id[10];     // bytes 109 to 118
+  UINT8 exec_id[16];            // bytes 119 to 134
+  UINT8 exec_type;              // byte 135
+  UINT8 ord_status;             // byte 136
+  UINT16BE ord_rej_reason;      // bytes 137 to 138
+  UINT64BE leaves_qty;          // bytes 139 to 146, signed, read here as unsigned
+  UINT64BE cum_qty;             // bytes 147 to 154, signed, read here as unsigned
+  UINT8 side;                   // byte 155
+  UINT8 ord_type;               // byte 156
+  UINT64BE order_qty;           // bytes 157 to 164, signed, read here as unsigned
+  UINT64BE price;               // bytes 165 to 172, signed, read here as unsigned
+  UINT8 account_id[10];         // bytes 173 to 182
+  UINT8 branch_id[2];           // bytes 183 to 184
+  UINT8 order_restrictions[4];  // bytes 185 to 188
+  UINT64BE stop_px;             // bytes 189 to 196, signed, read here as unsigned
+  UINT64BE min_qty;             // bytes 197 to 204, signed, read here as unsigned
+  UINT16BE max_price_levels;    // bytes 205 to 206
+  UINT8 time_in_force;          // byte 207
+  UINT8 cash_margin;            // byte 208
+} CentralizedAuctionExecutionReportMessage;
+
+// ---- Conversion Execution Report Message: 189 bytes --------------------------
+
+// Order response and cancel execution report for conversion, ApplID 041: confirms or rejects a new order, a successful cancel, or an order the system cancels itself. Not yet enabled.
+entrypoint typedef struct _ConversionExecutionReportMessage {
+  UINT32BE partition_no;        // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE report_index;        // bytes 4 to 11, signed, read here as unsigned
+  UINT8 appl_id[3];             // bytes 12 to 14
+  UINT8 reporting_pbuid[6];     // bytes 15 to 20
+  UINT8 submitting_pbuid[6];    // bytes 21 to 26
+  UINT8 security_id[8];         // bytes 27 to 34
+  UINT8 security_id_source[4];  // bytes 35 to 38
+  UINT16BE owner_type;          // bytes 39 to 40
+  UINT8 clearing_firm[2];       // bytes 41 to 42
+  UINT64BE transact_time;       // bytes 43 to 50, signed, read here as unsigned
+  UINT8 user_info[32];          // bytes 51 to 82
+  UINT8 order_id[16];           // bytes 83 to 98
+  UINT8 cl_ord_id[10];          // bytes 99 to 108
+  UINT8 orig_cl_ord_id[10];     // bytes 109 to 118
+  UINT8 exec_id[16];            // bytes 119 to 134
+  UINT8 exec_type;              // byte 135
+  UINT8 ord_status;             // byte 136
+  UINT16BE ord_rej_reason;      // bytes 137 to 138
+  UINT64BE leaves_qty;          // bytes 139 to 146, signed, read here as unsigned
+  UINT64BE cum_qty;             // bytes 147 to 154, signed, read here as unsigned
+  UINT8 side;                   // byte 155
+  UINT8 ord_type;               // byte 156
+  UINT64BE order_qty;           // bytes 157 to 164, signed, read here as unsigned
+  UINT64BE price;               // bytes 165 to 172, signed, read here as unsigned
+  UINT8 account_id[10];         // bytes 173 to 182
+  UINT8 branch_id[2];           // bytes 183 to 184
+  UINT8 order_restrictions[4];  // bytes 185 to 188
+} ConversionExecutionReportMessage;
+
+// ---- Inquiry Execution Report Message: 189 bytes -----------------------------
+
+// Order response and cancel execution report for inquiry, ApplID 042: confirms or rejects a new order; the business does not allow cancellation. Not yet enabled.
+entrypoint typedef struct _InquiryExecutionReportMessage {
+  UINT32BE partition_no;        // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE report_index;        // bytes 4 to 11, signed, read here as unsigned
+  UINT8 appl_id[3];             // bytes 12 to 14
+  UINT8 reporting_pbuid[6];     // bytes 15 to 20
+  UINT8 submitting_pbuid[6];    // bytes 21 to 26
+  UINT8 security_id[8];         // bytes 27 to 34
+  UINT8 security_id_source[4];  // bytes 35 to 38
+  UINT16BE owner_type;          // bytes 39 to 40
+  UINT8 clearing_firm[2];       // bytes 41 to 42
+  UINT64BE transact_time;       // bytes 43 to 50, signed, read here as unsigned
+  UINT8 user_info[32];          // bytes 51 to 82
+  UINT8 order_id[16];           // bytes 83 to 98
+  UINT8 cl_ord_id[10];          // bytes 99 to 108
+  UINT8 orig_cl_ord_id[10];     // bytes 109 to 118
+  UINT8 exec_id[16];            // bytes 119 to 134
+  UINT8 exec_type;              // byte 135
+  UINT8 ord_status;             // byte 136
+  UINT16BE ord_rej_reason;      // bytes 137 to 138
+  UINT64BE leaves_qty;          // bytes 139 to 146, signed, read here as unsigned
+  UINT64BE cum_qty;             // bytes 147 to 154, signed, read here as unsigned
+  UINT8 side;                   // byte 155
+  UINT8 ord_type;               // byte 156
+  UINT64BE order_qty;           // bytes 157 to 164, signed, read here as unsigned
+  UINT64BE price;               // bytes 165 to 172, signed, read here as unsigned
+  UINT8 account_id[10];         // bytes 173 to 182
+  UINT8 branch_id[2];           // bytes 183 to 184
+  UINT8 order_restrictions[4];  // bytes 185 to 188
+} InquiryExecutionReportMessage;
+
+// ---- Subscription Execution Report Message: 189 bytes ------------------------
+
+// Order response and cancel execution report for subscription, ApplID 043: confirms or rejects a new order; the business does not allow cancellation. Not yet enabled.
+entrypoint typedef struct _SubscriptionExecutionReportMessage {
+  UINT32BE partition_no;        // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE report_index;        // bytes 4 to 11, signed, read here as unsigned
+  UINT8 appl_id[3];             // bytes 12 to 14
+  UINT8 reporting_pbuid[6];     // bytes 15 to 20
+  UINT8 submitting_pbuid[6];    // bytes 21 to 26
+  UINT8 security_id[8];         // bytes 27 to 34
+  UINT8 security_id_source[4];  // bytes 35 to 38
+  UINT16BE owner_type;          // bytes 39 to 40
+  UINT8 clearing_firm[2];       // bytes 41 to 42
+  UINT64BE transact_time;       // bytes 43 to 50, signed, read here as unsigned
+  UINT8 user_info[32];          // bytes 51 to 82
+  UINT8 order_id[16];           // bytes 83 to 98
+  UINT8 cl_ord_id[10];          // bytes 99 to 108
+  UINT8 orig_cl_ord_id[10];     // bytes 109 to 118
+  UINT8 exec_id[16];            // bytes 119 to 134
+  UINT8 exec_type;              // byte 135
+  UINT8 ord_status;             // byte 136
+  UINT16BE ord_rej_reason;      // bytes 137 to 138
+  UINT64BE leaves_qty;          // bytes 139 to 146, signed, read here as unsigned
+  UINT64BE cum_qty;             // bytes 147 to 154, signed, read here as unsigned
+  UINT8 side;                   // byte 155
+  UINT8 ord_type;               // byte 156
+  UINT64BE order_qty;           // bytes 157 to 164, signed, read here as unsigned
+  UINT64BE price;               // bytes 165 to 172, signed, read here as unsigned
+  UINT8 account_id[10];         // bytes 173 to 182
+  UINT8 branch_id[2];           // bytes 183 to 184
+  UINT8 order_restrictions[4];  // bytes 185 to 188
+} SubscriptionExecutionReportMessage;
+
+// ---- Put Back Execution Report Message: 189 bytes ----------------------------
+
+// Order response and cancel execution report for put back, ApplID 044: confirms or rejects a new order, a successful cancel, or an order the system cancels itself. Not yet enabled.
+entrypoint typedef struct _PutBackExecutionReportMessage {
+  UINT32BE partition_no;        // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE report_index;        // bytes 4 to 11, signed, read here as unsigned
+  UINT8 appl_id[3];             // bytes 12 to 14
+  UINT8 reporting_pbuid[6];     // bytes 15 to 20
+  UINT8 submitting_pbuid[6];    // bytes 21 to 26
+  UINT8 security_id[8];         // bytes 27 to 34
+  UINT8 security_id_source[4];  // bytes 35 to 38
+  UINT16BE owner_type;          // bytes 39 to 40
+  UINT8 clearing_firm[2];       // bytes 41 to 42
+  UINT64BE transact_time;       // bytes 43 to 50, signed, read here as unsigned
+  UINT8 user_info[32];          // bytes 51 to 82
+  UINT8 order_id[16];           // bytes 83 to 98
+  UINT8 cl_ord_id[10];          // bytes 99 to 108
+  UINT8 orig_cl_ord_id[10];     // bytes 109 to 118
+  UINT8 exec_id[16];            // bytes 119 to 134
+  UINT8 exec_type;              // byte 135
+  UINT8 ord_status;             // byte 136
+  UINT16BE ord_rej_reason;      // bytes 137 to 138
+  UINT64BE leaves_qty;          // bytes 139 to 146, signed, read here as unsigned
+  UINT64BE cum_qty;             // bytes 147 to 154, signed, read here as unsigned
+  UINT8 side;                   // byte 155
+  UINT8 ord_type;               // byte 156
+  UINT64BE order_qty;           // bytes 157 to 164, signed, read here as unsigned
+  UINT64BE price;               // bytes 165 to 172, signed, read here as unsigned
+  UINT8 account_id[10];         // bytes 173 to 182
+  UINT8 branch_id[2];           // bytes 183 to 184
+  UINT8 order_restrictions[4];  // bytes 185 to 188
+} PutBackExecutionReportMessage;
+
+// ---- Tender Offer Acceptance Execution Report Message: 189 bytes -------------
+
+// Order response and cancel execution report for tender offer acceptance, ApplID 045: confirms or rejects a new order, a successful cancel, or an order the system cancels itself. Not yet enabled.
+entrypoint typedef struct _TenderOfferAcceptanceExecutionReportMessage {
+  UINT32BE partition_no;        // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE report_index;        // bytes 4 to 11, signed, read here as unsigned
+  UINT8 appl_id[3];             // bytes 12 to 14
+  UINT8 reporting_pbuid[6];     // bytes 15 to 20
+  UINT8 submitting_pbuid[6];    // bytes 21 to 26
+  UINT8 security_id[8];         // bytes 27 to 34
+  UINT8 security_id_source[4];  // bytes 35 to 38
+  UINT16BE owner_type;          // bytes 39 to 40
+  UINT8 clearing_firm[2];       // bytes 41 to 42
+  UINT64BE transact_time;       // bytes 43 to 50, signed, read here as unsigned
+  UINT8 user_info[32];          // bytes 51 to 82
+  UINT8 order_id[16];           // bytes 83 to 98
+  UINT8 cl_ord_id[10];          // bytes 99 to 108
+  UINT8 orig_cl_ord_id[10];     // bytes 109 to 118
+  UINT8 exec_id[16];            // bytes 119 to 134
+  UINT8 exec_type;              // byte 135
+  UINT8 ord_status;             // byte 136
+  UINT16BE ord_rej_reason;      // bytes 137 to 138
+  UINT64BE leaves_qty;          // bytes 139 to 146, signed, read here as unsigned
+  UINT64BE cum_qty;             // bytes 147 to 154, signed, read here as unsigned
+  UINT8 side;                   // byte 155
+  UINT8 ord_type;               // byte 156
+  UINT64BE order_qty;           // bytes 157 to 164, signed, read here as unsigned
+  UINT64BE price;               // bytes 165 to 172, signed, read here as unsigned
+  UINT8 account_id[10];         // bytes 173 to 182
+  UINT8 branch_id[2];           // bytes 183 to 184
+  UINT8 order_restrictions[4];  // bytes 185 to 188
+} TenderOfferAcceptanceExecutionReportMessage;
+
+// ---- Refinancing Securities Lending Non Agreed Execution Report Message: 194 bytes ----
+
+// Order response and cancel execution report for refinancing securities lending without agreement, ApplID 050: confirms or rejects a new order, a successful cancel, or an order the system cancels itself. Not yet enabled.
+entrypoint typedef struct _RefinancingSecuritiesLendingNonAgreedExecutionReportMessage {
+  UINT32BE partition_no;        // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE report_index;        // bytes 4 to 11, signed, read here as unsigned
+  UINT8 appl_id[3];             // bytes 12 to 14
+  UINT8 reporting_pbuid[6];     // bytes 15 to 20
+  UINT8 submitting_pbuid[6];    // bytes 21 to 26
+  UINT8 security_id[8];         // bytes 27 to 34
+  UINT8 security_id_source[4];  // bytes 35 to 38
+  UINT16BE owner_type;          // bytes 39 to 40
+  UINT8 clearing_firm[2];       // bytes 41 to 42
+  UINT64BE transact_time;       // bytes 43 to 50, signed, read here as unsigned
+  UINT8 user_info[32];          // bytes 51 to 82
+  UINT8 order_id[16];           // bytes 83 to 98
+  UINT8 cl_ord_id[10];          // bytes 99 to 108
+  UINT8 orig_cl_ord_id[10];     // bytes 109 to 118
+  UINT8 exec_id[16];            // bytes 119 to 134
+  UINT8 exec_type;              // byte 135
+  UINT8 ord_status;             // byte 136
+  UINT16BE ord_rej_reason;      // bytes 137 to 138
+  UINT64BE leaves_qty;          // bytes 139 to 146, signed, read here as unsigned
+  UINT64BE cum_qty;             // bytes 147 to 154, signed, read here as unsigned
+  UINT8 side;                   // byte 155
+  UINT8 ord_type;               // byte 156
+  UINT64BE order_qty;           // bytes 157 to 164, signed, read here as unsigned
+  UINT64BE price;               // bytes 165 to 172, signed, read here as unsigned
+  UINT8 account_id[10];         // bytes 173 to 182
+  UINT8 branch_id[2];           // bytes 183 to 184
+  UINT8 order_restrictions[4];  // bytes 185 to 188
+  UINT16BE expiration_days;     // bytes 189 to 190
+  UINT8 expiration_type;        // byte 191
+  UINT8 share_property[2];      // bytes 192 to 193
+} RefinancingSecuritiesLendingNonAgreedExecutionReportMessage;
+
+// ---- Bond Spot Matching Trade Execution Report Message: 175 bytes ------------
+
+// Execution report for a trade on an order for spot bond trading by matching, ApplID 010.
+entrypoint typedef struct _BondSpotMatchingTradeExecutionReportMessage {
+  UINT32BE partition_no;        // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE report_index;        // bytes 4 to 11, signed, read here as unsigned
+  UINT8 appl_id[3];             // bytes 12 to 14
+  UINT8 reporting_pbuid[6];     // bytes 15 to 20
+  UINT8 submitting_pbuid[6];    // bytes 21 to 26
+  UINT8 security_id[8];         // bytes 27 to 34
+  UINT8 security_id_source[4];  // bytes 35 to 38
+  UINT16BE owner_type;          // bytes 39 to 40
+  UINT8 clearing_firm[2];       // bytes 41 to 42
+  UINT64BE transact_time;       // bytes 43 to 50, signed, read here as unsigned
+  UINT8 user_info[32];          // bytes 51 to 82
+  UINT8 order_id[16];           // bytes 83 to 98
+  UINT8 cl_ord_id[10];          // bytes 99 to 108
+  UINT8 exec_id[16];            // bytes 109 to 124
+  UINT8 exec_type;              // byte 125
+  UINT8 ord_status;             // byte 126
+  UINT64BE last_px;             // bytes 127 to 134, signed, read here as unsigned
+  UINT64BE last_qty;            // bytes 135 to 142, signed, read here as unsigned
+  UINT64BE leaves_qty;          // bytes 143 to 150, signed, read here as unsigned
+  UINT64BE cum_qty;             // bytes 151 to 158, signed, read here as unsigned
+  UINT8 side;                   // byte 159
+  UINT8 account_id[10];         // bytes 160 to 169
+  UINT8 branch_id[2];           // bytes 170 to 171
+  UINT8 cash_margin;            // byte 172
+  UINT8 settl_type;             // byte 173
+  UINT8 settl_period;           // byte 174
+} BondSpotMatchingTradeExecutionReportMessage;
+
+// ---- Centralized Auction Trade Execution Report Message: 173 bytes -----------
+
+// Execution report for a trade on an order for centralized auction stock trading, ApplID 040. Not yet enabled.
+entrypoint typedef struct _CentralizedAuctionTradeExecutionReportMessage {
+  UINT32BE partition_no;        // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE report_index;        // bytes 4 to 11, signed, read here as unsigned
+  UINT8 appl_id[3];             // bytes 12 to 14
+  UINT8 reporting_pbuid[6];     // bytes 15 to 20
+  UINT8 submitting_pbuid[6];    // bytes 21 to 26
+  UINT8 security_id[8];         // bytes 27 to 34
+  UINT8 security_id_source[4];  // bytes 35 to 38
+  UINT16BE owner_type;          // bytes 39 to 40
+  UINT8 clearing_firm[2];       // bytes 41 to 42
+  UINT64BE transact_time;       // bytes 43 to 50, signed, read here as unsigned
+  UINT8 user_info[32];          // bytes 51 to 82
+  UINT8 order_id[16];           // bytes 83 to 98
+  UINT8 cl_ord_id[10];          // bytes 99 to 108
+  UINT8 exec_id[16];            // bytes 109 to 124
+  UINT8 exec_type;              // byte 125
+  UINT8 ord_status;             // byte 126
+  UINT64BE last_px;             // bytes 127 to 134, signed, read here as unsigned
+  UINT64BE last_qty;            // bytes 135 to 142, signed, read here as unsigned
+  UINT64BE leaves_qty;          // bytes 143 to 150, signed, read here as unsigned
+  UINT64BE cum_qty;             // bytes 151 to 158, signed, read here as unsigned
+  UINT8 side;                   // byte 159
+  UINT8 account_id[10];         // bytes 160 to 169
+  UINT8 branch_id[2];           // bytes 170 to 171
+  UINT8 cash_margin;            // byte 172
+} CentralizedAuctionTradeExecutionReportMessage;
+
+// ---- Refinancing Securities Lending Non Agreed Trade Execution Report Message: 181 bytes ----
+
+// Execution report for a trade on an order for refinancing securities lending without agreement, ApplID 050. Not yet enabled.
+entrypoint typedef struct _RefinancingSecuritiesLendingNonAgreedTradeExecutionReportMessage {
+  UINT32BE partition_no;        // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE report_index;        // bytes 4 to 11, signed, read here as unsigned
+  UINT8 appl_id[3];             // bytes 12 to 14
+  UINT8 reporting_pbuid[6];     // bytes 15 to 20
+  UINT8 submitting_pbuid[6];    // bytes 21 to 26
+  UINT8 security_id[8];         // bytes 27 to 34
+  UINT8 security_id_source[4];  // bytes 35 to 38
+  UINT16BE owner_type;          // bytes 39 to 40
+  UINT8 clearing_firm[2];       // bytes 41 to 42
+  UINT64BE transact_time;       // bytes 43 to 50, signed, read here as unsigned
+  UINT8 user_info[32];          // bytes 51 to 82
+  UINT8 order_id[16];           // bytes 83 to 98
+  UINT8 cl_ord_id[10];          // bytes 99 to 108
+  UINT8 exec_id[16];            // bytes 109 to 124
+  UINT8 exec_type;              // byte 125
+  UINT8 ord_status;             // byte 126
+  UINT64BE last_px;             // bytes 127 to 134, signed, read here as unsigned
+  UINT64BE last_qty;            // bytes 135 to 142, signed, read here as unsigned
+  UINT64BE leaves_qty;          // bytes 143 to 150, signed, read here as unsigned
+  UINT64BE cum_qty;             // bytes 151 to 158, signed, read here as unsigned
+  UINT8 side;                   // byte 159
+  UINT8 account_id[10];         // bytes 160 to 169
+  UINT8 branch_id[2];           // bytes 170 to 171
+  UINT16BE expiration_days;     // bytes 172 to 173
+  UINT8 expiration_type;        // byte 174
+  UINT32BE maturity_date;       // bytes 175 to 178
+  UINT8 share_property[2];      // bytes 179 to 180
+} RefinancingSecuritiesLendingNonAgreedTradeExecutionReportMessage;
+
+// ---- Bond Spot Negotiated Trade Capture Report Message: 294 bytes ------------
+
+// Trade capture report for spot bond trading by negotiation, ApplID 031, submitted for matching.
+entrypoint typedef struct _BondSpotNegotiatedTradeCaptureReportMessage {
+  UINT8 appl_id[3];                   // bytes 0 to 2
+  UINT8 submitting_pbuid[6];          // bytes 3 to 8
+  UINT8 security_id[8];               // bytes 9 to 16
+  UINT8 security_id_source[4];        // bytes 17 to 20
+  UINT16BE owner_type;                // bytes 21 to 22
+  UINT8 clearing_firm[2];             // bytes 23 to 24
+  UINT64BE transact_time;             // bytes 25 to 32, signed, read here as unsigned
+  UINT8 user_info[32];                // bytes 33 to 64
+  UINT8 trade_report_id[10];          // bytes 65 to 74
+  UINT8 trade_report_type;            // byte 75
+  UINT8 trade_report_trans_type;      // byte 76
+  UINT8 trade_handling_instr;         // byte 77
+  UINT8 trade_report_ref_id[10];      // bytes 78 to 87
+  UINT64BE last_px;                   // bytes 88 to 95, signed, read here as unsigned
+  UINT64BE last_qty;                  // bytes 96 to 103, signed, read here as unsigned
+  UINT16BE trd_type;                  // bytes 104 to 105
+  UINT16BE trd_sub_type;              // bytes 106 to 107
+  UINT32BE confirm_id;                // bytes 108 to 111
+  UINT8 side;                         // byte 112
+  UINT8 pbuid[6];                     // bytes 113 to 118
+  UINT8 account_id[10];               // bytes 119 to 128
+  UINT8 branch_id[2];                 // bytes 129 to 130
+  UINT8 counterparty_pbuid[6];        // bytes 131 to 136
+  UINT8 counterparty_account_id[10];  // bytes 137 to 146
+  UINT8 counterparty_branch_id[2];    // bytes 147 to 148
+  UINT8 member_id[6];                 // bytes 149 to 154
+  UINT8 trader_code[5];               // bytes 155 to 159
+  UINT8 counterparty_member_id[6];    // bytes 160 to 165
+  UINT8 counterparty_trader_code[5];  // bytes 166 to 170
+  UINT8 settl_type;                   // byte 171
+  UINT8 settl_period;                 // byte 172
+  UINT8 cash_margin;                  // byte 173
+  UINT8 memo[120];                    // bytes 174 to 293
+} BondSpotNegotiatedTradeCaptureReportMessage;
+
+// ---- Refinancing Securities Lending Agreed Trade Capture Report Message: 154 bytes ----
+
+// Trade capture report for refinancing securities lending by agreement, ApplID 051, submitted for matching. Not yet enabled.
+entrypoint typedef struct _RefinancingSecuritiesLendingAgreedTradeCaptureReportMessage {
+  UINT8 appl_id[3];                   // bytes 0 to 2
+  UINT8 submitting_pbuid[6];          // bytes 3 to 8
+  UINT8 security_id[8];               // bytes 9 to 16
+  UINT8 security_id_source[4];        // bytes 17 to 20
+  UINT16BE owner_type;                // bytes 21 to 22
+  UINT8 clearing_firm[2];             // bytes 23 to 24
+  UINT64BE transact_time;             // bytes 25 to 32, signed, read here as unsigned
+  UINT8 user_info[32];                // bytes 33 to 64
+  UINT8 trade_report_id[10];          // bytes 65 to 74
+  UINT8 trade_report_type;            // byte 75
+  UINT8 trade_report_trans_type;      // byte 76
+  UINT8 trade_handling_instr;         // byte 77
+  UINT8 trade_report_ref_id[10];      // bytes 78 to 87
+  UINT64BE last_px;                   // bytes 88 to 95, signed, read here as unsigned
+  UINT64BE last_qty;                  // bytes 96 to 103, signed, read here as unsigned
+  UINT16BE trd_type;                  // bytes 104 to 105
+  UINT16BE trd_sub_type;              // bytes 106 to 107
+  UINT32BE confirm_id;                // bytes 108 to 111
+  UINT8 side;                         // byte 112
+  UINT8 pbuid[6];                     // bytes 113 to 118
+  UINT8 account_id[10];               // bytes 119 to 128
+  UINT8 branch_id[2];                 // bytes 129 to 130
+  UINT8 counterparty_pbuid[6];        // bytes 131 to 136
+  UINT8 counterparty_account_id[10];  // bytes 137 to 146
+  UINT8 counterparty_branch_id[2];    // bytes 147 to 148
+  UINT16BE expiration_days;           // bytes 149 to 150
+  UINT8 expiration_type;              // byte 151
+  UINT8 share_property[2];            // bytes 152 to 153
+} RefinancingSecuritiesLendingAgreedTradeCaptureReportMessage;
+
+// ---- Mutual Trade Confirmation Trade Capture Report Message: 149 bytes -------
+
+// Trade capture report for mutual trade confirmation, ApplID 060, submitted for matching. Not yet enabled.
+entrypoint typedef struct _MutualTradeConfirmationTradeCaptureReportMessage {
+  UINT8 appl_id[3];                   // bytes 0 to 2
+  UINT8 submitting_pbuid[6];          // bytes 3 to 8
+  UINT8 security_id[8];               // bytes 9 to 16
+  UINT8 security_id_source[4];        // bytes 17 to 20
+  UINT16BE owner_type;                // bytes 21 to 22
+  UINT8 clearing_firm[2];             // bytes 23 to 24
+  UINT64BE transact_time;             // bytes 25 to 32, signed, read here as unsigned
+  UINT8 user_info[32];                // bytes 33 to 64
+  UINT8 trade_report_id[10];          // bytes 65 to 74
+  UINT8 trade_report_type;            // byte 75
+  UINT8 trade_report_trans_type;      // byte 76
+  UINT8 trade_handling_instr;         // byte 77
+  UINT8 trade_report_ref_id[10];      // bytes 78 to 87
+  UINT64BE last_px;                   // bytes 88 to 95, signed, read here as unsigned
+  UINT64BE last_qty;                  // bytes 96 to 103, signed, read here as unsigned
+  UINT16BE trd_type;                  // bytes 104 to 105
+  UINT16BE trd_sub_type;              // bytes 106 to 107
+  UINT32BE confirm_id;                // bytes 108 to 111
+  UINT8 side;                         // byte 112
+  UINT8 pbuid[6];                     // bytes 113 to 118
+  UINT8 account_id[10];               // bytes 119 to 128
+  UINT8 branch_id[2];                 // bytes 129 to 130
+  UINT8 counterparty_pbuid[6];        // bytes 131 to 136
+  UINT8 counterparty_account_id[10];  // bytes 137 to 146
+  UINT8 counterparty_branch_id[2];    // bytes 147 to 148
+} MutualTradeConfirmationTradeCaptureReportMessage;
+
+// ---- Market Making Mutual Trade Confirmation Trade Capture Report Message: 149 bytes ----
+
+// Trade capture report for market making mutual trade confirmation, ApplID 061, submitted for matching. Not yet enabled.
+entrypoint typedef struct _MarketMakingMutualTradeConfirmationTradeCaptureReportMessage {
+  UINT8 appl_id[3];                   // bytes 0 to 2
+  UINT8 submitting_pbuid[6];          // bytes 3 to 8
+  UINT8 security_id[8];               // bytes 9 to 16
+  UINT8 security_id_source[4];        // bytes 17 to 20
+  UINT16BE owner_type;                // bytes 21 to 22
+  UINT8 clearing_firm[2];             // bytes 23 to 24
+  UINT64BE transact_time;             // bytes 25 to 32, signed, read here as unsigned
+  UINT8 user_info[32];                // bytes 33 to 64
+  UINT8 trade_report_id[10];          // bytes 65 to 74
+  UINT8 trade_report_type;            // byte 75
+  UINT8 trade_report_trans_type;      // byte 76
+  UINT8 trade_handling_instr;         // byte 77
+  UINT8 trade_report_ref_id[10];      // bytes 78 to 87
+  UINT64BE last_px;                   // bytes 88 to 95, signed, read here as unsigned
+  UINT64BE last_qty;                  // bytes 96 to 103, signed, read here as unsigned
+  UINT16BE trd_type;                  // bytes 104 to 105
+  UINT16BE trd_sub_type;              // bytes 106 to 107
+  UINT32BE confirm_id;                // bytes 108 to 111
+  UINT8 side;                         // byte 112
+  UINT8 pbuid[6];                     // bytes 113 to 118
+  UINT8 account_id[10];               // bytes 119 to 128
+  UINT8 branch_id[2];                 // bytes 129 to 130
+  UINT8 counterparty_pbuid[6];        // bytes 131 to 136
+  UINT8 counterparty_account_id[10];  // bytes 137 to 146
+  UINT8 counterparty_branch_id[2];    // bytes 147 to 148
+} MarketMakingMutualTradeConfirmationTradeCaptureReportMessage;
+
+// ---- After Hours Block Trade Trade Capture Report Message: 150 bytes ---------
+
+// Trade capture report for after hours block trading, ApplID 062, submitted for matching. Not yet enabled.
+entrypoint typedef struct _AfterHoursBlockTradeTradeCaptureReportMessage {
+  UINT8 appl_id[3];                   // bytes 0 to 2
+  UINT8 submitting_pbuid[6];          // bytes 3 to 8
+  UINT8 security_id[8];               // bytes 9 to 16
+  UINT8 security_id_source[4];        // bytes 17 to 20
+  UINT16BE owner_type;                // bytes 21 to 22
+  UINT8 clearing_firm[2];             // bytes 23 to 24
+  UINT64BE transact_time;             // bytes 25 to 32, signed, read here as unsigned
+  UINT8 user_info[32];                // bytes 33 to 64
+  UINT8 trade_report_id[10];          // bytes 65 to 74
+  UINT8 trade_report_type;            // byte 75
+  UINT8 trade_report_trans_type;      // byte 76
+  UINT8 trade_handling_instr;         // byte 77
+  UINT8 trade_report_ref_id[10];      // bytes 78 to 87
+  UINT64BE last_px;                   // bytes 88 to 95, signed, read here as unsigned
+  UINT64BE last_qty;                  // bytes 96 to 103, signed, read here as unsigned
+  UINT16BE trd_type;                  // bytes 104 to 105
+  UINT16BE trd_sub_type;              // bytes 106 to 107
+  UINT32BE confirm_id;                // bytes 108 to 111
+  UINT8 side;                         // byte 112
+  UINT8 pbuid[6];                     // bytes 113 to 118
+  UINT8 account_id[10];               // bytes 119 to 128
+  UINT8 branch_id[2];                 // bytes 129 to 130
+  UINT8 counterparty_pbuid[6];        // bytes 131 to 136
+  UINT8 counterparty_account_id[10];  // bytes 137 to 146
+  UINT8 counterparty_branch_id[2];    // bytes 147 to 148
+  UINT8 cash_margin;                  // byte 149
+} AfterHoursBlockTradeTradeCaptureReportMessage;
+
+// ---- Bond Spot Negotiated Trade Capture Report Ack Message: 348 bytes --------
+
+// Trading gateway response to a trade capture report for spot bond trading by negotiation, ApplID 031.
+entrypoint typedef struct _BondSpotNegotiatedTradeCaptureReportAckMessage {
+  UINT32BE partition_no;                // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE report_index;                // bytes 4 to 11, signed, read here as unsigned
+  UINT8 appl_id[3];                     // bytes 12 to 14
+  UINT8 reporting_pbuid[6];             // bytes 15 to 20
+  UINT8 submitting_pbuid[6];            // bytes 21 to 26
+  UINT8 security_id[8];                 // bytes 27 to 34
+  UINT8 security_id_source[4];          // bytes 35 to 38
+  UINT16BE owner_type;                  // bytes 39 to 40
+  UINT8 clearing_firm[2];               // bytes 41 to 42
+  UINT64BE transact_time;               // bytes 43 to 50, signed, read here as unsigned
+  UINT8 user_info[32];                  // bytes 51 to 82
+  UINT8 trade_id[16];                   // bytes 83 to 98
+  UINT8 trade_report_id[10];            // bytes 99 to 108
+  UINT8 trade_report_type;              // byte 109
+  UINT8 trade_report_trans_type;        // byte 110
+  UINT8 trade_handling_instr;           // byte 111
+  UINT8 trade_report_ref_id[10];        // bytes 112 to 121
+  UINT8 trd_ack_status;                 // byte 122
+  UINT8 trd_rpt_status;                 // byte 123
+  UINT16BE trade_report_reject_reason;  // bytes 124 to 125
+  UINT64BE last_px;                     // bytes 126 to 133, signed, read here as unsigned
+  UINT64BE last_qty;                    // bytes 134 to 141, signed, read here as unsigned
+  UINT16BE trd_type;                    // bytes 142 to 143
+  UINT16BE trd_sub_type;                // bytes 144 to 145
+  UINT32BE confirm_id;                  // bytes 146 to 149
+  UINT8 exec_id[16];                    // bytes 150 to 165
+  UINT8 side;                           // byte 166
+  UINT8 pbuid[6];                       // bytes 167 to 172
+  UINT8 account_id[10];                 // bytes 173 to 182
+  UINT8 branch_id[2];                   // bytes 183 to 184
+  UINT8 counterparty_pbuid[6];          // bytes 185 to 190
+  UINT8 counterparty_account_id[10];    // bytes 191 to 200
+  UINT8 counterparty_branch_id[2];      // bytes 201 to 202
+  UINT8 member_id[6];                   // bytes 203 to 208
+  UINT8 trader_code[5];                 // bytes 209 to 213
+  UINT8 counterparty_member_id[6];      // bytes 214 to 219
+  UINT8 counterparty_trader_code[5];    // bytes 220 to 224
+  UINT8 settl_type;                     // byte 225
+  UINT8 settl_period;                   // byte 226
+  UINT8 cash_margin;                    // byte 227
+  UINT8 memo[120];                      // bytes 228 to 347
+} BondSpotNegotiatedTradeCaptureReportAckMessage;
+
+// ---- Refinancing Securities Lending Agreed Trade Capture Report Ack Message: 208 bytes ----
+
+// Trading gateway response to a trade capture report for refinancing securities lending by agreement, ApplID 051. Not yet enabled.
+entrypoint typedef struct _RefinancingSecuritiesLendingAgreedTradeCaptureReportAckMessage {
+  UINT32BE partition_no;                // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE report_index;                // bytes 4 to 11, signed, read here as unsigned
+  UINT8 appl_id[3];                     // bytes 12 to 14
+  UINT8 reporting_pbuid[6];             // bytes 15 to 20
+  UINT8 submitting_pbuid[6];            // bytes 21 to 26
+  UINT8 security_id[8];                 // bytes 27 to 34
+  UINT8 security_id_source[4];          // bytes 35 to 38
+  UINT16BE owner_type;                  // bytes 39 to 40
+  UINT8 clearing_firm[2];               // bytes 41 to 42
+  UINT64BE transact_time;               // bytes 43 to 50, signed, read here as unsigned
+  UINT8 user_info[32];                  // bytes 51 to 82
+  UINT8 trade_id[16];                   // bytes 83 to 98
+  UINT8 trade_report_id[10];            // bytes 99 to 108
+  UINT8 trade_report_type;              // byte 109
+  UINT8 trade_report_trans_type;        // byte 110
+  UINT8 trade_handling_instr;           // byte 111
+  UINT8 trade_report_ref_id[10];        // bytes 112 to 121
+  UINT8 trd_ack_status;                 // byte 122
+  UINT8 trd_rpt_status;                 // byte 123
+  UINT16BE trade_report_reject_reason;  // bytes 124 to 125
+  UINT64BE last_px;                     // bytes 126 to 133, signed, read here as unsigned
+  UINT64BE last_qty;                    // bytes 134 to 141, signed, read here as unsigned
+  UINT16BE trd_type;                    // bytes 142 to 143
+  UINT16BE trd_sub_type;                // bytes 144 to 145
+  UINT32BE confirm_id;                  // bytes 146 to 149
+  UINT8 exec_id[16];                    // bytes 150 to 165
+  UINT8 side;                           // byte 166
+  UINT8 pbuid[6];                       // bytes 167 to 172
+  UINT8 account_id[10];                 // bytes 173 to 182
+  UINT8 branch_id[2];                   // bytes 183 to 184
+  UINT8 counterparty_pbuid[6];          // bytes 185 to 190
+  UINT8 counterparty_account_id[10];    // bytes 191 to 200
+  UINT8 counterparty_branch_id[2];      // bytes 201 to 202
+  UINT16BE expiration_days;             // bytes 203 to 204
+  UINT8 expiration_type;                // byte 205
+  UINT8 share_property[2];              // bytes 206 to 207
+} RefinancingSecuritiesLendingAgreedTradeCaptureReportAckMessage;
+
+// ---- Mutual Trade Confirmation Trade Capture Report Ack Message: 203 bytes ----
+
+// Trading gateway response to a trade capture report for mutual trade confirmation, ApplID 060. Not yet enabled.
+entrypoint typedef struct _MutualTradeConfirmationTradeCaptureReportAckMessage {
+  UINT32BE partition_no;                // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE report_index;                // bytes 4 to 11, signed, read here as unsigned
+  UINT8 appl_id[3];                     // bytes 12 to 14
+  UINT8 reporting_pbuid[6];             // bytes 15 to 20
+  UINT8 submitting_pbuid[6];            // bytes 21 to 26
+  UINT8 security_id[8];                 // bytes 27 to 34
+  UINT8 security_id_source[4];          // bytes 35 to 38
+  UINT16BE owner_type;                  // bytes 39 to 40
+  UINT8 clearing_firm[2];               // bytes 41 to 42
+  UINT64BE transact_time;               // bytes 43 to 50, signed, read here as unsigned
+  UINT8 user_info[32];                  // bytes 51 to 82
+  UINT8 trade_id[16];                   // bytes 83 to 98
+  UINT8 trade_report_id[10];            // bytes 99 to 108
+  UINT8 trade_report_type;              // byte 109
+  UINT8 trade_report_trans_type;        // byte 110
+  UINT8 trade_handling_instr;           // byte 111
+  UINT8 trade_report_ref_id[10];        // bytes 112 to 121
+  UINT8 trd_ack_status;                 // byte 122
+  UINT8 trd_rpt_status;                 // byte 123
+  UINT16BE trade_report_reject_reason;  // bytes 124 to 125
+  UINT64BE last_px;                     // bytes 126 to 133, signed, read here as unsigned
+  UINT64BE last_qty;                    // bytes 134 to 141, signed, read here as unsigned
+  UINT16BE trd_type;                    // bytes 142 to 143
+  UINT16BE trd_sub_type;                // bytes 144 to 145
+  UINT32BE confirm_id;                  // bytes 146 to 149
+  UINT8 exec_id[16];                    // bytes 150 to 165
+  UINT8 side;                           // byte 166
+  UINT8 pbuid[6];                       // bytes 167 to 172
+  UINT8 account_id[10];                 // bytes 173 to 182
+  UINT8 branch_id[2];                   // bytes 183 to 184
+  UINT8 counterparty_pbuid[6];          // bytes 185 to 190
+  UINT8 counterparty_account_id[10];    // bytes 191 to 200
+  UINT8 counterparty_branch_id[2];      // bytes 201 to 202
+} MutualTradeConfirmationTradeCaptureReportAckMessage;
+
+// ---- Market Making Mutual Trade Confirmation Trade Capture Report Ack Message: 203 bytes ----
+
+// Trading gateway response to a trade capture report for market making mutual trade confirmation, ApplID 061. Not yet enabled.
+entrypoint typedef struct _MarketMakingMutualTradeConfirmationTradeCaptureReportAckMessage {
+  UINT32BE partition_no;                // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE report_index;                // bytes 4 to 11, signed, read here as unsigned
+  UINT8 appl_id[3];                     // bytes 12 to 14
+  UINT8 reporting_pbuid[6];             // bytes 15 to 20
+  UINT8 submitting_pbuid[6];            // bytes 21 to 26
+  UINT8 security_id[8];                 // bytes 27 to 34
+  UINT8 security_id_source[4];          // bytes 35 to 38
+  UINT16BE owner_type;                  // bytes 39 to 40
+  UINT8 clearing_firm[2];               // bytes 41 to 42
+  UINT64BE transact_time;               // bytes 43 to 50, signed, read here as unsigned
+  UINT8 user_info[32];                  // bytes 51 to 82
+  UINT8 trade_id[16];                   // bytes 83 to 98
+  UINT8 trade_report_id[10];            // bytes 99 to 108
+  UINT8 trade_report_type;              // byte 109
+  UINT8 trade_report_trans_type;        // byte 110
+  UINT8 trade_handling_instr;           // byte 111
+  UINT8 trade_report_ref_id[10];        // bytes 112 to 121
+  UINT8 trd_ack_status;                 // byte 122
+  UINT8 trd_rpt_status;                 // byte 123
+  UINT16BE trade_report_reject_reason;  // bytes 124 to 125
+  UINT64BE last_px;                     // bytes 126 to 133, signed, read here as unsigned
+  UINT64BE last_qty;                    // bytes 134 to 141, signed, read here as unsigned
+  UINT16BE trd_type;                    // bytes 142 to 143
+  UINT16BE trd_sub_type;                // bytes 144 to 145
+  UINT32BE confirm_id;                  // bytes 146 to 149
+  UINT8 exec_id[16];                    // bytes 150 to 165
+  UINT8 side;                           // byte 166
+  UINT8 pbuid[6];                       // bytes 167 to 172
+  UINT8 account_id[10];                 // bytes 173 to 182
+  UINT8 branch_id[2];                   // bytes 183 to 184
+  UINT8 counterparty_pbuid[6];          // bytes 185 to 190
+  UINT8 counterparty_account_id[10];    // bytes 191 to 200
+  UINT8 counterparty_branch_id[2];      // bytes 201 to 202
+} MarketMakingMutualTradeConfirmationTradeCaptureReportAckMessage;
+
+// ---- After Hours Block Trade Trade Capture Report Ack Message: 204 bytes -----
+
+// Trading gateway response to a trade capture report for after hours block trading, ApplID 062. Not yet enabled.
+entrypoint typedef struct _AfterHoursBlockTradeTradeCaptureReportAckMessage {
+  UINT32BE partition_no;                // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE report_index;                // bytes 4 to 11, signed, read here as unsigned
+  UINT8 appl_id[3];                     // bytes 12 to 14
+  UINT8 reporting_pbuid[6];             // bytes 15 to 20
+  UINT8 submitting_pbuid[6];            // bytes 21 to 26
+  UINT8 security_id[8];                 // bytes 27 to 34
+  UINT8 security_id_source[4];          // bytes 35 to 38
+  UINT16BE owner_type;                  // bytes 39 to 40
+  UINT8 clearing_firm[2];               // bytes 41 to 42
+  UINT64BE transact_time;               // bytes 43 to 50, signed, read here as unsigned
+  UINT8 user_info[32];                  // bytes 51 to 82
+  UINT8 trade_id[16];                   // bytes 83 to 98
+  UINT8 trade_report_id[10];            // bytes 99 to 108
+  UINT8 trade_report_type;              // byte 109
+  UINT8 trade_report_trans_type;        // byte 110
+  UINT8 trade_handling_instr;           // byte 111
+  UINT8 trade_report_ref_id[10];        // bytes 112 to 121
+  UINT8 trd_ack_status;                 // byte 122
+  UINT8 trd_rpt_status;                 // byte 123
+  UINT16BE trade_report_reject_reason;  // bytes 124 to 125
+  UINT64BE last_px;                     // bytes 126 to 133, signed, read here as unsigned
+  UINT64BE last_qty;                    // bytes 134 to 141, signed, read here as unsigned
+  UINT16BE trd_type;                    // bytes 142 to 143
+  UINT16BE trd_sub_type;                // bytes 144 to 145
+  UINT32BE confirm_id;                  // bytes 146 to 149
+  UINT8 exec_id[16];                    // bytes 150 to 165
+  UINT8 side;                           // byte 166
+  UINT8 pbuid[6];                       // bytes 167 to 172
+  UINT8 account_id[10];                 // bytes 173 to 182
+  UINT8 branch_id[2];                   // bytes 183 to 184
+  UINT8 counterparty_pbuid[6];          // bytes 185 to 190
+  UINT8 counterparty_account_id[10];    // bytes 191 to 200
+  UINT8 counterparty_branch_id[2];      // bytes 201 to 202
+  UINT8 cash_margin;                    // byte 203
+} AfterHoursBlockTradeTradeCaptureReportAckMessage;
+
+// ---- Bond Spot Negotiated Trade Capture Report Confirmation Message: 334 bytes ----
+
+// Trade confirmation of a trade capture report for spot bond trading by negotiation, ApplID 031.
+entrypoint typedef struct _BondSpotNegotiatedTradeCaptureReportConfirmationMessage {
+  UINT32BE partition_no;              // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE report_index;              // bytes 4 to 11, signed, read here as unsigned
+  UINT8 appl_id[3];                   // bytes 12 to 14
+  UINT8 reporting_pbuid[6];           // bytes 15 to 20
+  UINT8 submitting_pbuid[6];          // bytes 21 to 26
+  UINT8 security_id[8];               // bytes 27 to 34
+  UINT8 security_id_source[4];        // bytes 35 to 38
+  UINT16BE owner_type;                // bytes 39 to 40
+  UINT8 clearing_firm[2];             // bytes 41 to 42
+  UINT64BE transact_time;             // bytes 43 to 50, signed, read here as unsigned
+  UINT8 user_info[32];                // bytes 51 to 82
+  UINT8 trade_id[16];                 // bytes 83 to 98
+  UINT8 trade_report_id[10];          // bytes 99 to 108
+  UINT8 trade_report_type;            // byte 109
+  UINT8 trade_report_trans_type;      // byte 110
+  UINT8 trade_handling_instr;         // byte 111
+  UINT64BE last_px;                   // bytes 112 to 119, signed, read here as unsigned
+  UINT64BE last_qty;                  // bytes 120 to 127, signed, read here as unsigned
+  UINT16BE trd_type;                  // bytes 128 to 129
+  UINT16BE trd_sub_type;              // bytes 130 to 131
+  UINT32BE confirm_id;                // bytes 132 to 135
+  UINT8 exec_id[16];                  // bytes 136 to 151
+  UINT8 side;                         // byte 152
+  UINT8 pbuid[6];                     // bytes 153 to 158
+  UINT8 account_id[10];               // bytes 159 to 168
+  UINT8 branch_id[2];                 // bytes 169 to 170
+  UINT8 counterparty_pbuid[6];        // bytes 171 to 176
+  UINT8 counterparty_account_id[10];  // bytes 177 to 186
+  UINT8 counterparty_branch_id[2];    // bytes 187 to 188
+  UINT8 member_id[6];                 // bytes 189 to 194
+  UINT8 trader_code[5];               // bytes 195 to 199
+  UINT8 counterparty_member_id[6];    // bytes 200 to 205
+  UINT8 counterparty_trader_code[5];  // bytes 206 to 210
+  UINT8 settl_type;                   // byte 211
+  UINT8 settl_period;                 // byte 212
+  UINT8 cash_margin;                  // byte 213
+  UINT8 memo[120];                    // bytes 214 to 333
+} BondSpotNegotiatedTradeCaptureReportConfirmationMessage;
+
+// ---- Refinancing Securities Lending Agreed Trade Capture Report Confirmation Message: 198 bytes ----
+
+// Trade confirmation of a trade capture report for refinancing securities lending by agreement, ApplID 051. Not yet enabled.
+entrypoint typedef struct _RefinancingSecuritiesLendingAgreedTradeCaptureReportConfi_mi0bzc {
+  UINT32BE partition_no;              // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE report_index;              // bytes 4 to 11, signed, read here as unsigned
+  UINT8 appl_id[3];                   // bytes 12 to 14
+  UINT8 reporting_pbuid[6];           // bytes 15 to 20
+  UINT8 submitting_pbuid[6];          // bytes 21 to 26
+  UINT8 security_id[8];               // bytes 27 to 34
+  UINT8 security_id_source[4];        // bytes 35 to 38
+  UINT16BE owner_type;                // bytes 39 to 40
+  UINT8 clearing_firm[2];             // bytes 41 to 42
+  UINT64BE transact_time;             // bytes 43 to 50, signed, read here as unsigned
+  UINT8 user_info[32];                // bytes 51 to 82
+  UINT8 trade_id[16];                 // bytes 83 to 98
+  UINT8 trade_report_id[10];          // bytes 99 to 108
+  UINT8 trade_report_type;            // byte 109
+  UINT8 trade_report_trans_type;      // byte 110
+  UINT8 trade_handling_instr;         // byte 111
+  UINT64BE last_px;                   // bytes 112 to 119, signed, read here as unsigned
+  UINT64BE last_qty;                  // bytes 120 to 127, signed, read here as unsigned
+  UINT16BE trd_type;                  // bytes 128 to 129
+  UINT16BE trd_sub_type;              // bytes 130 to 131
+  UINT32BE confirm_id;                // bytes 132 to 135
+  UINT8 exec_id[16];                  // bytes 136 to 151
+  UINT8 side;                         // byte 152
+  UINT8 pbuid[6];                     // bytes 153 to 158
+  UINT8 account_id[10];               // bytes 159 to 168
+  UINT8 branch_id[2];                 // bytes 169 to 170
+  UINT8 counterparty_pbuid[6];        // bytes 171 to 176
+  UINT8 counterparty_account_id[10];  // bytes 177 to 186
+  UINT8 counterparty_branch_id[2];    // bytes 187 to 188
+  UINT16BE expiration_days;           // bytes 189 to 190
+  UINT8 expiration_type;              // byte 191
+  UINT32BE maturity_date;             // bytes 192 to 195
+  UINT8 share_property[2];            // bytes 196 to 197
+} RefinancingSecuritiesLendingAgreedTradeCaptureReportConfi_mi0bzc;
+
+// ---- Mutual Trade Confirmation Trade Capture Report Confirmation Message: 189 bytes ----
+
+// Trade confirmation of a trade capture report for mutual trade confirmation, ApplID 060. Not yet enabled.
+entrypoint typedef struct _MutualTradeConfirmationTradeCaptureReportConfirmationMessage {
+  UINT32BE partition_no;              // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE report_index;              // bytes 4 to 11, signed, read here as unsigned
+  UINT8 appl_id[3];                   // bytes 12 to 14
+  UINT8 reporting_pbuid[6];           // bytes 15 to 20
+  UINT8 submitting_pbuid[6];          // bytes 21 to 26
+  UINT8 security_id[8];               // bytes 27 to 34
+  UINT8 security_id_source[4];        // bytes 35 to 38
+  UINT16BE owner_type;                // bytes 39 to 40
+  UINT8 clearing_firm[2];             // bytes 41 to 42
+  UINT64BE transact_time;             // bytes 43 to 50, signed, read here as unsigned
+  UINT8 user_info[32];                // bytes 51 to 82
+  UINT8 trade_id[16];                 // bytes 83 to 98
+  UINT8 trade_report_id[10];          // bytes 99 to 108
+  UINT8 trade_report_type;            // byte 109
+  UINT8 trade_report_trans_type;      // byte 110
+  UINT8 trade_handling_instr;         // byte 111
+  UINT64BE last_px;                   // bytes 112 to 119, signed, read here as unsigned
+  UINT64BE last_qty;                  // bytes 120 to 127, signed, read here as unsigned
+  UINT16BE trd_type;                  // bytes 128 to 129
+  UINT16BE trd_sub_type;              // bytes 130 to 131
+  UINT32BE confirm_id;                // bytes 132 to 135
+  UINT8 exec_id[16];                  // bytes 136 to 151
+  UINT8 side;                         // byte 152
+  UINT8 pbuid[6];                     // bytes 153 to 158
+  UINT8 account_id[10];               // bytes 159 to 168
+  UINT8 branch_id[2];                 // bytes 169 to 170
+  UINT8 counterparty_pbuid[6];        // bytes 171 to 176
+  UINT8 counterparty_account_id[10];  // bytes 177 to 186
+  UINT8 counterparty_branch_id[2];    // bytes 187 to 188
+} MutualTradeConfirmationTradeCaptureReportConfirmationMessage;
+
+// ---- Market Making Mutual Trade Confirmation Trade Capture Report Confirmation Message: 189 bytes ----
+
+// Trade confirmation of a trade capture report for market making mutual trade confirmation, ApplID 061. Not yet enabled.
+entrypoint typedef struct _MarketMakingMutualTradeConfirmationTradeCaptureReportConf_wnbyqr {
+  UINT32BE partition_no;              // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE report_index;              // bytes 4 to 11, signed, read here as unsigned
+  UINT8 appl_id[3];                   // bytes 12 to 14
+  UINT8 reporting_pbuid[6];           // bytes 15 to 20
+  UINT8 submitting_pbuid[6];          // bytes 21 to 26
+  UINT8 security_id[8];               // bytes 27 to 34
+  UINT8 security_id_source[4];        // bytes 35 to 38
+  UINT16BE owner_type;                // bytes 39 to 40
+  UINT8 clearing_firm[2];             // bytes 41 to 42
+  UINT64BE transact_time;             // bytes 43 to 50, signed, read here as unsigned
+  UINT8 user_info[32];                // bytes 51 to 82
+  UINT8 trade_id[16];                 // bytes 83 to 98
+  UINT8 trade_report_id[10];          // bytes 99 to 108
+  UINT8 trade_report_type;            // byte 109
+  UINT8 trade_report_trans_type;      // byte 110
+  UINT8 trade_handling_instr;         // byte 111
+  UINT64BE last_px;                   // bytes 112 to 119, signed, read here as unsigned
+  UINT64BE last_qty;                  // bytes 120 to 127, signed, read here as unsigned
+  UINT16BE trd_type;                  // bytes 128 to 129
+  UINT16BE trd_sub_type;              // bytes 130 to 131
+  UINT32BE confirm_id;                // bytes 132 to 135
+  UINT8 exec_id[16];                  // bytes 136 to 151
+  UINT8 side;                         // byte 152
+  UINT8 pbuid[6];                     // bytes 153 to 158
+  UINT8 account_id[10];               // bytes 159 to 168
+  UINT8 branch_id[2];                 // bytes 169 to 170
+  UINT8 counterparty_pbuid[6];        // bytes 171 to 176
+  UINT8 counterparty_account_id[10];  // bytes 177 to 186
+  UINT8 counterparty_branch_id[2];    // bytes 187 to 188
+} MarketMakingMutualTradeConfirmationTradeCaptureReportConf_wnbyqr;
+
+// ---- After Hours Block Trade Trade Capture Report Confirmation Message: 190 bytes ----
+
+// Trade confirmation of a trade capture report for after hours block trading, ApplID 062. Not yet enabled.
+entrypoint typedef struct _AfterHoursBlockTradeTradeCaptureReportConfirmationMessage {
+  UINT32BE partition_no;              // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE report_index;              // bytes 4 to 11, signed, read here as unsigned
+  UINT8 appl_id[3];                   // bytes 12 to 14
+  UINT8 reporting_pbuid[6];           // bytes 15 to 20
+  UINT8 submitting_pbuid[6];          // bytes 21 to 26
+  UINT8 security_id[8];               // bytes 27 to 34
+  UINT8 security_id_source[4];        // bytes 35 to 38
+  UINT16BE owner_type;                // bytes 39 to 40
+  UINT8 clearing_firm[2];             // bytes 41 to 42
+  UINT64BE transact_time;             // bytes 43 to 50, signed, read here as unsigned
+  UINT8 user_info[32];                // bytes 51 to 82
+  UINT8 trade_id[16];                 // bytes 83 to 98
+  UINT8 trade_report_id[10];          // bytes 99 to 108
+  UINT8 trade_report_type;            // byte 109
+  UINT8 trade_report_trans_type;      // byte 110
+  UINT8 trade_handling_instr;         // byte 111
+  UINT64BE last_px;                   // bytes 112 to 119, signed, read here as unsigned
+  UINT64BE last_qty;                  // bytes 120 to 127, signed, read here as unsigned
+  UINT16BE trd_type;                  // bytes 128 to 129
+  UINT16BE trd_sub_type;              // bytes 130 to 131
+  UINT32BE confirm_id;                // bytes 132 to 135
+  UINT8 exec_id[16];                  // bytes 136 to 151
+  UINT8 side;                         // byte 152
+  UINT8 pbuid[6];                     // bytes 153 to 158
+  UINT8 account_id[10];               // bytes 159 to 168
+  UINT8 branch_id[2];                 // bytes 169 to 170
+  UINT8 counterparty_pbuid[6];        // bytes 171 to 176
+  UINT8 counterparty_account_id[10];  // bytes 177 to 186
+  UINT8 counterparty_branch_id[2];    // bytes 187 to 188
+  UINT8 cash_margin;                  // byte 189
+} AfterHoursBlockTradeTradeCaptureReportConfirmationMessage;
+
+// ---- Message Tail: 4 bytes ---------------------------------------------------
+
+// Bjse Bjtg Message Tail, defining the checksum of a message, transmitted without encryption
+entrypoint typedef struct _MessageTail {
+  UINT32BE checksum;  // bytes 0 to 3
+} MessageTail;
+

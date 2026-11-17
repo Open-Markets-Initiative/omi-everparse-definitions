@@ -1,0 +1,141 @@
+// Chicago Board Options Exchange Multicast Top
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out BzxOptions_MulticastTop_Spin_v1_2_54.3d
+//
+// What this definition does not state, and the model does:
+// - a Reassemble rule
+// - a run filling what frames it
+// - a field read in bits
+//
+// License: MIT No Attribution
+
+// ---- Packet Header: 8 bytes --------------------------------------------------
+
+entrypoint typedef struct _PacketHeader {
+  UINT16 length;        // bytes 0 to 1
+  UINT8 message_count;  // byte 2
+  UINT8 unit_;          // byte 3
+  UINT32 sequence;      // bytes 4 to 7
+} PacketHeader;
+
+// ---- Message Header: 2 bytes -------------------------------------------------
+
+entrypoint typedef struct _MessageHeader {
+  UINT8 message_length;  // byte 0
+  UINT8 message_type;    // byte 1
+} MessageHeader;
+
+// ---- Login Message: 20 bytes -------------------------------------------------
+
+// The Login message is the first message sent to the Spin Server by a user's process after the connection to the Spin Server is established. Failure to login before sending any other message type will result in the connection being dropped by the Spin Server. The format of the Login message for the Spin Server is identical to that of the GRP.
+entrypoint typedef struct _LoginMessage {
+  UINT8 session_sub_id[4];  // bytes 0 to 3
+  UINT8 username[4];        // bytes 4 to 7
+  UINT8 filler[2];          // bytes 8 to 9
+  UINT8 password[10];       // bytes 10 to 19
+} LoginMessage;
+
+// ---- Login Response Message: 1 byte ------------------------------------------
+
+// The Login Response message is sent by the Spin Server to a user's process in response to a Login message. The status field is used to reflect an accepted login or the reason the session was not accepted. If login fails, the connection will be dropped after the Login Response message is sent.
+entrypoint typedef struct _LoginResponseMessage {
+  UINT8 login_response_status;  // byte 0
+} LoginResponseMessage;
+
+// ---- Spin Image Available Message: 4 bytes -----------------------------------
+
+// The Spin Image Available message is sent once per second and indicates through what sequence number a spin is available.
+entrypoint typedef struct _SpinImageAvailableMessage {
+  UINT32 sequence;  // bytes 0 to 3
+} SpinImageAvailableMessage;
+
+// ---- Spin Request Message: 4 bytes -------------------------------------------
+
+// The Spin Request message is used by a user's process to request transmission of a spin of the unit's order book.
+entrypoint typedef struct _SpinRequestMessage {
+  UINT32 sequence;  // bytes 0 to 3
+} SpinRequestMessage;
+
+// ---- Spin Response Message: 9 bytes ------------------------------------------
+
+// The Spin Response message is sent in response to a user's Spin Request message indicating whether a spin will be sent.
+entrypoint typedef struct _SpinResponseMessage {
+  UINT32 sequence;             // bytes 0 to 3
+  UINT32 order_count;          // bytes 4 to 7
+  UINT8 spin_response_status;  // byte 8
+} SpinResponseMessage;
+
+// ---- Spin Finished Message: 4 bytes ------------------------------------------
+
+// The Spin Finished message is sent to indicate that all messages for the spin requested have been sent. A Spin Finished message is only sent if a Spin Request was not rejected. Upon receipt of a Spin Finished message, any buffered multicast messages should be applied to the customer's copy of the book to make it current.
+entrypoint typedef struct _SpinFinishedMessage {
+  UINT32 sequence;  // bytes 0 to 3
+} SpinFinishedMessage;
+
+// ---- Instrument Definition Request Message: 4 bytes --------------------------
+
+// The Instrument Definition Request message is used by a user's process to request transmission of this unit's Symbol Mappings and Complex Instrument Definitions. All Symbol Mapping messages will be sent before Complex Instrument Definition Expanded and Exchange Designated Complex Instrument Definition messages.
+entrypoint typedef struct _InstrumentDefinitionRequestMessage {
+  UINT32 sequence;  // bytes 0 to 3
+} InstrumentDefinitionRequestMessage;
+
+// ---- Instrument Definition Response Message: 9 bytes -------------------------
+
+// The Instrument Definition Response message is sent in response to a user's Instrument Definition Request message indicating whether a spin will be sent.
+entrypoint typedef struct _InstrumentDefinitionResponseMessage {
+  UINT32 sequence;                              // bytes 0 to 3
+  UINT32 instrument_count;                      // bytes 4 to 7
+  UINT8 instrument_definition_response_status;  // byte 8
+} InstrumentDefinitionResponseMessage;
+
+// ---- Time Message: 4 bytes ---------------------------------------------------
+
+// A Time message is immediately generated and sent when there is a Top event for a given clock second. If there is no Top event for a given clock second, then no Time message is sent for that second. All subsequent time offset fields for the same unit will use the new Time value as the base until another Time message is received for the same unit. The Time field is the number of seconds relative to midnight Eastern Time, which is provided in the Time Reference message. On C1 only, the Time message will also include the Epoch Time field, which is the current time represented as the number of whole seconds since the Epoch (midnight January 1, 1970).
+entrypoint typedef struct _TimeMessage {
+  UINT32 time;  // bytes 0 to 3
+} TimeMessage;
+
+// ---- Symbol Mapping Message: 36 bytes ----------------------------------------
+
+// A Symbol Mapping message is sent as an unsequenced message. One unsequenced Symbol Mapping message for each Symbol is sent in a continuous loop as bandwidth allows.
+entrypoint typedef struct _SymbolMappingMessage {
+  UINT8 feed_symbol[6];    // bytes 0 to 5
+  UINT8 osi_symbol[21];    // bytes 6 to 26
+  UINT8 symbol_condition;  // byte 27
+  UINT8 underlying[8];     // bytes 28 to 35
+} SymbolMappingMessage;
+
+// ---- Top Trade Message: 35 bytes ---------------------------------------------
+
+// The Top Trade message provides information about executions of orders on the book. Top Trade messages are necessary to calculate execution-based data. Top Trade messages do not alter the book. One or more Single Side Update Expanded or Two Side Update Expanded messages will follow a Top Trade message to reflect the updated book. The Top Trade message sends the trade price, trade quantity, execution id, and trade condition of a trade as well as the cumulative volume for the trading session. The Trade Condition value of X (Trade Break) is sent whenever an execution is broken. Trade breaks will contain the Symbol, Quantity, Price, and Execution Id of the original trade.
+entrypoint typedef struct _TopTradeMessage {
+  UINT32 time_offset;     // bytes 0 to 3
+  UINT8 symbol[6];        // bytes 4 to 9
+  UINT32 quantity_long;   // bytes 10 to 13
+  UINT64 price_long;      // bytes 14 to 21
+  UINT64 execution_id;    // bytes 22 to 29
+  UINT32 total_volume;    // bytes 30 to 33
+  UINT8 trade_condition;  // byte 34
+} TopTradeMessage;
+
+// ---- Trading Status Message: 16 bytes ----------------------------------------
+
+// The Trading Status message is used to indicate the current trading status of an options contract. A Trading Status message will be sent whenever a security's trading status changes. The Trading Status field will be used to represent the status of the RTH (9:30 a.m. ET - 4:15 p.m. ET) and Curb sessions. The GTH Trading Status field will be used to represent the status of series that trade during the GTH session. The GTH session runs from 8:15 p.m. to 9:25 a.m. ET for GTH-eligible Products (C1 only).
+entrypoint typedef struct _TradingStatusMessage {
+  UINT32 time_offset;        // bytes 0 to 3
+  UINT8 symbol[6];           // bytes 4 to 9
+  UINT8 reserved_2[2];       // bytes 10 to 11
+  UINT8 trading_status;      // byte 12
+  UINT8 reserved_1;          // byte 13
+  UINT8 gth_trading_status;  // byte 14
+  UINT8 second_reserved_1;   // byte 15
+} TradingStatusMessage;
+

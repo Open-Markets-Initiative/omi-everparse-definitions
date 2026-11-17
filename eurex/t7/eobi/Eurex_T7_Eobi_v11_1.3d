@@ -1,0 +1,327 @@
+// Eurex Exchange Enhanced Order Book Interface
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out Eurex_T7_Eobi_v11_1.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Eobi Header: 8 bytes ----------------------------------------------------
+
+// EOBI PacketHeader MessageHeaderComp (BodyLen + TemplateID + MsgSeqNum) first 8 bytes of every Eurex T7 EOBI packet.
+entrypoint typedef struct _EobiHeader {
+  UINT16 body_len;     // bytes 0 to 1
+  UINT16 template_id;  // bytes 2 to 3
+  UINT32 msg_seq_num;  // bytes 4 to 7
+} EobiHeader;
+
+// ---- Packet Header: 32 bytes -------------------------------------------------
+
+// Eurex Eobi Packet Header
+entrypoint typedef struct _PacketHeader {
+  EobiHeader eobi_header;          // bytes 0 to 7
+  UINT32 appl_seq_num;             // bytes 8 to 11
+  UINT32 market_segment_id;        // bytes 12 to 15, signed, read here as unsigned
+  UINT8 partition_id;              // byte 16
+  UINT8 completion_indicator;      // byte 17
+  UINT8 appl_seq_reset_indicator;  // byte 18
+  UINT8 d_s_c_p;                   // byte 19
+  UINT8 pad4[4];                   // bytes 20 to 23
+  UINT64 transact_time;            // bytes 24 to 31
+} PacketHeader;
+
+// ---- Message Header Comp: 8 bytes --------------------------------------------
+
+entrypoint typedef struct _MessageHeaderComp {
+  UINT16 body_len;     // bytes 0 to 1
+  UINT16 template_id;  // bytes 2 to 3
+  UINT32 msg_seq_num;  // bytes 4 to 7
+} MessageHeaderComp;
+
+// ---- Add Flexible Instrument: 80 bytes ---------------------------------------
+
+entrypoint typedef struct _AddFlexibleInstrument {
+  UINT64 security_id;       // bytes 0 to 7, signed, read here as unsigned
+  UINT64 transact_time;     // bytes 8 to 15
+  UINT8 security_desc[40];  // bytes 16 to 55
+  UINT8 security_type;      // byte 56
+  UINT8 put_or_call;        // byte 57
+  UINT8 exercise_style;     // byte 58
+  UINT8 settl_method;       // byte 59
+  UINT32 maturity_date;     // bytes 60 to 63
+  UINT64 strike_price;      // bytes 64 to 71, signed, read here as unsigned
+  UINT32 opt_attribute;     // bytes 72 to 75
+  UINT8 pad4[4];            // bytes 76 to 79
+} AddFlexibleInstrument;
+
+// ---- Auction Bbo: 56 bytes ---------------------------------------------------
+
+entrypoint typedef struct _AuctionBbo {
+  UINT64 transact_time;                    // bytes 0 to 7
+  UINT64 security_id;                      // bytes 8 to 15, signed, read here as unsigned
+  UINT64 bid_px;                           // bytes 16 to 23, signed, read here as unsigned
+  UINT64 offer_px;                         // bytes 24 to 31, signed, read here as unsigned
+  UINT64 bid_size;                         // bytes 32 to 39, signed, read here as unsigned
+  UINT64 offer_size;                       // bytes 40 to 47, signed, read here as unsigned
+  UINT8 potential_security_trading_event;  // byte 48
+  UINT8 bid_ord_type;                      // byte 49
+  UINT8 offer_ord_type;                    // byte 50
+  UINT8 pad5[5];                           // bytes 51 to 55
+} AuctionBbo;
+
+// ---- Auction Clearing Price: 48 bytes ----------------------------------------
+
+entrypoint typedef struct _AuctionClearingPrice {
+  UINT64 transact_time;                    // bytes 0 to 7
+  UINT64 security_id;                      // bytes 8 to 15, signed, read here as unsigned
+  UINT64 last_px;                          // bytes 16 to 23, signed, read here as unsigned
+  UINT64 last_qty;                         // bytes 24 to 31, signed, read here as unsigned
+  UINT64 imbalance_qty;                    // bytes 32 to 39, signed, read here as unsigned
+  UINT8 security_trading_status;           // byte 40
+  UINT8 potential_security_trading_event;  // byte 41
+  UINT8 pad6[6];                           // bytes 42 to 47
+} AuctionClearingPrice;
+
+// ---- Cross Request: 40 bytes -------------------------------------------------
+
+entrypoint typedef struct _CrossRequest {
+  UINT64 security_id;        // bytes 0 to 7, signed, read here as unsigned
+  UINT64 last_px;            // bytes 8 to 15, signed, read here as unsigned
+  UINT64 last_qty;           // bytes 16 to 23, signed, read here as unsigned
+  UINT8 side;                // byte 24
+  UINT8 cross_request_type;  // byte 25
+  UINT8 input_source;        // byte 26
+  UINT8 pad5[5];             // bytes 27 to 31
+  UINT64 transact_time;      // bytes 32 to 39
+} CrossRequest;
+
+// ---- Execution Summary: 72 bytes ---------------------------------------------
+
+entrypoint typedef struct _ExecutionSummary {
+  UINT64 security_id;           // bytes 0 to 7, signed, read here as unsigned
+  UINT64 aggressor_time;        // bytes 8 to 15
+  UINT64 request_time;          // bytes 16 to 23
+  UINT64 exec_id;               // bytes 24 to 31
+  UINT64 last_qty;              // bytes 32 to 39, signed, read here as unsigned
+  UINT8 aggressor_side;         // byte 40
+  UINT8 pad1;                   // byte 41
+  UINT16 trade_condition;       // bytes 42 to 43
+  UINT8 trading_hhi_indicator;  // byte 44
+  UINT8 pad3[3];                // bytes 45 to 47
+  UINT64 last_px;               // bytes 48 to 55, signed, read here as unsigned
+  UINT64 resting_hidden_qty;    // bytes 56 to 63, signed, read here as unsigned
+  UINT64 resting_cxl_qty;       // bytes 64 to 71, signed, read here as unsigned
+} ExecutionSummary;
+
+// ---- Full Order Execution: 48 bytes ------------------------------------------
+
+entrypoint typedef struct _FullOrderExecution {
+  UINT8 side;                         // byte 0
+  UINT8 ord_type;                     // byte 1
+  UINT8 algorithmic_trade_indicator;  // byte 2
+  UINT8 hhi_indicator;                // byte 3, signed, read here as unsigned
+  UINT32 trd_match_id;                // bytes 4 to 7
+  UINT64 price;                       // bytes 8 to 15, signed, read here as unsigned
+  UINT64 trd_reg_ts_time_priority;    // bytes 16 to 23
+  UINT64 security_id;                 // bytes 24 to 31, signed, read here as unsigned
+  UINT64 last_qty;                    // bytes 32 to 39, signed, read here as unsigned
+  UINT64 last_px;                     // bytes 40 to 47, signed, read here as unsigned
+} FullOrderExecution;
+
+// ---- Heartbeat: 8 bytes ------------------------------------------------------
+
+entrypoint typedef struct _Heartbeat {
+  UINT32 last_msg_seq_num_processed;  // bytes 0 to 3
+  UINT8 pad4[4];                      // bytes 4 to 7
+} Heartbeat;
+
+// ---- Instrument State Change: 48 bytes ---------------------------------------
+
+entrypoint typedef struct _InstrumentStateChange {
+  UINT64 security_id;             // bytes 0 to 7, signed, read here as unsigned
+  UINT8 security_status;          // byte 8
+  UINT8 security_trading_status;  // byte 9
+  UINT8 market_condition;         // byte 10
+  UINT8 fast_market_indicator;    // byte 11
+  UINT8 security_trading_event;   // byte 12
+  UINT8 sold_out_indicator;       // byte 13
+  UINT8 pad2[2];                  // bytes 14 to 15
+  UINT64 high_px;                 // bytes 16 to 23, signed, read here as unsigned
+  UINT64 low_px;                  // bytes 24 to 31, signed, read here as unsigned
+  UINT64 transact_time;           // bytes 32 to 39
+  UINT8 tes_security_status;      // byte 40
+  UINT8 pad7[7];                  // bytes 41 to 47
+} InstrumentStateChange;
+
+// ---- Order Details Comp: 32 bytes --------------------------------------------
+
+entrypoint typedef struct _OrderDetailsComp {
+  UINT64 trd_reg_ts_time_priority;  // bytes 0 to 7
+  UINT64 display_qty;               // bytes 8 to 15, signed, read here as unsigned
+  UINT8 side;                       // byte 16
+  UINT8 ord_type;                   // byte 17
+  UINT8 hhi_indicator;              // byte 18, signed, read here as unsigned
+  UINT8 pad5[5];                    // bytes 19 to 23
+  UINT64 price;                     // bytes 24 to 31, signed, read here as unsigned
+} OrderDetailsComp;
+
+// ---- Order Add: 48 bytes -----------------------------------------------------
+
+entrypoint typedef struct _OrderAdd {
+  UINT64 request_time;                  // bytes 0 to 7
+  UINT64 security_id;                   // bytes 8 to 15, signed, read here as unsigned
+  OrderDetailsComp order_details_comp;  // bytes 16 to 47
+} OrderAdd;
+
+// ---- Order Delete: 56 bytes --------------------------------------------------
+
+entrypoint typedef struct _OrderDelete {
+  UINT64 request_time;                  // bytes 0 to 7
+  UINT64 transact_time;                 // bytes 8 to 15
+  UINT64 security_id;                   // bytes 16 to 23, signed, read here as unsigned
+  OrderDetailsComp order_details_comp;  // bytes 24 to 55
+} OrderDelete;
+
+// ---- Order Mass Delete: 16 bytes ---------------------------------------------
+
+entrypoint typedef struct _OrderMassDelete {
+  UINT64 security_id;    // bytes 0 to 7, signed, read here as unsigned
+  UINT64 transact_time;  // bytes 8 to 15
+} OrderMassDelete;
+
+// ---- Order Modify: 80 bytes --------------------------------------------------
+
+entrypoint typedef struct _OrderModify {
+  UINT64 request_time;                   // bytes 0 to 7
+  UINT64 trd_reg_ts_prev_time_priority;  // bytes 8 to 15
+  UINT64 prev_price;                     // bytes 16 to 23, signed, read here as unsigned
+  UINT64 prev_display_qty;               // bytes 24 to 31, signed, read here as unsigned
+  UINT64 security_id;                    // bytes 32 to 39, signed, read here as unsigned
+  OrderDetailsComp order_details_comp;   // bytes 40 to 71
+  UINT8 prev_price_hhi_indicator;        // byte 72, signed, read here as unsigned
+  UINT8 pad7[7];                         // bytes 73 to 79
+} OrderModify;
+
+// ---- Order Modify Same Prio: 64 bytes ----------------------------------------
+
+entrypoint typedef struct _OrderModifySamePrio {
+  UINT64 request_time;                  // bytes 0 to 7
+  UINT64 transact_time;                 // bytes 8 to 15
+  UINT64 prev_display_qty;              // bytes 16 to 23, signed, read here as unsigned
+  UINT64 security_id;                   // bytes 24 to 31, signed, read here as unsigned
+  OrderDetailsComp order_details_comp;  // bytes 32 to 63
+} OrderModifySamePrio;
+
+// ---- Partial Order Execution: 48 bytes ---------------------------------------
+
+entrypoint typedef struct _PartialOrderExecution {
+  UINT8 side;                         // byte 0
+  UINT8 ord_type;                     // byte 1
+  UINT8 algorithmic_trade_indicator;  // byte 2
+  UINT8 hhi_indicator;                // byte 3, signed, read here as unsigned
+  UINT32 trd_match_id;                // bytes 4 to 7
+  UINT64 price;                       // bytes 8 to 15, signed, read here as unsigned
+  UINT64 trd_reg_ts_time_priority;    // bytes 16 to 23
+  UINT64 security_id;                 // bytes 24 to 31, signed, read here as unsigned
+  UINT64 last_qty;                    // bytes 32 to 39, signed, read here as unsigned
+  UINT64 last_px;                     // bytes 40 to 47, signed, read here as unsigned
+} PartialOrderExecution;
+
+// ---- Product State Change: 16 bytes ------------------------------------------
+
+entrypoint typedef struct _ProductStateChange {
+  UINT8 trading_session_id;      // byte 0
+  UINT8 trading_session_sub_id;  // byte 1
+  UINT8 trad_ses_status;         // byte 2
+  UINT8 market_condition;        // byte 3
+  UINT8 fast_market_indicator;   // byte 4
+  UINT8 tes_trad_ses_status;     // byte 5
+  UINT8 pad2[2];                 // bytes 6 to 7
+  UINT64 transact_time;          // bytes 8 to 15
+} ProductStateChange;
+
+// ---- Product Summary: 16 bytes -----------------------------------------------
+
+entrypoint typedef struct _ProductSummary {
+  UINT32 last_msg_seq_num_processed;  // bytes 0 to 3
+  UINT8 trading_session_id;           // byte 4
+  UINT8 trading_session_sub_id;       // byte 5
+  UINT8 trad_ses_status;              // byte 6
+  UINT8 market_condition;             // byte 7
+  UINT8 fast_market_indicator;        // byte 8
+  UINT8 tes_trad_ses_status;          // byte 9
+  UINT8 pad6[6];                      // bytes 10 to 15
+} ProductSummary;
+
+// ---- Quote Request: 32 bytes -------------------------------------------------
+
+entrypoint typedef struct _QuoteRequest {
+  UINT64 security_id;    // bytes 0 to 7, signed, read here as unsigned
+  UINT64 last_qty;       // bytes 8 to 15, signed, read here as unsigned
+  UINT8 side;            // byte 16
+  UINT8 pad7[7];         // bytes 17 to 23
+  UINT64 transact_time;  // bytes 24 to 31
+} QuoteRequest;
+
+// ---- Snapshot Order: 32 bytes ------------------------------------------------
+
+entrypoint typedef struct _SnapshotOrder {
+  OrderDetailsComp order_details_comp;  // bytes 0 to 31
+} SnapshotOrder;
+
+// ---- Tes Trade Report: 56 bytes ----------------------------------------------
+
+entrypoint typedef struct _TesTradeReport {
+  UINT64 security_id;                 // bytes 0 to 7, signed, read here as unsigned
+  UINT64 transact_time;               // bytes 8 to 15
+  UINT64 last_qty;                    // bytes 16 to 23, signed, read here as unsigned
+  UINT64 last_px;                     // bytes 24 to 31, signed, read here as unsigned
+  UINT32 trd_match_id;                // bytes 32 to 35
+  UINT16 trd_type;                    // bytes 36 to 37
+  UINT16 trade_condition;             // bytes 38 to 39
+  UINT8 multi_leg_reporting_type;     // byte 40
+  UINT8 multi_leg_price_model;        // byte 41
+  UINT8 pad6[6];                      // bytes 42 to 47
+  UINT64 non_disclosed_trade_volume;  // bytes 48 to 55, signed, read here as unsigned
+} TesTradeReport;
+
+// ---- Top Of Book: 56 bytes ---------------------------------------------------
+
+entrypoint typedef struct _TopOfBook {
+  UINT64 transact_time;          // bytes 0 to 7
+  UINT64 security_id;            // bytes 8 to 15, signed, read here as unsigned
+  UINT64 bid_px;                 // bytes 16 to 23, signed, read here as unsigned
+  UINT64 offer_px;               // bytes 24 to 31, signed, read here as unsigned
+  UINT64 bid_size;               // bytes 32 to 39, signed, read here as unsigned
+  UINT64 offer_size;             // bytes 40 to 47, signed, read here as unsigned
+  UINT16 number_of_buy_orders;   // bytes 48 to 49
+  UINT16 number_of_sell_orders;  // bytes 50 to 51
+  UINT8 pad4[4];                 // bytes 52 to 55
+} TopOfBook;
+
+// ---- Trade Report: 48 bytes --------------------------------------------------
+
+entrypoint typedef struct _TradeReport {
+  UINT64 security_id;                 // bytes 0 to 7, signed, read here as unsigned
+  UINT64 transact_time;               // bytes 8 to 15
+  UINT64 last_qty;                    // bytes 16 to 23, signed, read here as unsigned
+  UINT64 last_px;                     // bytes 24 to 31, signed, read here as unsigned
+  UINT32 trd_match_id;                // bytes 32 to 35
+  UINT8 match_type;                   // byte 36
+  UINT8 match_sub_type;               // byte 37
+  UINT8 algorithmic_trade_indicator;  // byte 38
+  UINT8 pad1;                         // byte 39
+  UINT16 trade_condition;             // bytes 40 to 41
+  UINT8 pad6[6];                      // bytes 42 to 47
+} TradeReport;
+

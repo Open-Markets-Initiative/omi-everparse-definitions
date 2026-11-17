@@ -1,0 +1,321 @@
+// The Members Exchange Members Orders
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out MemxEquities_Memo_v1_9_Server.3d
+//
+// What this definition does not state, and the model does:
+// - a Reassemble rule
+// - the dispatch that chooses a message by its type
+// - a field read in bits
+// - a block whose stated length holds more than its fields
+//
+// License: MIT No Attribution
+
+// ---- Common Header: 3 bytes --------------------------------------------------
+
+// Tcp Common Header
+entrypoint typedef struct _CommonHeader {
+  UINT8 message_type;       // byte 0
+  UINT16BE message_length;  // bytes 1 to 2
+} CommonHeader;
+
+// ---- Login Accepted Message: 1 byte ------------------------------------------
+
+// Memx Tcp Login Accepted Message
+entrypoint typedef struct _LoginAcceptedMessage {
+  UINT8 supported_request_mode;  // byte 0
+} LoginAcceptedMessage;
+
+// ---- Login Rejected Message: 1 byte ------------------------------------------
+
+// Memx Tcp Login Rejected Message
+entrypoint typedef struct _LoginRejectedMessage {
+  UINT8 login_reject_code;  // byte 0
+} LoginRejectedMessage;
+
+// ---- Start Of Session Message: 8 bytes ---------------------------------------
+
+// Memx Tcp Start of Session Message
+entrypoint typedef struct _StartOfSessionMessage {
+  UINT64BE session_id;  // bytes 0 to 7
+} StartOfSessionMessage;
+
+// ---- Replay Begin Message: 12 bytes ------------------------------------------
+
+// Memx Tcp Replay Begin Message
+entrypoint typedef struct _ReplayBeginMessage {
+  UINT64BE next_sequence_number;   // bytes 0 to 7
+  UINT32BE pending_message_count;  // bytes 8 to 11
+} ReplayBeginMessage;
+
+// ---- Replay Rejected Message: 1 byte -----------------------------------------
+
+// Memx Tcp Replay Rejected Message
+entrypoint typedef struct _ReplayRejectedMessage {
+  UINT8 replay_reject_code;  // byte 0
+} ReplayRejectedMessage;
+
+// ---- Replay Complete Message: 8 bytes ----------------------------------------
+
+// Memx Tcp Replay Complete Message
+entrypoint typedef struct _ReplayCompleteMessage {
+  UINT64BE message_count;  // bytes 0 to 7
+} ReplayCompleteMessage;
+
+// ---- Stream Begin Message: 16 bytes ------------------------------------------
+
+// Memx Tcp Stream Begin Message
+entrypoint typedef struct _StreamBeginMessage {
+  UINT64BE next_sequence_number;  // bytes 0 to 7
+  UINT64BE max_sequence_number;   // bytes 8 to 15
+} StreamBeginMessage;
+
+// ---- Stream Rejected Message: 1 byte -----------------------------------------
+
+// Memx Tcp Stream Rejected Message
+entrypoint typedef struct _StreamRejectedMessage {
+  UINT8 stream_reject_code;  // byte 0
+} StreamRejectedMessage;
+
+// ---- Stream Complete Message: 8 bytes ----------------------------------------
+
+// Memx Tcp Stream Complete Message
+entrypoint typedef struct _StreamCompleteMessage {
+  UINT64BE total_sequence_count;  // bytes 0 to 7
+} StreamCompleteMessage;
+
+// ---- Sbe Header: 6 bytes -----------------------------------------------------
+
+// Sbe Header
+entrypoint typedef struct _SbeHeader {
+  UINT16BE block_length;  // bytes 0 to 1
+  UINT8 template_id;      // byte 2
+  UINT8 schema_id;        // byte 3
+  UINT16BE version;       // bytes 4 to 5
+} SbeHeader;
+
+// ---- Execution Report Rejected Message: 58 bytes -----------------------------
+
+// ExecutionReport_RejectedMessage
+entrypoint typedef struct _ExecutionReportRejectedMessage {
+  UINT64BE sending_time;      // bytes 0 to 7
+  UINT8 cl_ord_id[16];        // bytes 8 to 23
+  UINT64BE exec_id;           // bytes 24 to 31
+  UINT8 ord_status;           // byte 32
+  UINT8 symbol[6];            // bytes 33 to 38
+  UINT8 symbol_sfx[6];        // bytes 39 to 44
+  UINT32BE leaves_qty;        // bytes 45 to 48
+  UINT32BE cum_qty;           // bytes 49 to 52
+  UINT8 order_reject_reason;  // byte 53
+  UINT8 link_id[4];           // bytes 54 to 57
+} ExecutionReportRejectedMessage;
+
+// ---- Execution Report Trade Message: 83 bytes --------------------------------
+
+// ExecutionReport_TradeMessage
+entrypoint typedef struct _ExecutionReportTradeMessage {
+  UINT64BE sending_time;     // bytes 0 to 7
+  UINT64BE order_id;         // bytes 8 to 15
+  UINT8 cl_ord_id[16];       // bytes 16 to 31
+  UINT64BE exec_id;          // bytes 32 to 39
+  UINT8 ord_status;          // byte 40
+  UINT32BE last_qty;         // bytes 41 to 44
+  UINT64BE last_px;          // bytes 45 to 52, signed, read here as unsigned
+  UINT32BE leaves_qty;       // bytes 53 to 56
+  UINT32BE cum_qty;          // bytes 57 to 60
+  UINT64BE transact_time;    // bytes 61 to 68
+  UINT8 last_liquidity_ind;  // byte 69
+  UINT8 last_mkt;            // byte 70
+  UINT64BE trd_matching_id;  // bytes 71 to 78
+  UINT8 link_id[4];          // bytes 79 to 82
+} ExecutionReportTradeMessage;
+
+// ---- Execution Report Pending Cancel Message: 81 bytes -----------------------
+
+// ExecutionReport_PendingCancelMessage
+entrypoint typedef struct _ExecutionReportPendingCancelMessage {
+  UINT64BE sending_time;     // bytes 0 to 7
+  UINT64BE order_id;         // bytes 8 to 15
+  UINT8 cl_ord_id[16];       // bytes 16 to 31
+  UINT8 orig_cl_ord_id[16];  // bytes 32 to 47
+  UINT64BE exec_id;          // bytes 48 to 55
+  UINT8 symbol[6];           // bytes 56 to 61
+  UINT8 symbol_sfx[6];       // bytes 62 to 67
+  UINT8 ord_status;          // byte 68
+  UINT32BE leaves_qty;       // bytes 69 to 72
+  UINT32BE cum_qty;          // bytes 73 to 76
+  UINT8 link_id[4];          // bytes 77 to 80
+} ExecutionReportPendingCancelMessage;
+
+// ---- Pending Mass Cancel Message: 55 bytes -----------------------------------
+
+// PendingMassCancelMessage
+entrypoint typedef struct _PendingMassCancelMessage {
+  UINT64BE sending_time;       // bytes 0 to 7
+  UINT8 cl_ord_id[16];         // bytes 8 to 23
+  UINT8 symbol[6];             // bytes 24 to 29
+  UINT8 symbol_sfx[6];         // bytes 30 to 35
+  UINT8 side_optional;         // byte 36
+  UINT64BE lower_than_price;   // bytes 37 to 44, signed, read here as unsigned
+  UINT64BE higher_than_price;  // bytes 45 to 52, signed, read here as unsigned
+  UINT16BE cancel_group_id;    // bytes 53 to 54
+} PendingMassCancelMessage;
+
+// ---- Execution Report Canceled Message: 78 bytes -----------------------------
+
+// ExecutionReport_CanceledMessage
+entrypoint typedef struct _ExecutionReportCanceledMessage {
+  UINT64BE sending_time;     // bytes 0 to 7
+  UINT8 cl_ord_id[16];       // bytes 8 to 23
+  UINT8 orig_cl_ord_id[16];  // bytes 24 to 39
+  UINT64BE order_id;         // bytes 40 to 47
+  UINT64BE exec_id;          // bytes 48 to 55
+  UINT8 ord_status;          // byte 56
+  UINT32BE leaves_qty;       // bytes 57 to 60
+  UINT32BE cum_qty;          // bytes 61 to 64
+  UINT8 cancel_reason;       // byte 65
+  UINT64BE transact_time;    // bytes 66 to 73
+  UINT8 link_id[4];          // bytes 74 to 77
+} ExecutionReportCanceledMessage;
+
+// ---- Mass Cancel Done Message: 24 bytes --------------------------------------
+
+// MassCancelDoneMessage
+entrypoint typedef struct _MassCancelDoneMessage {
+  UINT64BE sending_time;  // bytes 0 to 7
+  UINT8 cl_ord_id[16];    // bytes 8 to 23
+} MassCancelDoneMessage;
+
+// ---- Execution Report Pending Replace Message: 100 bytes ---------------------
+
+// ExecutionReport_PendingReplaceMessage
+entrypoint typedef struct _ExecutionReportPendingReplaceMessage {
+  UINT64BE sending_time;     // bytes 0 to 7
+  UINT64BE order_id;         // bytes 8 to 15
+  UINT8 cl_ord_id[16];       // bytes 16 to 31
+  UINT8 orig_cl_ord_id[16];  // bytes 32 to 47
+  UINT64BE exec_id;          // bytes 48 to 55
+  UINT8 symbol[6];           // bytes 56 to 61
+  UINT8 symbol_sfx[6];       // bytes 62 to 67
+  UINT8 side;                // byte 68
+  UINT32BE order_qty;        // bytes 69 to 72
+  UINT8 ord_type;            // byte 73
+  UINT64BE price;            // bytes 74 to 81, signed, read here as unsigned
+  UINT32BE display_qty;      // bytes 82 to 85
+  UINT8 locate_reqd;         // byte 86
+  UINT8 ord_status;          // byte 87
+  UINT32BE leaves_qty;       // bytes 88 to 91
+  UINT32BE cum_qty;          // bytes 92 to 95
+  UINT8 link_id[4];          // bytes 96 to 99
+} ExecutionReportPendingReplaceMessage;
+
+// ---- Execution Report Replaced Message: 108 bytes ----------------------------
+
+// ExecutionReport_ReplacedMessage
+entrypoint typedef struct _ExecutionReportReplacedMessage {
+  UINT64BE sending_time;     // bytes 0 to 7
+  UINT64BE order_id;         // bytes 8 to 15
+  UINT8 cl_ord_id[16];       // bytes 16 to 31
+  UINT8 orig_cl_ord_id[16];  // bytes 32 to 47
+  UINT64BE exec_id;          // bytes 48 to 55
+  UINT8 symbol[6];           // bytes 56 to 61
+  UINT8 symbol_sfx[6];       // bytes 62 to 67
+  UINT8 side;                // byte 68
+  UINT32BE order_qty;        // bytes 69 to 72
+  UINT8 ord_type;            // byte 73
+  UINT64BE price;            // bytes 74 to 81, signed, read here as unsigned
+  UINT32BE display_qty;      // bytes 82 to 85
+  UINT8 locate_reqd;         // byte 86
+  UINT8 ord_status;          // byte 87
+  UINT32BE leaves_qty;       // bytes 88 to 91
+  UINT32BE cum_qty;          // bytes 92 to 95
+  UINT64BE transact_time;    // bytes 96 to 103
+  UINT8 link_id[4];          // bytes 104 to 107
+} ExecutionReportReplacedMessage;
+
+// ---- Execution Report Trade Correction Message: 81 bytes ---------------------
+
+// ExecutionReport_TradeCorrectionMessage
+entrypoint typedef struct _ExecutionReportTradeCorrectionMessage {
+  UINT64BE sending_time;       // bytes 0 to 7
+  UINT64BE order_id;           // bytes 8 to 15
+  UINT8 cl_ord_id[16];         // bytes 16 to 31
+  UINT64BE exec_id;            // bytes 32 to 39
+  UINT64BE exec_ref_id;        // bytes 40 to 47
+  UINT64BE trd_match_id;       // bytes 48 to 55
+  UINT8 ord_status;            // byte 56
+  UINT64BE last_px;            // bytes 57 to 64, signed, read here as unsigned
+  UINT32BE last_qty_optional;  // bytes 65 to 68
+  UINT32BE leaves_qty;         // bytes 69 to 72
+  UINT32BE cum_qty;            // bytes 73 to 76
+  UINT8 link_id[4];            // bytes 77 to 80
+} ExecutionReportTradeCorrectionMessage;
+
+// ---- Execution Report Trade Break Message: 69 bytes --------------------------
+
+// ExecutionReport_TradeBreakMessage
+entrypoint typedef struct _ExecutionReportTradeBreakMessage {
+  UINT64BE sending_time;  // bytes 0 to 7
+  UINT64BE order_id;      // bytes 8 to 15
+  UINT8 cl_ord_id[16];    // bytes 16 to 31
+  UINT64BE exec_id;       // bytes 32 to 39
+  UINT64BE exec_ref_id;   // bytes 40 to 47
+  UINT64BE trd_match_id;  // bytes 48 to 55
+  UINT8 ord_status;       // byte 56
+  UINT32BE leaves_qty;    // bytes 57 to 60
+  UINT32BE cum_qty;       // bytes 61 to 64
+  UINT8 link_id[4];       // bytes 65 to 68
+} ExecutionReportTradeBreakMessage;
+
+// ---- Execution Report Restatement Message: 75 bytes --------------------------
+
+// ExecutionReport_RestatementMessage
+entrypoint typedef struct _ExecutionReportRestatementMessage {
+  UINT64BE sending_time;              // bytes 0 to 7
+  UINT64BE order_id;                  // bytes 8 to 15
+  UINT8 cl_ord_id[16];                // bytes 16 to 31
+  UINT64BE exec_id;                   // bytes 32 to 39
+  UINT8 ord_status;                   // byte 40
+  UINT64BE last_px_optional;          // bytes 41 to 48, signed, read here as unsigned
+  UINT32BE leaves_qty;                // bytes 49 to 52
+  UINT32BE cum_qty;                   // bytes 53 to 56
+  UINT32BE last_shares;               // bytes 57 to 60
+  UINT8 exec_restatement_reason;      // byte 61
+  UINT64BE transact_time;             // bytes 62 to 69
+  UINT8 extended_restatement_reason;  // byte 70
+  UINT8 link_id[4];                   // bytes 71 to 74
+} ExecutionReportRestatementMessage;
+
+// ---- Order Cancel Reject Message: 30 bytes -----------------------------------
+
+// OrderCancelRejectMessage
+entrypoint typedef struct _OrderCancelRejectMessage {
+  UINT64BE sending_time;      // bytes 0 to 7
+  UINT8 cl_ord_id[16];        // bytes 8 to 23
+  UINT8 cxl_rej_response_to;  // byte 24
+  UINT8 cxl_rej_reason;       // byte 25
+  UINT8 link_id[4];           // bytes 26 to 29
+} OrderCancelRejectMessage;
+
+// ---- Mass Cancel Reject Message: 56 bytes ------------------------------------
+
+// MassCancelRejectMessage
+entrypoint typedef struct _MassCancelRejectMessage {
+  UINT64BE sending_time;            // bytes 0 to 7
+  UINT8 cl_ord_id[16];              // bytes 8 to 23
+  UINT8 symbol[6];                  // bytes 24 to 29
+  UINT8 symbol_sfx[6];              // bytes 30 to 35
+  UINT8 side_optional;              // byte 36
+  UINT64BE lower_than_price;        // bytes 37 to 44, signed, read here as unsigned
+  UINT64BE higher_than_price;       // bytes 45 to 52, signed, read here as unsigned
+  UINT16BE cancel_group_id;         // bytes 53 to 54
+  UINT8 mass_cancel_reject_reason;  // byte 55
+} MassCancelRejectMessage;
+

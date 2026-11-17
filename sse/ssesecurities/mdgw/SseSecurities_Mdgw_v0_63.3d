@@ -1,0 +1,116 @@
+// Shanghai Stock Exchange Market Data Gateway
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out SseSecurities_Mdgw_v0_63.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - the dispatch that chooses a message by its type
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Standard Header: 24 bytes -----------------------------------------------
+
+entrypoint typedef struct _StandardHeader {
+  UINT8 msg_type[4];      // bytes 0 to 3
+  UINT64BE sending_time;  // bytes 4 to 11
+  UINT64BE msg_seq_num;   // bytes 12 to 19
+  UINT32BE body_length;   // bytes 20 to 23
+} StandardHeader;
+
+// ---- Logon Message: 74 bytes -------------------------------------------------
+
+// The client must send this message first when starting a market data session.
+entrypoint typedef struct _LogonMessage {
+  UINT8 sender_comp_i_d[32];  // bytes 0 to 31
+  UINT8 target_comp_i_d[32];  // bytes 32 to 63
+  UINT16BE heart_bt_int;      // bytes 64 to 65
+  UINT8 appl_ver_i_d[8];      // bytes 66 to 73
+} LogonMessage;
+
+// ---- Logout Message: 260 bytes -----------------------------------------------
+
+// The logout message starts or confirms the end of a market data session. A disconnection without an exchange of logout messages is treated as an abnormal disconnection. After sending a logout message, neither side of the connection should send any further message.
+entrypoint typedef struct _LogoutMessage {
+  UINT32BE session_status;  // bytes 0 to 3
+  UINT8 text[256];          // bytes 4 to 259
+} LogoutMessage;
+
+// ---- Channel Heartbeat: 12 bytes ---------------------------------------------
+
+// Tick-by-tick market data supports sending a heartbeat every 3 seconds during idle periods of data sending. If data sending stays busy, the channel heartbeat interval can exceed 3s.
+entrypoint typedef struct _ChannelHeartbeat {
+  UINT8 channel_heartbeat_security_type;   // byte 0
+  UINT16BE channel_heartbeat_channel_n_o;  // bytes 1 to 2
+  UINT64BE appl_last_seq_num;              // bytes 3 to 10
+  UINT8 end_of_channel;                    // byte 11
+} ChannelHeartbeat;
+
+// ---- Retransmission Message: 52 bytes ----------------------------------------
+
+// The retransmission message is used to request market data on a channel that supports retransmission. For application messages that can be retransmitted (all types of tick-by-tick market data messages), if application messages are missing, the user can send a retransmission message upstream, which represents a retransmission request. The upstream handles retransmission requests in a request reply manner: it returns the data to be retransmitted according to the start and end sequence numbers specified in the retransmission message, and after the retransmission is complete it returns a retransmission message reporting that the retransmission is complete; if the retransmission fails, it returns a retransmission message reporting that the retransmission failed. The upstream system supports retransmission of only one message gap at a time; when the upstream receives multiple retransmission requests, it returns a retransmission failure for the other request messages. For tick-by-tick market data, the channel code and the message record number can be used to determine whether messages have been lost. When the message record number received is <= the largest message record number already received on this channel, the message has already been received and should be ignored. When the message record number received is > the largest message record number already received +1 (for example, the largest message record number received is 100 and the new message record number is 102), messages have been lost, and the lost data should be recovered by sending a retransmission request.
+entrypoint typedef struct _RetransmissionMessage {
+  UINT16BE retransmission_message_channel_n_o;  // bytes 0 to 1
+  UINT8 resend_type;                            // byte 2
+  UINT64BE appl_beg_seq_num;                    // bytes 3 to 10
+  UINT64BE appl_end_seq_num;                    // bytes 11 to 18
+  UINT8 resend_status;                          // byte 19
+  UINT8 reject_text[32];                        // bytes 20 to 51
+} RetransmissionMessage;
+
+// ---- Market Status Message: 14 bytes -----------------------------------------
+
+// The market status message is used by the exchange to publish information such as the market status and the number of products. It is published periodically and when the market status changes.
+entrypoint typedef struct _MarketStatusMessage {
+  UINT8 market_status_message_security_type;  // byte 0
+  UINT8 trad_ses_mode;                        // byte 1
+  UINT8 trading_session_i_d[8];               // bytes 2 to 9
+  UINT32BE tot_no_related_sym;                // bytes 10 to 13
+} MarketStatusMessage;
+
+// ---- Tick-by-Tick Order Market Data Extension Fields: 139 bytes --------------
+
+entrypoint typedef struct _Tick_by_TickOrderMarketDataExtensionFields {
+  UINT8 side;                                                                   // byte 0
+  UINT8 quote_i_d[18];                                                          // bytes 1 to 18
+  UINT8 member_i_d[12];                                                         // bytes 19 to 30
+  UINT8 trader_code[12];                                                        // bytes 31 to 42
+  UINT8 full_amount_trade;                                                      // byte 43
+  UINT8 settl_type;                                                             // byte 44
+  UINT32BE contract_multiplier;                                                 // bytes 45 to 48
+  UINT16BE expiration_days;                                                     // bytes 49 to 50
+  UINT64BE tick_by_tick_order_market_data_extension_fields_total_value_traded;  // bytes 51 to 58
+  UINT8 basket_i_d[16];                                                         // bytes 59 to 74
+  UINT8 investor_name[32];                                                      // bytes 75 to 106
+  UINT8 bid_trans_type;                                                         // byte 107
+  UINT8 bid_exec_inst_type;                                                     // byte 108
+  UINT32BE expire_date;                                                         // bytes 109 to 112
+  UINT8 secondary_order_i_d[18];                                                // bytes 113 to 130
+  UINT64BE min_qty;                                                             // bytes 131 to 138
+} Tick_by_TickOrderMarketDataExtensionFields;
+
+// ---- Tick-by-Tick Trade Market Data Extension Fields: 53 bytes ---------------
+
+entrypoint typedef struct _Tick_by_TickTradeMarketDataExtensionFields {
+  UINT8 bid_appl_seq_num[18];                                                   // bytes 0 to 17
+  UINT8 offer_appl_seq_num[18];                                                 // bytes 18 to 35
+  UINT64BE tick_by_tick_trade_market_data_extension_fields_total_value_traded;  // bytes 36 to 43
+  UINT8 trade_method;                                                           // byte 44
+  UINT64BE margin_price;                                                        // bytes 45 to 52
+} Tick_by_TickTradeMarketDataExtensionFields;
+
+// ---- Standard Trailer: 4 bytes -----------------------------------------------
+
+// The checksum is calculated from the start of the message header (header included) to the end of the message body. See Appendix 1 Calculating the checksum for sample code.
+entrypoint typedef struct _StandardTrailer {
+  UINT32BE check_sum;  // bytes 0 to 3
+} StandardTrailer;
+

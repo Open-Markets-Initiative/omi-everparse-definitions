@@ -1,0 +1,156 @@
+// CME Group iLink 3
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out Ebs_iLink3_v8_4_Client.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a field present only on a condition
+// - a field read in bits
+// - a block whose stated length holds more than its fields
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Simple Open Framing Header: 4 bytes -------------------------------------
+
+// Simple Open Framing Header
+entrypoint typedef struct _SimpleOpenFramingHeader {
+  UINT16 message_length;  // bytes 0 to 1
+  UINT16 encoding_type;   // bytes 2 to 3
+} SimpleOpenFramingHeader;
+
+// ---- Message Header: 8 bytes -------------------------------------------------
+
+// Template ID and length of message root
+entrypoint typedef struct _MessageHeader {
+  UINT16 block_length;  // bytes 0 to 1
+  UINT16 template_id;   // bytes 2 to 3
+  UINT16 schema_id;     // bytes 4 to 5
+  UINT16 version;       // bytes 6 to 7
+} MessageHeader;
+
+// ---- Sequence: 14 bytes ------------------------------------------------------
+
+// The Sequence message is used in both Recoverable (CME to customer) and Idempotent (customer to CME) flows.
+entrypoint typedef struct _Sequence {
+  UINT64 uuid;                       // bytes 0 to 7
+  UINT32 next_seq_no;                // bytes 8 to 11
+  UINT8 fault_tolerance_indicator;   // byte 12
+  UINT8 keep_alive_interval_lapsed;  // byte 13
+} Sequence;
+
+// ---- Terminate: 67 bytes -----------------------------------------------------
+
+// The Terminate message is sent to indicate that the sender is going to disconnect the TCP socket connection.
+entrypoint typedef struct _Terminate {
+  UINT8 reason[48];          // bytes 0 to 47
+  UINT64 uuid;               // bytes 48 to 55
+  UINT64 request_timestamp;  // bytes 56 to 63
+  UINT16 error_codes;        // bytes 64 to 65
+  UINT8 split_msg;           // byte 66
+} Terminate;
+
+// ---- Retransmit Request: 30 bytes --------------------------------------------
+
+// Customers can send the Retransmit Request message to recover missed messages.
+entrypoint typedef struct _RetransmitRequest {
+  UINT64 uuid;               // bytes 0 to 7
+  UINT64 last_uuid;          // bytes 8 to 15
+  UINT64 request_timestamp;  // bytes 16 to 23
+  UINT32 from_seq_no;        // bytes 24 to 27
+  UINT16 msg_count_16;       // bytes 28 to 29
+} RetransmitRequest;
+
+// ---- Order Cancel Request: 88 bytes ------------------------------------------
+
+// Sent by client system to cancel an existing order; an order may be cancelled by referencing the Order ID.
+entrypoint typedef struct _OrderCancelRequest {
+  UINT64 order_id;                   // bytes 0 to 7
+  UINT64 party_details_list_req_id;  // bytes 8 to 15
+  UINT8 manual_order_indicator;      // byte 16
+  UINT32 seq_num;                    // bytes 17 to 20
+  UINT8 sender_id[20];               // bytes 21 to 40
+  UINT8 cl_ord_id[20];               // bytes 41 to 60
+  UINT64 order_request_id;           // bytes 61 to 68
+  UINT64 sending_time_epoch;         // bytes 69 to 76
+  UINT8 location[5];                 // bytes 77 to 81
+  UINT32 security_id;                // bytes 82 to 85, signed, read here as unsigned
+  UINT8 side;                        // byte 86
+  UINT8 liquidity_flag;              // byte 87
+} OrderCancelRequest;
+
+// ---- Group Size: 3 bytes -----------------------------------------------------
+
+// Repeating group dimensions
+entrypoint typedef struct _GroupSize {
+  UINT16 block_length;  // bytes 0 to 1
+  UINT8 num_in_group;   // byte 2
+} GroupSize;
+
+// ---- Order Mass Status Request: 68 bytes -------------------------------------
+
+// The Order Mass Status Request message requests the status for orders matching criteria specified within the request.
+entrypoint typedef struct _OrderMassStatusRequest {
+  UINT64 party_details_list_req_id;  // bytes 0 to 7
+  UINT64 mass_status_req_id;         // bytes 8 to 15
+  UINT8 manual_order_indicator;      // byte 16
+  UINT32 seq_num;                    // bytes 17 to 20
+  UINT8 sender_id[20];               // bytes 21 to 40
+  UINT64 sending_time_epoch;         // bytes 41 to 48
+  UINT8 security_group[6];           // bytes 49 to 54
+  UINT8 location[5];                 // bytes 55 to 59
+  UINT32 security_id_optional;       // bytes 60 to 63, signed, read here as unsigned
+  UINT8 mass_status_req_type;        // byte 64
+  UINT8 ord_status_req_type;         // byte 65
+  UINT8 mass_status_tif;             // byte 66
+  UINT8 market_segment_id;           // byte 67
+} OrderMassStatusRequest;
+
+// ---- Order Status Request: 62 bytes ------------------------------------------
+
+// Submitted by the client system to obtain the current status of a specific order; CME Globex returns the order status in the form of an Execution Report (MsgType=8) with the status listed in tag 39-OrdStatus.
+entrypoint typedef struct _OrderStatusRequest {
+  UINT64 party_details_list_req_id;  // bytes 0 to 7
+  UINT64 ord_status_req_id;          // bytes 8 to 15
+  UINT8 manual_order_indicator;      // byte 16
+  UINT32 seq_num;                    // bytes 17 to 20
+  UINT8 sender_id[20];               // bytes 21 to 40
+  UINT64 order_id;                   // bytes 41 to 48
+  UINT64 sending_time_epoch;         // bytes 49 to 56
+  UINT8 location[5];                 // bytes 57 to 61
+} OrderStatusRequest;
+
+// ---- Execution Ack: 87 bytes -------------------------------------------------
+
+// The Execution Acknowledgment message notifies CME that a given fill has either been accepted or rejected by a counterparty for EU bilateral trades.
+entrypoint typedef struct _ExecutionAck {
+  UINT64 party_details_list_req_id;  // bytes 0 to 7
+  UINT64 order_id;                   // bytes 8 to 15
+  UINT8 exec_ack_status;             // byte 16
+  UINT32 seq_num;                    // bytes 17 to 20
+  UINT8 cl_ord_id[20];               // bytes 21 to 40
+  UINT64 sec_exec_id;                // bytes 41 to 48
+  UINT64 last_px;                    // bytes 49 to 56, signed, read here as unsigned
+  UINT32 security_id;                // bytes 57 to 60, signed, read here as unsigned
+  UINT32 last_qty;                   // bytes 61 to 64
+  UINT8 dk_reason;                   // byte 65
+  UINT8 side;                        // byte 66
+  UINT8 sender_id[20];               // bytes 67 to 86
+} ExecutionAck;
+
+// ---- Leg Option Delta: 5 bytes -----------------------------------------------
+
+// Up to 26 legs (i.e., repeating groups) supported for UDS for options. Up to 40 legs (i.e., repeating groups) supported for UDS for futures. Will be set to 0 for REPO
+entrypoint typedef struct _LegOptionDelta {
+  UINT32 mantissa_32;  // bytes 0 to 3, signed, read here as unsigned
+  UINT8 exponent;      // byte 4, signed, read here as unsigned
+} LegOptionDelta;
+

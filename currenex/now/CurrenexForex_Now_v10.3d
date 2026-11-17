@@ -1,0 +1,171 @@
+// Currenex Now Forex Market Data
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out CurrenexForex_Now_v10.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a field of no fixed width
+// - a run of a stated number of entries
+//
+// License: MIT No Attribution
+
+// ---- Message Header: 9 bytes -------------------------------------------------
+
+// Currenex Itch Market Data Message Header
+entrypoint typedef struct _MessageHeader {
+  UINT32BE sequence_number;  // bytes 0 to 3
+  UINT32BE timestamp;        // bytes 4 to 7
+  UINT8 message_type;        // byte 8
+} MessageHeader;
+
+// ---- Logon Message: 44 bytes -------------------------------------------------
+
+// Client initiates a session by submitting a Logon message to Currenex_NOW
+entrypoint typedef struct _LogonMessage {
+  UINT8 user_id[20];    // bytes 0 to 19
+  UINT8 password[20];   // bytes 20 to 39
+  UINT32BE session_id;  // bytes 40 to 43, signed, read here as unsigned
+} LogonMessage;
+
+// ---- Logout Message: 27 bytes ------------------------------------------------
+
+// Terminate a session by sending or receiving a Logout message
+entrypoint typedef struct _LogoutMessage {
+  UINT8 user_id[20];        // bytes 0 to 19
+  UINT32BE session_id;      // bytes 20 to 23, signed, read here as unsigned
+  UINT8 reason_alpha_3[3];  // bytes 24 to 26
+} LogoutMessage;
+
+// ---- Heart Beat Message: 4 bytes ---------------------------------------------
+
+// Keep-alive ping sent every 15 seconds; client must respond
+entrypoint typedef struct _HeartBeatMessage {
+  UINT32BE session_id;  // bytes 0 to 3, signed, read here as unsigned
+} HeartBeatMessage;
+
+// ---- Instrument Info: 35 bytes -----------------------------------------------
+
+// Definition of a currency or metal instrument
+entrypoint typedef struct _InstrumentInfo {
+  UINT32BE session_id;        // bytes 0 to 3, signed, read here as unsigned
+  UINT16BE instrument_index;  // bytes 4 to 5, signed, read here as unsigned
+  UINT8 instrument_type;      // byte 6
+  UINT8 instrument_id[20];    // bytes 7 to 26
+  UINT64BE settlement_date;   // bytes 27 to 34, signed, read here as unsigned
+} InstrumentInfo;
+
+// ---- Instrument Info Ack Message: 6 bytes ------------------------------------
+
+// Acknowledge receipt of InstrumentInfo
+entrypoint typedef struct _InstrumentInfoAckMessage {
+  UINT32BE session_id;        // bytes 0 to 3, signed, read here as unsigned
+  UINT16BE instrument_index;  // bytes 4 to 5, signed, read here as unsigned
+} InstrumentInfoAckMessage;
+
+// ---- Subscription Reply Message: 57 bytes ------------------------------------
+
+// Response to SubscriptionRequest
+entrypoint typedef struct _SubscriptionReplyMessage {
+  UINT32BE session_id;        // bytes 0 to 3, signed, read here as unsigned
+  UINT16BE instrument_index;  // bytes 4 to 5, signed, read here as unsigned
+  UINT8 type_;                // byte 6
+  UINT8 reason_alpha_50[50];  // bytes 7 to 56
+} SubscriptionReplyMessage;
+
+// ---- Mass Subscription Reply Message: 55 bytes -------------------------------
+
+// Response to MassSubscriptionRequest
+entrypoint typedef struct _MassSubscriptionReplyMessage {
+  UINT32BE session_id;        // bytes 0 to 3, signed, read here as unsigned
+  UINT8 type_;                // byte 4
+  UINT8 reason_alpha_50[50];  // bytes 5 to 54
+} MassSubscriptionReplyMessage;
+
+// ---- Bid: 12 bytes -----------------------------------------------------------
+
+// Market level bid
+entrypoint typedef struct _Bid {
+  UINT32BE rate;    // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE amount;  // bytes 4 to 11, signed, read here as unsigned
+} Bid;
+
+// ---- Offer: 12 bytes ---------------------------------------------------------
+
+// Market level offer
+entrypoint typedef struct _Offer {
+  UINT32BE rate;    // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE amount;  // bytes 4 to 11, signed, read here as unsigned
+} Offer;
+
+// ---- Paid Given Message: 16 bytes --------------------------------------------
+
+// Latest trade versus liquidity
+entrypoint typedef struct _PaidGivenMessage {
+  UINT16BE instrument_index;   // bytes 0 to 1, signed, read here as unsigned
+  UINT32BE rate;               // bytes 2 to 5, signed, read here as unsigned
+  UINT8 size_indicator;        // byte 6
+  UINT8 paid_given_indicator;  // byte 7
+  UINT64BE transact_time;      // bytes 8 to 15, signed, read here as unsigned
+} PaidGivenMessage;
+
+// ---- Conf Factor 75: 8 bytes -------------------------------------------------
+
+// 75th percentile confidence factor
+entrypoint typedef struct _ConfFactor75 {
+  UINT32BE bid_price;    // bytes 0 to 3, signed, read here as unsigned
+  UINT32BE offer_price;  // bytes 4 to 7, signed, read here as unsigned
+} ConfFactor75;
+
+// ---- Conf Factor 50: 8 bytes -------------------------------------------------
+
+// 50th percentile confidence factor
+entrypoint typedef struct _ConfFactor50 {
+  UINT32BE bid_price;    // bytes 0 to 3, signed, read here as unsigned
+  UINT32BE offer_price;  // bytes 4 to 7, signed, read here as unsigned
+} ConfFactor50;
+
+// ---- Conf Factor 25: 8 bytes -------------------------------------------------
+
+// 25th percentile confidence factor
+entrypoint typedef struct _ConfFactor25 {
+  UINT32BE bid_price;    // bytes 0 to 3, signed, read here as unsigned
+  UINT32BE offer_price;  // bytes 4 to 7, signed, read here as unsigned
+} ConfFactor25;
+
+// ---- Wamr With Confidence Factor Message: 38 bytes ---------------------------
+
+// Weighted average mid-rate with confidence factors
+entrypoint typedef struct _WamrWithConfidenceFactorMessage {
+  UINT16BE instrument_index;       // bytes 0 to 1, signed, read here as unsigned
+  UINT32BE price;                  // bytes 2 to 5, signed, read here as unsigned
+  ConfFactor75 conf_factor_75;     // bytes 6 to 13
+  ConfFactor50 conf_factor_50;     // bytes 14 to 21
+  ConfFactor25 conf_factor_25;     // bytes 22 to 29
+  UINT64BE calculation_timestamp;  // bytes 30 to 37, signed, read here as unsigned
+} WamrWithConfidenceFactorMessage;
+
+// ---- Mid Activity Indicator Message: 3 bytes ---------------------------------
+
+// Indicator of mid-rate activity windows
+entrypoint typedef struct _MidActivityIndicatorMessage {
+  UINT16BE instrument_index;  // bytes 0 to 1, signed, read here as unsigned
+  UINT8 activity_indicator;   // byte 2
+} MidActivityIndicatorMessage;
+
+// ---- Reject Message: 55 bytes ------------------------------------------------
+
+// Reject incorrectly formatted or invalid messages
+entrypoint typedef struct _RejectMessage {
+  UINT32BE session_id;        // bytes 0 to 3, signed, read here as unsigned
+  UINT8 reject_msg_type;      // byte 4
+  UINT8 reason_alpha_50[50];  // bytes 5 to 54
+} RejectMessage;
+

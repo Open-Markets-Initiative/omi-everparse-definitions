@@ -1,0 +1,318 @@
+// National Association of Securities Dealers Automated Quotations (Nasdaq) Itch To Trade Options
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out NomOptions_Itto_v4_0_2025_Udp.3d
+//
+// What this definition does not state, and the model does:
+// - the dispatch that chooses a message by its type
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Packet Header: 20 bytes -------------------------------------------------
+
+// Itch Mold Udp 64 Packet Header
+entrypoint typedef struct _PacketHeader {
+  UINT8 session[10];         // bytes 0 to 9
+  UINT64BE sequence_number;  // bytes 10 to 17
+  UINT16BE message_count;    // bytes 18 to 19
+} PacketHeader;
+
+// ---- Message Header: 3 bytes -------------------------------------------------
+
+// Mold Udp 64 Message Header
+entrypoint typedef struct _MessageHeader {
+  UINT16BE message_length;  // bytes 0 to 1
+  UINT8 message_type;       // byte 2
+} MessageHeader;
+
+// ---- System Event Message: 9 bytes -------------------------------------------
+
+// The system event message type is used to signal a market or data feed handler event.
+entrypoint typedef struct _SystemEventMessage {
+  UINT16BE tracking_number;  // bytes 0 to 1
+  UINT8 timestamp[6];        // bytes 2 to 7
+  UINT8 event_code;          // byte 8
+} SystemEventMessage;
+
+// ---- Options Directory Message: 43 bytes -------------------------------------
+
+// At the start of each trading day, NASDAQ disseminates options symbol directory messages for all active options symbols in the NASDAQ option system.
+entrypoint typedef struct _OptionsDirectoryMessage {
+  UINT16BE tracking_number;        // bytes 0 to 1
+  UINT8 timestamp[6];              // bytes 2 to 7
+  UINT32BE option_id;              // bytes 8 to 11
+  UINT8 security_symbol[6];        // bytes 12 to 17
+  UINT8 expiration_year;           // byte 18
+  UINT8 expiration_month;          // byte 19
+  UINT8 expiration_date;           // byte 20
+  UINT32BE explicit_strike_price;  // bytes 21 to 24, signed, read here as unsigned
+  UINT8 option_type;               // byte 25
+  UINT8 source;                    // byte 26
+  UINT8 underlying_symbol[13];     // bytes 27 to 39
+  UINT8 options_closing_type;      // byte 40
+  UINT8 tradable;                  // byte 41
+  UINT8 mpv;                       // byte 42
+} OptionsDirectoryMessage;
+
+// ---- Trading Action Message: 13 bytes ----------------------------------------
+
+// After the start of system hours, NASDAQ will use the Trading Action message to relay changes in trading status for an individual option. Messages will be sent when an option is halted, is released for quotation, released for trading, or temporarily suspended for trading on the buy or sell side.
+entrypoint typedef struct _TradingActionMessage {
+  UINT16BE tracking_number;     // bytes 0 to 1
+  UINT8 timestamp[6];           // bytes 2 to 7
+  UINT32BE option_id;           // bytes 8 to 11
+  UINT8 current_trading_state;  // byte 12
+} TradingActionMessage;
+
+// ---- Security Open Message: 13 bytes -----------------------------------------
+
+// NASDAQ plans to disseminate the Option Open Message for each option as soon as the opening is completed. Upon receipt of the open state message, firms should be advised that the option denoted in the message is now available for auto execution within the NASDAQ Options Market System. Upon receipt of the closed state message, firms should be advised that the option is no longer eligible for auto-execution within the NASDAQ Options Market System.
+entrypoint typedef struct _SecurityOpenMessage {
+  UINT16BE tracking_number;  // bytes 0 to 1
+  UINT8 timestamp[6];        // bytes 2 to 7
+  UINT32BE option_id;        // bytes 8 to 11
+  UINT8 open_state;          // byte 12
+} SecurityOpenMessage;
+
+// ---- Add Order Message Short Message Form: 25 bytes --------------------------
+
+// For bandwidth efficiency reasons, this message can be published in either short or long format.
+entrypoint typedef struct _AddOrderMessageShortMessageForm {
+  UINT16BE tracking_number;         // bytes 0 to 1
+  UINT8 timestamp[6];               // bytes 2 to 7
+  UINT64BE order_reference_number;  // bytes 8 to 15
+  UINT8 market_side;                // byte 16
+  UINT32BE option_id;               // bytes 17 to 20
+  UINT16BE price_short;             // bytes 21 to 22
+  UINT16BE volume_short;            // bytes 23 to 24
+} AddOrderMessageShortMessageForm;
+
+// ---- Add Order Message Long Form Message: 29 bytes ---------------------------
+
+// For bandwidth efficiency reasons, this message can be published in either short or long format.
+entrypoint typedef struct _AddOrderMessageLongFormMessage {
+  UINT16BE tracking_number;         // bytes 0 to 1
+  UINT8 timestamp[6];               // bytes 2 to 7
+  UINT64BE order_reference_number;  // bytes 8 to 15
+  UINT8 market_side;                // byte 16
+  UINT32BE option_id;               // bytes 17 to 20
+  UINT32BE price_long;              // bytes 21 to 24, signed, read here as unsigned
+  UINT32BE volume_long;             // bytes 25 to 28
+} AddOrderMessageLongFormMessage;
+
+// ---- Add Quote Message Short Form Message: 36 bytes --------------------------
+
+// For bandwidth efficiency reasons, this message can be published in either short or long format.
+entrypoint typedef struct _AddQuoteMessageShortFormMessage {
+  UINT16BE tracking_number;       // bytes 0 to 1
+  UINT8 timestamp[6];             // bytes 2 to 7
+  UINT64BE bid_reference_number;  // bytes 8 to 15
+  UINT64BE ask_reference_number;  // bytes 16 to 23
+  UINT32BE option_id;             // bytes 24 to 27
+  UINT16BE bid_price_short;       // bytes 28 to 29
+  UINT16BE bid_size_short;        // bytes 30 to 31
+  UINT16BE ask_price_short;       // bytes 32 to 33
+  UINT16BE ask_size_short;        // bytes 34 to 35
+} AddQuoteMessageShortFormMessage;
+
+// ---- Add Quote Message Long Form Message: 44 bytes ---------------------------
+
+// For bandwidth efficiency reasons, this message can be published in either short or long format.
+entrypoint typedef struct _AddQuoteMessageLongFormMessage {
+  UINT16BE tracking_number;       // bytes 0 to 1
+  UINT8 timestamp[6];             // bytes 2 to 7
+  UINT64BE bid_reference_number;  // bytes 8 to 15
+  UINT64BE ask_reference_number;  // bytes 16 to 23
+  UINT32BE option_id;             // bytes 24 to 27
+  UINT32BE bid;                   // bytes 28 to 31
+  UINT32BE bid_size_long;         // bytes 32 to 35
+  UINT32BE ask;                   // bytes 36 to 39
+  UINT32BE ask_size_long;         // bytes 40 to 43
+} AddQuoteMessageLongFormMessage;
+
+// ---- Single Side Executed Message: 28 bytes ----------------------------------
+
+// This message is sent whenever a Side order is executed in whole or in part. It is possible to receive several Single Side Executed Messages for the same Side order if that Side order is executed in several parts. The multiple Single Side Executed Messages on the same order are cumulative. By combining the executions received separately via two types of Single Side Executed Messages and Trade Messages, it is possible to build a complete view of all non-auction executions that happen on NASDAQ. Auction execution information is available in one bulk print via the Auction Trade Message.
+entrypoint typedef struct _SingleSideExecutedMessage {
+  UINT16BE tracking_number;     // bytes 0 to 1
+  UINT8 timestamp[6];           // bytes 2 to 7
+  UINT64BE reference_number;    // bytes 8 to 15
+  UINT32BE executed_contracts;  // bytes 16 to 19
+  UINT32BE cross_number;        // bytes 20 to 23
+  UINT32BE match_number;        // bytes 24 to 27
+} SingleSideExecutedMessage;
+
+// ---- Single Side Executed With Price Message: 33 bytes -----------------------
+
+// These executions may be marked as non-printable. If the execution is marked as non-printed, it means that the contracts will be included into a later bulk print (e.g., in the case of auction executions). If a firm is looking to use the ITTO data in time-and-sales displays or volume calculations, NASDAQ recommends that firms ignore messages marked as non-printable to prevent double counting.
+entrypoint typedef struct _SingleSideExecutedWithPriceMessage {
+  UINT16BE tracking_number;   // bytes 0 to 1
+  UINT8 timestamp[6];         // bytes 2 to 7
+  UINT64BE reference_number;  // bytes 8 to 15
+  UINT32BE cross_number;      // bytes 16 to 19
+  UINT32BE match_number;      // bytes 20 to 23
+  UINT8 printable;            // byte 24
+  UINT32BE price_long;        // bytes 25 to 28, signed, read here as unsigned
+  UINT32BE volume_long;       // bytes 29 to 32
+} SingleSideExecutedWithPriceMessage;
+
+// ---- Order Cancel Message: 20 bytes ------------------------------------------
+
+// This message is sent whenever an order on the book is modified as a result of a partial cancellation.
+entrypoint typedef struct _OrderCancelMessage {
+  UINT16BE tracking_number;         // bytes 0 to 1
+  UINT8 timestamp[6];               // bytes 2 to 7
+  UINT64BE order_reference_number;  // bytes 8 to 15
+  UINT32BE cancelled_contracts;     // bytes 16 to 19
+} OrderCancelMessage;
+
+// ---- Single Side Replace Message Short Form: 28 bytes ------------------------
+
+// This message is sent whenever an order or one side of a quote on the book is replaced. The replacement has a new sequence number and replaces the prior sequence number.
+entrypoint typedef struct _SingleSideReplaceMessageShortForm {
+  UINT16BE tracking_number;            // bytes 0 to 1
+  UINT8 timestamp[6];                  // bytes 2 to 7
+  UINT64BE original_reference_number;  // bytes 8 to 15
+  UINT64BE new_reference_number;       // bytes 16 to 23
+  UINT16BE price_short;                // bytes 24 to 25
+  UINT16BE volume_short;               // bytes 26 to 27
+} SingleSideReplaceMessageShortForm;
+
+// ---- Single Side Replace Message Long Form: 32 bytes -------------------------
+
+// This message is sent whenever an order or one side of a quote on the book is replaced. The replacement has a new sequence number and replaces the prior sequence number.
+entrypoint typedef struct _SingleSideReplaceMessageLongForm {
+  UINT16BE tracking_number;            // bytes 0 to 1
+  UINT8 timestamp[6];                  // bytes 2 to 7
+  UINT64BE original_reference_number;  // bytes 8 to 15
+  UINT64BE new_reference_number;       // bytes 16 to 23
+  UINT32BE price_long;                 // bytes 24 to 27, signed, read here as unsigned
+  UINT32BE volume_long;                // bytes 28 to 31
+} SingleSideReplaceMessageLongForm;
+
+// ---- Single Side Delete Message: 16 bytes ------------------------------------
+
+// The message is sent when an order or a side of a quote is being cancelled. All remaining contracts are no longer accessible so the side should be removed from the book.
+entrypoint typedef struct _SingleSideDeleteMessage {
+  UINT16BE tracking_number;   // bytes 0 to 1
+  UINT8 timestamp[6];         // bytes 2 to 7
+  UINT64BE reference_number;  // bytes 8 to 15
+} SingleSideDeleteMessage;
+
+// ---- Single Side Change Message: 25 bytes ------------------------------------
+
+// This message is sent whenever an order or a side of a quote is being updated for price and (or) contracts. The reference number associated with the order quote is unchanged.
+entrypoint typedef struct _SingleSideChangeMessage {
+  UINT16BE tracking_number;   // bytes 0 to 1
+  UINT8 timestamp[6];         // bytes 2 to 7
+  UINT64BE reference_number;  // bytes 8 to 15
+  UINT8 change_reason;        // byte 16
+  UINT32BE price_long;        // bytes 17 to 20, signed, read here as unsigned
+  UINT32BE volume_long;       // bytes 21 to 24
+} SingleSideChangeMessage;
+
+// ---- Quote Replace Message Short Form: 48 bytes ------------------------------
+
+// This message is sent whenever a quote on the book is replaced. The replaced quote has new sequence numbers on both sides. These new sequence numbers replace the prior sequence numbers on the quote.
+entrypoint typedef struct _QuoteReplaceMessageShortForm {
+  UINT16BE tracking_number;                // bytes 0 to 1
+  UINT8 timestamp[6];                      // bytes 2 to 7
+  UINT64BE original_bid_reference_number;  // bytes 8 to 15
+  UINT64BE bid_reference_number;           // bytes 16 to 23
+  UINT64BE original_ask_reference_number;  // bytes 24 to 31
+  UINT64BE ask_reference_number;           // bytes 32 to 39
+  UINT16BE bid_price_short;                // bytes 40 to 41
+  UINT16BE bid_size_short;                 // bytes 42 to 43
+  UINT16BE ask_price_short;                // bytes 44 to 45
+  UINT16BE ask_size_short;                 // bytes 46 to 47
+} QuoteReplaceMessageShortForm;
+
+// ---- Quote Replace Message Long Form: 56 bytes -------------------------------
+
+// This message is sent whenever a quote on the book is replaced. The replaced quote has new sequence numbers on both sides. These new sequence numbers replace the prior sequence numbers on the quote.
+entrypoint typedef struct _QuoteReplaceMessageLongForm {
+  UINT16BE tracking_number;                // bytes 0 to 1
+  UINT8 timestamp[6];                      // bytes 2 to 7
+  UINT64BE original_bid_reference_number;  // bytes 8 to 15
+  UINT64BE bid_reference_number;           // bytes 16 to 23
+  UINT64BE original_ask_reference_number;  // bytes 24 to 31
+  UINT64BE ask_reference_number;           // bytes 32 to 39
+  UINT32BE bid_price_long;                 // bytes 40 to 43, signed, read here as unsigned
+  UINT32BE bid_size_long;                  // bytes 44 to 47
+  UINT32BE ask_price_long;                 // bytes 48 to 51, signed, read here as unsigned
+  UINT32BE ask_size_long;                  // bytes 52 to 55
+} QuoteReplaceMessageLongForm;
+
+// ---- Quote Delete Message: 24 bytes ------------------------------------------
+
+// The message is sent when a single quote is being cancelled. All remaining contracts are no longer accessible so the quote should be removed from the book.
+entrypoint typedef struct _QuoteDeleteMessage {
+  UINT16BE tracking_number;       // bytes 0 to 1
+  UINT8 timestamp[6];             // bytes 2 to 7
+  UINT64BE bid_reference_number;  // bytes 8 to 15
+  UINT64BE ask_reference_number;  // bytes 16 to 23
+} QuoteDeleteMessage;
+
+// ---- Options Trade Messages Non Auction: 29 bytes ----------------------------
+
+// This Options Trade Message is designed to provide execution details for normal match events involving non-displayable order types. (Note: There is a separate message for NASDAQ Option auction events.)
+entrypoint typedef struct _OptionsTradeMessagesNonAuction {
+  UINT16BE tracking_number;  // bytes 0 to 1
+  UINT8 timestamp[6];        // bytes 2 to 7
+  UINT8 buy_sell_indicator;  // byte 8
+  UINT32BE option_id;        // bytes 9 to 12
+  UINT32BE cross_number;     // bytes 13 to 16
+  UINT32BE match_number;     // bytes 17 to 20
+  UINT32BE price_long;       // bytes 21 to 24, signed, read here as unsigned
+  UINT32BE volume_long;      // bytes 25 to 28
+} OptionsTradeMessagesNonAuction;
+
+// ---- Options Cross Trade Message: 29 bytes -----------------------------------
+
+// This message will also be used to report all executions within a price improvement (PRISM) auction.
+entrypoint typedef struct _OptionsCrossTradeMessage {
+  UINT16BE tracking_number;  // bytes 0 to 1
+  UINT8 timestamp[6];        // bytes 2 to 7
+  UINT32BE option_id;        // bytes 8 to 11
+  UINT32BE cross_number;     // bytes 12 to 15
+  UINT32BE match_number;     // bytes 16 to 19
+  UINT8 cross_type;          // byte 20
+  UINT32BE price_long;       // bytes 21 to 24, signed, read here as unsigned
+  UINT32BE volume_long;      // bytes 25 to 28
+} OptionsCrossTradeMessage;
+
+// ---- Broken Trade Order Executed Message: 16 bytes ---------------------------
+
+// The Broken Trade Message is sent whenever an execution on NASDAQ is broken. An execution may be broken if it is found to be clearly erroneous pursuant to NASDAQ s Clearly Erroneous Policy. A trade break is final; once a trade is broken, it cannot be reinstated.
+entrypoint typedef struct _BrokenTradeOrderExecutedMessage {
+  UINT16BE tracking_number;  // bytes 0 to 1
+  UINT8 timestamp[6];        // bytes 2 to 7
+  UINT32BE cross_number;     // bytes 8 to 11
+  UINT32BE match_number;     // bytes 12 to 15
+} BrokenTradeOrderExecutedMessage;
+
+// ---- Noii Message: 34 bytes --------------------------------------------------
+
+// For the NASDAQ Opening Auction, NASDAQ will begin the dissemination of NOII messages for a put or a call option five minutes prior to the start of opening process event and two minutes prior to the halt resumption (reopening) process event.
+entrypoint typedef struct _NoiiMessage {
+  UINT16BE tracking_number;       // bytes 0 to 1
+  UINT8 timestamp[6];             // bytes 2 to 7
+  UINT32BE auction_id;            // bytes 8 to 11
+  UINT8 auction_type;             // byte 12
+  UINT32BE paired_contracts;      // bytes 13 to 16
+  UINT8 imbalance_direction;      // byte 17
+  UINT32BE option_id;             // bytes 18 to 21
+  UINT32BE imbalance_price;       // bytes 22 to 25, signed, read here as unsigned
+  UINT32BE imbalance_volume;      // bytes 26 to 29
+  UINT8 customer_firm_indicator;  // byte 30
+  UINT8 reserved_3[3];            // bytes 31 to 33
+} NoiiMessage;
+

@@ -1,0 +1,361 @@
+// Shenzhen Stock Exchange Szse Tcp Market Data
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out SzseSecurities_TcpMarketData_v1_17.3d
+//
+// What this definition does not state, and the model does:
+// - the dispatch that chooses a message by its type
+// - a run counted by a field
+// - a length prefix framing what follows
+//
+// License: MIT No Attribution
+
+// ---- Message Header: 8 bytes -------------------------------------------------
+
+// Szse Mdgw Message Header, defining the type and body length of a message, transmitted without encryption
+entrypoint typedef struct _MessageHeader {
+  UINT32BE msg_type;     // bytes 0 to 3
+  UINT32BE body_length;  // bytes 4 to 7
+} MessageHeader;
+
+// ---- Logon Message: 92 bytes -------------------------------------------------
+
+// Logon message is the first message sent out to Market Data GateWay by Vendor Supplied System. Vendor Supplied System sets up a connection with Market Data GateWay through a logon message, and Market Data GateWay confirms the logon success through a logon message of its own, so both sides transmit this message type.
+entrypoint typedef struct _LogonMessage {
+  UINT8 sender_comp_id[20];       // bytes 0 to 19
+  UINT8 target_comp_id[20];       // bytes 20 to 39
+  UINT32BE heart_bt_int;          // bytes 40 to 43, signed, read here as unsigned
+  UINT8 password[16];             // bytes 44 to 59
+  UINT8 default_appl_ver_id[32];  // bytes 60 to 91
+} LogonMessage;
+
+// ---- Logout Message: 204 bytes -----------------------------------------------
+
+// When the connection request from Vendor Supplied System is not accepted, Market Data GateWay sends a logout message to refuse the logon request. Vendor Supplied System also sends a logout message voluntarily to disconnect, so both sides transmit this message type.
+entrypoint typedef struct _LogoutMessage {
+  UINT32BE session_status;  // bytes 0 to 3, signed, read here as unsigned
+  UINT8 text[200];          // bytes 4 to 203
+} LogoutMessage;
+
+// ---- Channel Heartbeat Message: 12 bytes -------------------------------------
+
+// Sent on a market data channel every 3 seconds, carrying the sequence number of the last market data message on the channel.
+entrypoint typedef struct _ChannelHeartbeatMessage {
+  UINT16BE channel_no;         // bytes 0 to 1
+  UINT64BE appl_last_seq_num;  // bytes 2 to 9, signed, read here as unsigned
+  UINT16BE end_of_channel;     // bytes 10 to 11
+} ChannelHeartbeatMessage;
+
+// ---- Retransmitting Message: 44 bytes ----------------------------------------
+
+// Vendor Supplied System sends a re-transmission message to Market Data GateWay, which returns the re-transmission data needed followed by a re-transmission message indicating completion, or the failure reason if it fails. Market Data GateWay handles multiple requests in the order in which they arrive, so this message type is transmitted by both sides; ResendStatus and RejectText are only effective on the gateway reply.
+entrypoint typedef struct _RetransmittingMessage {
+  UINT8 resend_type;          // byte 0
+  UINT16BE channel_no;        // bytes 1 to 2
+  UINT64BE appl_beg_seq_num;  // bytes 3 to 10, signed, read here as unsigned
+  UINT64BE appl_end_seq_num;  // bytes 11 to 18, signed, read here as unsigned
+  UINT8 news_id[8];           // bytes 19 to 26
+  UINT8 resend_status;        // byte 27
+  UINT8 reject_text[16];      // bytes 28 to 43
+} RetransmittingMessage;
+
+// ---- Client User Information Reporting Message: 26 bytes ---------------------
+
+// Vendor Supplied System reports the number of client users connected to it at the current time to the Market Data GateWay front-end processor at regular intervals. Only the Vendor Supplied System of a vendor sends this message.
+entrypoint typedef struct _ClientUserInformationReportingMessage {
+  UINT64BE orig_time;      // bytes 0 to 7, signed, read here as unsigned
+  UINT8 version_code[16];  // bytes 8 to 23
+  UINT16BE user_num;       // bytes 24 to 25
+} ClientUserInformationReportingMessage;
+
+// ---- Business Reject Message: 74 bytes ---------------------------------------
+
+// Rejects an application layer message that satisfies the session layer rules but does not satisfy the rules of the business layer. It reports on an incorrect re-transmitted message or client user information reporting message declared by the user.
+entrypoint typedef struct _BusinessRejectMessage {
+  UINT64BE ref_seq_num;              // bytes 0 to 7, signed, read here as unsigned
+  UINT32BE ref_msg_type;             // bytes 8 to 11
+  UINT8 business_reject_ref_id[10];  // bytes 12 to 21
+  UINT16BE business_reject_reason;   // bytes 22 to 23
+  UINT8 business_reject_text[50];    // bytes 24 to 73
+} BusinessRejectMessage;
+
+// ---- Real Time Market Status Message: 69 bytes -------------------------------
+
+// Released every 3 seconds, carrying the trading session state of a market and, for stock connect, the daily quota balance.
+entrypoint typedef struct _RealTimeMarketStatusMessage {
+  UINT64BE orig_time;               // bytes 0 to 7, signed, read here as unsigned
+  UINT16BE channel_no;              // bytes 8 to 9
+  UINT8 market_id[8];               // bytes 10 to 17
+  UINT8 market_segment_id[8];       // bytes 18 to 25
+  UINT8 trading_session_id[4];      // bytes 26 to 29
+  UINT8 trading_session_sub_id[4];  // bytes 30 to 33
+  UINT16BE trad_ses_status;         // bytes 34 to 35
+  UINT64BE trad_ses_start_time;     // bytes 36 to 43, signed, read here as unsigned
+  UINT64BE trad_ses_end_time;       // bytes 44 to 51, signed, read here as unsigned
+  UINT64BE thredhold_amount;        // bytes 52 to 59, signed, read here as unsigned
+  UINT64BE pos_amt;                 // bytes 60 to 67, signed, read here as unsigned
+  UINT8 amounts_status;             // byte 68
+} RealTimeMarketStatusMessage;
+
+// ---- Statistic Indicator Snapshot Message: 69 bytes --------------------------
+
+// Snapshot carrying market data category 910, statistic indicators.
+entrypoint typedef struct _StatisticIndicatorSnapshotMessage {
+  UINT64BE orig_time;           // bytes 0 to 7, signed, read here as unsigned
+  UINT16BE channel_no;          // bytes 8 to 9
+  UINT8 md_stream_id[3];        // bytes 10 to 12
+  UINT8 security_id[8];         // bytes 13 to 20
+  UINT8 security_id_source[4];  // bytes 21 to 24
+  UINT8 trading_phase_code[8];  // bytes 25 to 32
+  UINT64BE prev_close_px;       // bytes 33 to 40, signed, read here as unsigned
+  UINT64BE num_trades;          // bytes 41 to 48, signed, read here as unsigned
+  UINT64BE total_volume_trade;  // bytes 49 to 56, signed, read here as unsigned
+  UINT64BE total_value_trade;   // bytes 57 to 64, signed, read here as unsigned
+  UINT32BE stock_num;           // bytes 65 to 68
+} StatisticIndicatorSnapshotMessage;
+
+// ---- Order Tick Data In Call Auction Message: 51 bytes -----------------------
+
+// Order tick carrying market data categories 011 for equities, funds and bonds in the call auction of the spot market, 021 pledge-style repo and 041 call auction in options.
+entrypoint typedef struct _OrderTickDataInCallAuctionMessage {
+  UINT16BE channel_no;          // bytes 0 to 1
+  UINT64BE appl_seq_num;        // bytes 2 to 9, signed, read here as unsigned
+  UINT8 md_stream_id[3];        // bytes 10 to 12
+  UINT8 security_id[8];         // bytes 13 to 20
+  UINT8 security_id_source[4];  // bytes 21 to 24
+  UINT64BE price;               // bytes 25 to 32, signed, read here as unsigned
+  UINT64BE order_qty;           // bytes 33 to 40, signed, read here as unsigned
+  UINT8 side;                   // byte 41
+  UINT64BE transac_time;        // bytes 42 to 49, signed, read here as unsigned
+  UINT8 ord_type;               // byte 50
+} OrderTickDataInCallAuctionMessage;
+
+// ---- Order Tick Data Of Negotiable Trade Message: 100 bytes ------------------
+
+// Order tick carrying market data categories 051 indication of interest of negotiable trade and 052 quote of negotiable trade.
+entrypoint typedef struct _OrderTickDataOfNegotiableTradeMessage {
+  UINT16BE channel_no;          // bytes 0 to 1
+  UINT64BE appl_seq_num;        // bytes 2 to 9, signed, read here as unsigned
+  UINT8 md_stream_id[3];        // bytes 10 to 12
+  UINT8 security_id[8];         // bytes 13 to 20
+  UINT8 security_id_source[4];  // bytes 21 to 24
+  UINT64BE price;               // bytes 25 to 32, signed, read here as unsigned
+  UINT64BE order_qty;           // bytes 33 to 40, signed, read here as unsigned
+  UINT8 side;                   // byte 41
+  UINT64BE transac_time;        // bytes 42 to 49, signed, read here as unsigned
+  UINT8 confirm_id[8];          // bytes 50 to 57
+  UINT8 contactor[12];          // bytes 58 to 69
+  UINT8 contact_info[30];       // bytes 70 to 99
+} OrderTickDataOfNegotiableTradeMessage;
+
+// ---- Order Tick Data Of Security Lending Message: 53 bytes -------------------
+
+// Order tick carrying market data category 071, security lending.
+entrypoint typedef struct _OrderTickDataOfSecurityLendingMessage {
+  UINT16BE channel_no;          // bytes 0 to 1
+  UINT64BE appl_seq_num;        // bytes 2 to 9, signed, read here as unsigned
+  UINT8 md_stream_id[3];        // bytes 10 to 12
+  UINT8 security_id[8];         // bytes 13 to 20
+  UINT8 security_id_source[4];  // bytes 21 to 24
+  UINT64BE price;               // bytes 25 to 32, signed, read here as unsigned
+  UINT64BE order_qty;           // bytes 33 to 40, signed, read here as unsigned
+  UINT8 side;                   // byte 41
+  UINT64BE transac_time;        // bytes 42 to 49, signed, read here as unsigned
+  UINT16BE expiration_days;     // bytes 50 to 51
+  UINT8 expiration_type;        // byte 52
+} OrderTickDataOfSecurityLendingMessage;
+
+// ---- Order Tick Data Of Spot Bond Trading Matching Deal Message: 51 bytes ----
+
+// Order tick carrying market data categories 021 bond general pledged repo matching deal and 411 spot bond trading matching deal.
+entrypoint typedef struct _OrderTickDataOfSpotBondTradingMatchingDealMessage {
+  UINT16BE channel_no;          // bytes 0 to 1
+  UINT64BE appl_seq_num;        // bytes 2 to 9, signed, read here as unsigned
+  UINT8 md_stream_id[3];        // bytes 10 to 12
+  UINT8 security_id[8];         // bytes 13 to 20
+  UINT8 security_id_source[4];  // bytes 21 to 24
+  UINT64BE price;               // bytes 25 to 32, signed, read here as unsigned
+  UINT64BE order_qty;           // bytes 33 to 40, signed, read here as unsigned
+  UINT8 side;                   // byte 41
+  UINT64BE transac_time;        // bytes 42 to 49, signed, read here as unsigned
+  UINT8 ord_type;               // byte 50
+} OrderTickDataOfSpotBondTradingMatchingDealMessage;
+
+// ---- Order Tick Data Of Spot Bond Trading Quotation Message: 377 bytes -------
+
+// Order tick carrying market data categories 415 spot bond trading declaration of intent and 417 spot bond trading large amount matching deal, for spot bond trading other than bid.
+entrypoint typedef struct _OrderTickDataOfSpotBondTradingQuotationMessage {
+  UINT16BE channel_no;          // bytes 0 to 1
+  UINT64BE appl_seq_num;        // bytes 2 to 9, signed, read here as unsigned
+  UINT8 md_stream_id[3];        // bytes 10 to 12
+  UINT8 security_id[8];         // bytes 13 to 20
+  UINT8 security_id_source[4];  // bytes 21 to 24
+  UINT64BE price;               // bytes 25 to 32, signed, read here as unsigned
+  UINT64BE order_qty;           // bytes 33 to 40, signed, read here as unsigned
+  UINT8 side;                   // byte 41
+  UINT64BE transac_time;        // bytes 42 to 49, signed, read here as unsigned
+  UINT8 quote_id[10];           // bytes 50 to 59
+  UINT8 member_id[6];           // bytes 60 to 65
+  UINT8 investor_type[2];       // bytes 66 to 67
+  UINT8 investor_id[10];        // bytes 68 to 77
+  UINT8 investor_name[120];     // bytes 78 to 197
+  UINT8 trader_code[8];         // bytes 198 to 205
+  UINT8 settl_period;           // byte 206
+  UINT16BE settl_type;          // bytes 207 to 208
+  UINT8 memo[160];              // bytes 209 to 368
+  UINT64BE min_qty;             // bytes 369 to 376, signed, read here as unsigned
+} OrderTickDataOfSpotBondTradingQuotationMessage;
+
+// ---- Order Tick Data Of Bid Quotation Message: 407 bytes ---------------------
+
+// Order tick carrying market data category 416, spot bond trading bidding deal, covering the bid order and bid reservation.
+entrypoint typedef struct _OrderTickDataOfBidQuotationMessage {
+  UINT16BE channel_no;           // bytes 0 to 1
+  UINT64BE appl_seq_num;         // bytes 2 to 9, signed, read here as unsigned
+  UINT8 md_stream_id[3];         // bytes 10 to 12
+  UINT8 security_id[8];          // bytes 13 to 20
+  UINT8 security_id_source[4];   // bytes 21 to 24
+  UINT64BE price;                // bytes 25 to 32, signed, read here as unsigned
+  UINT64BE order_qty;            // bytes 33 to 40, signed, read here as unsigned
+  UINT8 side;                    // byte 41
+  UINT64BE transac_time;         // bytes 42 to 49, signed, read here as unsigned
+  UINT8 member_id[6];            // bytes 50 to 55
+  UINT8 investor_type[2];        // bytes 56 to 57
+  UINT8 investor_id[10];         // bytes 58 to 67
+  UINT8 investor_name[120];      // bytes 68 to 187
+  UINT8 trader_code[8];          // bytes 188 to 195
+  UINT8 settl_period;            // byte 196
+  UINT16BE settl_type;           // bytes 197 to 198
+  UINT8 memo[160];               // bytes 199 to 358
+  UINT8 secondary_order_id[16];  // bytes 359 to 374
+  UINT16BE bid_trans_type;       // bytes 375 to 376
+  UINT16BE bid_exec_inst_type;   // bytes 377 to 378
+  UINT64BE low_limit_price;      // bytes 379 to 386, signed, read here as unsigned
+  UINT64BE high_limit_price;     // bytes 387 to 394, signed, read here as unsigned
+  UINT64BE min_qty;              // bytes 395 to 402, signed, read here as unsigned
+  UINT32BE trade_date;           // bytes 403 to 406
+} OrderTickDataOfBidQuotationMessage;
+
+// ---- Transaction Tick Data In Call Auction Message: 66 bytes -----------------
+
+// Transaction tick carrying market data categories 011 for equities, funds and bonds in the call auction of the spot market, 021 pledge-style repo and 041 call auction in options. The sequence number of tick order and tick transaction data in the same channel is consecutive.
+entrypoint typedef struct _TransactionTickDataInCallAuctionMessage {
+  UINT16BE channel_no;          // bytes 0 to 1
+  UINT64BE appl_seq_num;        // bytes 2 to 9, signed, read here as unsigned
+  UINT8 md_stream_id[3];        // bytes 10 to 12
+  UINT64BE bid_appl_seq_num;    // bytes 13 to 20, signed, read here as unsigned
+  UINT64BE offer_appl_seq_num;  // bytes 21 to 28, signed, read here as unsigned
+  UINT8 security_id[8];         // bytes 29 to 36
+  UINT8 security_id_source[4];  // bytes 37 to 40
+  UINT64BE last_px;             // bytes 41 to 48, signed, read here as unsigned
+  UINT64BE last_qty;            // bytes 49 to 56, signed, read here as unsigned
+  UINT8 exec_type;              // byte 57
+  UINT64BE transac_time;        // bytes 58 to 65, signed, read here as unsigned
+} TransactionTickDataInCallAuctionMessage;
+
+// ---- Transaction Tick Data Of Negotiable Trade Message: 66 bytes -------------
+
+// Transaction tick carrying market data categories 051 indication of interest of negotiable trade and 052 quote of negotiable trade.
+entrypoint typedef struct _TransactionTickDataOfNegotiableTradeMessage {
+  UINT16BE channel_no;          // bytes 0 to 1
+  UINT64BE appl_seq_num;        // bytes 2 to 9, signed, read here as unsigned
+  UINT8 md_stream_id[3];        // bytes 10 to 12
+  UINT64BE bid_appl_seq_num;    // bytes 13 to 20, signed, read here as unsigned
+  UINT64BE offer_appl_seq_num;  // bytes 21 to 28, signed, read here as unsigned
+  UINT8 security_id[8];         // bytes 29 to 36
+  UINT8 security_id_source[4];  // bytes 37 to 40
+  UINT64BE last_px;             // bytes 41 to 48, signed, read here as unsigned
+  UINT64BE last_qty;            // bytes 49 to 56, signed, read here as unsigned
+  UINT8 exec_type;              // byte 57
+  UINT64BE transac_time;        // bytes 58 to 65, signed, read here as unsigned
+} TransactionTickDataOfNegotiableTradeMessage;
+
+// ---- Transaction Tick Data Of Security Lending Message: 66 bytes -------------
+
+// Transaction tick carrying market data category 071, security lending.
+entrypoint typedef struct _TransactionTickDataOfSecurityLendingMessage {
+  UINT16BE channel_no;          // bytes 0 to 1
+  UINT64BE appl_seq_num;        // bytes 2 to 9, signed, read here as unsigned
+  UINT8 md_stream_id[3];        // bytes 10 to 12
+  UINT64BE bid_appl_seq_num;    // bytes 13 to 20, signed, read here as unsigned
+  UINT64BE offer_appl_seq_num;  // bytes 21 to 28, signed, read here as unsigned
+  UINT8 security_id[8];         // bytes 29 to 36
+  UINT8 security_id_source[4];  // bytes 37 to 40
+  UINT64BE last_px;             // bytes 41 to 48, signed, read here as unsigned
+  UINT64BE last_qty;            // bytes 49 to 56, signed, read here as unsigned
+  UINT8 exec_type;              // byte 57
+  UINT64BE transac_time;        // bytes 58 to 65, signed, read here as unsigned
+} TransactionTickDataOfSecurityLendingMessage;
+
+// ---- Transaction Tick Data Of Bond General Pledged Repo Message: 66 bytes ----
+
+// Transaction tick carrying market data categories 021 bond general pledged repo matching deal and 411 spot bond trading matching deal.
+entrypoint typedef struct _TransactionTickDataOfBondGeneralPledgedRepoMessage {
+  UINT16BE channel_no;          // bytes 0 to 1
+  UINT64BE appl_seq_num;        // bytes 2 to 9, signed, read here as unsigned
+  UINT8 md_stream_id[3];        // bytes 10 to 12
+  UINT64BE bid_appl_seq_num;    // bytes 13 to 20, signed, read here as unsigned
+  UINT64BE offer_appl_seq_num;  // bytes 21 to 28, signed, read here as unsigned
+  UINT8 security_id[8];         // bytes 29 to 36
+  UINT8 security_id_source[4];  // bytes 37 to 40
+  UINT64BE last_px;             // bytes 41 to 48, signed, read here as unsigned
+  UINT64BE last_qty;            // bytes 49 to 56, signed, read here as unsigned
+  UINT8 exec_type;              // byte 57
+  UINT64BE transac_time;        // bytes 58 to 65, signed, read here as unsigned
+} TransactionTickDataOfBondGeneralPledgedRepoMessage;
+
+// ---- Transaction Tick Data Of Spot Bond Trading Quotation Message: 69 bytes ----
+
+// Transaction tick carrying market data categories 412 spot bond trading negotiated deal, 413 click deal, 414 inquiry deal and 417 large amount matching deal, for spot bond trading other than bid.
+entrypoint typedef struct _TransactionTickDataOfSpotBondTradingQuotationMessage {
+  UINT16BE channel_no;          // bytes 0 to 1
+  UINT64BE appl_seq_num;        // bytes 2 to 9, signed, read here as unsigned
+  UINT8 md_stream_id[3];        // bytes 10 to 12
+  UINT64BE bid_appl_seq_num;    // bytes 13 to 20, signed, read here as unsigned
+  UINT64BE offer_appl_seq_num;  // bytes 21 to 28, signed, read here as unsigned
+  UINT8 security_id[8];         // bytes 29 to 36
+  UINT8 security_id_source[4];  // bytes 37 to 40
+  UINT64BE last_px;             // bytes 41 to 48, signed, read here as unsigned
+  UINT64BE last_qty;            // bytes 49 to 56, signed, read here as unsigned
+  UINT8 exec_type;              // byte 57
+  UINT64BE transac_time;        // bytes 58 to 65, signed, read here as unsigned
+  UINT8 settl_period;           // byte 66
+  UINT16BE settl_type;          // bytes 67 to 68
+} TransactionTickDataOfSpotBondTradingQuotationMessage;
+
+// ---- Transaction Tick Data Of Bid Quotation Message: 95 bytes ----------------
+
+// Transaction tick carrying market data category 416, spot bond trading bidding deal.
+entrypoint typedef struct _TransactionTickDataOfBidQuotationMessage {
+  UINT16BE channel_no;           // bytes 0 to 1
+  UINT64BE appl_seq_num;         // bytes 2 to 9, signed, read here as unsigned
+  UINT8 md_stream_id[3];         // bytes 10 to 12
+  UINT64BE bid_appl_seq_num;     // bytes 13 to 20, signed, read here as unsigned
+  UINT64BE offer_appl_seq_num;   // bytes 21 to 28, signed, read here as unsigned
+  UINT8 security_id[8];          // bytes 29 to 36
+  UINT8 security_id_source[4];   // bytes 37 to 40
+  UINT64BE last_px;              // bytes 41 to 48, signed, read here as unsigned
+  UINT64BE last_qty;             // bytes 49 to 56, signed, read here as unsigned
+  UINT8 exec_type;               // byte 57
+  UINT64BE transac_time;         // bytes 58 to 65, signed, read here as unsigned
+  UINT8 settl_period;            // byte 66
+  UINT16BE settl_type;           // bytes 67 to 68
+  UINT8 secondary_order_id[16];  // bytes 69 to 84
+  UINT16BE bid_exec_inst_type;   // bytes 85 to 86
+  UINT64BE margin_price;         // bytes 87 to 94, signed, read here as unsigned
+} TransactionTickDataOfBidQuotationMessage;
+
+// ---- Message Tail: 4 bytes ---------------------------------------------------
+
+// Szse Mdgw Message Tail, defining the checksum of a message, transmitted without encryption
+entrypoint typedef struct _MessageTail {
+  UINT32BE checksum;  // bytes 0 to 3
+} MessageTail;
+

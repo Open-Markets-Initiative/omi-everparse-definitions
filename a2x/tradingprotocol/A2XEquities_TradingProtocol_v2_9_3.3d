@@ -1,0 +1,179 @@
+// A2X Markets A2X Binary Protocol
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out A2XEquities_TradingProtocol_v2_9_3.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - the dispatch that chooses a message by its type
+// - a field read in bits
+//
+// License: MIT No Attribution
+
+// ---- Message Header: 7 bytes -------------------------------------------------
+
+// A2X Atp message header
+entrypoint typedef struct _MessageHeader {
+  UINT16 length;      // bytes 0 to 1
+  UINT8 msg_type;     // byte 2
+  UINT32 msg_seq_no;  // bytes 3 to 6
+} MessageHeader;
+
+// ---- Login Message: 40 bytes -------------------------------------------------
+
+// The Login message is the initial message used to establish a trading session. It is also used to re-establish a session after a break.
+entrypoint typedef struct _LoginMessage {
+  UINT16 protocol_version;    // bytes 0 to 1
+  UINT8 sender_id[16];        // bytes 2 to 17
+  UINT8 password[16];         // bytes 18 to 33
+  UINT16 inactivity_timeout;  // bytes 34 to 35
+  UINT32 atp_seq_no;          // bytes 36 to 39
+} LoginMessage;
+
+// ---- Login Response Message: 5 bytes -----------------------------------------
+
+// The Login Response message is sent by A2X to acknowledge a Login request, and either accept or reject it.
+entrypoint typedef struct _LoginResponseMessage {
+  UINT8 result_code;     // byte 0
+  UINT32 client_seq_no;  // bytes 1 to 4
+} LoginResponseMessage;
+
+// ---- Logout Message: 33 bytes ------------------------------------------------
+
+// The Logout message is usually sent as a response to the Logout Request however it may also be sent by A2X in case of a low sequence number or other protocol violation, or for other reasons. The TCP/IP connection is closed immediately after this message has been sent.
+entrypoint typedef struct _LogoutMessage {
+  UINT8 logout_reason_code;  // byte 0
+  UINT8 reason_text[32];     // bytes 1 to 32
+} LogoutMessage;
+
+// ---- Order Add Message: 46 bytes ---------------------------------------------
+
+// The Add Order message is sent by the trading Member to enter an order for a particular security.
+entrypoint typedef struct _OrderAddMessage {
+  UINT32 security_id_long;  // bytes 0 to 3
+  UINT8 order_type;         // byte 4
+  UINT8 time_in_force;      // byte 5
+  UINT8 side;               // byte 6
+  UINT32 quantity;          // bytes 7 to 10
+  UINT64 price;             // bytes 11 to 18
+  UINT8 order_capacity;     // byte 19
+  UINT16 account;           // bytes 20 to 21
+  UINT64 user_tag;          // bytes 22 to 29
+  UINT8 reserved_16[16];    // bytes 30 to 45
+} OrderAddMessage;
+
+// ---- Order Add Extended Message: 54 bytes ------------------------------------
+
+// The Order Add Extended message is sent by the trading Member to enter an order for a particular security with additional attributes.
+entrypoint typedef struct _OrderAddExtendedMessage {
+  UINT32 security_id_long;  // bytes 0 to 3
+  UINT8 order_type;         // byte 4
+  UINT8 time_in_force;      // byte 5
+  UINT8 side;               // byte 6
+  UINT32 quantity;          // bytes 7 to 10
+  UINT64 price;             // bytes 11 to 18
+  UINT8 order_capacity;     // byte 19
+  UINT16 account;           // bytes 20 to 21
+  UINT64 user_tag;          // bytes 22 to 29
+  UINT8 reserved_16[16];    // bytes 30 to 45
+  UINT32 display_quantity;  // bytes 46 to 49
+  UINT32 min_qty;           // bytes 50 to 53
+} OrderAddExtendedMessage;
+
+// ---- Order Cancel Message: 28 bytes ------------------------------------------
+
+// The Order Cancel message is sent when a user wishes to cancel an open order.
+entrypoint typedef struct _OrderCancelMessage {
+  UINT32 order_ref;       // bytes 0 to 3
+  UINT64 user_tag;        // bytes 4 to 11
+  UINT8 reserved_16[16];  // bytes 12 to 27
+} OrderCancelMessage;
+
+// ---- Order Modify Message: 41 bytes ------------------------------------------
+
+// The Order Modify message is sent when a user wishes to modify an open order. Order quantity and/or limit price may be modified. Both values must be included, even if one of them is unchanged.
+entrypoint typedef struct _OrderModifyMessage {
+  UINT32 order_ref;       // bytes 0 to 3
+  UINT64 price;           // bytes 4 to 11
+  UINT32 quantity;        // bytes 12 to 15
+  UINT64 user_tag;        // bytes 16 to 23
+  UINT8 reserved_16[16];  // bytes 24 to 39
+  UINT8 order_capacity;   // byte 40
+} OrderModifyMessage;
+
+// ---- Order Modify Extended Message: 45 bytes ---------------------------------
+
+// The Order Modify Extended message is sent when a user wants to modify an open Order Add Extended. Order quantity and/or limit price and/or display quantity and/or minimum quantity may be modified. All values must be included, even if some are unchanged.
+entrypoint typedef struct _OrderModifyExtendedMessage {
+  UINT32 order_ref;         // bytes 0 to 3
+  UINT64 price;             // bytes 4 to 11
+  UINT32 quantity;          // bytes 12 to 15
+  UINT64 user_tag;          // bytes 16 to 23
+  UINT8 reserved_16[16];    // bytes 24 to 39
+  UINT8 order_capacity;     // byte 40
+  UINT32 display_quantity;  // bytes 41 to 44
+} OrderModifyExtendedMessage;
+
+// ---- Iceberg Order Refresh Message: 16 bytes ---------------------------------
+
+// A2X sends an Iceberg Order Refresh message to notify the Member when an iceberg order is refreshed from the non-displayed reserve quantity.
+entrypoint typedef struct _IcebergOrderRefreshMessage {
+  UINT32 order_ref;         // bytes 0 to 3
+  UINT32 orig_a2_x_ord_id;  // bytes 4 to 7
+  UINT32 new_a2_x_ord_id;   // bytes 8 to 11
+  UINT32 quantity;          // bytes 12 to 15
+} IcebergOrderRefreshMessage;
+
+// ---- Trade Capture Message: 48 bytes -----------------------------------------
+
+// A2X uses a Trade Capture Report message for the purpose of allowing members to submit Large in Scale (LS), Negotiated Benchmark Cross (NBC) and Matched Principal (MP) trades to the exchange.
+entrypoint typedef struct _TradeCaptureMessage {
+  UINT32 quantity;            // bytes 0 to 3
+  UINT64 price;               // bytes 4 to 11
+  UINT32 security_id_long;    // bytes 12 to 15
+  UINT8 trade_capture_type;   // byte 16
+  UINT8 reserved_1;           // byte 17
+  UINT64 user_tag;            // bytes 18 to 25
+  UINT8 reserved_8[8];        // bytes 26 to 33
+  UINT16 buy_account;         // bytes 34 to 35
+  UINT8 buy_order_capacity;   // byte 36
+  UINT8 reserved_long_2[8];   // bytes 37 to 44
+  UINT16 sell_account;        // bytes 45 to 46
+  UINT8 sell_order_capacity;  // byte 47
+} TradeCaptureMessage;
+
+// ---- Trade Message: 41 bytes -------------------------------------------------
+
+// The Trade message is published when an order executes. The Trade message is also used to communicate indicative trade reports at lock time for Market at Close orders. Note that the price and tradeRef values will be zero for indicative trade reports published when MaC orders are matched at lock time.
+entrypoint typedef struct _TradeMessage {
+  UINT32 order_ref;          // bytes 0 to 3
+  UINT32 quantity;           // bytes 4 to 7
+  UINT64 price;              // bytes 8 to 15
+  UINT8 side;                // byte 16
+  UINT32 trade_ref;          // bytes 17 to 20
+  UINT8 ccp_code;            // byte 21
+  UINT8 liq_indicator;       // byte 22
+  UINT16 security_id_short;  // bytes 23 to 24
+  UINT64 trade_timestamp;    // bytes 25 to 32
+  UINT64 user_tag;           // bytes 33 to 40
+} TradeMessage;
+
+// ---- Trade Bust Message: 29 bytes --------------------------------------------
+
+// If a trade is invalidated, a Trade Bust message is sent to notify the trading Member.
+entrypoint typedef struct _TradeBustMessage {
+  UINT32 order_ref;       // bytes 0 to 3
+  UINT32 quantity;        // bytes 4 to 7
+  UINT64 price;           // bytes 8 to 15
+  UINT8 side;             // byte 16
+  UINT32 trade_ref;       // bytes 17 to 20
+  UINT64 bust_timestamp;  // bytes 21 to 28
+} TradeBustMessage;
+

@@ -1,0 +1,387 @@
+// Chicago Board Options Exchange Futures Binary Order Entry
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out CfeFutures_BinaryOrderEntry_v1_1_31_Exchange.3d
+//
+// What this definition does not state, and the model does:
+// - a Reassemble rule
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Exchange Message Header: 12 bytes ---------------------------------------
+
+// Message header of a packet sent by the exchange
+entrypoint typedef struct _ExchangeMessageHeader {
+  UINT16 start_of_message;       // bytes 0 to 1
+  UINT16 message_length;         // bytes 2 to 3
+  UINT16 exchange_message_type;  // bytes 4 to 5
+  UINT8 matching_unit;           // byte 6
+  UINT8 reserved_field;          // byte 7
+  UINT32 sequence_number;        // bytes 8 to 11
+} ExchangeMessageHeader;
+
+// ---- Logout Response Message: 61 bytes ---------------------------------------
+
+// A Logout Response is usually sent in response to a Logout Request
+entrypoint typedef struct _LogoutResponseMessage {
+  UINT8 logout_reason;           // byte 0
+  UINT8 logout_reason_text[60];  // bytes 1 to 60
+} LogoutResponseMessage;
+
+// ---- Prevent Match: 3 bytes --------------------------------------------------
+
+entrypoint typedef struct _PreventMatch {
+  UINT8 mtp_modifier;      // byte 0
+  UINT8 unique_id_level;   // byte 1
+  UINT8 trading_group_id;  // byte 2
+} PreventMatch;
+
+// ---- Order Acknowledgement: 161 bytes ----------------------------------------
+
+// Order Acknowledgement messages are sent in response to a new order message
+entrypoint typedef struct _OrderAcknowledgement {
+  UINT64 transaction_time;         // bytes 0 to 7
+  UINT8 cl_ord_id[20];             // bytes 8 to 27
+  UINT64 order_id;                 // bytes 28 to 35
+  UINT8 side;                      // byte 36
+  UINT64 price;                    // bytes 37 to 44, signed, read here as unsigned
+  UINT8 ord_type;                  // byte 45
+  UINT8 time_in_force;             // byte 46
+  UINT32 min_qty;                  // bytes 47 to 50
+  UINT8 symbol[8];                 // bytes 51 to 58
+  UINT8 capacity;                  // byte 59
+  UINT8 account[16];               // bytes 60 to 75
+  UINT8 clearing_firm[4];          // bytes 76 to 79
+  UINT8 clearing_account[4];       // bytes 80 to 83
+  UINT32 order_qty;                // bytes 84 to 87
+  PreventMatch prevent_match;      // bytes 88 to 90
+  UINT32 maturity_date;            // bytes 91 to 94
+  UINT8 open_close;                // byte 95
+  UINT32 leaves_qty;               // bytes 96 to 99
+  UINT8 base_liquidity_indicator;  // byte 100
+  UINT64 expire_time;              // bytes 101 to 108
+  UINT8 sub_liquidity_indicator;   // byte 109
+  UINT64 stop_px;                  // bytes 110 to 117, signed, read here as unsigned
+  UINT32 cmta_number;              // bytes 118 to 121
+  UINT8 cti_code;                  // byte 122
+  UINT8 manual_order_indicator;    // byte 123
+  UINT8 oeo_id[18];                // bytes 124 to 141
+  UINT32 cum_qty;                  // bytes 142 to 145
+  UINT8 frequent_trader_id[6];     // bytes 146 to 151
+  UINT8 cust_order_handling_inst;  // byte 152
+  UINT64 request_received_time;    // bytes 153 to 160
+} OrderAcknowledgement;
+
+// ---- Order Rejected: 93 bytes ------------------------------------------------
+
+// Order Rejected messages are sent in response to a New Order which must be rejected
+entrypoint typedef struct _OrderRejected {
+  UINT64 transaction_time;    // bytes 0 to 7
+  UINT8 cl_ord_id[20];        // bytes 8 to 27
+  UINT8 clearing_firm[4];     // bytes 28 to 31
+  UINT8 order_reject_reason;  // byte 32
+  UINT8 text[60];             // bytes 33 to 92
+} OrderRejected;
+
+// ---- Order Modified: 101 bytes -----------------------------------------------
+
+// Order Modified messages are sent in response to a Modify Order to indicate that the orderhas been successfully modified
+entrypoint typedef struct _OrderModified {
+  UINT64 transaction_time;         // bytes 0 to 7
+  UINT8 cl_ord_id[20];             // bytes 8 to 27
+  UINT8 orig_cl_ord_id[20];        // bytes 28 to 47
+  UINT64 order_id;                 // bytes 48 to 55
+  UINT8 clearing_firm[4];          // bytes 56 to 59
+  UINT64 price;                    // bytes 60 to 67, signed, read here as unsigned
+  UINT8 ord_type;                  // byte 68
+  UINT32 order_qty;                // bytes 69 to 72
+  UINT32 leaves_qty;               // bytes 73 to 76
+  UINT8 base_liquidity_indicator;  // byte 77
+  UINT64 stop_px;                  // bytes 78 to 85, signed, read here as unsigned
+  UINT8 frequent_trader_id[6];     // bytes 86 to 91
+  UINT8 cust_order_handling_inst;  // byte 92
+  UINT64 request_received_time;    // bytes 93 to 100
+} OrderModified;
+
+// ---- Modify Rejected: 113 bytes ----------------------------------------------
+
+// Modify Rejected messages are sent in response to a Modify Order for an order which cannot be modified
+entrypoint typedef struct _ModifyRejected {
+  UINT64 transaction_time;     // bytes 0 to 7
+  UINT8 cl_ord_id[20];         // bytes 8 to 27
+  UINT8 orig_cl_ord_id[20];    // bytes 28 to 47
+  UINT8 clearing_firm[4];      // bytes 48 to 51
+  UINT8 modify_reject_reason;  // byte 52
+  UINT8 text[60];              // bytes 53 to 112
+} ModifyRejected;
+
+// ---- Order Execution: 91 bytes -----------------------------------------------
+
+// AnOrder Executionis sent for each fill on an order
+entrypoint typedef struct _OrderExecution {
+  UINT64 transaction_time;         // bytes 0 to 7
+  UINT8 cl_ord_id[20];             // bytes 8 to 27
+  UINT64 exec_id;                  // bytes 28 to 35
+  UINT32 last_shares;              // bytes 36 to 39
+  UINT64 last_px;                  // bytes 40 to 47, signed, read here as unsigned
+  UINT32 leaves_qty;               // bytes 48 to 51
+  UINT8 base_liquidity_indicator;  // byte 52
+  UINT8 sub_liquidity_indicator;   // byte 53
+  UINT8 side;                      // byte 54
+  UINT8 symbol[8];                 // bytes 55 to 62
+  UINT8 clearing_firm[4];          // bytes 63 to 66
+  UINT32 maturity_date;            // bytes 67 to 70
+  UINT8 fee_code[2];               // bytes 71 to 72
+  UINT32 trade_date;               // bytes 73 to 76
+  UINT32 clearing_size;            // bytes 77 to 80
+  UINT8 pending_status;            // byte 81
+  UINT8 multileg_reporting_type;   // byte 82
+  UINT64 secondary_exec_id;        // bytes 83 to 90
+} OrderExecution;
+
+// ---- Order Execution Option: 103 bytes ---------------------------------------
+
+// An Order Execution is sent for each fill on an order
+entrypoint typedef struct _OrderExecutionOption {
+  UINT64 transaction_time;         // bytes 0 to 7
+  UINT8 cl_ord_id[20];             // bytes 8 to 27
+  UINT64 exec_id;                  // bytes 28 to 35
+  UINT32 last_shares;              // bytes 36 to 39
+  UINT64 last_px;                  // bytes 40 to 47, signed, read here as unsigned
+  UINT32 leaves_qty;               // bytes 48 to 51
+  UINT8 base_liquidity_indicator;  // byte 52
+  UINT8 sub_liquidity_indicator;   // byte 53
+  UINT8 side;                      // byte 54
+  UINT8 symbol[8];                 // bytes 55 to 62
+  UINT8 clearing_firm[4];          // bytes 63 to 66
+  UINT8 security_desc[16];         // bytes 67 to 82
+  UINT8 fee_code[2];               // bytes 83 to 84
+  UINT32 trade_date;               // bytes 85 to 88
+  UINT32 clearing_size;            // bytes 89 to 92
+  UINT8 pending_status;            // byte 93
+  UINT8 multileg_reporting_type;   // byte 94
+  UINT64 secondary_exec_id;        // bytes 95 to 102
+} OrderExecutionOption;
+
+// ---- Order Cancelled: 41 bytes -----------------------------------------------
+
+// Order Cancelled message
+entrypoint typedef struct _OrderCancelled {
+  UINT64 transaction_time;       // bytes 0 to 7
+  UINT8 cl_ord_id[20];           // bytes 8 to 27
+  UINT8 clearing_firm[4];        // bytes 28 to 31
+  UINT8 cancel_reason;           // byte 32
+  UINT64 request_received_time;  // bytes 33 to 40
+} OrderCancelled;
+
+// ---- Cancel Rejected: 93 bytes -----------------------------------------------
+
+// A Cancel Rejected message is sent in response to a Cancel Order message to indicate that the cancellation cannot occur
+entrypoint typedef struct _CancelRejected {
+  UINT64 transaction_time;     // bytes 0 to 7
+  UINT8 cl_ord_id[20];         // bytes 8 to 27
+  UINT8 clearing_firm[4];      // bytes 28 to 31
+  UINT8 cancel_reject_reason;  // byte 32
+  UINT8 text[60];              // bytes 33 to 92
+} CancelRejected;
+
+// ---- Mass Cancel Acknowledgement: 40 bytes -----------------------------------
+
+// A Mass Cancel Acknowledgment is an unsequenced message sent when a Cancel Order or Purge Orders message requesting a mass cancellation has completed cancelling all individual orders
+entrypoint typedef struct _MassCancelAcknowledgement {
+  UINT64 transaction_time;       // bytes 0 to 7
+  UINT8 mass_cancel_id[20];      // bytes 8 to 27
+  UINT32 cancelled_order_count;  // bytes 28 to 31
+  UINT64 request_received_time;  // bytes 32 to 39
+} MassCancelAcknowledgement;
+
+// ---- Mass Cancel Rejected: 89 bytes ------------------------------------------
+
+// A Mass Cancel Rejected message is sent in response to a Mass Cancel Order message to indicate that the mass cancellation cannot occur
+entrypoint typedef struct _MassCancelRejected {
+  UINT64 transaction_time;          // bytes 0 to 7
+  UINT8 mass_cancel_id[20];         // bytes 8 to 27
+  UINT8 mass_cancel_reject_reason;  // byte 28
+  UINT8 text[60];                   // bytes 29 to 88
+} MassCancelRejected;
+
+// ---- Purge Acknowledgement: 40 bytes -----------------------------------------
+
+// A Purge Acknowledgment is an unsequenced message sent when a Purge Orders message requesting an order purge has completed cancelling all individual orders
+entrypoint typedef struct _PurgeAcknowledgement {
+  UINT64 transaction_time;       // bytes 0 to 7
+  UINT8 mass_cancel_id[20];      // bytes 8 to 27
+  UINT32 cancelled_order_count;  // bytes 28 to 31
+  UINT64 request_received_time;  // bytes 32 to 39
+} PurgeAcknowledgement;
+
+// ---- Purge Rejected: 89 bytes ------------------------------------------------
+
+// A Purge Rejected message is sent in response to a Purge Orders message to indicate that the mass cancellation cannot occur
+entrypoint typedef struct _PurgeRejected {
+  UINT64 transaction_time;    // bytes 0 to 7
+  UINT8 mass_cancel_id[20];   // bytes 8 to 27
+  UINT8 purge_reject_reason;  // byte 28
+  UINT8 text[60];             // bytes 29 to 88
+} PurgeRejected;
+
+// ---- Trade Cancel Correct: 92 bytes ------------------------------------------
+
+// Used to provide notification that a trade has been cancelled or corrected
+entrypoint typedef struct _TradeCancelCorrect {
+  UINT64 transaction_time;         // bytes 0 to 7
+  UINT8 cl_ord_id[20];             // bytes 8 to 27
+  UINT64 exec_ref_id;              // bytes 28 to 35
+  UINT8 side;                      // byte 36
+  UINT8 base_liquidity_indicator;  // byte 37
+  UINT8 clearing_firm[4];          // bytes 38 to 41
+  UINT8 clearing_account[4];       // bytes 42 to 45
+  UINT32 last_shares;              // bytes 46 to 49
+  UINT64 last_px;                  // bytes 50 to 57, signed, read here as unsigned
+  UINT64 corrected_price;          // bytes 58 to 65, signed, read here as unsigned
+  UINT64 orig_time;                // bytes 66 to 73
+  UINT8 symbol[8];                 // bytes 74 to 81
+  UINT8 capacity;                  // byte 82
+  UINT32 maturity_date;            // bytes 83 to 86
+  UINT8 open_close;                // byte 87
+  UINT32 cmta_number;              // bytes 88 to 91
+} TradeCancelCorrect;
+
+// ---- Trade Cancel Correct Option: 104 bytes ----------------------------------
+
+// Used to provide notification that an option trade has been cancelled or corrected
+entrypoint typedef struct _TradeCancelCorrectOption {
+  UINT64 transaction_time;         // bytes 0 to 7
+  UINT8 cl_ord_id[20];             // bytes 8 to 27
+  UINT64 exec_ref_id;              // bytes 28 to 35
+  UINT8 side;                      // byte 36
+  UINT8 base_liquidity_indicator;  // byte 37
+  UINT8 clearing_firm[4];          // bytes 38 to 41
+  UINT8 clearing_account[4];       // bytes 42 to 45
+  UINT32 last_shares;              // bytes 46 to 49
+  UINT64 last_px;                  // bytes 50 to 57, signed, read here as unsigned
+  UINT64 corrected_price;          // bytes 58 to 65, signed, read here as unsigned
+  UINT64 orig_time;                // bytes 66 to 73
+  UINT8 symbol[8];                 // bytes 74 to 81
+  UINT8 capacity;                  // byte 82
+  UINT8 security_desc[16];         // bytes 83 to 98
+  UINT8 open_close;                // byte 99
+  UINT32 cmta_number;              // bytes 100 to 103
+} TradeCancelCorrectOption;
+
+// ---- Tas Restatement: 104 bytes ----------------------------------------------
+
+// A Tas Restatement is sent post-settlement time for each TAS execution during the associated business day to communicate the updated Price and Symbol associated with the cleared execution
+entrypoint typedef struct _TasRestatement {
+  UINT64 transaction_time;        // bytes 0 to 7
+  UINT8 cl_ord_id[20];            // bytes 8 to 27
+  UINT8 clearing_firm[4];         // bytes 28 to 31
+  UINT64 exec_id;                 // bytes 32 to 39
+  UINT8 side;                     // byte 40
+  UINT64 price;                   // bytes 41 to 48, signed, read here as unsigned
+  UINT8 symbol[8];                // bytes 49 to 56
+  UINT32 maturity_date;           // bytes 57 to 60
+  UINT32 last_shares;             // bytes 61 to 64
+  UINT64 last_px;                 // bytes 65 to 72, signed, read here as unsigned
+  UINT8 fee_code[2];              // bytes 73 to 74
+  UINT32 trade_date;              // bytes 75 to 78
+  UINT64 clearing_price;          // bytes 79 to 86, signed, read here as unsigned
+  UINT8 clearing_symbol[8];       // bytes 87 to 94
+  UINT8 multileg_reporting_type;  // byte 95
+  UINT64 secondary_exec_id;       // bytes 96 to 103
+} TasRestatement;
+
+// ---- Quote Update Rejected: 25 bytes -----------------------------------------
+
+// Quote Update Rejected messages are sent in response to a Quote Update or Quote Update Option message when the entire quote block is rejected by the order handler
+entrypoint typedef struct _QuoteUpdateRejected {
+  UINT64 transaction_time;    // bytes 0 to 7
+  UINT8 quote_update_id[16];  // bytes 8 to 23
+  UINT8 quote_reject_reason;  // byte 24
+} QuoteUpdateRejected;
+
+// ---- Quote Restated: 52 bytes ------------------------------------------------
+
+// Quote Restatedmessages are sent to inform the TPH that an order has been asynchronously modified for some reason by CFE
+entrypoint typedef struct _QuoteRestated {
+  UINT64 transaction_time;    // bytes 0 to 7
+  UINT8 quote_update_id[16];  // bytes 8 to 23
+  UINT64 order_id;            // bytes 24 to 31
+  UINT32 leaves_qty;          // bytes 32 to 35
+  UINT64 working_price;       // bytes 36 to 43, signed, read here as unsigned
+  UINT8 quote_symbol[6];      // bytes 44 to 49
+  UINT8 side;                 // byte 50
+  UINT8 restatement_reason;   // byte 51
+} QuoteRestated;
+
+// ---- Quote Execution: 71 bytes -----------------------------------------------
+
+// A Quote Execution message is used to indicate an execution has occurred on a resting quote
+entrypoint typedef struct _QuoteExecution {
+  UINT64 transaction_time;         // bytes 0 to 7
+  UINT8 quote_update_id[16];       // bytes 8 to 23
+  UINT64 order_id;                 // bytes 24 to 31
+  UINT64 exec_id;                  // bytes 32 to 39
+  UINT8 quote_symbol[6];           // bytes 40 to 45
+  UINT8 clearing_firm[4];          // bytes 46 to 49
+  UINT32 last_shares;              // bytes 50 to 53
+  UINT64 last_px;                  // bytes 54 to 61, signed, read here as unsigned
+  UINT32 leaves_qty;               // bytes 62 to 65
+  UINT8 side;                      // byte 66
+  UINT8 base_liquidity_indicator;  // byte 67
+  UINT8 sub_liquidity_indicator;   // byte 68
+  UINT8 fee_code[2];               // bytes 69 to 70
+} QuoteExecution;
+
+// ---- Quote Cancelled: 40 bytes -----------------------------------------------
+
+// A Quote Cancelled message will be sent to indicate an unsolicited cancellation of a quote entered with a Quote Update message
+entrypoint typedef struct _QuoteCancelled {
+  UINT64 transaction_time;    // bytes 0 to 7
+  UINT8 quote_update_id[16];  // bytes 8 to 23
+  UINT64 order_id;            // bytes 24 to 31
+  UINT8 quote_symbol[6];      // bytes 32 to 37
+  UINT8 side;                 // byte 38
+  UINT8 cancel_reason;        // byte 39
+} QuoteCancelled;
+
+// ---- Tas Quote Restatement: 54 bytes -----------------------------------------
+
+// A TAS Quote Restatement is sent post-settlement time for each TAS quote execution during the associated business day to communicate the updated Price and Symbol associated with the cleared execution
+entrypoint typedef struct _TasQuoteRestatement {
+  UINT64 transaction_time;    // bytes 0 to 7
+  UINT8 quote_update_id[16];  // bytes 8 to 23
+  UINT64 exec_id;             // bytes 24 to 31
+  UINT8 quote_symbol[6];      // bytes 32 to 37
+  UINT8 clearing_symbol[8];   // bytes 38 to 45
+  UINT64 clearing_price;      // bytes 46 to 53, signed, read here as unsigned
+} TasQuoteRestatement;
+
+// ---- Reset Risk Acknowledgement: 25 bytes ------------------------------------
+
+// Response to a Reset Risk request
+entrypoint typedef struct _ResetRiskAcknowledgement {
+  UINT8 risk_status_id[16];      // bytes 0 to 15
+  UINT8 risk_reset_result;       // byte 16
+  UINT64 request_received_time;  // bytes 17 to 24
+} ResetRiskAcknowledgement;
+
+// ---- New Complex Instrument Rejected Option: 93 bytes ------------------------
+
+// The New Complex Instrument Rejected indicates that a requested complex strategy has been rejected
+entrypoint typedef struct _NewComplexInstrumentRejectedOption {
+  UINT64 transaction_time;                 // bytes 0 to 7
+  UINT8 cl_ord_id[20];                     // bytes 8 to 27
+  UINT8 clearing_firm[4];                  // bytes 28 to 31
+  UINT8 complex_instrument_reject_reason;  // byte 32
+  UINT8 text[60];                          // bytes 33 to 92
+} NewComplexInstrumentRejectedOption;
+

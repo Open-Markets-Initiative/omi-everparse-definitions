@@ -1,0 +1,131 @@
+// Currenex Executable Streaming Prices
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out CurrenexForex_Esp_v9.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+//
+// License: MIT No Attribution
+
+// ---- Message Header: 9 bytes -------------------------------------------------
+
+// Currenex Itch Market Data Message Header
+entrypoint typedef struct _MessageHeader {
+  UINT32BE sequence_number;  // bytes 0 to 3
+  UINT32BE timestamp;        // bytes 4 to 7
+  UINT8 message_type;        // byte 8
+} MessageHeader;
+
+// ---- Logon: 44 bytes ---------------------------------------------------------
+
+// A MP initiates a session by submitting a Logon message to Currenex
+entrypoint typedef struct _Logon {
+  UINT8 user_id[20];    // bytes 0 to 19
+  UINT8 password[20];   // bytes 20 to 39
+  UINT32BE session_id;  // bytes 40 to 43, signed, read here as unsigned
+} Logon;
+
+// ---- Logout: 27 bytes --------------------------------------------------------
+
+// Currenex or a MP can terminate a session by sending a Logout message
+entrypoint typedef struct _Logout {
+  UINT8 user_id[20];    // bytes 0 to 19
+  UINT32BE session_id;  // bytes 20 to 23, signed, read here as unsigned
+  UINT8 reason[3];      // bytes 24 to 26
+} Logout;
+
+// ---- Heartbeat: 4 bytes ------------------------------------------------------
+
+// To ensure session integrity, Currenex sends a heartbeat message every fifteen seconds
+entrypoint typedef struct _Heartbeat {
+  UINT32BE session_id;  // bytes 0 to 3, signed, read here as unsigned
+} Heartbeat;
+
+// ---- Instrument Info: 35 bytes -----------------------------------------------
+
+// Included in the InstrumentInfo message is the InstrumentType, a free form instrument definition, and the InstrumentIndex used to request quotes and manage price updates
+entrypoint typedef struct _InstrumentInfo {
+  UINT32BE session_id;        // bytes 0 to 3, signed, read here as unsigned
+  UINT16BE instrument_index;  // bytes 4 to 5, signed, read here as unsigned
+  UINT8 instrument_type;      // byte 6
+  UINT8 instrument_id[20];    // bytes 7 to 26
+  UINT64BE settlement_date;   // bytes 27 to 34, signed, read here as unsigned
+} InstrumentInfo;
+
+// ---- Instrument Info Ack: 6 bytes --------------------------------------------
+
+// A MP should respond to each received InstrumentInfo message with an InstrumentInfoAck message
+entrypoint typedef struct _InstrumentInfoAck {
+  UINT32BE session_id;        // bytes 0 to 3, signed, read here as unsigned
+  UINT16BE instrument_index;  // bytes 4 to 5, signed, read here as unsigned
+} InstrumentInfoAck;
+
+// ---- Subscription Request: 8 bytes -------------------------------------------
+
+// Currenex will stream ESP messages to a MP once it receives a SubscriptionRequest message for the pair
+entrypoint typedef struct _SubscriptionRequest {
+  UINT32BE session_id;        // bytes 0 to 3, signed, read here as unsigned
+  UINT8 subscription_type;    // byte 4
+  UINT16BE instrument_index;  // bytes 5 to 6, signed, read here as unsigned
+  UINT8 subscribe_to_ticker;  // byte 7
+} SubscriptionRequest;
+
+// ---- Subscription Reply: 57 bytes --------------------------------------------
+
+// Currenex responds to a SubscriptionRequest with a SubscriptionReply message
+entrypoint typedef struct _SubscriptionReply {
+  UINT32BE session_id;        // bytes 0 to 3, signed, read here as unsigned
+  UINT16BE instrument_index;  // bytes 4 to 5, signed, read here as unsigned
+  UINT8 reply_type;           // byte 6
+  UINT8 reject_reason[50];    // bytes 7 to 56
+} SubscriptionReply;
+
+// ---- Price Message: 29 bytes -------------------------------------------------
+
+// Price Message
+entrypoint typedef struct _PriceMessage {
+  UINT16BE instrument_index;  // bytes 0 to 1, signed, read here as unsigned
+  UINT8 price_id;             // byte 2, signed, read here as unsigned
+  UINT8 side;                 // byte 3
+  UINT64BE max_amount;        // bytes 4 to 11, signed, read here as unsigned
+  UINT64BE min_amount;        // bytes 12 to 19, signed, read here as unsigned
+  UINT32BE price;             // bytes 20 to 23, signed, read here as unsigned
+  UINT8 attributed;           // byte 24
+  UINT8 price_provider[4];    // bytes 25 to 28
+} PriceMessage;
+
+// ---- Price Cancel Message: 3 bytes -------------------------------------------
+
+// Price Cancel
+entrypoint typedef struct _PriceCancelMessage {
+  UINT16BE instrument_index;  // bytes 0 to 1, signed, read here as unsigned
+  UINT8 price_id;             // byte 2, signed, read here as unsigned
+} PriceCancelMessage;
+
+// ---- Trade Ticker Message: 15 bytes ------------------------------------------
+
+// A MP can subscribe to TradeTicker messages by setting SubscribeToTicker=0 in the SubscriptionRequest message
+entrypoint typedef struct _TradeTickerMessage {
+  UINT16BE instrument_index;  // bytes 0 to 1, signed, read here as unsigned
+  UINT32BE rate;              // bytes 2 to 5, signed, read here as unsigned
+  UINT8 ticker_type;          // byte 6
+  UINT64BE transact_time;     // bytes 7 to 14, signed, read here as unsigned
+} TradeTickerMessage;
+
+// ---- Reject Message: 55 bytes ------------------------------------------------
+
+// Included in the InstrumentInfo message is the InstrumentType, a free form instrument definition, and the InstrumentIndex used to request quotes and manage price updates
+entrypoint typedef struct _RejectMessage {
+  UINT32BE session_id;      // bytes 0 to 3, signed, read here as unsigned
+  UINT8 reject_msg_type;    // byte 4
+  UINT8 reject_reason[50];  // bytes 5 to 54
+} RejectMessage;
+

@@ -1,0 +1,187 @@
+// National Association of Securities Dealers Automated Quotations (Nasdaq) Ouch to Trade Options
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out NtxOptions_Otto_v2_2_Client.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a length prefix framing what follows
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Client Packet Header: 3 bytes -------------------------------------------
+
+// Packet header of a packet sent by the client
+entrypoint typedef struct _ClientPacketHeader {
+  UINT16BE packet_length;    // bytes 0 to 1
+  UINT8 client_packet_type;  // byte 2
+} ClientPacketHeader;
+
+// ---- Login Request Packet: 46 bytes ------------------------------------------
+
+// The SoupBinTCP client must send a Login Request Packet immediately upon establishing a new TCP/IP socket connection to the server
+entrypoint typedef struct _LoginRequestPacket {
+  UINT8 username[6];                    // bytes 0 to 5
+  UINT8 password[10];                   // bytes 6 to 15
+  UINT8 requested_session[10];          // bytes 16 to 25
+  UINT8 requested_sequence_number[20];  // bytes 26 to 45
+} LoginRequestPacket;
+
+// ---- New Order Long Form Message: 95 bytes -----------------------------------
+
+// Long form of the New Order request provides full flexibility of configuring order attributes:
+entrypoint typedef struct _NewOrderLongFormMessage {
+  UINT8 firm_id[4];               // bytes 0 to 3
+  UINT32BE instrument_id;         // bytes 4 to 7
+  UINT8 cl_ord_id[16];            // bytes 8 to 23
+  UINT32BE cmta;                  // bytes 24 to 27
+  UINT8 clearing_account[4];      // bytes 28 to 31
+  UINT32BE occ_account;           // bytes 32 to 35
+  UINT8 cust_acct[10];            // bytes 36 to 45
+  UINT8 preferred_party[3];       // bytes 46 to 48
+  UINT8 alo_inst;                 // byte 49
+  UINT8 iso;                      // byte 50
+  UINT8 side;                     // byte 51
+  UINT8 order_type;               // byte 52
+  UINT64BE price;                 // bytes 53 to 60, signed, read here as unsigned
+  UINT32BE quantity;              // bytes 61 to 64
+  UINT32BE min_qty;               // bytes 65 to 68
+  UINT8 tif;                      // byte 69
+  UINT8 capacity;                 // byte 70
+  UINT8 auction_type;             // byte 71
+  UINT32BE auction_id;            // bytes 72 to 75
+  UINT8 flash_inst;               // byte 76
+  UINT8 disclosure_mask;          // byte 77
+  UINT8 price_protection;         // byte 78
+  UINT16BE display_qty;           // bytes 79 to 80
+  UINT8 display_when;             // byte 81
+  UINT8 display_method;           // byte 82
+  UINT16BE display_low_qty;       // bytes 83 to 84
+  UINT16BE display_high_qty;      // bytes 85 to 86
+  UINT16BE position_effect_mask;  // bytes 87 to 88
+  UINT8 stock_leg_short_sale;     // byte 89
+  UINT8 stock_leg_mpid[4];        // bytes 90 to 93
+  UINT8 persist_inst;             // byte 94
+} NewOrderLongFormMessage;
+
+// ---- New Order Short Form Message: 48 bytes ----------------------------------
+
+// Short format of the New Order request is a compact message (less than 50 bytes) with limited flexibility:
+entrypoint typedef struct _NewOrderShortFormMessage {
+  UINT8 firm_id[4];               // bytes 0 to 3
+  UINT32BE instrument_id;         // bytes 4 to 7
+  UINT8 cl_ord_id[16];            // bytes 8 to 23
+  UINT8 alo_inst;                 // byte 24
+  UINT8 iso;                      // byte 25
+  UINT8 side;                     // byte 26
+  UINT8 order_type;               // byte 27
+  UINT64BE price;                 // bytes 28 to 35, signed, read here as unsigned
+  UINT16BE quantity_short;        // bytes 36 to 37
+  UINT8 tif;                      // byte 38
+  UINT8 capacity;                 // byte 39
+  UINT8 auction_type;             // byte 40
+  UINT32BE auction_id;            // bytes 41 to 44
+  UINT8 price_protection;         // byte 45
+  UINT16BE position_effect_mask;  // bytes 46 to 47
+} NewOrderShortFormMessage;
+
+// ---- Replace Order Message: 37 bytes -----------------------------------------
+
+// Replace Order message is used to modify an existing order for both simple and complex instruments.
+entrypoint typedef struct _ReplaceOrderMessage {
+  UINT8 firm_id[4];          // bytes 0 to 3
+  UINT8 orig_cl_ord_id[16];  // bytes 4 to 19
+  UINT32BE quantity;         // bytes 20 to 23
+  UINT8 order_type;          // byte 24
+  UINT8 tif;                 // byte 25
+  UINT8 cust_acct[10];       // bytes 26 to 35
+  UINT8 price_protection;    // byte 36
+} ReplaceOrderMessage;
+
+// ---- Cancel Order Message: 20 bytes ------------------------------------------
+
+// The order to be deleted is identified by the ClOrdId field. If the order cannot be deleted, or cannot be found, the request is rejected.
+entrypoint typedef struct _CancelOrderMessage {
+  UINT8 firm_id[4];     // bytes 0 to 3
+  UINT8 cl_ord_id[16];  // bytes 4 to 19
+} CancelOrderMessage;
+
+// ---- Mass Cancel Message: 41 bytes -------------------------------------------
+
+// This message is used to mass-delete multiple open orders based on the specified Scope. - If message contains invalid fields request is rejected.
+entrypoint typedef struct _MassCancelMessage {
+  UINT8 firm_id[4];             // bytes 0 to 3
+  UINT8 cl_request_id[16];      // bytes 4 to 19
+  UINT8 instrument_type;        // byte 20
+  UINT8 scope;                  // byte 21
+  UINT16BE product_id;          // bytes 22 to 23
+  UINT32BE instrument_id;       // bytes 24 to 27
+  UINT8 underlying_symbol[13];  // bytes 28 to 40
+} MassCancelMessage;
+
+// ---- New Cross Order Message: 140 bytes --------------------------------------
+
+// Cross Order message allows specifying two opposite sides to trade against each other. The primary side of the order is exposed in an auction if CrossType is set to A (Auction).
+entrypoint typedef struct _NewCrossOrderMessage {
+  UINT8 firm_id[4];                       // bytes 0 to 3
+  UINT32BE instrument_id;                 // bytes 4 to 7
+  UINT8 cross_type;                       // byte 8
+  UINT8 auction_type;                     // byte 9
+  UINT8 auction_alloc_pct;                // byte 10
+  UINT8 side;                             // byte 11
+  UINT8 iso;                              // byte 12
+  UINT8 price_protection;                 // byte 13
+  UINT64BE effective_time;                // bytes 14 to 21
+  UINT8 disclosure_mask;                  // byte 22
+  UINT8 primary_cl_ord_id[16];            // bytes 23 to 38
+  UINT32BE primary_cmta;                  // bytes 39 to 42
+  UINT8 primary_clearing_account[4];      // bytes 43 to 46
+  UINT32BE primary_occ_account;           // bytes 47 to 50
+  UINT8 primary_cust_acct[10];            // bytes 51 to 60
+  UINT64BE primary_price;                 // bytes 61 to 68, signed, read here as unsigned
+  UINT32BE primary_quantity;              // bytes 69 to 72
+  UINT8 primary_capacity;                 // byte 73
+  UINT16BE primary_position_effect_mask;  // bytes 74 to 75
+  UINT8 primary_stock_leg_short_sale;     // byte 76
+  UINT8 primary_stock_leg_mpid[4];        // bytes 77 to 80
+  UINT8 contra_cl_ord_id[16];             // bytes 81 to 96
+  UINT32BE contra_cmta;                   // bytes 97 to 100
+  UINT8 contra_clearing_account[4];       // bytes 101 to 104
+  UINT32BE contra_occ_account;            // bytes 105 to 108
+  UINT8 contra_cust_acct[10];             // bytes 109 to 118
+  UINT8 contra_order_type;                // byte 119
+  UINT64BE contra_price;                  // bytes 120 to 127, signed, read here as unsigned
+  UINT32BE contra_quantity;               // bytes 128 to 131
+  UINT8 contra_capacity;                  // byte 132
+  UINT16BE contra_position_effect_mask;   // bytes 133 to 134
+  UINT8 contra_stock_leg_short_sale;      // byte 135
+  UINT8 contra_stock_leg_mpid[4];         // bytes 136 to 139
+} NewCrossOrderMessage;
+
+// ---- Member Kill Switch Request Message: 25 bytes ----------------------------
+
+// The Member Kill Switch Request is used to block ability to enter new orders, alter existing orders, delete orders, and create complex instruments on NOM, ISE, GEMX and MRX.
+entrypoint typedef struct _MemberKillSwitchRequestMessage {
+  UINT8 firm_id[4];         // bytes 0 to 3
+  UINT8 cl_request_id[16];  // bytes 4 to 19
+  UINT8 target_firm_id[4];  // bytes 20 to 23
+  UINT8 kill_action;        // byte 24
+} MemberKillSwitchRequestMessage;
+
+// ---- Subscription Request Message: 36 bytes ----------------------------------
+
+// OTTO protocol specifies a number of notification message types that can be sent to the client optionally.
+entrypoint typedef struct _SubscriptionRequestMessage {
+  UINT8 firm_id[4];         // bytes 0 to 3
+  UINT8 cl_request_id[16];  // bytes 4 to 19
+  UINT8 subscription[16];   // bytes 20 to 35
+} SubscriptionRequestMessage;
+

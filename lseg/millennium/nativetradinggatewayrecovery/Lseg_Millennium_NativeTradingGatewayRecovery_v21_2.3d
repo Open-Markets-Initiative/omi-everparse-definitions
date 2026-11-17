@@ -1,0 +1,186 @@
+// London Stock Exchange Native Trading Gateway Recovery
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out Lseg_Millennium_NativeTradingGatewayRecovery_v21_2.3d
+//
+// What this definition does not state, and the model does:
+// - a length prefix framing what follows
+// - a field read in bits
+//
+// License: MIT No Attribution
+
+// ---- Message Header: 4 bytes -------------------------------------------------
+
+// Native Trading Gateway Message Header
+entrypoint typedef struct _MessageHeader {
+  UINT8 start_of_message;  // byte 0, signed, read here as unsigned
+  UINT16 message_length;   // bytes 1 to 2, signed, read here as unsigned
+  UINT8 message_type;      // byte 3
+} MessageHeader;
+
+// ---- Logon Message: 76 bytes -------------------------------------------------
+
+// Allows the client and server to establish a session.
+entrypoint typedef struct _LogonMessage {
+  UINT8 user_name[25];     // bytes 0 to 24
+  UINT8 password[25];      // bytes 25 to 49
+  UINT8 new_password[25];  // bytes 50 to 74
+  UINT8 message_version;   // byte 75
+} LogonMessage;
+
+// ---- Logon Reply Message: 34 bytes -------------------------------------------
+
+// Allows the server to acknowledge a client's Logon.
+entrypoint typedef struct _LogonReplyMessage {
+  UINT32 reject_code;                   // bytes 0 to 3, signed, read here as unsigned
+  UINT8 password_expiry_day_count[30];  // bytes 4 to 33
+} LogonReplyMessage;
+
+// ---- Logout Message: 20 bytes ------------------------------------------------
+
+// Allows the client and server to terminate a session.
+entrypoint typedef struct _LogoutMessage {
+  UINT8 reason[20];  // bytes 0 to 19
+} LogoutMessage;
+
+// ---- Missed Message Request Message: 5 bytes ---------------------------------
+
+// Allows the client to subscribe to missed messages through the Recovery Channel.
+entrypoint typedef struct _MissedMessageRequestMessage {
+  UINT8 app_id;             // byte 0
+  UINT32 last_msg_seq_num;  // bytes 1 to 4, signed, read here as unsigned
+} MissedMessageRequestMessage;
+
+// ---- Missed Message Request Ack Message: 1 byte ------------------------------
+
+// Allows the server to acknowledge a client's Missed Message Request.
+entrypoint typedef struct _MissedMessageRequestAckMessage {
+  UINT8 missed_message_request_ack_response_type;  // byte 0
+} MissedMessageRequestAckMessage;
+
+// ---- Missed Message Report Message: 1 byte -----------------------------------
+
+// Allows the server to communicate the result of a Missed Message Request.
+entrypoint typedef struct _MissedMessageReportMessage {
+  UINT8 missed_message_report_response_type;  // byte 0
+} MissedMessageReportMessage;
+
+// ---- Reject Message: 55 bytes ------------------------------------------------
+
+// Used to reject a message that does not comply with the Native Trading Gateway messaging protocol.
+entrypoint typedef struct _RejectMessage {
+  UINT32 reject_code;           // bytes 0 to 3, signed, read here as unsigned
+  UINT8 reject_reason[30];      // bytes 4 to 33
+  UINT8 rejected_message_type;  // byte 34
+  UINT8 client_order_id[20];    // bytes 35 to 54
+} RejectMessage;
+
+// ---- System Status Message: 2 bytes ------------------------------------------
+
+// Indicates service non availability of a partition, disseminated on the recovery and realtime channels.
+entrypoint typedef struct _SystemStatusMessage {
+  UINT8 app_id;      // byte 0
+  UINT8 app_status;  // byte 1
+} SystemStatusMessage;
+
+// ---- Transact Time: 8 bytes --------------------------------------------------
+
+// Composite
+entrypoint typedef struct _TransactTime {
+  UINT32 seconds;      // bytes 0 to 3
+  UINT32 nanoseconds;  // bytes 4 to 7
+} TransactTime;
+
+// ---- Order Mass Cancel Report Message: 52 bytes ------------------------------
+
+// Indicates that a mass order cancel request was accepted or rejected.
+entrypoint typedef struct _OrderMassCancelReportMessage {
+  UINT8 app_id;                      // byte 0
+  UINT32 sequence_no;                // bytes 1 to 4, signed, read here as unsigned
+  UINT8 client_order_id[20];         // bytes 5 to 24
+  UINT8 mass_cancel_response;        // byte 25
+  UINT32 mass_cancel_reject_reason;  // bytes 26 to 29, signed, read here as unsigned
+  UINT8 reserved_4[4];               // bytes 30 to 33
+  TransactTime transact_time;        // bytes 34 to 41
+  UINT8 reserved_10[10];             // bytes 42 to 51
+} OrderMassCancelReportMessage;
+
+// ---- Quote Status Report Message: 143 bytes ----------------------------------
+
+// Allows the server to communicate the status of the RFQ to the Requester.
+entrypoint typedef struct _QuoteStatusReportMessage {
+  UINT8 partition_id;               // byte 0
+  UINT32 sequence_number;           // bytes 1 to 4, signed, read here as unsigned
+  UINT8 quote_msg_id[20];           // bytes 5 to 24
+  UINT8 quote_req_id[10];           // bytes 25 to 34
+  UINT8 quote_status;               // byte 35
+  UINT32 reject_code;               // bytes 36 to 39, signed, read here as unsigned
+  UINT8 order_book;                 // byte 40
+  UINT8 market_makers[60];          // bytes 41 to 100
+  UINT8 rfq_id[10];                 // bytes 101 to 110
+  UINT32 expire_time;               // bytes 111 to 114
+  UINT8 bid_id[12];                 // bytes 115 to 126
+  UINT8 offer_id[12];               // bytes 127 to 138
+  UINT32 expire_time_milliseconds;  // bytes 139 to 142
+} QuoteStatusReportMessage;
+
+// ---- Quote Request Reject Message: 110 bytes ---------------------------------
+
+// Rejects an RFQ. Sent by the Market Maker to reject, and by the server to reject or to relay a Market Maker rejection.
+entrypoint typedef struct _QuoteRequestRejectMessage {
+  UINT8 partition_id;       // byte 0
+  UINT32 sequence_number;   // bytes 1 to 4, signed, read here as unsigned
+  UINT8 quote_req_id[10];   // bytes 5 to 14
+  UINT32 reject_code;       // bytes 15 to 18, signed, read here as unsigned
+  UINT8 order_book;         // byte 19
+  UINT32 instrument_id;     // bytes 20 to 23, signed, read here as unsigned
+  UINT8 side;               // byte 24
+  UINT32 order_quantity;    // bytes 25 to 28, signed, read here as unsigned
+  UINT8 market_makers[60];  // bytes 29 to 88
+  UINT8 contra_trader[11];  // bytes 89 to 99
+  UINT8 rfq_id[10];         // bytes 100 to 109
+} QuoteRequestRejectMessage;
+
+// ---- Quote Ack Message: 65 bytes ---------------------------------------------
+
+// Allows the server to acknowledge a new or modified RFQ Quote to the Market Maker.
+entrypoint typedef struct _QuoteAckMessage {
+  UINT8 partition_id;      // byte 0
+  UINT32 sequence_number;  // bytes 1 to 4, signed, read here as unsigned
+  UINT8 quote_msg_id[20];  // bytes 5 to 24
+  UINT8 rfq_id[10];        // bytes 25 to 34
+  UINT8 bid_id[12];        // bytes 35 to 46
+  UINT8 offer_id[12];      // bytes 47 to 58
+  UINT8 quote_ack_status;  // byte 59
+  UINT32 reject_code;      // bytes 60 to 63, signed, read here as unsigned
+  UINT8 order_book;        // byte 64
+} QuoteAckMessage;
+
+// ---- Quote Response Message: 88 bytes ----------------------------------------
+
+// Carries an RFQ response. Sent by the Requester to execute or cancel an RFQ Quote, and by the server to report quote and RFQ status.
+entrypoint typedef struct _QuoteResponseMessage {
+  UINT8 partition_id;      // byte 0
+  UINT32 sequence_number;  // bytes 1 to 4, signed, read here as unsigned
+  UINT8 quote_msg_id[20];  // bytes 5 to 24
+  UINT8 rfq_id[10];        // bytes 25 to 34
+  UINT8 quote_resp_type;   // byte 35
+  UINT32 instrument_id;    // bytes 36 to 39, signed, read here as unsigned
+  UINT8 side;              // byte 40
+  UINT32 order_quantity;   // bytes 41 to 44, signed, read here as unsigned
+  UINT64 limit_price;      // bytes 45 to 52, signed, read here as unsigned
+  UINT8 order_book;        // byte 53
+  UINT8 bid_id[12];        // bytes 54 to 65
+  UINT8 offer_id[12];      // bytes 66 to 77
+  UINT8 capacity;          // byte 78
+  UINT8 clearing_account;  // byte 79
+  UINT8 reserved_8[8];     // bytes 80 to 87
+} QuoteResponseMessage;
+

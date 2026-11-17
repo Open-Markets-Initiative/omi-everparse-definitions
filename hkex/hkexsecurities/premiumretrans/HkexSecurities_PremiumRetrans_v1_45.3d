@@ -1,0 +1,276 @@
+// Hong Kong Exchanges and Clearing Orion Market Data Cash Premium Retransmission
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out HkexSecurities_PremiumRetrans_v1_45.3d
+//
+// What this definition does not state, and the model does:
+// - a Reassemble rule
+// - a run counted by a field
+// - the dispatch that chooses a message by its type
+//
+// License: MIT No Attribution
+
+// ---- Packet Header: 16 bytes -------------------------------------------------
+
+// Omd packet header (byte-identical to the Udp form; SeqNum and SendTime set to 0 on Tcp per 3.5)
+entrypoint typedef struct _PacketHeader {
+  UINT16 pkt_size;   // bytes 0 to 1
+  UINT8 msg_count;   // byte 2
+  UINT8 filler;      // byte 3
+  UINT32 seq_num;    // bytes 4 to 7
+  UINT64 send_time;  // bytes 8 to 15
+} PacketHeader;
+
+// ---- Msg Header: 4 bytes -----------------------------------------------------
+
+// Omd message header
+entrypoint typedef struct _MsgHeader {
+  UINT16 msg_size;  // bytes 0 to 1
+  UINT16 msg_type;  // bytes 2 to 3
+} MsgHeader;
+
+// ---- Closing Price Message: 12 bytes -----------------------------------------
+
+// The Closing Price message is generated near the end of the business day for each security. If the closing price is not available, ClosingPrice is set to 0. NumberOfTrades is not populated for SS (OMD Securities Standard) clients.
+entrypoint typedef struct _ClosingPriceMessage {
+  UINT32 security_code;     // bytes 0 to 3
+  UINT32 closing_price;     // bytes 4 to 7, signed, read here as unsigned
+  UINT32 number_of_trades;  // bytes 8 to 11
+} ClosingPriceMessage;
+
+// ---- Sequence Reset Message: 4 bytes -----------------------------------------
+
+// The Sequence Reset message is sent on each multicast channel at start of day. It may also be sent when there is a need for the rectification of stock reference data before market open.
+entrypoint typedef struct _SequenceResetMessage {
+  UINT32 new_seq_no;  // bytes 0 to 3
+} SequenceResetMessage;
+
+// ---- Disaster Recovery Signal Message: 4 bytes -------------------------------
+
+// The Disaster Recovery (DR) Signal message is sent on a dedicated multicast channel whenever a site failover scenario is triggered.
+entrypoint typedef struct _DisasterRecoverySignalMessage {
+  UINT32 dr_status;  // bytes 0 to 3
+} DisasterRecoverySignalMessage;
+
+// ---- Indicative Equilibrium Price Message: 16 bytes --------------------------
+
+// The Indicative Equilibrium Price (IEP) message is generated whenever there is change of the IEP or Indicative Equilibrium Volume (IEV) during Pre-Opening Session (POS) or Closing Auction Session (CAS). The IEP is 0 when IEP does not exist.
+entrypoint typedef struct _IndicativeEquilibriumPriceMessage {
+  UINT32 security_code;       // bytes 0 to 3
+  UINT32 price;               // bytes 4 to 7, signed, read here as unsigned
+  UINT64 aggregate_quantity;  // bytes 8 to 15
+} IndicativeEquilibriumPriceMessage;
+
+// ---- Nominal Price Message: 8 bytes ------------------------------------------
+
+// The Nominal message may be generated when an order is added, deleted or modified in a book or when trade or trade cancel is performed. Before the first Nominal Price message, the nominal price should be the same as the previous closing price provided in Security Definition (11).
+entrypoint typedef struct _NominalPriceMessage {
+  UINT32 security_code;  // bytes 0 to 3
+  UINT32 nominal_price;  // bytes 4 to 7, signed, read here as unsigned
+} NominalPriceMessage;
+
+// ---- Order Imbalance Message: 16 bytes ---------------------------------------
+
+// The Order Imbalance message provides order imbalance information at the Indicative Equilibrium Price (IEP) during the Pre-Opening Session (POS) and Closing Auction Session (CAS).
+entrypoint typedef struct _OrderImbalanceMessage {
+  UINT32 security_code;             // bytes 0 to 3
+  UINT8 order_imbalance_direction;  // byte 4
+  UINT8 filler_1;                   // byte 5
+  UINT64 order_imbalance_quantity;  // bytes 6 to 13
+  UINT8 filler_2[2];                // bytes 14 to 15
+} OrderImbalanceMessage;
+
+// ---- Market Definition Message: 36 bytes -------------------------------------
+
+// The Market Definition message is generated at the start of the business day for each market segment.
+entrypoint typedef struct _MarketDefinitionMessage {
+  UINT8 market_code[4];         // bytes 0 to 3
+  UINT8 market_name[25];        // bytes 4 to 28
+  UINT8 currency_code[3];       // bytes 29 to 31
+  UINT32 number_of_securities;  // bytes 32 to 35
+} MarketDefinitionMessage;
+
+// ---- Face Value Composite: 9 bytes -------------------------------------------
+
+// Bond face value scaled at runtime by DecimalsInFaceValue. 0 mantissa means Not available.
+entrypoint typedef struct _FaceValueComposite {
+  UINT64 face_value;             // bytes 0 to 7
+  UINT8 decimals_in_face_value;  // byte 8
+} FaceValueComposite;
+
+// ---- Call Price Composite: 5 bytes -------------------------------------------
+
+// CBBC call price scaled at runtime by DecimalsInCallPrice. 0 mantissa means Not available.
+entrypoint typedef struct _CallPriceComposite {
+  UINT32 call_price;             // bytes 0 to 3, signed, read here as unsigned
+  UINT8 decimals_in_call_price;  // byte 4
+} CallPriceComposite;
+
+// ---- Entitlement Composite: 5 bytes ------------------------------------------
+
+// Warrant entitlement scaled at runtime by DecimalsInEntitlement. 0 mantissa means Not available.
+entrypoint typedef struct _EntitlementComposite {
+  UINT32 entitlement;             // bytes 0 to 3, signed, read here as unsigned
+  UINT8 decimals_in_entitlement;  // byte 4
+} EntitlementComposite;
+
+// ---- Currency Rate Message: 12 bytes -----------------------------------------
+
+// The Currency Rate message provides the foreign exchange conversion rates between various foreign currencies and the Hong Kong dollar.
+entrypoint typedef struct _CurrencyRateMessage {
+  UINT8 currency_code[3];  // bytes 0 to 2
+  UINT8 filler_1;          // byte 3
+  UINT16 currency_factor;  // bytes 4 to 5
+  UINT8 filler_2[2];       // bytes 6 to 7
+  UINT32 currency_rate;    // bytes 8 to 11
+} CurrencyRateMessage;
+
+// ---- Reference Price Message: 16 bytes ---------------------------------------
+
+// Reference price, lower and upper price limits for order input during an applicable auction session (POS or CAS). Sent again when there is any change.
+entrypoint typedef struct _ReferencePriceMessage {
+  UINT32 security_code;    // bytes 0 to 3
+  UINT32 reference_price;  // bytes 4 to 7, signed, read here as unsigned
+  UINT32 lower_price;      // bytes 8 to 11, signed, read here as unsigned
+  UINT32 upper_price;      // bytes 12 to 15, signed, read here as unsigned
+} ReferencePriceMessage;
+
+// ---- Refresh Complete Message: 4 bytes ---------------------------------------
+
+// This message is published to mark the end of a refresh.
+entrypoint typedef struct _RefreshCompleteMessage {
+  UINT32 last_seq_num;  // bytes 0 to 3
+} RefreshCompleteMessage;
+
+// ---- Logon Message: 12 bytes -------------------------------------------------
+
+// The Logon message enables client authentication. Not required for multicast channels; only used for retransmission requests.
+entrypoint typedef struct _LogonMessage {
+  UINT8 username[12];  // bytes 0 to 11
+} LogonMessage;
+
+// ---- Logon Response Message: 4 bytes -----------------------------------------
+
+// Response to a Logon request indicating session status.
+entrypoint typedef struct _LogonResponseMessage {
+  UINT8 session_status;  // byte 0
+  UINT8 filler_3[3];     // bytes 1 to 3
+} LogonResponseMessage;
+
+// ---- Retransmission Request Message: 12 bytes --------------------------------
+
+// Client-initiated request to retransmit a range of messages from a specific multicast channel.
+entrypoint typedef struct _RetransmissionRequestMessage {
+  UINT16 channel_id;     // bytes 0 to 1
+  UINT8 filler_2[2];     // bytes 2 to 3
+  UINT32 begin_seq_num;  // bytes 4 to 7
+  UINT32 end_seq_num;    // bytes 8 to 11
+} RetransmissionRequestMessage;
+
+// ---- Retransmission Response Message: 12 bytes -------------------------------
+
+// Server response to a Retransmission Request indicating whether the range can be resent.
+entrypoint typedef struct _RetransmissionResponseMessage {
+  UINT16 channel_id;     // bytes 0 to 1
+  UINT8 retrans_status;  // byte 2
+  UINT8 filler_1;        // byte 3
+  UINT32 begin_seq_num;  // bytes 4 to 7
+  UINT32 end_seq_num;    // bytes 8 to 11
+} RetransmissionResponseMessage;
+
+// ---- Statistics Message: 48 bytes --------------------------------------------
+
+// The Statistics message provides statistics including volume-weighted average price and turnover. Generated (excluding overseas trades) once after CTS/auction match, manual trade, odd lot trade, or trade cancel. VWAP is not populated for SS (OMD Securities Standard) clients.
+entrypoint typedef struct _StatisticsMessage {
+  UINT32 security_code;             // bytes 0 to 3
+  UINT64 shares_traded;             // bytes 4 to 11
+  UINT64 turnover;                  // bytes 12 to 19, signed, read here as unsigned
+  UINT32 high_price;                // bytes 20 to 23, signed, read here as unsigned
+  UINT32 low_price;                 // bytes 24 to 27, signed, read here as unsigned
+  UINT32 last_price;                // bytes 28 to 31, signed, read here as unsigned
+  UINT32 vwap;                      // bytes 32 to 35, signed, read here as unsigned
+  UINT32 short_sell_shares_traded;  // bytes 36 to 39
+  UINT64 short_sell_turnover;       // bytes 40 to 47, signed, read here as unsigned
+} StatisticsMessage;
+
+// ---- Market Turnover Message: 16 bytes ---------------------------------------
+
+// The Market Turnover message contains the total turnover (excluding overseas trades) for all securities on a given market segment for a given trading currency. When CurrencyCode is blank, the turnover represents the total for all trading currencies, expressed in HKD. Updates disseminated around every 2 seconds during trading hours.
+entrypoint typedef struct _MarketTurnoverMessage {
+  UINT8 market_code[4];    // bytes 0 to 3
+  UINT8 currency_code[3];  // bytes 4 to 6
+  UINT8 filler_1;          // byte 7
+  UINT64 turnover;         // bytes 8 to 15, signed, read here as unsigned
+} MarketTurnoverMessage;
+
+// ---- Yield Message: 8 bytes --------------------------------------------------
+
+// The Yield message is generated for bond securities when their yield percentage changes.
+entrypoint typedef struct _YieldMessage {
+  UINT32 security_code;  // bytes 0 to 3
+  UINT32 yield;          // bytes 4 to 7, signed, read here as unsigned
+} YieldMessage;
+
+// ---- Trading Session Status Message: 28 bytes --------------------------------
+
+// The Trading Session Status provides information on the status of a market segment. It is sent whenever there is change of trading session. This message may be sent on a separate multicast channel from order and trade data and therefore may not be synchronized.
+entrypoint typedef struct _TradingSessionStatusMessage {
+  UINT8 market_code[4];            // bytes 0 to 3
+  UINT8 filler_1;                  // byte 4
+  UINT8 trading_session_sub_id;    // byte 5
+  UINT8 trading_ses_status;        // byte 6
+  UINT8 trading_ses_control_flag;  // byte 7
+  UINT8 filler_4[4];               // bytes 8 to 11
+  UINT64 start_date_time;          // bytes 12 to 19
+  UINT64 end_date_time;            // bytes 20 to 27
+} TradingSessionStatusMessage;
+
+// ---- Security Status Message: 8 bytes ----------------------------------------
+
+// The Security Status message is generated at the start of the business day if the security is not available for trading, and whenever a security state changes.
+entrypoint typedef struct _SecurityStatusMessage {
+  UINT32 security_code;        // bytes 0 to 3
+  UINT8 suspension_indicator;  // byte 4
+  UINT8 filler_3[3];           // bytes 5 to 7
+} SecurityStatusMessage;
+
+// ---- Trade Message: 28 bytes -------------------------------------------------
+
+// The Trade message is generated each time a trade has been performed.
+entrypoint typedef struct _TradeMessage {
+  UINT32 security_code;  // bytes 0 to 3
+  UINT32 trade_id;       // bytes 4 to 7
+  UINT32 price;          // bytes 8 to 11, signed, read here as unsigned
+  UINT32 quantity;       // bytes 12 to 15
+  UINT16 trd_type;       // bytes 16 to 17, signed, read here as unsigned
+  UINT8 filler_2[2];     // bytes 18 to 19
+  UINT64 trade_time;     // bytes 20 to 27
+} TradeMessage;
+
+// ---- Trade Cancel Message: 8 bytes -------------------------------------------
+
+// The Trade Cancel message is generated when a trade has been cancelled.
+entrypoint typedef struct _TradeCancelMessage {
+  UINT32 security_code;  // bytes 0 to 3
+  UINT32 trade_id;       // bytes 4 to 7
+} TradeCancelMessage;
+
+// ---- Vcm Trigger Message: 32 bytes -------------------------------------------
+
+// The VCM Trigger message is generated whenever a cooling off period is triggered by Volatility Control Mechanism (VCM).
+entrypoint typedef struct _VcmTriggerMessage {
+  UINT32 security_code;           // bytes 0 to 3
+  UINT64 cooling_off_start_time;  // bytes 4 to 11
+  UINT64 cooling_off_end_time;    // bytes 12 to 19
+  UINT32 vcm_reference_price;     // bytes 20 to 23, signed, read here as unsigned
+  UINT32 vcm_lower_price;         // bytes 24 to 27, signed, read here as unsigned
+  UINT32 vcm_upper_price;         // bytes 28 to 31, signed, read here as unsigned
+} VcmTriggerMessage;
+

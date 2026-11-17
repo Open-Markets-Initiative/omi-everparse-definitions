@@ -1,0 +1,69 @@
+// CME Group Us Treasuries
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out BrokerTec_UsTreasury_v10_1_Udp.3d
+//
+// What this definition does not state, and the model does:
+// - a length prefix framing what follows
+// - a block whose stated length holds more than its fields
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Binary Packet Header: 12 bytes ------------------------------------------
+
+// Cme Mdp Packet Header
+entrypoint typedef struct _BinaryPacketHeader {
+  UINT32 packet_sequence_number;  // bytes 0 to 3
+  UINT64 sending_time;            // bytes 4 to 11
+} BinaryPacketHeader;
+
+// ---- Simple Binary Header: 8 bytes -------------------------------------------
+
+// Template ID and length of message root
+entrypoint typedef struct _SimpleBinaryHeader {
+  UINT16 block_length;  // bytes 0 to 1
+  UINT16 template_id;   // bytes 2 to 3
+  UINT16 schema_id;     // bytes 4 to 5
+  UINT16 version;       // bytes 6 to 7
+} SimpleBinaryHeader;
+
+// ---- Message Header: 10 bytes ------------------------------------------------
+
+// Message Size followed by the Simple Binary Header
+entrypoint typedef struct _MessageHeader {
+  UINT16 message_size;                      // bytes 0 to 1
+  SimpleBinaryHeader simple_binary_header;  // bytes 2 to 9
+} MessageHeader;
+
+// ---- Group Size: 3 bytes -----------------------------------------------------
+
+// Repeating group dimensions
+entrypoint typedef struct _GroupSize {
+  UINT16 block_length;  // bytes 0 to 1
+  UINT8 num_in_group;   // byte 2
+} GroupSize;
+
+// ---- Md Entry Px: 9 bytes ----------------------------------------------------
+
+// Number of data blocks
+entrypoint typedef struct _MdEntryPx {
+  UINT64 mantissa;  // bytes 0 to 7, signed, read here as unsigned
+  UINT8 exponent;   // byte 8, signed, read here as unsigned
+} MdEntryPx;
+
+// ---- Coupon Rate: 5 bytes ----------------------------------------------------
+
+// Number of data blocks
+entrypoint typedef struct _CouponRate {
+  UINT32 mantissa_32;  // bytes 0 to 3, signed, read here as unsigned
+  UINT8 exponent;      // byte 4, signed, read here as unsigned
+} CouponRate;
+

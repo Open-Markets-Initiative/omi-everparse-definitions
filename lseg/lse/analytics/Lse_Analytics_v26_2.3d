@@ -1,0 +1,81 @@
+// London Stock Exchange Analytics
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out Lse_Analytics_v26_2.3d
+//
+// What this definition does not state, and the model does:
+// - a run counted by a field
+// - a field read in bits
+//
+// License: MIT No Attribution
+
+// ---- Unit Header: 8 bytes ----------------------------------------------------
+
+entrypoint typedef struct _UnitHeader {
+  UINT16 length;            // bytes 0 to 1
+  UINT8 message_count;      // byte 2
+  UINT8 market_data_group;  // byte 3
+  UINT32 sequence_number;   // bytes 4 to 7
+} UnitHeader;
+
+// ---- Message Header: 3 bytes -------------------------------------------------
+
+// Gtp Udp Message Header
+entrypoint typedef struct _MessageHeader {
+  UINT16 message_length;  // bytes 0 to 1
+  UINT8 message_type;     // byte 2
+} MessageHeader;
+
+// ---- System Event Message: 11 bytes ------------------------------------------
+
+// Sent to indicate the start and end of the day.
+entrypoint typedef struct _SystemEventMessage {
+  UINT64 timestamp;     // bytes 0 to 7
+  UINT8 event_code;     // byte 8
+  UINT16 source_venue;  // bytes 9 to 10
+} SystemEventMessage;
+
+// ---- Instrument Status Message: 27 bytes -------------------------------------
+
+// Used to communicate scheduled and unscheduled session changes. When sent in the recovery channel, used to indicate the current trading status of an instrument.
+entrypoint typedef struct _InstrumentStatusMessage {
+  UINT64 timestamp;             // bytes 0 to 7
+  UINT64 instrument;            // bytes 8 to 15
+  UINT16 source_venue;          // bytes 16 to 17
+  UINT8 trading_status;         // byte 18
+  UINT8 session_change_reason;  // byte 19
+  UINT8 new_end_time[6];        // bytes 20 to 25
+  UINT8 order_book_type;        // byte 26
+} InstrumentStatusMessage;
+
+// ---- Analytics Message: 106 bytes --------------------------------------------
+
+// Analytics Message is used to disseminate additional statistics including order book activity statistics.
+entrypoint typedef struct _AnalyticsMessage {
+  UINT64 timestamp;                        // bytes 0 to 7
+  UINT64 instrument;                       // bytes 8 to 15
+  UINT16 source_venue;                     // bytes 16 to 17
+  UINT64 start_time;                       // bytes 18 to 25
+  UINT64 end_time;                         // bytes 26 to 33
+  UINT32 buy_order_count;                  // bytes 34 to 37
+  UINT32 sell_order_count;                 // bytes 38 to 41
+  UINT64 buy_order_size;                   // bytes 42 to 49
+  UINT64 sell_order_size;                  // bytes 50 to 57
+  UINT32 buy_order_cancellations;          // bytes 58 to 61
+  UINT32 sell_order_cancellations;         // bytes 62 to 65
+  UINT32 buy_limit_order_cancellations;    // bytes 66 to 69
+  UINT32 buy_market_order_cancellations;   // bytes 70 to 73
+  UINT32 sell_limit_order_cancellations;   // bytes 74 to 77
+  UINT32 sell_market_order_cancellations;  // bytes 78 to 81
+  UINT64 bid_ask_spread;                   // bytes 82 to 89, signed, read here as unsigned
+  UINT64 vwap_buy;                         // bytes 90 to 97, signed, read here as unsigned
+  UINT64 vwap_sell;                        // bytes 98 to 105, signed, read here as unsigned
+} AnalyticsMessage;
+

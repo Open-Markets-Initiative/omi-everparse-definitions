@@ -1,0 +1,114 @@
+// National Association of Securities Dealers Automated Quotations (Nasdaq) Ouch to Trade Options
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out MrxOptions_Otto_v3_0_0_Client.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a length prefix framing what follows
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Client Packet Header: 3 bytes -------------------------------------------
+
+// Packet header of a packet sent by the client
+entrypoint typedef struct _ClientPacketHeader {
+  UINT16BE packet_length;    // bytes 0 to 1
+  UINT8 client_packet_type;  // byte 2
+} ClientPacketHeader;
+
+// ---- Login Request Packet: 46 bytes ------------------------------------------
+
+// The SoupBinTCP client must send a Login Request Packet immediately upon establishing a new TCP/IP socket connection to the server
+entrypoint typedef struct _LoginRequestPacket {
+  UINT8 username[6];                    // bytes 0 to 5
+  UINT8 password[10];                   // bytes 6 to 15
+  UINT8 requested_session[10];          // bytes 16 to 25
+  UINT8 requested_sequence_number[20];  // bytes 26 to 45
+} LoginRequestPacket;
+
+// ---- New Order Short Form Message: 49 bytes ----------------------------------
+
+// Short format of the New Order request is a compact message (50 bytes) with limited flexibility: simple and multi-leg instruments, quantity up to 65535, auction responses, default clearing configuration for the Firm. Acknowledged by Order Accepted (Short Form).
+entrypoint typedef struct _NewOrderShortFormMessage {
+  UINT8 firm_id[4];               // bytes 0 to 3
+  UINT32BE instrument_id;         // bytes 4 to 7
+  UINT8 cl_ord_id[16];            // bytes 8 to 23
+  UINT8 alo_inst;                 // byte 24
+  UINT8 iso;                      // byte 25
+  UINT8 side;                     // byte 26
+  UINT8 order_type;               // byte 27
+  UINT64BE price;                 // bytes 28 to 35, signed, read here as unsigned
+  UINT16BE quantity_short;        // bytes 36 to 37
+  UINT8 tif;                      // byte 38
+  UINT8 capacity;                 // byte 39
+  UINT8 auction_type;             // byte 40
+  UINT32BE auction_id;            // bytes 41 to 44
+  UINT8 price_protection;         // byte 45
+  UINT16BE position_effect_mask;  // bytes 46 to 47
+  UINT8 stock_capacity;           // byte 48
+} NewOrderShortFormMessage;
+
+// ---- Replace Order Message: 61 bytes -----------------------------------------
+
+// Replace Order message is used to modify an existing order for both simple and complex instruments. It can also be used to alter price of the contra side of Cross Orders. The order to be replaced is identified by OrigClOrdId.
+entrypoint typedef struct _ReplaceOrderMessage {
+  UINT8 firm_id[4];          // bytes 0 to 3
+  UINT8 orig_cl_ord_id[16];  // bytes 4 to 19
+  UINT8 cl_ord_id[16];       // bytes 20 to 35
+  UINT32BE quantity;         // bytes 36 to 39
+  UINT8 order_type;          // byte 40
+  UINT64BE price;            // bytes 41 to 48, signed, read here as unsigned
+  UINT8 tif;                 // byte 49
+  UINT8 cust_acct[10];       // bytes 50 to 59
+  UINT8 price_protection;    // byte 60
+} ReplaceOrderMessage;
+
+// ---- Cancel Order Message: 20 bytes ------------------------------------------
+
+// Cancel Order by Client ID. Deletes a single simple order, a single complex order, or a Cross Order (terminating an ongoing auction). The order to be deleted is identified by the ClOrdId field.
+entrypoint typedef struct _CancelOrderMessage {
+  UINT8 firm_id[4];     // bytes 0 to 3
+  UINT8 cl_ord_id[16];  // bytes 4 to 19
+} CancelOrderMessage;
+
+// ---- Mass Cancel Message: 41 bytes -------------------------------------------
+
+// This message is used to mass-delete multiple open orders based on the specified Scope. The sequence of Order Canceled messages is terminated with a single Mass Cancel Response.
+entrypoint typedef struct _MassCancelMessage {
+  UINT8 firm_id[4];             // bytes 0 to 3
+  UINT8 cl_request_id[16];      // bytes 4 to 19
+  UINT8 instrument_type;        // byte 20
+  UINT8 scope;                  // byte 21
+  UINT16BE product_id;          // bytes 22 to 23
+  UINT32BE instrument_id;       // bytes 24 to 27
+  UINT8 underlying_symbol[13];  // bytes 28 to 40
+} MassCancelMessage;
+
+// ---- Member Kill Switch Request Message: 25 bytes ----------------------------
+
+// The Member Kill Switch Request is used to block ability to enter new orders, alter existing orders, delete orders, and create complex instruments. Scope of the Kill Switch Request is one firm per request. Answered by Member Kill Switch Notification or Reject.
+entrypoint typedef struct _MemberKillSwitchRequestMessage {
+  UINT8 firm_id[4];         // bytes 0 to 3
+  UINT8 cl_request_id[16];  // bytes 4 to 19
+  UINT8 target_firm_id[4];  // bytes 20 to 23
+  UINT8 kill_action;        // byte 24
+} MemberKillSwitchRequestMessage;
+
+// ---- Subscription Request Message: 36 bytes ----------------------------------
+
+// Subscription Request message allows client to modify the set of optional notification types it receives on the OTTO connection for the current session. Supported on PHLX, ISE, GEMX and MRX. Answered by Subscription Response or Reject.
+entrypoint typedef struct _SubscriptionRequestMessage {
+  UINT8 firm_id[4];         // bytes 0 to 3
+  UINT8 cl_request_id[16];  // bytes 4 to 19
+  UINT8 subscription[16];   // bytes 20 to 35
+} SubscriptionRequestMessage;
+

@@ -1,0 +1,197 @@
+// Chicago Board Options Exchange Multicast Depth Of Book
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out EdgaEquities_MulticastDepthOfBook_v2_41_64.3d
+//
+// What this definition does not state, and the model does:
+// - the dispatch that chooses a message by its type
+// - a run filling what frames it
+// - a field read in bits
+//
+// License: MIT No Attribution
+
+// ---- Packet Header: 8 bytes --------------------------------------------------
+
+entrypoint typedef struct _PacketHeader {
+  UINT16 length;        // bytes 0 to 1
+  UINT8 message_count;  // byte 2
+  UINT8 unit_;          // byte 3
+  UINT32 sequence;      // bytes 4 to 7
+} PacketHeader;
+
+// ---- Message Header: 2 bytes -------------------------------------------------
+
+entrypoint typedef struct _MessageHeader {
+  UINT8 message_length;  // byte 0
+  UINT8 message_type;    // byte 1
+} MessageHeader;
+
+// ---- Eq Time Message: 4 bytes ------------------------------------------------
+
+// A Time message is immediately generated and sent when there is a PITCH event for a given clock second
+entrypoint typedef struct _EqTimeMessage {
+  UINT32 time;  // bytes 0 to 3
+} EqTimeMessage;
+
+// ---- Eq Unit Clear Message: 4 bytes ------------------------------------------
+
+// The Unit Clear message instructs feed recipients to clear all orders for the Cboe book in the unit specified in the Sequenced Unit Header
+entrypoint typedef struct _EqUnitClearMessage {
+  UINT32 time_offset;  // bytes 0 to 3
+} EqUnitClearMessage;
+
+// ---- Eq Order Executed Message: 24 bytes -------------------------------------
+
+// Order Executed messages are sent when a visible order on the Cboe book is executed in whole or in part
+entrypoint typedef struct _EqOrderExecutedMessage {
+  UINT32 time_offset;        // bytes 0 to 3
+  UINT64 order_id;           // bytes 4 to 11
+  UINT32 executed_quantity;  // bytes 12 to 15
+  UINT64 execution_id;       // bytes 16 to 23
+} EqOrderExecutedMessage;
+
+// ---- Eq Order Executed At Price Size Message: 36 bytes -----------------------
+
+// Order Executed at Price/Size messages are sent when a visible order on the Cboe book is executed in whole or in part at a different price than the limit price on the original Add Order message or the limit order price in the latest Modify Order message referencing the Order Id
+entrypoint typedef struct _EqOrderExecutedAtPriceSizeMessage {
+  UINT32 time_offset;         // bytes 0 to 3
+  UINT64 order_id;            // bytes 4 to 11
+  UINT32 executed_quantity;   // bytes 12 to 15
+  UINT32 remaining_quantity;  // bytes 16 to 19
+  UINT64 execution_id;        // bytes 20 to 27
+  UINT64 price_long;          // bytes 28 to 35
+} EqOrderExecutedAtPriceSizeMessage;
+
+// ---- Eq Reduce Size Long Message: 16 bytes -----------------------------------
+
+// Reduce Size messages are sent when a visible order on the Cboe book is partially reduced
+entrypoint typedef struct _EqReduceSizeLongMessage {
+  UINT32 time_offset;             // bytes 0 to 3
+  UINT64 order_id;                // bytes 4 to 11
+  UINT32 canceled_quantity_long;  // bytes 12 to 15
+} EqReduceSizeLongMessage;
+
+// ---- Eq Reduce Size Short Message: 14 bytes ----------------------------------
+
+// Reduce Size messages are sent when a visible order on the Cboe book is partially reduced
+entrypoint typedef struct _EqReduceSizeShortMessage {
+  UINT32 time_offset;              // bytes 0 to 3
+  UINT64 order_id;                 // bytes 4 to 11
+  UINT16 canceled_quantity_short;  // bytes 12 to 13
+} EqReduceSizeShortMessage;
+
+// ---- Eq Delete Order Message: 12 bytes ---------------------------------------
+
+// The Delete Order message is sent whenever a booked order is cancelled or leaves the order book
+entrypoint typedef struct _EqDeleteOrderMessage {
+  UINT32 time_offset;  // bytes 0 to 3
+  UINT64 order_id;     // bytes 4 to 11
+} EqDeleteOrderMessage;
+
+// ---- Eq Trade Long Message: 39 bytes -----------------------------------------
+
+// The Trade message provides information about executions of non-displayed orders on the Cboe book and routed executions to other trading centers
+entrypoint typedef struct _EqTradeLongMessage {
+  UINT32 time_offset;     // bytes 0 to 3
+  UINT64 order_id;        // bytes 4 to 11
+  UINT8 side_indicator;   // byte 12
+  UINT32 quantity_long;   // bytes 13 to 16
+  UINT8 symbol_short[6];  // bytes 17 to 22
+  UINT64 price_long;      // bytes 23 to 30
+  UINT64 execution_id;    // bytes 31 to 38
+} EqTradeLongMessage;
+
+// ---- Eq Trade Short Message: 31 bytes ----------------------------------------
+
+// The Trade message provides information about executions of non-displayed orders on the Cboe book and routed executions to other trading centers
+entrypoint typedef struct _EqTradeShortMessage {
+  UINT32 time_offset;     // bytes 0 to 3
+  UINT64 order_id;        // bytes 4 to 11
+  UINT8 side_indicator;   // byte 12
+  UINT16 quantity_short;  // bytes 13 to 14
+  UINT8 symbol_short[6];  // bytes 15 to 20
+  UINT16 price_short;     // bytes 21 to 22
+  UINT64 execution_id;    // bytes 23 to 30
+} EqTradeShortMessage;
+
+// ---- Eq Trade Expanded Message: 41 bytes -------------------------------------
+
+// The Trade message provides information about executions of non-displayed orders on the Cboe book and routed executions to other trading centers. Expanded version accommodates larger symbol sizes possible through the ISRA plan.
+entrypoint typedef struct _EqTradeExpandedMessage {
+  UINT32 time_offset;    // bytes 0 to 3
+  UINT64 order_id;       // bytes 4 to 11
+  UINT8 side_indicator;  // byte 12
+  UINT32 quantity_long;  // bytes 13 to 16
+  UINT8 symbol_long[8];  // bytes 17 to 24
+  UINT64 price_long;     // bytes 25 to 32
+  UINT64 execution_id;   // bytes 33 to 40
+} EqTradeExpandedMessage;
+
+// ---- Eq Trade Break Message: 12 bytes ----------------------------------------
+
+// The Trade Break message is sent whenever an execution on Cboe is broken
+entrypoint typedef struct _EqTradeBreakMessage {
+  UINT32 time_offset;   // bytes 0 to 3
+  UINT64 execution_id;  // bytes 4 to 11
+} EqTradeBreakMessage;
+
+// ---- Eq End Of Session: 4 bytes ----------------------------------------------
+
+// The End of Session message is sent for each unit when the unit shuts down
+entrypoint typedef struct _EqEndOfSession {
+  UINT32 time_offset;  // bytes 0 to 3
+} EqEndOfSession;
+
+// ---- Eq Trading Status Message: 16 bytes -------------------------------------
+
+// The Trading Status message is used to indicate the current trading status of a security
+entrypoint typedef struct _EqTradingStatusMessage {
+  UINT32 time_offset;       // bytes 0 to 3
+  UINT8 symbol_long[8];     // bytes 4 to 11
+  UINT8 trading_status;     // byte 12
+  UINT8 reg_sho_action;     // byte 13
+  UINT8 reserved_1;         // byte 14
+  UINT8 second_reserved_1;  // byte 15
+} EqTradingStatusMessage;
+
+// ---- Eq Auction Update Message: 45 bytes -------------------------------------
+
+// Auction Update messages are used to disseminate Cboe price and size information during auctions for Cboe listed securities and for Cboe Market Close crosses on BZX, and for Periodic Auctions on BYX
+entrypoint typedef struct _EqAuctionUpdateMessage {
+  UINT32 time_offset;         // bytes 0 to 3
+  UINT8 stock_symbol[8];      // bytes 4 to 11
+  UINT8 auction_type;         // byte 12
+  UINT64 reference_price;     // bytes 13 to 20
+  UINT32 buy_shares;          // bytes 21 to 24
+  UINT32 sell_shares;         // bytes 25 to 28
+  UINT64 indicative_price;    // bytes 29 to 36
+  UINT64 auction_only_price;  // bytes 37 to 44
+} EqAuctionUpdateMessage;
+
+// ---- Eq Auction Summary Message: 25 bytes ------------------------------------
+
+// Auction Summary messages are used to disseminate the results of an auction of a Cboe listed security on BZX, and for Periodic Auctions on BYX
+entrypoint typedef struct _EqAuctionSummaryMessage {
+  UINT32 time_offset;       // bytes 0 to 3
+  UINT8 stock_symbol[8];    // bytes 4 to 11
+  UINT8 auction_type;       // byte 12
+  UINT64 price_long;        // bytes 13 to 20
+  UINT32 shares_contracts;  // bytes 21 to 24
+} EqAuctionSummaryMessage;
+
+// ---- Eq Retail Price Improvement Message: 13 bytes ---------------------------
+
+// This message is a Retail Liquidity Indicator (RLI) that includes symbol and side, but not price and size. BYX Only.
+entrypoint typedef struct _EqRetailPriceImprovementMessage {
+  UINT32 time_offset;              // bytes 0 to 3
+  UINT8 symbol_long[8];            // bytes 4 to 11
+  UINT8 retail_price_improvement;  // byte 12
+} EqRetailPriceImprovementMessage;
+

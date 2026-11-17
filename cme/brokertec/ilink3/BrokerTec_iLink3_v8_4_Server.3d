@@ -1,0 +1,286 @@
+// CME Group iLink 3
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out BrokerTec_iLink3_v8_4_Server.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a field present only on a condition
+// - a block whose stated length holds more than its fields
+// - a run counted by a field
+// - a field read in bits
+//
+// License: MIT No Attribution
+
+// ---- Simple Open Framing Header: 4 bytes -------------------------------------
+
+// Simple Open Framing Header
+entrypoint typedef struct _SimpleOpenFramingHeader {
+  UINT16 message_length;  // bytes 0 to 1
+  UINT16 encoding_type;   // bytes 2 to 3
+} SimpleOpenFramingHeader;
+
+// ---- Message Header: 8 bytes -------------------------------------------------
+
+// Template ID and length of message root
+entrypoint typedef struct _MessageHeader {
+  UINT16 block_length;  // bytes 0 to 1
+  UINT16 template_id;   // bytes 2 to 3
+  UINT16 schema_id;     // bytes 4 to 5
+  UINT16 version;       // bytes 6 to 7
+} MessageHeader;
+
+// ---- Negotiation Reject: 68 bytes --------------------------------------------
+
+// The Negotiation Reject message is sent when CME rejects a Negotiate message sent by the customer.
+entrypoint typedef struct _NegotiationReject {
+  UINT8 reason[48];                 // bytes 0 to 47
+  UINT64 uuid;                      // bytes 48 to 55
+  UINT64 request_timestamp;         // bytes 56 to 63
+  UINT16 error_codes;               // bytes 64 to 65
+  UINT8 fault_tolerance_indicator;  // byte 66
+  UINT8 split_msg;                  // byte 67
+} NegotiationReject;
+
+// ---- Establishment Ack: 38 bytes ---------------------------------------------
+
+// The Establishment Acknowledgment message is sent when an Establish message from a customer is accepted by CME.
+entrypoint typedef struct _EstablishmentAck {
+  UINT64 uuid;                             // bytes 0 to 7
+  UINT64 request_timestamp;                // bytes 8 to 15
+  UINT32 next_seq_no;                      // bytes 16 to 19
+  UINT32 previous_seq_no;                  // bytes 20 to 23
+  UINT64 previous_uuid;                    // bytes 24 to 31
+  UINT16 keep_alive_interval;              // bytes 32 to 33
+  UINT16 secret_key_secure_id_expiration;  // bytes 34 to 35
+  UINT8 fault_tolerance_indicator;         // byte 36
+  UINT8 split_msg;                         // byte 37
+} EstablishmentAck;
+
+// ---- Establishment Reject: 72 bytes ------------------------------------------
+
+// The Establishment Reject message is sent when an Establish message from the customer is rejected by CME.
+entrypoint typedef struct _EstablishmentReject {
+  UINT8 reason[48];                 // bytes 0 to 47
+  UINT64 uuid;                      // bytes 48 to 55
+  UINT64 request_timestamp;         // bytes 56 to 63
+  UINT32 next_seq_no;               // bytes 64 to 67
+  UINT16 error_codes;               // bytes 68 to 69
+  UINT8 fault_tolerance_indicator;  // byte 70
+  UINT8 split_msg;                  // byte 71
+} EstablishmentReject;
+
+// ---- Sequence: 14 bytes ------------------------------------------------------
+
+// The Sequence message is used in both Recoverable (CME to customer) and Idempotent (customer to CME) flows.
+entrypoint typedef struct _Sequence {
+  UINT64 uuid;                       // bytes 0 to 7
+  UINT32 next_seq_no;                // bytes 8 to 11
+  UINT8 fault_tolerance_indicator;   // byte 12
+  UINT8 keep_alive_interval_lapsed;  // byte 13
+} Sequence;
+
+// ---- Terminate: 67 bytes -----------------------------------------------------
+
+// The Terminate message is sent to indicate that the sender is going to disconnect the TCP socket connection.
+entrypoint typedef struct _Terminate {
+  UINT8 reason[48];          // bytes 0 to 47
+  UINT64 uuid;               // bytes 48 to 55
+  UINT64 request_timestamp;  // bytes 56 to 63
+  UINT16 error_codes;        // bytes 64 to 65
+  UINT8 split_msg;           // byte 66
+} Terminate;
+
+// ---- Retransmission: 31 bytes ------------------------------------------------
+
+// The Retransmission message is sent when a Retransmit Request message from the customer is accepted by CME.
+entrypoint typedef struct _Retransmission {
+  UINT64 uuid;               // bytes 0 to 7
+  UINT64 last_uuid;          // bytes 8 to 15
+  UINT64 request_timestamp;  // bytes 16 to 23
+  UINT32 from_seq_no;        // bytes 24 to 27
+  UINT16 msg_count_16;       // bytes 28 to 29
+  UINT8 split_msg;           // byte 30
+} Retransmission;
+
+// ---- Retransmit Reject: 75 bytes ---------------------------------------------
+
+// CME Globex sends a Retransmit Reject message when a Retransmit Request message from the customer is rejected.
+entrypoint typedef struct _RetransmitReject {
+  UINT8 reason[48];          // bytes 0 to 47
+  UINT64 uuid;               // bytes 48 to 55
+  UINT64 last_uuid;          // bytes 56 to 63
+  UINT64 request_timestamp;  // bytes 64 to 71
+  UINT16 error_codes;        // bytes 72 to 73
+  UINT8 split_msg;           // byte 74
+} RetransmitReject;
+
+// ---- Not Applied: 17 bytes ---------------------------------------------------
+
+// The Not Applied message is sent when CME detects a sequence gap from the customer.
+entrypoint typedef struct _NotApplied {
+  UINT64 uuid;         // bytes 0 to 7
+  UINT32 from_seq_no;  // bytes 8 to 11
+  UINT32 msg_count;    // bytes 12 to 15
+  UINT8 split_msg;     // byte 16
+} NotApplied;
+
+// ---- Group Size: 3 bytes -----------------------------------------------------
+
+// Repeating group dimensions
+entrypoint typedef struct _GroupSize {
+  UINT16 block_length;  // bytes 0 to 1
+  UINT8 num_in_group;   // byte 2
+} GroupSize;
+
+// ---- Business Reject: 330 bytes ----------------------------------------------
+
+// The Business Message Reject message can reject an application-level message, which fulfills session level rules but fails the business rules.
+entrypoint typedef struct _BusinessReject {
+  UINT32 seq_num;                             // bytes 0 to 3
+  UINT64 uuid;                                // bytes 4 to 11
+  UINT8 text[256];                            // bytes 12 to 267
+  UINT8 sender_id_optional[20];               // bytes 268 to 287
+  UINT64 party_details_list_req_id_optional;  // bytes 288 to 295
+  UINT64 sending_time_epoch;                  // bytes 296 to 303
+  UINT64 business_reject_ref_id;              // bytes 304 to 311
+  UINT8 location_optional[5];                 // bytes 312 to 316
+  UINT32 ref_seq_num;                         // bytes 317 to 320
+  UINT16 ref_tag_id;                          // bytes 321 to 322
+  UINT16 business_reject_reason;              // bytes 323 to 324
+  UINT8 ref_msg_type[2];                      // bytes 325 to 326
+  UINT8 poss_retrans_flag;                    // byte 327
+  UINT8 manual_order_indicator_optional;      // byte 328
+  UINT8 split_msg;                            // byte 329
+} BusinessReject;
+
+// ---- Volatility: 9 bytes -----------------------------------------------------
+
+// ExecutionReportTradeSpreadLeg
+entrypoint typedef struct _Volatility {
+  UINT64 mantissa;  // bytes 0 to 7, signed, read here as unsigned
+  UINT8 exponent;   // byte 8, signed, read here as unsigned
+} Volatility;
+
+// ---- Option Delta: 5 bytes ---------------------------------------------------
+
+// ExecutionReportTradeSpreadLeg
+entrypoint typedef struct _OptionDelta {
+  UINT32 mantissa_32;  // bytes 0 to 3, signed, read here as unsigned
+  UINT8 exponent;      // byte 4, signed, read here as unsigned
+} OptionDelta;
+
+// ---- Time To Expiration: 5 bytes ---------------------------------------------
+
+// ExecutionReportTradeSpreadLeg
+entrypoint typedef struct _TimeToExpiration {
+  UINT32 mantissa_32;  // bytes 0 to 3, signed, read here as unsigned
+  UINT8 exponent;      // byte 4, signed, read here as unsigned
+} TimeToExpiration;
+
+// ---- Risk Free Rate: 5 bytes -------------------------------------------------
+
+// ExecutionReportTradeSpreadLeg
+entrypoint typedef struct _RiskFreeRate {
+  UINT32 mantissa_32;  // bytes 0 to 3, signed, read here as unsigned
+  UINT8 exponent;      // byte 4, signed, read here as unsigned
+} RiskFreeRate;
+
+// ---- Order Cancel Reject: 409 bytes ------------------------------------------
+
+// The Order Cancel Reject message is issued upon receipt of a cancel request message which cannot be honored.
+entrypoint typedef struct _OrderCancelReject {
+  UINT32 seq_num;                    // bytes 0 to 3
+  UINT64 uuid;                       // bytes 4 to 11
+  UINT8 text[256];                   // bytes 12 to 267
+  UINT8 exec_id[40];                 // bytes 268 to 307
+  UINT8 sender_id[20];               // bytes 308 to 327
+  UINT8 cl_ord_id[20];               // bytes 328 to 347
+  UINT64 party_details_list_req_id;  // bytes 348 to 355
+  UINT64 order_id;                   // bytes 356 to 363
+  UINT64 transact_time;              // bytes 364 to 371
+  UINT64 sending_time_epoch;         // bytes 372 to 379
+  UINT64 order_request_id;           // bytes 380 to 387
+  UINT8 location[5];                 // bytes 388 to 392
+  UINT16 cxl_rej_reason;             // bytes 393 to 394
+  UINT16 delay_duration;             // bytes 395 to 396
+  UINT8 manual_order_indicator;      // byte 397
+  UINT8 poss_retrans_flag;           // byte 398
+  UINT8 split_msg;                   // byte 399
+  UINT8 liquidity_flag;              // byte 400
+  UINT64 delay_to_time;              // bytes 401 to 408
+} OrderCancelReject;
+
+// ---- Order Cancel Replace Reject: 409 bytes ----------------------------------
+
+// The Order Cancel Replace Reject message is issued upon receipt of a cancel replace request message that cannot be honored.
+entrypoint typedef struct _OrderCancelReplaceReject {
+  UINT32 seq_num;                    // bytes 0 to 3
+  UINT64 uuid;                       // bytes 4 to 11
+  UINT8 text[256];                   // bytes 12 to 267
+  UINT8 exec_id[40];                 // bytes 268 to 307
+  UINT8 sender_id[20];               // bytes 308 to 327
+  UINT8 cl_ord_id[20];               // bytes 328 to 347
+  UINT64 party_details_list_req_id;  // bytes 348 to 355
+  UINT64 order_id;                   // bytes 356 to 363
+  UINT64 transact_time;              // bytes 364 to 371
+  UINT64 sending_time_epoch;         // bytes 372 to 379
+  UINT64 order_request_id;           // bytes 380 to 387
+  UINT8 location[5];                 // bytes 388 to 392
+  UINT16 cxl_rej_reason;             // bytes 393 to 394
+  UINT16 delay_duration;             // bytes 395 to 396
+  UINT8 manual_order_indicator;      // byte 397
+  UINT8 poss_retrans_flag;           // byte 398
+  UINT8 split_msg;                   // byte 399
+  UINT8 liquidity_flag;              // byte 400
+  UINT64 delay_to_time;              // bytes 401 to 408
+} OrderCancelReplaceReject;
+
+// ---- Request For Quote Ack: 358 bytes ----------------------------------------
+
+// Request for Quote Acknowledgment message is used in response to a Request for Quote message to either accept it or reject it.
+entrypoint typedef struct _RequestForQuoteAck {
+  UINT32 seq_num;                    // bytes 0 to 3
+  UINT64 uuid;                       // bytes 4 to 11
+  UINT8 text[256];                   // bytes 12 to 267
+  UINT8 sender_id[20];               // bytes 268 to 287
+  UINT8 exchange_quote_req_id[17];   // bytes 288 to 304
+  UINT64 party_details_list_req_id;  // bytes 305 to 312
+  UINT64 request_time;               // bytes 313 to 320
+  UINT64 sending_time_epoch;         // bytes 321 to 328
+  UINT64 quote_req_id;               // bytes 329 to 336
+  UINT8 location[5];                 // bytes 337 to 341
+  UINT16 quote_reject_reason;        // bytes 342 to 343
+  UINT16 delay_duration;             // bytes 344 to 345
+  UINT8 quote_ack_status;            // byte 346
+  UINT8 manual_order_indicator;      // byte 347
+  UINT8 split_msg;                   // byte 348
+  UINT8 poss_retrans_flag;           // byte 349
+  UINT64 delay_to_time;              // bytes 350 to 357
+} RequestForQuoteAck;
+
+// ---- Maturity Month Year: 5 bytes --------------------------------------------
+
+// SecurityDefinitionResponse
+entrypoint typedef struct _MaturityMonthYear {
+  UINT16 year;  // bytes 0 to 1
+  UINT8 month;  // byte 2
+  UINT8 day;    // byte 3
+  UINT8 week;   // byte 4
+} MaturityMonthYear;
+
+// ---- Leg Option Delta: 5 bytes -----------------------------------------------
+
+// Up to 26 legs (i.e., repeating groups) supported for UDS for options. Up to 40 legs (i.e., repeating groups) supported for UDS for futures. Will be set to 0 for REPO
+entrypoint typedef struct _LegOptionDelta {
+  UINT32 mantissa_32;  // bytes 0 to 3, signed, read here as unsigned
+  UINT8 exponent;      // byte 4, signed, read here as unsigned
+} LegOptionDelta;
+

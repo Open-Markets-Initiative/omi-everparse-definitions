@@ -1,0 +1,141 @@
+// SIX Swiss Exchange SIX Swiss Exchange IMI Orderbook Snapshot Recovery Service
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out SixSwissExchange_Snapshot_v1_24_0_Server.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a length prefix framing what follows
+//
+// License: MIT No Attribution
+
+// ---- Server Packet Header: 3 bytes -------------------------------------------
+
+// Packet header of a packet sent by the server
+entrypoint typedef struct _ServerPacketHeader {
+  UINT16BE packet_length;    // bytes 0 to 1
+  UINT8 server_packet_type;  // byte 2
+} ServerPacketHeader;
+
+// ---- Login Accepted Packet: 30 bytes -----------------------------------------
+
+// The SoupBinTCP server sends a Login Accepted Packet in response to receiving a valid Login Request from the client
+entrypoint typedef struct _LoginAcceptedPacket {
+  UINT8 accepted_session[10];          // bytes 0 to 9
+  UINT8 accepted_sequence_number[20];  // bytes 10 to 29
+} LoginAcceptedPacket;
+
+// ---- Login Rejected Packet: 1 byte -------------------------------------------
+
+// The SoupBinTCP server sends this packet in response to an invalid Login Request Packet from the client
+entrypoint typedef struct _LoginRejectedPacket {
+  UINT8 reject_reason_code;  // byte 0
+} LoginRejectedPacket;
+
+// ---- Time Stamp Seconds Message: 4 bytes -------------------------------------
+
+// Timestamp of seconds since midnight, used in combination with the nanoseconds timestamp of each message
+entrypoint typedef struct _TimeStampSecondsMessage {
+  UINT32BE second;  // bytes 0 to 3
+} TimeStampSecondsMessage;
+
+// ---- System Event Message: 17 bytes ------------------------------------------
+
+// Sent as a result of trade events at the system, group and Orderbook level
+entrypoint typedef struct _SystemEventMessage {
+  UINT32BE timestamp;  // bytes 0 to 3
+  UINT8 group[8];      // bytes 4 to 11
+  UINT8 event_code;    // byte 12
+  UINT32BE orderbook;  // bytes 13 to 16
+} SystemEventMessage;
+
+// ---- Quantity Tick Size Message: 16 bytes ------------------------------------
+
+// Shows the Quantity Tick (Category) of a Security
+entrypoint typedef struct _QuantityTickSizeMessage {
+  UINT32BE timestamp;               // bytes 0 to 3
+  UINT32BE quantity_tick_table_id;  // bytes 4 to 7
+  UINT32BE quantity_tick_size;      // bytes 8 to 11
+  UINT32BE quantity_start;          // bytes 12 to 15
+} QuantityTickSizeMessage;
+
+// ---- Price Tick Size Message: 16 bytes ---------------------------------------
+
+// Shows the Price Tick (Category) of a Security
+entrypoint typedef struct _PriceTickSizeMessage {
+  UINT32BE timestamp;            // bytes 0 to 3
+  UINT32BE price_tick_table_id;  // bytes 4 to 7
+  UINT32BE price_tick_size;      // bytes 8 to 11
+  UINT32BE price_start;          // bytes 12 to 15
+} PriceTickSizeMessage;
+
+// ---- Orderbook Directory Message: 68 bytes -----------------------------------
+
+// Provides the basic reference data for the active Orderbooks for a specific OBM partition
+entrypoint typedef struct _OrderbookDirectoryMessage {
+  UINT32BE timestamp;               // bytes 0 to 3
+  UINT32BE orderbook;               // bytes 4 to 7
+  UINT8 price_type;                 // byte 8
+  UINT8 isin[12];                   // bytes 9 to 20
+  UINT8 currency[3];                // bytes 21 to 23
+  UINT8 group[8];                   // bytes 24 to 31
+  UINT32BE minimum_quantity;        // bytes 32 to 35
+  UINT32BE quantity_tick_table_id;  // bytes 36 to 39
+  UINT32BE price_tick_table_id;     // bytes 40 to 43
+  UINT32BE price_decimals;          // bytes 44 to 47
+  UINT32BE delisting_date;          // bytes 48 to 51
+  UINT32BE delisting_time;          // bytes 52 to 55
+  UINT32BE qod_price_decimals;      // bytes 56 to 59
+  UINT8 security_exchange[4];       // bytes 60 to 63
+  UINT8 reference_exchange[4];      // bytes 64 to 67
+} OrderbookDirectoryMessage;
+
+// ---- Orderbook Trading Action Message: 10 bytes ------------------------------
+
+// Sent as a result of an Orderbook state or condition change
+entrypoint typedef struct _OrderbookTradingActionMessage {
+  UINT32BE timestamp;    // bytes 0 to 3
+  UINT32BE orderbook;    // bytes 4 to 7
+  UINT8 trading_state;   // byte 8
+  UINT8 book_condition;  // byte 9
+} OrderbookTradingActionMessage;
+
+// ---- Add Order Message: 25 bytes ---------------------------------------------
+
+// A new order has been accepted and added to the book; an Order Number and Quantity of zero carries the reference price
+entrypoint typedef struct _AddOrderMessage {
+  UINT32BE timestamp;       // bytes 0 to 3
+  UINT64BE order_number;    // bytes 4 to 11
+  UINT8 order_verb;         // byte 12
+  UINT32BE order_quantity;  // bytes 13 to 16
+  UINT32BE orderbook;       // bytes 17 to 20
+  UINT32BE order_price;     // bytes 21 to 24
+} AddOrderMessage;
+
+// ---- Indicative Price Quantity Message: 29 bytes -----------------------------
+
+// Sent during non-automatic matching periods telling the users what would happen if the book was uncrossed now
+entrypoint typedef struct _IndicativePriceQuantityMessage {
+  UINT32BE timestamp;                     // bytes 0 to 3
+  UINT64BE theoretical_opening_quantity;  // bytes 4 to 11
+  UINT32BE orderbook;                     // bytes 12 to 15
+  UINT32BE best_bid;                      // bytes 16 to 19
+  UINT32BE best_offer;                    // bytes 20 to 23
+  UINT32BE theoretical_opening_price;     // bytes 24 to 27
+  UINT8 cross_type;                       // byte 28
+} IndicativePriceQuantityMessage;
+
+// ---- Glimpse Snapshot Message: 8 bytes ---------------------------------------
+
+// The last message of the GLIMPSE snapshot
+entrypoint typedef struct _GlimpseSnapshotMessage {
+  UINT64BE sequence_number;  // bytes 0 to 7
+} GlimpseSnapshotMessage;
+

@@ -1,0 +1,50 @@
+// The London Metal Exchange LMEsource WarehouseStock Refresh
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out LmeSelect_WarehouseStockSnapshot_v4_18.3d
+//
+// What this definition does not state, and the model does:
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Packet Header: 16 bytes -------------------------------------------------
+
+// LMEsource packet header, giving the packet size, the number of messages it carries, the sequence number of the first of them and the time the packet was sent
+entrypoint typedef struct _PacketHeader {
+  UINT16 pkt_size;   // bytes 0 to 1
+  UINT8 msg_count;   // byte 2
+  UINT8 filler;      // byte 3
+  UINT32 seq_num;    // bytes 4 to 7
+  UINT64 send_time;  // bytes 8 to 15
+} PacketHeader;
+
+// ---- Message Header: 4 bytes -------------------------------------------------
+
+// LMEsource message header, giving the size of the message and its type
+entrypoint typedef struct _MessageHeader {
+  UINT16 msg_size;  // bytes 0 to 1
+  UINT16 msg_type;  // bytes 2 to 3
+} MessageHeader;
+
+// ---- Sequence Reset Message: 4 bytes -----------------------------------------
+
+// Sent on each multicast channel at start of day, and intraday in case of a disaster recovery. The client must ignore the sequence number of the Sequence Reset message itself and set the next expected sequence number to NewSeqNo, clear all cached data for all instruments and subscribe to the refresh channels to receive the current state of the market.
+entrypoint typedef struct _SequenceResetMessage {
+  UINT32 new_seq_no;  // bytes 0 to 3
+} SequenceResetMessage;
+
+// ---- Refresh Complete Message: 4 bytes ---------------------------------------
+
+// Published to mark the end of a refresh cycle.
+entrypoint typedef struct _RefreshCompleteMessage {
+  UINT32 last_seq_num;  // bytes 0 to 3
+} RefreshCompleteMessage;
+

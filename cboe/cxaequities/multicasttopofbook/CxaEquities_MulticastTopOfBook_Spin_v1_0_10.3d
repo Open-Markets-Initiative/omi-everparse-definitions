@@ -1,0 +1,129 @@
+// Chicago Board Options Exchange Multicast Top Of Book
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out CxaEquities_MulticastTopOfBook_Spin_v1_0_10.3d
+//
+// What this definition does not state, and the model does:
+// - a Reassemble rule
+// - a run filling what frames it
+//
+// License: MIT No Attribution
+
+// ---- Packet Header: 8 bytes --------------------------------------------------
+
+entrypoint typedef struct _PacketHeader {
+  UINT16 length;        // bytes 0 to 1
+  UINT8 message_count;  // byte 2
+  UINT8 unit_;          // byte 3
+  UINT32 sequence;      // bytes 4 to 7
+} PacketHeader;
+
+// ---- Message Header: 2 bytes -------------------------------------------------
+
+entrypoint typedef struct _MessageHeader {
+  UINT8 message_length;  // byte 0
+  UINT8 message_type;    // byte 1
+} MessageHeader;
+
+// ---- Login Message: 20 bytes -------------------------------------------------
+
+// First message sent to the Spin Server by the client process after the connection to the Spin Server is established. Failure to login before sending any other message type will result in the connection being dropped by the Spin Server. Identical format to the GRP Login message.
+entrypoint typedef struct _LoginMessage {
+  UINT8 session_sub_id[4];  // bytes 0 to 3
+  UINT8 username[4];        // bytes 4 to 7
+  UINT8 filler[2];          // bytes 8 to 9
+  UINT8 password[10];       // bytes 10 to 19
+} LoginMessage;
+
+// ---- Login Response Message: 1 byte ------------------------------------------
+
+// Sent by the Spin Server to the client process in response to a Login message. The Status field reflects an accepted login or the reason the session was not accepted. If login fails, the connection will be dropped after the Login Response message is sent.
+entrypoint typedef struct _LoginResponseMessage {
+  UINT8 login_response_status;  // byte 0
+} LoginResponseMessage;
+
+// ---- Spin Image Available Message: 4 bytes -----------------------------------
+
+// Sent once per second by the Spin Server, indicating through what sequence number a spin is available.
+entrypoint typedef struct _SpinImageAvailableMessage {
+  UINT32 sequence;  // bytes 0 to 3
+} SpinImageAvailableMessage;
+
+// ---- Spin Request Message: 4 bytes -------------------------------------------
+
+// Used by a client's process to request transmission of a spin of the unit's order book.
+entrypoint typedef struct _SpinRequestMessage {
+  UINT32 sequence;  // bytes 0 to 3
+} SpinRequestMessage;
+
+// ---- Spin Response Message: 9 bytes ------------------------------------------
+
+// Sent by the Spin Server in response to a client's Spin Request message indicating whether a spin will be sent.
+entrypoint typedef struct _SpinResponseMessage {
+  UINT32 sequence;             // bytes 0 to 3
+  UINT32 order_count;          // bytes 4 to 7
+  UINT8 spin_response_status;  // byte 8
+} SpinResponseMessage;
+
+// ---- Spin Finished Message: 4 bytes ------------------------------------------
+
+// Sent to indicate that all messages for the spin requested have been sent. A Spin Finished message is only sent if a Spin Request was not rejected. Upon receipt, any buffered multicast messages should be applied to the client's copy of the book to make it current.
+entrypoint typedef struct _SpinFinishedMessage {
+  UINT32 sequence;  // bytes 0 to 3
+} SpinFinishedMessage;
+
+// ---- Trading Status Message: 20 bytes ----------------------------------------
+
+// Indicates the current trading status of a security. Included in a spin response so the client can populate trading state for each symbol.
+entrypoint typedef struct _TradingStatusMessage {
+  UINT64 timestamp;         // bytes 0 to 7
+  UINT8 symbol[6];          // bytes 8 to 13
+  UINT8 trading_status;     // byte 14
+  UINT8 market_id_code[4];  // bytes 15 to 18
+  UINT8 reserved_1;         // byte 19
+} TradingStatusMessage;
+
+// ---- Single Side Update Message: 28 bytes ------------------------------------
+
+// Carries the current inside price and quantity for a single side of a symbol. Included in a spin response so the client can populate the top-of-book state.
+entrypoint typedef struct _SingleSideUpdateMessage {
+  UINT64 timestamp;  // bytes 0 to 7
+  UINT8 symbol[6];   // bytes 8 to 13
+  UINT8 side;        // byte 14
+  UINT64 price;      // bytes 15 to 22
+  UINT32 quantity;   // bytes 23 to 26
+  UINT8 reserved_1;  // byte 27
+} SingleSideUpdateMessage;
+
+// ---- Two Side Update Message: 40 bytes ---------------------------------------
+
+// Carries the current inside prices and quantities for both sides of a symbol. Included in a spin response so the client can populate the top-of-book state.
+entrypoint typedef struct _TwoSideUpdateMessage {
+  UINT64 timestamp;         // bytes 0 to 7
+  UINT8 symbol[6];          // bytes 8 to 13
+  UINT64 bid_price;         // bytes 14 to 21
+  UINT32 bid_quantity;      // bytes 22 to 25
+  UINT8 reserved_1;         // byte 26
+  UINT64 ask_price;         // bytes 27 to 34
+  UINT32 ask_quantity;      // bytes 35 to 38
+  UINT8 second_reserved_1;  // byte 39
+} TwoSideUpdateMessage;
+
+// ---- Calculated Value Message: 31 bytes --------------------------------------
+
+// Carries the latest calculated market value for a specified symbol. Included in a spin response so the client can populate the latest index, iNAV, or closing price value.
+entrypoint typedef struct _CalculatedValueMessage {
+  UINT64 timestamp;        // bytes 0 to 7
+  UINT8 symbol[6];         // bytes 8 to 13
+  UINT8 value_category;    // byte 14
+  UINT64 value;            // bytes 15 to 22
+  UINT64 value_timestamp;  // bytes 23 to 30
+} CalculatedValueMessage;
+

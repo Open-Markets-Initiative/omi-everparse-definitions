@@ -1,0 +1,455 @@
+// Australian Securities Exchange 24 Itch
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out AsxDerivatives_T24_v1_13.3d
+//
+// What this definition does not state, and the model does:
+// - the dispatch that chooses a message by its type
+// - a run counted by a field
+// - a run of a stated number of entries
+// - a field read in bits
+//
+// License: MIT No Attribution
+
+// ---- Session: 10 bytes -------------------------------------------------------
+
+entrypoint typedef struct _Session {
+  UINT8 protocol_version[3];  // bytes 0 to 2
+  UINT8 session_year[2];      // bytes 3 to 4
+  UINT8 session_week[2];      // bytes 5 to 6
+  UINT8 trading_service[3];   // bytes 7 to 9
+} Session;
+
+// ---- Packet Header: 20 bytes -------------------------------------------------
+
+// Itch Mold Udp 64 Packet Header
+entrypoint typedef struct _PacketHeader {
+  Session session;           // bytes 0 to 9
+  UINT64BE sequence_number;  // bytes 10 to 17
+  UINT16BE message_count;    // bytes 18 to 19
+} PacketHeader;
+
+// ---- Message Header: 3 bytes -------------------------------------------------
+
+// Mold Udp 64 Message Header
+entrypoint typedef struct _MessageHeader {
+  UINT16BE message_length;  // bytes 0 to 1
+  UINT8 message_type;       // byte 2
+} MessageHeader;
+
+// ---- Time Message: 4 bytes ---------------------------------------------------
+
+// The server will, on each packet multicast, transmit this message for every second for which at least one application message is generated
+entrypoint typedef struct _TimeMessage {
+  UINT32BE second;  // bytes 0 to 3
+} TimeMessage;
+
+// ---- System Event Message: 7 bytes -------------------------------------------
+
+// The system event message is used to signal a market or trading period event.
+entrypoint typedef struct _SystemEventMessage {
+  UINT32BE nanoseconds;  // bytes 0 to 3
+  UINT16BE trade_date;   // bytes 4 to 5
+  UINT8 event_code;      // byte 6
+} SystemEventMessage;
+
+// ---- Future Symbol Directory Message: 53 bytes -------------------------------
+
+// As each product moves to the new Trade Date, ASX Trade24 will disseminate the future symbol messages defining the available futures, CFDs and Share Future contracts for each instrument. The action of disseminating this message will automatically imply the contract is in a Pending session state.
+entrypoint typedef struct _FutureSymbolDirectoryMessage {
+  UINT32BE nanoseconds;                   // bytes 0 to 3
+  UINT16BE trade_date;                    // bytes 4 to 5
+  UINT32BE contract_number;               // bytes 6 to 9
+  UINT8 exchange[6];                      // bytes 10 to 15
+  UINT8 instrument[6];                    // bytes 16 to 21
+  UINT8 contract_type;                    // byte 22
+  UINT16BE expiry_year;                   // bytes 23 to 24
+  UINT8 expiry_month;                     // byte 25
+  UINT8 price_decimal_position;           // byte 26
+  UINT32BE price_fractional_denominator;  // bytes 27 to 30
+  UINT16BE price_minimum_tick;            // bytes 31 to 32
+  UINT32BE last_trading_date;             // bytes 33 to 36
+  UINT32BE prior_day_settlement;          // bytes 37 to 40, signed, read here as unsigned
+  UINT8 financial_type;                   // byte 41
+  UINT8 currency[3];                      // bytes 42 to 44
+  UINT32BE lot_size_or_face_value;        // bytes 45 to 48
+  UINT8 maturity_value;                   // byte 49
+  UINT16BE coupon_rate;                   // bytes 50 to 51
+  UINT8 payments_per_year;                // byte 52
+} FutureSymbolDirectoryMessage;
+
+// ---- Spread Symbol Directory Message: 34 bytes -------------------------------
+
+// As each product moves to the new Trade Date, ASX Trade24 will disseminate the spread symbol messages defining the available calendar spread and inter-spread contracts. For contracts that are inter-spreads, the underlying legs are in the same Trade Date.
+entrypoint typedef struct _SpreadSymbolDirectoryMessage {
+  UINT32BE nanoseconds;                   // bytes 0 to 3
+  UINT16BE trade_date;                    // bytes 4 to 5
+  UINT32BE contract_number;               // bytes 6 to 9
+  UINT8 exchange[6];                      // bytes 10 to 15
+  UINT8 contract_type;                    // byte 16
+  UINT32BE first_leg_contract_number;     // bytes 17 to 20
+  UINT32BE second_leg_contract_number;    // bytes 21 to 24
+  UINT8 primary_ratio;                    // byte 25
+  UINT8 secondary_ratio;                  // byte 26
+  UINT8 price_decimal_position;           // byte 27
+  UINT32BE price_fractional_denominator;  // bytes 28 to 31
+  UINT16BE price_minimum_tick;            // bytes 32 to 33
+} SpreadSymbolDirectoryMessage;
+
+// ---- Option Symbol Directory Message: 74 bytes -------------------------------
+
+// As each product moves to the new Trade Date, ASX Trade24 will disseminate the option symbol messages defining all the available options contracts. For Single Session Options only, the exchange can activate or de-activate option symbols during the course of trading by issuing Order Book State messages for affected option contracts. If an option symbol is not active (Activated field is N ) or is de-activated (Trading Status is I ), reference to that option contract should be removed from the list of actively traded contracts. If an option symbol is active (Activated field is Y ) or is activated (Trading Status is A ), reference to that option contract should be added to the list of actively traded contracts.
+entrypoint typedef struct _OptionSymbolDirectoryMessage {
+  UINT32BE nanoseconds;                          // bytes 0 to 3
+  UINT16BE trade_date;                           // bytes 4 to 5
+  UINT32BE contract_number;                      // bytes 6 to 9
+  UINT8 exchange[6];                             // bytes 10 to 15
+  UINT8 instrument[6];                           // bytes 16 to 21
+  UINT8 contract_type;                           // byte 22
+  UINT16BE expiry_year;                          // bytes 23 to 24
+  UINT8 expiry_month;                            // byte 25
+  UINT8 option_type;                             // byte 26
+  UINT32BE strike;                               // bytes 27 to 30
+  UINT32BE underlying_contract_number;           // bytes 31 to 34
+  UINT8 price_decimal_position;                  // byte 35
+  UINT32BE price_fractional_denominator;         // bytes 36 to 39
+  UINT16BE price_minimum_tick;                   // bytes 40 to 41
+  UINT8 strike_price_decimal_position;           // byte 42
+  UINT32BE strike_price_fractional_denominator;  // bytes 43 to 46
+  UINT16BE strike_price_minimum_tick;            // bytes 47 to 48
+  UINT32BE last_trading_date;                    // bytes 49 to 52
+  UINT32BE prior_day_settlement;                 // bytes 53 to 56, signed, read here as unsigned
+  UINT32BE volatility;                           // bytes 57 to 60
+  UINT8 financial_type;                          // byte 61
+  UINT8 currency[3];                             // bytes 62 to 64
+  UINT32BE lot_size_or_face_value;               // bytes 65 to 68
+  UINT8 maturity_value;                          // byte 69
+  UINT16BE coupon_rate;                          // bytes 70 to 71
+  UINT8 payments_per_year;                       // byte 72
+  UINT8 activated;                               // byte 73
+} OptionSymbolDirectoryMessage;
+
+// ---- Order Book State Message: 11 bytes --------------------------------------
+
+// ASX Trade24 uses this message to indicate the current session state of a contract to the market.
+entrypoint typedef struct _OrderBookStateMessage {
+  UINT32BE nanoseconds;      // bytes 0 to 3
+  UINT16BE trade_date;       // bytes 4 to 5
+  UINT32BE contract_number;  // bytes 6 to 9
+  UINT8 trading_status;      // byte 10
+} OrderBookStateMessage;
+
+// ---- Order Added Message: 31 bytes -------------------------------------------
+
+// An Order Added message indicates a new order has been accepted by the ASX Trade24 system and was added to the order book. All orders in ASX Trade24 are anonymous and one Add type is supported for real orders that are not custom market orders. The message is referenced by an Order Number assigned by ASX Trade24 and is unique for the life of the order.
+entrypoint typedef struct _OrderAddedMessage {
+  UINT32BE nanoseconds;          // bytes 0 to 3
+  UINT16BE trade_date;           // bytes 4 to 5
+  UINT32BE contract_number;      // bytes 6 to 9
+  UINT8 side;                    // byte 10
+  UINT64BE order_number;         // bytes 11 to 18
+  UINT32BE order_book_priority;  // bytes 19 to 22
+  UINT32BE quantity;             // bytes 23 to 26
+  UINT32BE price;                // bytes 27 to 30, signed, read here as unsigned
+} OrderAddedMessage;
+
+// ---- Order Replaced Message: 31 bytes ----------------------------------------
+
+// This message is sent whenever an order in the book has been modified for price or volume where the priority changes. Even though the side and contract number cannot be changed, these fields are included in the message to provide fast look-up.
+entrypoint typedef struct _OrderReplacedMessage {
+  UINT32BE nanoseconds;          // bytes 0 to 3
+  UINT16BE trade_date;           // bytes 4 to 5
+  UINT32BE contract_number;      // bytes 6 to 9
+  UINT8 side;                    // byte 10
+  UINT64BE order_number;         // bytes 11 to 18
+  UINT32BE order_book_priority;  // bytes 19 to 22
+  UINT32BE quantity;             // bytes 23 to 26
+  UINT32BE price;                // bytes 27 to 30, signed, read here as unsigned
+} OrderReplacedMessage;
+
+// ---- Order Volume Cancelled Message: 23 bytes --------------------------------
+
+// This message is sent whenever an order in the book is modified as a result of a partial cancellation of volume. The difference between this message and the Order Replaced is an Order Replaced will always show a change of order book priority in regards to the order s position in the queue. An Order Volume Cancelled message is not sent when an order has partially traded.
+entrypoint typedef struct _OrderVolumeCancelledMessage {
+  UINT32BE nanoseconds;      // bytes 0 to 3
+  UINT16BE trade_date;       // bytes 4 to 5
+  UINT32BE contract_number;  // bytes 6 to 9
+  UINT8 side;                // byte 10
+  UINT64BE order_number;     // bytes 11 to 18
+  UINT32BE quantity;         // bytes 19 to 22
+} OrderVolumeCancelledMessage;
+
+// ---- Order Deleted Message: 19 bytes -----------------------------------------
+
+// This message is sent whenever an order in the book is cancelled by the owner, expired, cancelled by the exchange, purged or volume cancelled. All remaining volume is no longer accessible so the order must be removed from the book.
+entrypoint typedef struct _OrderDeletedMessage {
+  UINT32BE nanoseconds;      // bytes 0 to 3
+  UINT16BE trade_date;       // bytes 4 to 5
+  UINT32BE contract_number;  // bytes 6 to 9
+  UINT8 side;                // byte 10
+  UINT64BE order_number;     // bytes 11 to 18
+} OrderDeletedMessage;
+
+// ---- Implied Order Added Message: 31 bytes -----------------------------------
+
+// This message is the same format as the Order Added message, except the nature of this order is it has an implied price, implied volume and a priority that is derived from two or more spreadable real orders.
+entrypoint typedef struct _ImpliedOrderAddedMessage {
+  UINT32BE nanoseconds;          // bytes 0 to 3
+  UINT16BE trade_date;           // bytes 4 to 5
+  UINT32BE contract_number;      // bytes 6 to 9
+  UINT8 side;                    // byte 10
+  UINT64BE order_number;         // bytes 11 to 18
+  UINT32BE order_book_priority;  // bytes 19 to 22
+  UINT32BE quantity;             // bytes 23 to 26
+  UINT32BE price;                // bytes 27 to 30, signed, read here as unsigned
+} ImpliedOrderAddedMessage;
+
+// ---- Implied Order Replaced Message: 31 bytes --------------------------------
+
+// This message is the same format as the Order Replaced message, except this replacement refers to an implied order and is sent whenever the implied pricing or volume has changed due to a price or volume movement of real orders for a side of a single contract number.
+entrypoint typedef struct _ImpliedOrderReplacedMessage {
+  UINT32BE nanoseconds;          // bytes 0 to 3
+  UINT16BE trade_date;           // bytes 4 to 5
+  UINT32BE contract_number;      // bytes 6 to 9
+  UINT8 side;                    // byte 10
+  UINT64BE order_number;         // bytes 11 to 18
+  UINT32BE order_book_priority;  // bytes 19 to 22
+  UINT32BE quantity;             // bytes 23 to 26
+  UINT32BE price;                // bytes 27 to 30, signed, read here as unsigned
+} ImpliedOrderReplacedMessage;
+
+// ---- Implied Order Deleted Message: 19 bytes ---------------------------------
+
+// This message is the same format as the Order Deleted message, except this deletion refers to an implied order. When received, any implied volume is no longer accessible so the implied order of the indicated side must be removed from the book.
+entrypoint typedef struct _ImpliedOrderDeletedMessage {
+  UINT32BE nanoseconds;      // bytes 0 to 3
+  UINT16BE trade_date;       // bytes 4 to 5
+  UINT32BE contract_number;  // bytes 6 to 9
+  UINT8 side;                // byte 10
+  UINT64BE order_number;     // bytes 11 to 18
+} ImpliedOrderDeletedMessage;
+
+// ---- Custom Market Order Replaced Message: 22 bytes --------------------------
+
+// This message is sent whenever an order in the custom market book has been modified for volume. Custom market order modification messages always include the Order Number of the Custom Market Order Added to which the update applies. To determine the current display volume for an order, subscribers must replace the original volume stated in the Custom Market Order Added message with the quantity stated in the Custom Market Order Replaced message of the same order number.
+entrypoint typedef struct _CustomMarketOrderReplacedMessage {
+  UINT32BE nanoseconds;          // bytes 0 to 3
+  UINT16BE trade_date;           // bytes 4 to 5
+  UINT64BE order_number;         // bytes 6 to 13
+  UINT32BE order_book_priority;  // bytes 14 to 17
+  UINT32BE quantity;             // bytes 18 to 21
+} CustomMarketOrderReplacedMessage;
+
+// ---- Custom Market Order Deleted Message: 14 bytes ---------------------------
+
+// This message is sent whenever an order in the custom market book is cancelled by the owner, expired, cancelled by the exchange or purged. All remaining volume is no longer accessible so the order must be removed from the book. A Custom Market Order Deleted message is not sent when an order has traded out.
+entrypoint typedef struct _CustomMarketOrderDeletedMessage {
+  UINT32BE nanoseconds;   // bytes 0 to 3
+  UINT16BE trade_date;    // bytes 4 to 5
+  UINT64BE order_number;  // bytes 6 to 13
+} CustomMarketOrderDeletedMessage;
+
+// ---- Order Executed Message: 36 bytes ----------------------------------------
+
+// This message is sent whenever a resting order of the book is executed in whole or in part where the price and contract number of the order and trade are the same. It is possible to receive several Order Executed messages for the same order reference number if that order is executed in several parts.
+entrypoint typedef struct _OrderExecutedMessage {
+  UINT32BE nanoseconds;         // bytes 0 to 3
+  UINT16BE trade_date;          // bytes 4 to 5
+  UINT32BE contract_number;     // bytes 6 to 9
+  UINT8 side;                   // byte 10
+  UINT64BE order_number;        // bytes 11 to 18
+  UINT32BE quantity_remaining;  // bytes 19 to 22
+  UINT8 trade_type;             // byte 23
+  UINT32BE match_number;        // bytes 24 to 27
+  UINT32BE executed_quantity;   // bytes 28 to 31
+  UINT32BE trade_price;         // bytes 32 to 35, signed, read here as unsigned
+} OrderExecutedMessage;
+
+// ---- Order Executed With Price Message: 47 bytes -----------------------------
+
+// This message is sent whenever two resting orders of the same contract are executed. This can occur in two circumstances: During levelling in whole or in part at a price that could be different from one or both resting order prices.
+entrypoint typedef struct _OrderExecutedWithPriceMessage {
+  UINT32BE nanoseconds;                // bytes 0 to 3
+  UINT16BE trade_date;                 // bytes 4 to 5
+  UINT32BE contract_number;            // bytes 6 to 9
+  UINT64BE buying_order_number;        // bytes 10 to 17
+  UINT32BE buyer_quantity_remaining;   // bytes 18 to 21
+  UINT64BE selling_order_number;       // bytes 22 to 29
+  UINT32BE seller_quantity_remaining;  // bytes 30 to 33
+  UINT8 trade_type;                    // byte 34
+  UINT32BE match_number;               // bytes 35 to 38
+  UINT32BE executed_quantity;          // bytes 39 to 42
+  UINT32BE trade_price;                // bytes 43 to 46, signed, read here as unsigned
+} OrderExecutedWithPriceMessage;
+
+// ---- Spread Executed Message: 46 bytes ---------------------------------------
+
+// This message is sent whenever the open leg of a resting spread order is traded in whole or in part where the price and the contract number will be different than the traded contract number. It is possible to receive several Spread Executed messages for the same order number if that order is executed in several parts.
+entrypoint typedef struct _SpreadExecutedMessage {
+  UINT32BE nanoseconds;             // bytes 0 to 3
+  UINT16BE trade_date;              // bytes 4 to 5
+  UINT32BE contract_number;         // bytes 6 to 9
+  UINT8 side;                       // byte 10
+  UINT64BE order_number;            // bytes 11 to 18
+  UINT32BE quantity_remaining;      // bytes 19 to 22
+  UINT8 trade_type;                 // byte 23
+  UINT32BE match_number;            // bytes 24 to 27
+  UINT32BE executed_quantity;       // bytes 28 to 31
+  UINT32BE trade_price;             // bytes 32 to 35, signed, read here as unsigned
+  UINT32BE traded_contract_number;  // bytes 36 to 39
+  UINT32BE spread_trade_price;      // bytes 40 to 43, signed, read here as unsigned
+  UINT8 trade_side_of_leg;          // byte 44
+  UINT8 printable;                  // byte 45
+} SpreadExecutedMessage;
+
+// ---- Trade Spread Execution Chain Message: 62 bytes --------------------------
+
+// This message is sent whenever two resting orders of different contracts are executed in whole or in part at a price different from the initial display price(s) such as sweeping or spreading orders. Since the execution price is different than the display price of the original Add Order, a trade price field is included within the execution message.
+entrypoint typedef struct _TradeSpreadExecutionChainMessage {
+  UINT32BE nanoseconds;                // bytes 0 to 3
+  UINT16BE trade_date;                 // bytes 4 to 5
+  UINT32BE buyer;                      // bytes 6 to 9
+  UINT8 side_of_buyer;                 // byte 10
+  UINT64BE buyer_order_number;         // bytes 11 to 18
+  UINT32BE buyer_quantity_remaining;   // bytes 19 to 22
+  UINT32BE seller_contract_number;     // bytes 23 to 26
+  UINT8 side_of_seller;                // byte 27
+  UINT64BE selling_order_number;       // bytes 28 to 35
+  UINT32BE seller_quantity_remaining;  // bytes 36 to 39
+  UINT8 trade_type;                    // byte 40
+  UINT32BE match_number;               // bytes 41 to 44
+  UINT32BE executed_quantity;          // bytes 45 to 48
+  UINT32BE trade_price;                // bytes 49 to 52, signed, read here as unsigned
+  UINT32BE traded_contract_number;     // bytes 53 to 56
+  UINT32BE spread_trade_price;         // bytes 57 to 60, signed, read here as unsigned
+  UINT8 printable;                     // byte 61
+} TradeSpreadExecutionChainMessage;
+
+// ---- Custom Market Executed Message: 37 bytes --------------------------------
+
+// This message is sent whenever the open leg of a resting custom market order is traded in whole or in part.
+entrypoint typedef struct _CustomMarketExecutedMessage {
+  UINT32BE nanoseconds;             // bytes 0 to 3
+  UINT16BE trade_date;              // bytes 4 to 5
+  UINT64BE order_number;            // bytes 6 to 13
+  UINT32BE quantity_remaining;      // bytes 14 to 17
+  UINT8 trade_type;                 // byte 18
+  UINT32BE match_number;            // bytes 19 to 22
+  UINT32BE executed_quantity;       // bytes 23 to 26
+  UINT32BE trade_price;             // bytes 27 to 30, signed, read here as unsigned
+  UINT32BE traded_contract_number;  // bytes 31 to 34
+  UINT8 trade_side_of_leg;          // byte 35
+  UINT8 printable;                  // byte 36
+} CustomMarketExecutedMessage;
+
+// ---- Custom Market Trade Message: 54 bytes -----------------------------------
+
+// This message is sent whenever a resting custom market order is matched with a resting non-custom market order executed in whole or in part at a price that could be different from the initial display price(s) such as spreading orders. Since the execution price could be different than the display price of the original Order Added, a trade price field is included within the execution message.
+entrypoint typedef struct _CustomMarketTradeMessage {
+  UINT32BE nanoseconds;                       // bytes 0 to 3
+  UINT16BE trade_date;                        // bytes 4 to 5
+  UINT32BE contract_number;                   // bytes 6 to 9
+  UINT8 side;                                 // byte 10
+  UINT64BE order_number;                      // bytes 11 to 18
+  UINT32BE quantity_remaining;                // bytes 19 to 22
+  UINT64BE custom_market_order_number;        // bytes 23 to 30
+  UINT32BE custom_market_quantity_remaining;  // bytes 31 to 34
+  UINT8 trade_type;                           // byte 35
+  UINT32BE match_number;                      // bytes 36 to 39
+  UINT32BE executed_quantity;                 // bytes 40 to 43
+  UINT32BE trade_price;                       // bytes 44 to 47, signed, read here as unsigned
+  UINT32BE traded_contract_number;            // bytes 48 to 51
+  UINT8 trade_side_of_non_custom_order;       // byte 52
+  UINT8 printable;                            // byte 53
+} CustomMarketTradeMessage;
+
+// ---- Trade Cancellation Message: 10 bytes ------------------------------------
+
+// This message is sent whenever a trade is cancelled by exchange operations. This message does not affect any resting orders and is more for Information purposes. Adjustments to the Open, High, Low, Last will be performed as separate action using the Open, High, Low, Last Trade Adjustment message.
+entrypoint typedef struct _TradeCancellationMessage {
+  UINT32BE nanoseconds;   // bytes 0 to 3
+  UINT16BE trade_date;    // bytes 4 to 5
+  UINT32BE match_number;  // bytes 6 to 9
+} TradeCancellationMessage;
+
+// ---- Equilibrium Price Auction Info Message: 30 bytes ------------------------
+
+// ASX Trade24 disseminates equilibrium prices during a price discovery period. As orders are added, modified, cancelled or deleted a message will be reported informing the market the potential opening price.
+entrypoint typedef struct _EquilibriumPriceAuctionInfoMessage {
+  UINT32BE nanoseconds;        // bytes 0 to 3
+  UINT16BE trade_date;         // bytes 4 to 5
+  UINT32BE contract_number;    // bytes 6 to 9
+  UINT32BE equilibrium_price;  // bytes 10 to 13, signed, read here as unsigned
+  UINT32BE best_bid_price;     // bytes 14 to 17, signed, read here as unsigned
+  UINT32BE best_ask_price;     // bytes 18 to 21, signed, read here as unsigned
+  UINT32BE best_bid_quantity;  // bytes 22 to 25
+  UINT32BE best_ask_quantity;  // bytes 26 to 29
+} EquilibriumPriceAuctionInfoMessage;
+
+// ---- Market Settlement Message: 19 bytes -------------------------------------
+
+// ASX Trade24 disseminates settlement prices for all future and option contracts in two instalments, an interim and then a final. When the contract moves to the next trade date, the Future Symbol Directory or Option Symbol Directory message will reflect the final settlement price reported from the previous trade date in the prior day settlement field.
+entrypoint typedef struct _MarketSettlementMessage {
+  UINT32BE nanoseconds;       // bytes 0 to 3
+  UINT16BE trade_date;        // bytes 4 to 5
+  UINT32BE contract_number;   // bytes 6 to 9
+  UINT32BE settlement_price;  // bytes 10 to 13, signed, read here as unsigned
+  UINT32BE volatility;        // bytes 14 to 17
+  UINT8 settlement_type;      // byte 18
+} MarketSettlementMessage;
+
+// ---- Ad Hoc Text Message: 112 bytes ------------------------------------------
+
+// ASX Trade24 disseminates text messages to inform the market of ad hoc events.
+entrypoint typedef struct _AdHocTextMessage {
+  UINT32BE nanoseconds;     // bytes 0 to 3
+  UINT16BE trade_date;      // bytes 4 to 5
+  UINT8 source_id[6];       // bytes 6 to 11
+  UINT8 text_message[100];  // bytes 12 to 111
+} AdHocTextMessage;
+
+// ---- Request For Quote Message: 18 bytes -------------------------------------
+
+// ASX Trade24 disseminates anonymous non-custom RFQs from the market.
+entrypoint typedef struct _RequestForQuoteMessage {
+  UINT32BE nanoseconds;      // bytes 0 to 3
+  UINT16BE trade_date;       // bytes 4 to 5
+  UINT32BE contract_number;  // bytes 6 to 9
+  UINT32BE price;            // bytes 10 to 13, signed, read here as unsigned
+  UINT32BE quantity;         // bytes 14 to 17
+} RequestForQuoteMessage;
+
+// ---- Anomalous Order Threshold Publish Message: 34 bytes ---------------------
+
+// ASX Trade24 reports this message to inform the market of setting, zeroing or adjusting the Extreme Trade Range price (ETR), the Anomalous Order Threshold price (AOT) and the associated ranges for a contract that requires Market Integrity Rules enforcement.
+entrypoint typedef struct _AnomalousOrderThresholdPublishMessage {
+  UINT32BE nanoseconds;      // bytes 0 to 3
+  UINT16BE trade_date;       // bytes 4 to 5
+  UINT32BE contract_number;  // bytes 6 to 9
+  UINT32BE aot_price;        // bytes 10 to 13, signed, read here as unsigned
+  UINT32BE aot_upper_price;  // bytes 14 to 17, signed, read here as unsigned
+  UINT32BE aot_lower_price;  // bytes 18 to 21, signed, read here as unsigned
+  UINT32BE etr_price;        // bytes 22 to 25, signed, read here as unsigned
+  UINT32BE etr_upper_price;  // bytes 26 to 29, signed, read here as unsigned
+  UINT32BE etr_lower_price;  // bytes 30 to 33, signed, read here as unsigned
+} AnomalousOrderThresholdPublishMessage;
+
+// ---- Volume And Open Interest Message: 20 bytes ------------------------------
+
+// ASX Trade24 disseminates volume and open interest information for each trade date. The VOI Trade Date indicates the trade date to which the information applies.
+entrypoint typedef struct _VolumeAndOpenInterestMessage {
+  UINT32BE nanoseconds;        // bytes 0 to 3
+  UINT16BE trade_date;         // bytes 4 to 5
+  UINT32BE contract_number;    // bytes 6 to 9
+  UINT32BE cumulative_volume;  // bytes 10 to 13
+  UINT32BE open_interest;      // bytes 14 to 17
+  UINT16BE voi_trade_date;     // bytes 18 to 19
+} VolumeAndOpenInterestMessage;
+

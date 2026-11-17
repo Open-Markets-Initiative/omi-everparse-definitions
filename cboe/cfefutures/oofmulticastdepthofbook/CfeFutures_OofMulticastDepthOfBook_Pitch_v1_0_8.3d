@@ -1,0 +1,237 @@
+// Chicago Board Options Exchange OOF Multicast Depth Of Book
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out CfeFutures_OofMulticastDepthOfBook_Pitch_v1_0_8.3d
+//
+// What this definition does not state, and the model does:
+// - the dispatch that chooses a message by its type
+// - a run filling what frames it
+// - a run counted by a field
+// - a field read in bits
+//
+// License: MIT No Attribution
+
+// ---- Packet Header: 8 bytes --------------------------------------------------
+
+entrypoint typedef struct _PacketHeader {
+  UINT16 length;        // bytes 0 to 1
+  UINT8 message_count;  // byte 2
+  UINT8 unit_;          // byte 3
+  UINT32 sequence;      // bytes 4 to 7
+} PacketHeader;
+
+// ---- Message Header: 2 bytes -------------------------------------------------
+
+entrypoint typedef struct _MessageHeader {
+  UINT8 message_length;  // byte 0
+  UINT8 message_type;    // byte 1
+} MessageHeader;
+
+// ---- Time Reference Message: 16 bytes ----------------------------------------
+
+// The Time Reference message is used to provide a midnight reference point for recipients of the feed. It is sent whenever the system starts up and when the system crosses a midnight boundary. All subsequent Time messages for the same unit will the use the last Midnight Reference until another Time Reference message is received for that unit. The Time Reference message includes the Trade Date, so most other sequenced messages will not include that information. Time Reference messages will be included in a spin response.
+entrypoint typedef struct _TimeReferenceMessage {
+  UINT32 midnight_reference;  // bytes 0 to 3
+  UINT32 time_reference;      // bytes 4 to 7
+  UINT32 time_offset;         // bytes 8 to 11
+  UINT32 trade_date;          // bytes 12 to 15
+} TimeReferenceMessage;
+
+// ---- Time Message: 8 bytes ---------------------------------------------------
+
+// A Time message is immediately generated and sent when there is a PITCH event for a given clock second. If there is no PITCH event for a given clock second, then no Time message is sent for that second. All subsequent Time Offset fields for the same unit will use the new Time message value as the base until another Time message is received for the same unit. The Time field is the number of seconds relative to midnight Central Time, which is provided in the Time Reference message. The Time message also includes the Epoch Time field, which is the current time represented as the number of whole seconds since the Epoch (Midnight January 1, 1970).
+entrypoint typedef struct _TimeMessage {
+  UINT32 time_reference;  // bytes 0 to 3
+  UINT32 epoch_time;      // bytes 4 to 7
+} TimeMessage;
+
+// ---- Unit Clear Message: 4 bytes ---------------------------------------------
+
+// The Unit Clear message instructs feed recipients to clear all orders for the CFE book in the unit specified in the Sequenced Unit Header message header. It would be distributed in rare recovery events such as a data center fail-over.
+entrypoint typedef struct _UnitClearMessage {
+  UINT32 time_offset;  // bytes 0 to 3
+} UnitClearMessage;
+
+// ---- Transaction Begin Message: 4 bytes --------------------------------------
+
+// The Transaction Begin message indicates any subsequent messages, up to the accompanying Transaction End message, are all part of the same transaction block. One example of where this might be used is when a single aggressive order executes against several resting orders. All PITCH messages corresponding to such an event would be included between a Transaction Begin message and Transaction End message. It is important to note that any PITCH Message Type may be included in a transaction block and there is no guarantee that the messages apply to the same price level or even the same Symbol. Transaction Begin messages do not alter the book and can be ignored if messages are being used solely to build a book. Feed processors can use a transaction block as a trigger to postpone publishing a quote update until the end of the transaction block. In the prior example of a single aggressive order executing against multiple resting orders, a top of book feed would be able to publish a single trade message and quote update resulting from multiple Order Executed messages once it finished processing all of the messages within the transaction block.
+entrypoint typedef struct _TransactionBeginMessage {
+  UINT32 time_offset;  // bytes 0 to 3
+} TransactionBeginMessage;
+
+// ---- Transaction End Message: 4 bytes ----------------------------------------
+
+// The Transaction End message indicates that a transaction indicated by a previous Transaction Begin message has completed. Transaction End messages do not alter the book and can be ignored if messages are being used solely to build a book.
+entrypoint typedef struct _TransactionEndMessage {
+  UINT32 time_offset;  // bytes 0 to 3
+} TransactionEndMessage;
+
+// ---- Oof Symbol Mapping Message: 58 bytes ------------------------------------
+
+// An OOF Symbol Mapping message is used to map the 6 character multicast feed symbol field and options on futures name to the option contract and future underlying. The option contract is comprised of the strike price, put/call flag, options expiration date, and future underlying. The future underlying is comprised of the futures product and futures expiration date, which map to a futures symbol. This message can be sent either as a sequenced message or as an unsequenced message. It is sent as a sequenced message at system startup upon the beginning of a trading session or if an instrument is created or modified during a trading day. A new sequenced message may also be sent for a symbol that does not visibly change any attribute. A continuous loop of unsequenced symbol mapping messages (sequence = 0) is sent throughout the day at variable rates as bandwidth allows. The Time Offset field should be ignored on unsequenced messages. OOF Symbol Mapping messages are included in a spin response and will be disseminated before Complex Instrument Definition Expanded messages.
+entrypoint typedef struct _OofSymbolMappingMessage {
+  UINT32 time_offset;                 // bytes 0 to 3
+  UINT8 feed_symbol[6];               // bytes 4 to 9
+  UINT8 futures_product[8];           // bytes 10 to 17
+  UINT32 futures_expiration;          // bytes 18 to 21
+  UINT8 futures_symbol[6];            // bytes 22 to 27
+  UINT64 strike_price;                // bytes 28 to 35
+  UINT8 call_put_indicator;           // byte 36
+  UINT32 options_expiration;          // bytes 37 to 40
+  UINT8 options_on_futures_name[16];  // bytes 41 to 56
+  UINT8 symbol_condition;             // byte 57
+} OofSymbolMappingMessage;
+
+// ---- Trading Status Message: 16 bytes ----------------------------------------
+
+// The Trading Status message is used to indicate the current trading status of a symbol. A Trading Status message will be sent for all symbols as they transition through various trading states. If a Trading Status message has not been received for a symbol, then the Trading Status for the symbol should be assumed to be H = Halted. The following summarizes the Trading Status values for options in the CFE system: H = Halted state. This state is used for Supervisory Halts initiated by the Trade Desk. Orders are not being accepted in this state. Q = Queuing state. This state is used when orders are being accepted for queuing. The Queuing state is used during the pre-open for all symbols. It is also used for spread instruments that may not be tradeable due to Threshold Width. T = Trading state. This state is used when the symbol is available for trading. CFE will send a Trading Status of Q once orders can be accepted for queuing in preparation for the open. At or after the opening time, CFE will send a Trading Status of T as symbols are opened for trading. Once trading is done for the day CFE will send a Trading Status of H indicating the symbol is Halted.
+entrypoint typedef struct _TradingStatusMessage {
+  UINT32 time_offset;    // bytes 0 to 3
+  UINT8 symbol[6];       // bytes 4 to 9
+  UINT16 reserved_2;     // bytes 10 to 11
+  UINT8 trading_status;  // byte 12
+  UINT8 reserved_3[3];   // bytes 13 to 15
+} TradingStatusMessage;
+
+// ---- Add Order Long Message: 31 bytes ----------------------------------------
+
+// An Add Order message represents a newly accepted visible order on the CFE book. It includes a day- specific Order Id assigned by CFE to the order.
+entrypoint typedef struct _AddOrderLongMessage {
+  UINT32 time_offset;    // bytes 0 to 3
+  UINT64 order_id;       // bytes 4 to 11
+  UINT8 side_indicator;  // byte 12
+  UINT32 quantity_long;  // bytes 13 to 16
+  UINT8 symbol[6];       // bytes 17 to 22
+  UINT64 price_long;     // bytes 23 to 30
+} AddOrderLongMessage;
+
+// ---- Add Order Short Message: 23 bytes ---------------------------------------
+
+// An Add Order message represents a newly accepted visible order on the CFE book. It includes a day- specific Order Id assigned by CFE to the order.
+entrypoint typedef struct _AddOrderShortMessage {
+  UINT32 time_offset;     // bytes 0 to 3
+  UINT64 order_id;        // bytes 4 to 11
+  UINT8 side_indicator;   // byte 12
+  UINT16 quantity_short;  // bytes 13 to 14
+  UINT8 symbol[6];        // bytes 15 to 20
+  UINT16 price_short;     // bytes 21 to 22
+} AddOrderShortMessage;
+
+// ---- Order Executed Message: 25 bytes ----------------------------------------
+
+// Order Executed messages are sent when an order on the CFE book is executed in whole or in part. The execution price equals the limit order price found in the original Add Order message or the limit order price in the latest Modify Order message referencing the Order Id.
+entrypoint typedef struct _OrderExecutedMessage {
+  UINT32 time_offset;        // bytes 0 to 3
+  UINT64 order_id;           // bytes 4 to 11
+  UINT32 executed_quantity;  // bytes 12 to 15
+  UINT64 execution_id;       // bytes 16 to 23
+  UINT8 trade_condition;     // byte 24
+} OrderExecutedMessage;
+
+// ---- Reduce Size Long Message: 16 bytes --------------------------------------
+
+// Reduce Size messages are sent when a visible order on the CFE book is partially reduced.
+entrypoint typedef struct _ReduceSizeLongMessage {
+  UINT32 time_offset;             // bytes 0 to 3
+  UINT64 order_id;                // bytes 4 to 11
+  UINT32 canceled_quantity_long;  // bytes 12 to 15
+} ReduceSizeLongMessage;
+
+// ---- Reduce Size Short Message: 14 bytes -------------------------------------
+
+// Reduce Size messages are sent when a visible order on the CFE book is partially reduced.
+entrypoint typedef struct _ReduceSizeShortMessage {
+  UINT32 time_offset;              // bytes 0 to 3
+  UINT64 order_id;                 // bytes 4 to 11
+  UINT16 canceled_quantity_short;  // bytes 12 to 13
+} ReduceSizeShortMessage;
+
+// ---- Modify Order Long Message: 24 bytes -------------------------------------
+
+// The Modify Order message is sent whenever an open order is visibly modified. The Order Id refers to the Order Id of the original Add Order message. Note that Modify Order messages that appear to be no ops (i.e. they do not appear to modify any relevant fields) will still lose priority.
+entrypoint typedef struct _ModifyOrderLongMessage {
+  UINT32 time_offset;    // bytes 0 to 3
+  UINT64 order_id;       // bytes 4 to 11
+  UINT32 quantity_long;  // bytes 12 to 15
+  UINT64 price_long;     // bytes 16 to 23
+} ModifyOrderLongMessage;
+
+// ---- Modify Order Short Message: 16 bytes ------------------------------------
+
+// The Modify Order message is sent whenever an open order is visibly modified. The Order Id refers to the Order Id of the original Add Order message. Note that Modify Order messages that appear to be no ops (i.e. they do not appear to modify any relevant fields) will still lose priority.
+entrypoint typedef struct _ModifyOrderShortMessage {
+  UINT32 time_offset;     // bytes 0 to 3
+  UINT64 order_id;        // bytes 4 to 11
+  UINT16 quantity_short;  // bytes 12 to 13
+  UINT16 price_short;     // bytes 14 to 15
+} ModifyOrderShortMessage;
+
+// ---- Delete Order Message: 12 bytes ------------------------------------------
+
+// The Delete Order message is sent whenever a booked order is cancelled or leaves the order book. The Order Id refers to the Order Id of the original Add Order message. An order that is deleted from the book may return to the book later under certain circumstances. Therefore, a Delete Order message does not indicate that a given Order Id will not be sent again on a subsequent Add Order message.
+entrypoint typedef struct _DeleteOrderMessage {
+  UINT32 time_offset;  // bytes 0 to 3
+  UINT64 order_id;     // bytes 4 to 11
+} DeleteOrderMessage;
+
+// ---- Trade Long Message: 40 bytes --------------------------------------------
+
+// The Trade message provides information about executions that occur off of the CFE book (such as Block trades). Trade messages are necessary to calculate CFE execution data. Trade messages do not alter the book and can be ignored if messages are being used solely to build a book. The Order Id sent in a Trade message is obfuscated and will not tie back to any real Order Id sent back via a FIX or BOE order entry session.
+entrypoint typedef struct _TradeLongMessage {
+  UINT32 time_offset;     // bytes 0 to 3
+  UINT64 order_id;        // bytes 4 to 11
+  UINT8 side_indicator;   // byte 12
+  UINT32 quantity_long;   // bytes 13 to 16
+  UINT8 symbol[6];        // bytes 17 to 22
+  UINT64 price_long;      // bytes 23 to 30
+  UINT64 execution_id;    // bytes 31 to 38
+  UINT8 trade_condition;  // byte 39
+} TradeLongMessage;
+
+// ---- Trade Short Message: 32 bytes -------------------------------------------
+
+// The Trade message provides information about executions that occur off of the CFE book (such as Block trades). Trade messages are necessary to calculate CFE execution data. Trade messages do not alter the book and can be ignored if messages are being used solely to build a book. The Order Id sent in a Trade message is obfuscated and will not tie back to any real Order Id sent back via a FIX or BOE order entry session.
+entrypoint typedef struct _TradeShortMessage {
+  UINT32 time_offset;     // bytes 0 to 3
+  UINT64 order_id;        // bytes 4 to 11
+  UINT8 side_indicator;   // byte 12
+  UINT16 quantity_short;  // bytes 13 to 14
+  UINT8 symbol[6];        // bytes 15 to 20
+  UINT16 price_short;     // bytes 21 to 22
+  UINT64 execution_id;    // bytes 23 to 30
+  UINT8 trade_condition;  // byte 31
+} TradeShortMessage;
+
+// ---- Trade Break Message: 12 bytes -------------------------------------------
+
+// The Trade Break message is sent whenever an execution on CFE is broken. Trade breaks are rare and only affect applications that rely upon CFE execution-based data. A Trade Break message followed immediately be a new Trade message with the same Execution Id indicates that a trade correction has occurred. Applications that simply build a CFE book can ignore Trade Break messages.
+entrypoint typedef struct _TradeBreakMessage {
+  UINT32 time_offset;   // bytes 0 to 3
+  UINT64 execution_id;  // bytes 4 to 11
+} TradeBreakMessage;
+
+// ---- Settlement Message: 23 bytes --------------------------------------------
+
+// Settlement messages are used to provide information concerning indicative, approved, or corrected daily and final settlement prices for CFE products. An indicative daily settlement price (Issue = I) is calculated by the system and sent immediately after an instrument closes trading but before the settlement price is approved. An approved settlement price (Issue = S) is sent once the CFE Trade Desk approves a settlement price for an instrument. If there is an error in the approved settlement price, then it may be re-issued (Issue = R).
+entrypoint typedef struct _SettlementMessage {
+  UINT32 time_offset;       // bytes 0 to 3
+  UINT8 symbol[6];          // bytes 4 to 9
+  UINT32 trade_date;        // bytes 10 to 13
+  UINT64 settlement_price;  // bytes 14 to 21
+  UINT8 issue;              // byte 22
+} SettlementMessage;
+
+// ---- End Of Session Message: 4 bytes -----------------------------------------
+
+// The End of Session message is sent for each unit when the unit shuts down. No more sequenced messages will be delivered for this unit, but heartbeats from the unit may be received.
+entrypoint typedef struct _EndOfSessionMessage {
+  UINT32 time_offset;  // bytes 0 to 3
+} EndOfSessionMessage;
+

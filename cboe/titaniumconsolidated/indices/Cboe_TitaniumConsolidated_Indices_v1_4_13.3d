@@ -1,0 +1,63 @@
+// Chicago Board Options Exchange Global Indices Feed
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out Cboe_TitaniumConsolidated_Indices_v1_4_13.3d
+//
+// What this definition does not state, and the model does:
+// - a run counted by a field
+// - a length prefix framing what follows
+//
+// License: MIT No Attribution
+
+// ---- Packet Header: 16 bytes -------------------------------------------------
+
+// Cgif packet header appearing once at the beginning of each packet
+entrypoint typedef struct _PacketHeader {
+  UINT8 version;               // byte 0
+  UINT16BE length;             // bytes 1 to 2
+  UINT64BE sending_time;       // bytes 3 to 10
+  UINT8 number_of_messages;    // byte 11
+  UINT32BE first_msg_seq_num;  // bytes 12 to 15
+} PacketHeader;
+
+// ---- Message Header: 8 bytes -------------------------------------------------
+
+// Cgif Message Header common to all messages. Per spec section Message Header : Length + Template ID + MessageType + MsgSeqNum, 8 bytes total. Template ID drives payload dispatch; MessageType is per-spec FIX-compliant market data type (may be shared across templates); MsgSeqNum is the per-channel monotonic sequence number.
+entrypoint typedef struct _MessageHeader {
+  UINT16BE message_length;  // bytes 0 to 1
+  UINT8 template_i_d;       // byte 2
+  UINT8 message_type;       // byte 3
+  UINT32BE msg_seq_num;     // bytes 4 to 7
+} MessageHeader;
+
+// ---- Md Entry Px: 5 bytes ----------------------------------------------------
+
+// MDEntryPx
+entrypoint typedef struct _MdEntryPx {
+  UINT8 exponent;     // byte 0, signed, read here as unsigned
+  UINT32BE mantissa;  // bytes 1 to 4, signed, read here as unsigned
+} MdEntryPx;
+
+// ---- Effective Business Date: 9 bytes ----------------------------------------
+
+// EffectiveBusinessDate
+entrypoint typedef struct _EffectiveBusinessDate {
+  UINT8 byte_length;                       // byte 0, signed, read here as unsigned
+  UINT8 effective_business_date_chars[8];  // bytes 1 to 8
+} EffectiveBusinessDate;
+
+// ---- Date: 11 bytes ----------------------------------------------------------
+
+// Date
+entrypoint typedef struct _Date {
+  UINT8 byte_length;     // byte 0, signed, read here as unsigned
+  UINT8 date_chars[10];  // bytes 1 to 10
+} Date;
+

@@ -1,0 +1,314 @@
+// National Association of Securities Dealers Automated Quotations (Nasdaq) Depth Of Market
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out NtxOptions_DepthOfMarket_v2_2_Udp.3d
+//
+// What this definition does not state, and the model does:
+// - the dispatch that chooses a message by its type
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Packet Header: 20 bytes -------------------------------------------------
+
+// Itch Mold Udp 64 Packet Header
+entrypoint typedef struct _PacketHeader {
+  UINT8 session[10];         // bytes 0 to 9
+  UINT64BE sequence_number;  // bytes 10 to 17
+  UINT16BE message_count;    // bytes 18 to 19
+} PacketHeader;
+
+// ---- Message Header: 3 bytes -------------------------------------------------
+
+// Mold Udp 64 Message Header
+entrypoint typedef struct _MessageHeader {
+  UINT16BE message_length;  // bytes 0 to 1
+  UINT8 message_type;       // byte 2
+} MessageHeader;
+
+// ---- System Event Message: 11 bytes ------------------------------------------
+
+// The system event message type is used to signal a market or data feed handler event.
+entrypoint typedef struct _SystemEventMessage {
+  UINT16BE tracking_number;  // bytes 0 to 1
+  UINT64BE timestamp;        // bytes 2 to 9
+  UINT8 event_code;          // byte 10
+} SystemEventMessage;
+
+// ---- Derivative Directory Message: 86 bytes ----------------------------------
+
+// Derivative Directory Message for active options symbols.
+entrypoint typedef struct _DerivativeDirectoryMessage {
+  UINT16BE tracking_number;        // bytes 0 to 1
+  UINT64BE timestamp;              // bytes 2 to 9
+  UINT32BE instrument_id;          // bytes 10 to 13
+  UINT8 security_symbol[6];        // bytes 14 to 19
+  UINT8 expiration_year;           // byte 20
+  UINT8 expiration_month;          // byte 21
+  UINT8 expiration_date;           // byte 22
+  UINT32BE explicit_strike_price;  // bytes 23 to 26, signed, read here as unsigned
+  UINT8 option_type;               // byte 27
+  UINT8 underlying_symbol[13];     // bytes 28 to 40
+  UINT8 closing_type;              // byte 41
+  UINT8 tradable;                  // byte 42
+  UINT8 mpv;                       // byte 43
+  UINT8 isin[12];                  // bytes 44 to 55
+  UINT16BE tick_size_table_id;     // bytes 56 to 57
+  UINT8 price_notation;            // byte 58
+  UINT8 volume_notation;           // byte 59
+  UINT16BE financial_product;      // bytes 60 to 61
+  UINT8 market_segment_id;         // byte 62
+  UINT8 trading_currency[3];       // bytes 63 to 65
+  UINT8 mic[4];                    // bytes 66 to 69
+  UINT8 instrument_long_name[16];  // bytes 70 to 85
+} DerivativeDirectoryMessage;
+
+// ---- Trading Action Message: 15 bytes ----------------------------------------
+
+// The options system uses this administrative message to indicate the current trading status of an option.
+entrypoint typedef struct _TradingActionMessage {
+  UINT16BE tracking_number;     // bytes 0 to 1
+  UINT64BE timestamp;           // bytes 2 to 9
+  UINT32BE instrument_id;       // bytes 10 to 13
+  UINT8 current_trading_state;  // byte 14
+} TradingActionMessage;
+
+// ---- Add Order Short Form Message: 30 bytes ----------------------------------
+
+// An Add Order Short Form Message indicates a new order or new quote accepted by the system.
+entrypoint typedef struct _AddOrderShortFormMessage {
+  UINT16BE tracking_number;         // bytes 0 to 1
+  UINT64BE timestamp;               // bytes 2 to 9
+  UINT32BE instrument_id;           // bytes 10 to 13
+  UINT64BE order_reference_number;  // bytes 14 to 21
+  UINT8 market_side;                // byte 22
+  UINT8 order_capacity;             // byte 23
+  UINT16BE price_short;             // bytes 24 to 25
+  UINT16BE volume_short;            // bytes 26 to 27
+  UINT16BE rank;                    // bytes 28 to 29
+} AddOrderShortFormMessage;
+
+// ---- Add Order Long Form Message: 34 bytes -----------------------------------
+
+// An Add Order Long Form Message indicates a new order or new quote accepted by the system.
+entrypoint typedef struct _AddOrderLongFormMessage {
+  UINT16BE tracking_number;         // bytes 0 to 1
+  UINT64BE timestamp;               // bytes 2 to 9
+  UINT32BE instrument_id;           // bytes 10 to 13
+  UINT64BE order_reference_number;  // bytes 14 to 21
+  UINT8 market_side;                // byte 22
+  UINT8 order_capacity;             // byte 23
+  UINT32BE price_long;              // bytes 24 to 27, signed, read here as unsigned
+  UINT32BE volume_long;             // bytes 28 to 31
+  UINT16BE rank;                    // bytes 32 to 33
+} AddOrderLongFormMessage;
+
+// ---- Add Quote Short Form Message: 38 bytes ----------------------------------
+
+// An Add Quote Short Form Message indicates a new two-sided quote accepted by the system.
+entrypoint typedef struct _AddQuoteShortFormMessage {
+  UINT16BE tracking_number;       // bytes 0 to 1
+  UINT64BE timestamp;             // bytes 2 to 9
+  UINT32BE instrument_id;         // bytes 10 to 13
+  UINT64BE bid_reference_number;  // bytes 14 to 21
+  UINT64BE ask_reference_number;  // bytes 22 to 29
+  UINT16BE bid_price_short;       // bytes 30 to 31
+  UINT16BE bid_size_short;        // bytes 32 to 33
+  UINT16BE ask_price_short;       // bytes 34 to 35
+  UINT16BE ask_size_short;        // bytes 36 to 37
+} AddQuoteShortFormMessage;
+
+// ---- Add Quote Long Form Message: 46 bytes -----------------------------------
+
+// An Add Quote Long Form Message indicates a new two-sided quote accepted by the system.
+entrypoint typedef struct _AddQuoteLongFormMessage {
+  UINT16BE tracking_number;       // bytes 0 to 1
+  UINT64BE timestamp;             // bytes 2 to 9
+  UINT32BE instrument_id;         // bytes 10 to 13
+  UINT64BE bid_reference_number;  // bytes 14 to 21
+  UINT64BE ask_reference_number;  // bytes 22 to 29
+  UINT32BE bid_price_long;        // bytes 30 to 33, signed, read here as unsigned
+  UINT32BE bid_size_long;         // bytes 34 to 37
+  UINT32BE ask_price_long;        // bytes 38 to 41, signed, read here as unsigned
+  UINT32BE ask_size_long;         // bytes 42 to 45
+} AddQuoteLongFormMessage;
+
+// ---- Order Executed Message: 38 bytes ----------------------------------------
+
+// This message is sent whenever an order on the book is executed in whole or in part.
+entrypoint typedef struct _OrderExecutedMessage {
+  UINT16BE tracking_number;   // bytes 0 to 1
+  UINT64BE timestamp;         // bytes 2 to 9
+  UINT32BE instrument_id;     // bytes 10 to 13
+  UINT32BE strategy_id;       // bytes 14 to 17
+  UINT64BE reference_number;  // bytes 18 to 25
+  UINT32BE executed_volume;   // bytes 26 to 29
+  UINT32BE cross_number;      // bytes 30 to 33
+  UINT32BE match_number;      // bytes 34 to 37
+} OrderExecutedMessage;
+
+// ---- Order Executed With Price Message: 43 bytes -----------------------------
+
+// This message is sent whenever an order on the book is executed in whole or in part at a price different from the initial display price.
+entrypoint typedef struct _OrderExecutedWithPriceMessage {
+  UINT16BE tracking_number;   // bytes 0 to 1
+  UINT64BE timestamp;         // bytes 2 to 9
+  UINT32BE instrument_id;     // bytes 10 to 13
+  UINT32BE strategy_id;       // bytes 14 to 17
+  UINT64BE reference_number;  // bytes 18 to 25
+  UINT32BE cross_number;      // bytes 26 to 29
+  UINT32BE match_number;      // bytes 30 to 33
+  UINT8 printable;            // byte 34
+  UINT32BE price_long;        // bytes 35 to 38, signed, read here as unsigned
+  UINT32BE volume_long;       // bytes 39 to 42
+} OrderExecutedWithPriceMessage;
+
+// ---- Order Cancel Message: 26 bytes ------------------------------------------
+
+// This message is sent whenever an order on the book is modified as a result of a partial cancellation.
+entrypoint typedef struct _OrderCancelMessage {
+  UINT16BE tracking_number;         // bytes 0 to 1
+  UINT64BE timestamp;               // bytes 2 to 9
+  UINT32BE instrument_id;           // bytes 10 to 13
+  UINT64BE order_reference_number;  // bytes 14 to 21
+  UINT32BE cancelled_volume;        // bytes 22 to 25
+} OrderCancelMessage;
+
+// ---- Order Replace Short Form Message: 34 bytes ------------------------------
+
+// This message is sent whenever an order on the book is replaced.
+entrypoint typedef struct _OrderReplaceShortFormMessage {
+  UINT16BE tracking_number;            // bytes 0 to 1
+  UINT64BE timestamp;                  // bytes 2 to 9
+  UINT32BE instrument_id;              // bytes 10 to 13
+  UINT64BE original_reference_number;  // bytes 14 to 21
+  UINT64BE new_reference_number;       // bytes 22 to 29
+  UINT16BE price_short;                // bytes 30 to 31
+  UINT16BE volume_short;               // bytes 32 to 33
+} OrderReplaceShortFormMessage;
+
+// ---- Order Replace Long Form Message: 38 bytes -------------------------------
+
+// This message is sent whenever an order on the book is replaced.
+entrypoint typedef struct _OrderReplaceLongFormMessage {
+  UINT16BE tracking_number;            // bytes 0 to 1
+  UINT64BE timestamp;                  // bytes 2 to 9
+  UINT32BE instrument_id;              // bytes 10 to 13
+  UINT64BE original_reference_number;  // bytes 14 to 21
+  UINT64BE new_reference_number;       // bytes 22 to 29
+  UINT32BE price_long;                 // bytes 30 to 33, signed, read here as unsigned
+  UINT32BE volume_long;                // bytes 34 to 37
+} OrderReplaceLongFormMessage;
+
+// ---- Order Delete Message: 22 bytes ------------------------------------------
+
+// This message is sent whenever an order on the book is being deleted.
+entrypoint typedef struct _OrderDeleteMessage {
+  UINT16BE tracking_number;   // bytes 0 to 1
+  UINT64BE timestamp;         // bytes 2 to 9
+  UINT32BE instrument_id;     // bytes 10 to 13
+  UINT64BE reference_number;  // bytes 14 to 21
+} OrderDeleteMessage;
+
+// ---- Order Change Message: 31 bytes ------------------------------------------
+
+// This message is sent whenever an order is being updated for price and (or) contracts.
+entrypoint typedef struct _OrderChangeMessage {
+  UINT16BE tracking_number;   // bytes 0 to 1
+  UINT64BE timestamp;         // bytes 2 to 9
+  UINT32BE instrument_id;     // bytes 10 to 13
+  UINT64BE reference_number;  // bytes 14 to 21
+  UINT8 change_reason;        // byte 22
+  UINT32BE price_long;        // bytes 23 to 26, signed, read here as unsigned
+  UINT32BE volume_long;       // bytes 27 to 30
+} OrderChangeMessage;
+
+// ---- Quote Replace Short Form Message: 54 bytes ------------------------------
+
+// This message is sent whenever a quote on the book is replaced.
+entrypoint typedef struct _QuoteReplaceShortFormMessage {
+  UINT16BE tracking_number;                // bytes 0 to 1
+  UINT64BE timestamp;                      // bytes 2 to 9
+  UINT32BE instrument_id;                  // bytes 10 to 13
+  UINT64BE original_bid_reference_number;  // bytes 14 to 21
+  UINT64BE bid_reference_number;           // bytes 22 to 29
+  UINT64BE original_ask_reference_number;  // bytes 30 to 37
+  UINT64BE ask_reference_number;           // bytes 38 to 45
+  UINT16BE bid_price_short;                // bytes 46 to 47
+  UINT16BE bid_size_short;                 // bytes 48 to 49
+  UINT16BE ask_price_short;                // bytes 50 to 51
+  UINT16BE ask_size_short;                 // bytes 52 to 53
+} QuoteReplaceShortFormMessage;
+
+// ---- Quote Replace Long Form Message: 62 bytes -------------------------------
+
+// This message is sent whenever a quote on the book is replaced.
+entrypoint typedef struct _QuoteReplaceLongFormMessage {
+  UINT16BE tracking_number;                // bytes 0 to 1
+  UINT64BE timestamp;                      // bytes 2 to 9
+  UINT32BE instrument_id;                  // bytes 10 to 13
+  UINT64BE original_bid_reference_number;  // bytes 14 to 21
+  UINT64BE bid_reference_number;           // bytes 22 to 29
+  UINT64BE original_ask_reference_number;  // bytes 30 to 37
+  UINT64BE ask_reference_number;           // bytes 38 to 45
+  UINT32BE bid_price_long;                 // bytes 46 to 49, signed, read here as unsigned
+  UINT32BE bid_size_long;                  // bytes 50 to 53
+  UINT32BE ask_price_long;                 // bytes 54 to 57, signed, read here as unsigned
+  UINT32BE ask_size_long;                  // bytes 58 to 61
+} QuoteReplaceLongFormMessage;
+
+// ---- Quote Delete Message: 30 bytes ------------------------------------------
+
+// This message is sent whenever a quote on the book is being deleted.
+entrypoint typedef struct _QuoteDeleteMessage {
+  UINT16BE tracking_number;       // bytes 0 to 1
+  UINT64BE timestamp;             // bytes 2 to 9
+  UINT32BE instrument_id;         // bytes 10 to 13
+  UINT64BE bid_reference_number;  // bytes 14 to 21
+  UINT64BE ask_reference_number;  // bytes 22 to 29
+} QuoteDeleteMessage;
+
+// ---- Trade Message: 37 bytes -------------------------------------------------
+
+// The Trade Message is designed to provide execution details for the normal different types of trades.
+entrypoint typedef struct _TradeMessage {
+  UINT16BE tracking_number;  // bytes 0 to 1
+  UINT64BE timestamp;        // bytes 2 to 9
+  UINT32BE instrument_id;    // bytes 10 to 13
+  UINT32BE cross_number;     // bytes 14 to 17
+  UINT32BE match_number;     // bytes 18 to 21
+  UINT32BE strategy_id;      // bytes 22 to 25
+  UINT8 cross_type;          // byte 26
+  UINT32BE price_long;       // bytes 27 to 30, signed, read here as unsigned
+  UINT32BE volume_long;      // bytes 31 to 34
+  UINT8 printable;           // byte 35
+  UINT8 trade_type;          // byte 36
+} TradeMessage;
+
+// ---- Net Order Imbalance Message: 49 bytes -----------------------------------
+
+// This message is used to announce opening and re-opening auctions.
+entrypoint typedef struct _NetOrderImbalanceMessage {
+  UINT16BE tracking_number;       // bytes 0 to 1
+  UINT64BE timestamp;             // bytes 2 to 9
+  UINT32BE instrument_id;         // bytes 10 to 13
+  UINT32BE auction_id;            // bytes 14 to 17
+  UINT8 auction_type;             // byte 18
+  UINT32BE paired_quantity;       // bytes 19 to 22
+  UINT8 imbalance_direction;      // byte 23
+  UINT32BE imbalance_price;       // bytes 24 to 27, signed, read here as unsigned
+  UINT32BE imbalance_volume;      // bytes 28 to 31
+  UINT8 customer_firm_indicator;  // byte 32
+  UINT32BE best_bid_price;        // bytes 33 to 36, signed, read here as unsigned
+  UINT32BE best_bid_quantity;     // bytes 37 to 40
+  UINT32BE best_ask_price;        // bytes 41 to 44, signed, read here as unsigned
+  UINT32BE best_ask_quantity;     // bytes 45 to 48
+} NetOrderImbalanceMessage;
+

@@ -1,0 +1,151 @@
+// New York Stock Exchange Depth Feed Retransmission
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out NationalEquities_DepthFeedRetransmission_v1_6.3d
+//
+// What this definition does not state, and the model does:
+// - the dispatch that chooses a message by its type
+// - a run filling what frames it
+// - a field present only on a condition
+//
+// License: MIT No Attribution
+
+// ---- Send Time: 8 bytes ------------------------------------------------------
+
+// The time when this packet was published to the multicast channel
+entrypoint typedef struct _SendTime {
+  UINT32 seconds;      // bytes 0 to 3
+  UINT32 nanoseconds;  // bytes 4 to 7
+} SendTime;
+
+// ---- Packet Header: 16 bytes -------------------------------------------------
+
+// Pillar common client udp packet header
+entrypoint typedef struct _PacketHeader {
+  UINT16 pkt_size;      // bytes 0 to 1
+  UINT8 delivery_flag;  // byte 2
+  UINT8 number_msgs;    // byte 3
+  UINT32 seq_num;       // bytes 4 to 7
+  SendTime send_time;   // bytes 8 to 15
+} PacketHeader;
+
+// ---- Message Header: 4 bytes -------------------------------------------------
+
+// Pillar message header
+entrypoint typedef struct _MessageHeader {
+  UINT16 message_size;  // bytes 0 to 1
+  UINT16 message_type;  // bytes 2 to 3
+} MessageHeader;
+
+// ---- Sequence Number Reset Message: 10 bytes ---------------------------------
+
+// This message is sent to reset the Message Sequence Number at start of day, or in response to failures.
+entrypoint typedef struct _SequenceNumberResetMessage {
+  UINT32 source_time;     // bytes 0 to 3
+  UINT32 source_time_ns;  // bytes 4 to 7
+  UINT8 product_id;       // byte 8
+  UINT8 channel_id;       // byte 9
+} SequenceNumberResetMessage;
+
+// ---- Symbol Index Mapping Message: 40 bytes ----------------------------------
+
+// This message is published over the real-time data channels at system startup or in the context of a refresh sequence after a Matching Engine or Pillar Publisher failover. It provides referential data for a single specified symbol.
+entrypoint typedef struct _SymbolIndexMappingMessage {
+  UINT32 symbol_index;       // bytes 0 to 3
+  UINT8 symbol[11];          // bytes 4 to 14
+  UINT8 reserved_1;          // byte 15
+  UINT16 market_id;          // bytes 16 to 17
+  UINT8 system_id;           // byte 18
+  UINT8 exchange_code;       // byte 19
+  UINT8 price_scale_code;    // byte 20
+  UINT8 security_type;       // byte 21
+  UINT16 lot_size;           // bytes 22 to 23
+  UINT32 prev_close_price;   // bytes 24 to 27
+  UINT32 prev_close_volume;  // bytes 28 to 31
+  UINT8 price_resolution;    // byte 32
+  UINT8 round_lot;           // byte 33
+  UINT16 mpv;                // bytes 34 to 35
+  UINT16 unit_of_trade;      // bytes 36 to 37
+  UINT8 reserved_2[2];       // bytes 38 to 39
+} SymbolIndexMappingMessage;
+
+// ---- Symbol Clear Message: 18 bytes ------------------------------------------
+
+// In case of a failure and recovery of a Matching Engine or an Pillar Publisher, the publisher may send a full state refresh for every symbol affected. This unrequested refresh is preceded by a Symbol Clear message. The client should react to receipt of a Symbol Clear message by clearing all state information for the specified symbol in anticipation of receiving a full state refresh.
+entrypoint typedef struct _SymbolClearMessage {
+  UINT32 source_time;          // bytes 0 to 3
+  UINT32 source_time_ns;       // bytes 4 to 7
+  UINT32 symbol_index;         // bytes 8 to 11
+  UINT32 next_source_seq_num;  // bytes 12 to 15
+  UINT16 market_id;            // bytes 16 to 17
+} SymbolClearMessage;
+
+// ---- Security Status Message: 42 bytes ---------------------------------------
+
+// This message informs clients of changes in the status of a specific security, such as Trading Halts, Short Sale Restriction state changes, etc.
+entrypoint typedef struct _SecurityStatusMessage {
+  UINT32 source_time;                // bytes 0 to 3
+  UINT32 source_time_ns;             // bytes 4 to 7
+  UINT32 symbol_index;               // bytes 8 to 11
+  UINT32 symbol_seq_num;             // bytes 12 to 15
+  UINT8 security_status;             // byte 16
+  UINT8 halt_condition;              // byte 17
+  UINT16 market_id;                  // bytes 18 to 19
+  UINT8 reserved_2[2];               // bytes 20 to 21
+  UINT32 price_1;                    // bytes 22 to 25
+  UINT32 price_2;                    // bytes 26 to 29
+  UINT8 ssr_triggering_exchange_id;  // byte 30
+  UINT32 ssr_triggering_volume;      // bytes 31 to 34
+  UINT32 time;                       // bytes 35 to 38
+  UINT8 ssr_state;                   // byte 39
+  UINT8 market_state;                // byte 40
+  UINT8 session_state;               // byte 41
+} SecurityStatusMessage;
+
+// ---- Message Unavailable Message: 10 bytes -----------------------------------
+
+// This message will be sent over the Retransmission multicast channels to inform clients of unavailability of a range of messages (or part of a range) for which they may have requested a retransmission.
+entrypoint typedef struct _MessageUnavailableMessage {
+  UINT32 begin_seq_num;  // bytes 0 to 3
+  UINT32 end_seq_num;    // bytes 4 to 7
+  UINT8 product_id;      // byte 8
+  UINT8 channel_id;      // byte 9
+} MessageUnavailableMessage;
+
+// ---- Imbalance Message: 71 bytes ---------------------------------------------
+
+// Imbalance messages are published once a second during auctions to update price and volume information.
+entrypoint typedef struct _ImbalanceMessage {
+  UINT32 source_time;                      // bytes 0 to 3
+  UINT32 source_time_ns;                   // bytes 4 to 7
+  UINT32 symbol_index;                     // bytes 8 to 11
+  UINT32 symbol_seq_num;                   // bytes 12 to 15
+  UINT32 reference_price;                  // bytes 16 to 19, signed, read here as unsigned
+  UINT32 paired_qty;                       // bytes 20 to 23
+  UINT32 total_imbalance_qty;              // bytes 24 to 27
+  UINT32 market_imbalance_qty;             // bytes 28 to 31
+  UINT16 auction_time;                     // bytes 32 to 33
+  UINT8 auction_type;                      // byte 34
+  UINT8 imbalance_side;                    // byte 35
+  UINT32 continuous_book_clearing_price;   // bytes 36 to 39, signed, read here as unsigned
+  UINT32 auction_interest_clearing_price;  // bytes 40 to 43, signed, read here as unsigned
+  UINT32 ssr_filing_price;                 // bytes 44 to 47, signed, read here as unsigned
+  UINT32 indicative_match_price;           // bytes 48 to 51, signed, read here as unsigned
+  UINT32 upper_collar;                     // bytes 52 to 55, signed, read here as unsigned
+  UINT32 lower_collar;                     // bytes 56 to 59, signed, read here as unsigned
+  UINT8 auction_status;                    // byte 60
+  UINT8 freeze_status;                     // byte 61
+  UINT8 num_extensions;                    // byte 62
+  UINT32 unpaired_qty;                     // bytes 63 to 66
+  UINT8 unpaired_side;                     // byte 67
+  UINT8 reserved_1;                        // byte 68
+  UINT16 market_id;                        // bytes 69 to 70
+} ImbalanceMessage;
+

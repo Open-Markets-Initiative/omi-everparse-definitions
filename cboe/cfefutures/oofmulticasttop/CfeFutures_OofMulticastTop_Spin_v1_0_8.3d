@@ -1,0 +1,201 @@
+// Chicago Board Options Exchange OOF Multicast Top
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out CfeFutures_OofMulticastTop_Spin_v1_0_8.3d
+//
+// What this definition does not state, and the model does:
+// - a Reassemble rule
+// - a run filling what frames it
+// - a run counted by a field
+// - a field read in bits
+//
+// License: MIT No Attribution
+
+// ---- Packet Header: 8 bytes --------------------------------------------------
+
+entrypoint typedef struct _PacketHeader {
+  UINT16 length;        // bytes 0 to 1
+  UINT8 message_count;  // byte 2
+  UINT8 unit_;          // byte 3
+  UINT32 sequence;      // bytes 4 to 7
+} PacketHeader;
+
+// ---- Message Header: 2 bytes -------------------------------------------------
+
+entrypoint typedef struct _MessageHeader {
+  UINT8 message_length;  // byte 0
+  UINT8 message_type;    // byte 1
+} MessageHeader;
+
+// ---- Time Reference Message: 16 bytes ----------------------------------------
+
+// The Time Reference message is used to provide a midnight reference point for recipients of the feed. It is sent whenever the system starts up and when the system crosses a midnight boundary. All subsequent Time messages for the same unit will the use the last Midnight Reference until another Time Reference message is received for that unit. The Time Reference message includes the Trade Date, so most other sequenced messages will not include that information. Time Reference messages will be included in a spin response.
+entrypoint typedef struct _TimeReferenceMessage {
+  UINT32 midnight_reference;  // bytes 0 to 3
+  UINT32 time_reference;      // bytes 4 to 7
+  UINT32 time_offset;         // bytes 8 to 11
+  UINT32 trade_date;          // bytes 12 to 15
+} TimeReferenceMessage;
+
+// ---- Time Message: 8 bytes ---------------------------------------------------
+
+// A Time message is immediately generated and sent when there is a TOP event for a given clock second. If there is no new sequenced TOP event for a given clock second, then no Time message is sent for that second. All subsequent Time Offset fields for the same unit will use the new Time value as the base until another Time message is received for the same unit. The Time field is the number of seconds relative to midnight Central Time, which is provided in the Time Reference message. The Time message also includes the Epoch Time field, which is the current time represented as the number of whole seconds since the Epoch (Midnight January 1, 1970).
+entrypoint typedef struct _TimeMessage {
+  UINT32 time_reference;  // bytes 0 to 3
+  UINT32 epoch_time;      // bytes 4 to 7
+} TimeMessage;
+
+// ---- Oof Symbol Mapping Message: 58 bytes ------------------------------------
+
+// An OOF Symbol Mapping message is used to map the 6 character multicast feed symbol field and options on futures name to the option contract and future underlying. The option contract is comprised of the strike price, put/call flag, options expiration date, and future underlying. The future underlying is comprised of the futures product and futures expiration date, which map to a futures symbol. This message can be sent either as a sequenced message or as an unsequenced message. It is sent as a sequenced message at system startup upon the beginning of a trading session or if an instrument is created or modified during a trading day. A new sequenced message may also be sent for a symbol that does not visibly change any attribute. A continuous loop of unsequenced symbol mapping messages (sequence = 0) is sent throughout the day at variable rates as bandwidth allows. The Time Offset field should be ignored on unsequenced messages. OOF Symbol Mapping messages are included in a spin response and will be disseminated before Complex Instrument Definition Expanded messages.
+entrypoint typedef struct _OofSymbolMappingMessage {
+  UINT32 time_offset;                 // bytes 0 to 3
+  UINT8 feed_symbol[6];               // bytes 4 to 9
+  UINT8 futures_product[8];           // bytes 10 to 17
+  UINT32 futures_expiration;          // bytes 18 to 21
+  UINT8 futures_symbol[6];            // bytes 22 to 27
+  UINT64 strike_price;                // bytes 28 to 35
+  UINT8 call_put_indicator;           // byte 36
+  UINT32 options_expiration;          // bytes 37 to 40
+  UINT8 options_on_futures_name[16];  // bytes 41 to 56
+  UINT8 symbol_condition;             // byte 57
+} OofSymbolMappingMessage;
+
+// ---- Trading Status Message: 16 bytes ----------------------------------------
+
+// The Trading Status message is used to indicate the current trading status of a symbol. A Trading Status message will be sent for all symbols as they transition through various trading states. If a Trading Status message has not been received for a symbol, then the Trading Status for the symbol should be assumed to be H = Halted. The following summarizes the Trading Status values for options in the CFE system: H = Halted state. This state is used for Supervisory Halts initiated by the Trade Desk. Orders are not being accepted in this state. Q = Queuing state. This state is used when orders are being accepted for queuing. The Queuing state is used during the pre-open for all symbols. It is also used for spread instruments that may not be tradeable due to Threshold Width. T = Trading state. This state is used when the symbol is available for trading. CFE will send a Trading Status of Q once orders can be accepted for queuing in preparation for the open. At or after the opening time, CFE will send a Trading Status of T as symbols are opened for trading. Once trading is done for the day CFE will send a Trading Status of H indicating the symbol is Halted.
+entrypoint typedef struct _TradingStatusMessage {
+  UINT32 time_offset;    // bytes 0 to 3
+  UINT8 symbol[6];       // bytes 4 to 9
+  UINT16 reserved_2;     // bytes 10 to 11
+  UINT8 trading_status;  // byte 12
+  UINT8 reserved_3[3];   // bytes 13 to 15
+} TradingStatusMessage;
+
+// ---- Single Side Update Short Message: 15 bytes ------------------------------
+
+// Single Side Update messages provide an updated price and size for a single side of a Symbol. The side is denoted by the Side field. One Single Side Update message may reflect one or more updates to the inside book that were processed at the same time, but will only be done so in a way that can be arbitrated between A/B feeds. Single Side Update messages come in two variants: Single Side Update (Long) message and Single Side Update (Short) message. The Single Side Update (Short) message is used whenever possible, but the Single Side Update (Long) message is used whenever the Price cannot be represented by a Binary Short Price or the Quantity cannot be represented by an unsigned 16-bit integer.
+entrypoint typedef struct _SingleSideUpdateShortMessage {
+  UINT32 time_offset;     // bytes 0 to 3
+  UINT8 symbol[6];        // bytes 4 to 9
+  UINT8 side;             // byte 10
+  UINT16 price_short;     // bytes 11 to 12
+  UINT16 quantity_short;  // bytes 13 to 14
+} SingleSideUpdateShortMessage;
+
+// ---- Single Side Update Long Message: 23 bytes -------------------------------
+
+// Single Side Update messages provide an updated price and size for a single side of a Symbol. The side is denoted by the Side field. One Single Side Update message may reflect one or more updates to the inside book that were processed at the same time, but will only be done so in a way that can be arbitrated between A/B feeds. Single Side Update messages come in two variants: Single Side Update (Long) message and Single Side Update (Short) message. The Single Side Update (Short) message is used whenever possible, but the Single Side Update (Long) message is used whenever the Price cannot be represented by a Binary Short Price or the Quantity cannot be represented by an unsigned 16-bit integer.
+entrypoint typedef struct _SingleSideUpdateLongMessage {
+  UINT32 time_offset;    // bytes 0 to 3
+  UINT8 symbol[6];       // bytes 4 to 9
+  UINT8 side;            // byte 10
+  UINT64 price_long;     // bytes 11 to 18
+  UINT32 quantity_long;  // bytes 19 to 22
+} SingleSideUpdateLongMessage;
+
+// ---- Two Side Update Short Message: 18 bytes ---------------------------------
+
+// Two Side Update messages provide an updated price and size for both sides of a Symbol. One Two Side Update message may reflect one or more updates to the inside book that were processed at the same time, but will only be done so in a way that can be arbitrated between A/B feeds. Two Side Update messages come in two variants: Two Side Update (Long) message and Two Side Update (Short) message. The Two Side Update (Short) message is used whenever possible, but the Two Side Update (Long) message is used whenever the Price cannot be represented by a Binary Short Price or the Quantity cannot be represented by an unsigned 16-bit integer.
+entrypoint typedef struct _TwoSideUpdateShortMessage {
+  UINT32 time_offset;         // bytes 0 to 3
+  UINT8 symbol[6];            // bytes 4 to 9
+  UINT16 bid_price_short;     // bytes 10 to 11
+  UINT16 bid_quantity_short;  // bytes 12 to 13
+  UINT16 ask_price_short;     // bytes 14 to 15
+  UINT16 ask_quantity_short;  // bytes 16 to 17
+} TwoSideUpdateShortMessage;
+
+// ---- Two Side Update Long Message: 34 bytes ----------------------------------
+
+// Two Side Update messages provide an updated price and size for both sides of a Symbol. One Two Side Update message may reflect one or more updates to the inside book that were processed at the same time, but will only be done so in a way that can be arbitrated between A/B feeds. Two Side Update messages come in two variants: Two Side Update (Long) message and Two Side Update (Short) message. The Two Side Update (Short) message is used whenever possible, but the Two Side Update (Long) message is used whenever the Price cannot be represented by a Binary Short Price or the Quantity cannot be represented by an unsigned 16-bit integer.
+entrypoint typedef struct _TwoSideUpdateLongMessage {
+  UINT32 time_offset;        // bytes 0 to 3
+  UINT8 symbol[6];           // bytes 4 to 9
+  UINT64 bid_price_long;     // bytes 10 to 17
+  UINT32 bid_quantity_long;  // bytes 18 to 21
+  UINT64 ask_price_long;     // bytes 22 to 29
+  UINT32 ask_quantity_long;  // bytes 30 to 33
+} TwoSideUpdateLongMessage;
+
+// ---- Settlement Message: 23 bytes --------------------------------------------
+
+// Settlement messages are used to provide information concerning indicative, approved, or corrected daily and final settlement prices for CFE products. An indicative daily settlement price (Issue = I) is calculated by the system and sent immediately after an instrument closes trading but before the settlement price is approved. An approved settlement price (Issue = S) is sent once the CFE Trade Desk approves a settlement price for an instrument. If there is an error in the approved settlement price, then it may be re-issued (Issue = R). Settlement messages will be included in a spin response.
+entrypoint typedef struct _SettlementMessage {
+  UINT32 time_offset;       // bytes 0 to 3
+  UINT8 symbol[6];          // bytes 4 to 9
+  UINT32 trade_date;        // bytes 10 to 13
+  UINT64 settlement_price;  // bytes 14 to 21
+  UINT8 issue;              // byte 22
+} SettlementMessage;
+
+// ---- Login Message: 20 bytes -------------------------------------------------
+
+// The Login message is the first message sent to the GRP by a user's process after the connection to the GRP is established. Failure to login before sending any other message type will result in the connection being dropped by the GRP.
+entrypoint typedef struct _LoginMessage {
+  UINT8 session_sub_id[4];  // bytes 0 to 3
+  UINT8 username[4];        // bytes 4 to 7
+  UINT8 filler[2];          // bytes 8 to 9
+  UINT8 password[10];       // bytes 10 to 19
+} LoginMessage;
+
+// ---- Login Response Message: 1 byte ------------------------------------------
+
+// The Login Response message is sent by the GRP to a user's process in response to a Login message. The status field is used to reflect an accepted login or the reason the session was not accepted. If login fails, the connection will be dropped after the Login Response message is sent.
+entrypoint typedef struct _LoginResponseMessage {
+  UINT8 login_response_status;  // byte 0
+} LoginResponseMessage;
+
+// ---- Spin Image Available Message: 4 bytes -----------------------------------
+
+// The Spin Image Available message is sent once per second and indicates through what sequence number a spin is available.
+entrypoint typedef struct _SpinImageAvailableMessage {
+  UINT32 sequence;  // bytes 0 to 3
+} SpinImageAvailableMessage;
+
+// ---- Spin Request Message: 4 bytes -------------------------------------------
+
+// The Spin Request message is used by a user's process to request transmission of a spin of the unit's order book. See to Spin Servers for more complete details regarding Sequence specification as well as buffering requirements.
+entrypoint typedef struct _SpinRequestMessage {
+  UINT32 sequence;  // bytes 0 to 3
+} SpinRequestMessage;
+
+// ---- Spin Response Message: 9 bytes ------------------------------------------
+
+// The Spin Response message is sent in response to a user's Spin Request message indicating whether a spin will be sent.
+entrypoint typedef struct _SpinResponseMessage {
+  UINT32 sequence;             // bytes 0 to 3
+  UINT32 order_count;          // bytes 4 to 7
+  UINT8 spin_response_status;  // byte 8
+} SpinResponseMessage;
+
+// ---- Spin Finished Message: 4 bytes ------------------------------------------
+
+// The Spin Finished message is sent to indicate that all messages for the spin requested have been sent. A Spin Finished message is only sent if a Spin Request message was not rejected. Upon receipt of a Spin Finished message, any buffered multicast messages should be applied to the participant's copy of the book to make it current.
+entrypoint typedef struct _SpinFinishedMessage {
+  UINT32 sequence;  // bytes 0 to 3
+} SpinFinishedMessage;
+
+// ---- Instrument Definition Request Message: 4 bytes --------------------------
+
+// The Instrument Definition Request message is used to request transmission of this unit's OOF Symbol Mappings and Complex Instrument Definitions. All OOF Symbol Mapping messages will be sent before Complex Instrument Definition Expanded messages. Refer to Spin Servers for more complete details regarding Sequence specification as well as buffering requirements.
+entrypoint typedef struct _InstrumentDefinitionRequestMessage {
+  UINT32 sequence;  // bytes 0 to 3
+} InstrumentDefinitionRequestMessage;
+
+// ---- Instrument Definition Response Message: 9 bytes -------------------------
+
+// The Instrument Definition Response message is sent in response to a user's Instrument Definition Request message indicating whether a spin will be sent.
+entrypoint typedef struct _InstrumentDefinitionResponseMessage {
+  UINT32 sequence;                              // bytes 0 to 3
+  UINT32 instrument_count;                      // bytes 4 to 7
+  UINT8 instrument_definition_response_status;  // byte 8
+} InstrumentDefinitionResponseMessage;
+

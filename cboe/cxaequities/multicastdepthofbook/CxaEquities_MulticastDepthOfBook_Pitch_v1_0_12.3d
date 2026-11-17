@@ -1,0 +1,174 @@
+// Chicago Board Options Exchange Multicast Depth Of Book
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out CxaEquities_MulticastDepthOfBook_Pitch_v1_0_12.3d
+//
+// What this definition does not state, and the model does:
+// - the dispatch that chooses a message by its type
+// - a run filling what frames it
+// - a field read in bits
+//
+// License: MIT No Attribution
+
+// ---- Packet Header: 8 bytes --------------------------------------------------
+
+entrypoint typedef struct _PacketHeader {
+  UINT16 length;        // bytes 0 to 1
+  UINT8 message_count;  // byte 2
+  UINT8 unit_;          // byte 3
+  UINT32 sequence;      // bytes 4 to 7
+} PacketHeader;
+
+// ---- Message Header: 2 bytes -------------------------------------------------
+
+entrypoint typedef struct _MessageHeader {
+  UINT8 message_length;  // byte 0
+  UINT8 message_type;    // byte 1
+} MessageHeader;
+
+// ---- Unit Clear Message: 4 bytes ---------------------------------------------
+
+// Instructs feed recipients to clear all orders for the CXA book in the unit specified in the Sequenced Unit Header. Distributed in rare recovery events such as a datacentre fail-over.
+entrypoint typedef struct _UnitClearMessage {
+  UINT32 reserved_4;  // bytes 0 to 3
+} UnitClearMessage;
+
+// ---- Trading Status Message: 20 bytes ----------------------------------------
+
+// Indicates the current trading status of a security. A Trading Status message will be sent whenever trading status changes for a security.
+entrypoint typedef struct _TradingStatusMessage {
+  UINT64 timestamp;         // bytes 0 to 7
+  UINT8 symbol[6];          // bytes 8 to 13
+  UINT8 trading_status;     // byte 14
+  UINT8 market_id_code[4];  // bytes 15 to 18
+  UINT8 reserved_1;         // byte 19
+} TradingStatusMessage;
+
+// ---- Add Order Message: 40 bytes ---------------------------------------------
+
+// Represents a newly accepted visible or undisclosed order on the CXA book. Includes a day-specific Order Id assigned by CXA to the order.
+entrypoint typedef struct _AddOrderMessage {
+  UINT64 timestamp;      // bytes 0 to 7
+  UINT64 order_id;       // bytes 8 to 15
+  UINT8 side_indicator;  // byte 16
+  UINT32 quantity;       // bytes 17 to 20
+  UINT8 symbol[6];       // bytes 21 to 26
+  UINT64 price;          // bytes 27 to 34
+  UINT8 pid[4];          // bytes 35 to 38
+  UINT8 reserved_1;      // byte 39
+} AddOrderMessage;
+
+// ---- Order Executed Message: 41 bytes ----------------------------------------
+
+// Sent when a visible order on the CXA book is executed in whole or in part. The execution price equals the order price found in the original Add Order message or the order price in the latest Modify Order message referencing the Order Id.
+entrypoint typedef struct _OrderExecutedMessage {
+  UINT64 timestamp;          // bytes 0 to 7
+  UINT64 order_id;           // bytes 8 to 15
+  UINT32 executed_quantity;  // bytes 16 to 19
+  UINT64 execution_id;       // bytes 20 to 27
+  UINT64 contra_order_id;    // bytes 28 to 35
+  UINT8 contra_pid[4];       // bytes 36 to 39
+  UINT8 reserved_1;          // byte 40
+} OrderExecutedMessage;
+
+// ---- Order Executed At Price Message: 50 bytes -------------------------------
+
+// Used to update lit orders that have fully or partially executed in an auction. There is one Order Executed at Price message per auction trade, which includes the order IDs of both resting orders matched in the trade. Each message is followed by either a Reduce Size message (if the contra order has partially executed) or a Delete Order message (if the contra order has fully executed).
+entrypoint typedef struct _OrderExecutedAtPriceMessage {
+  UINT64 timestamp;          // bytes 0 to 7
+  UINT64 order_id;           // bytes 8 to 15
+  UINT32 executed_quantity;  // bytes 16 to 19
+  UINT64 execution_id;       // bytes 20 to 27
+  UINT64 contra_order_id;    // bytes 28 to 35
+  UINT8 contra_pid[4];       // bytes 36 to 39
+  UINT8 execution_type;      // byte 40
+  UINT64 price;              // bytes 41 to 48
+  UINT8 reserved_1;          // byte 49
+} OrderExecutedAtPriceMessage;
+
+// ---- Reduce Size Message: 20 bytes -------------------------------------------
+
+// Sent when a visible order on the CXA book is partially reduced.
+entrypoint typedef struct _ReduceSizeMessage {
+  UINT64 timestamp;           // bytes 0 to 7
+  UINT64 order_id;            // bytes 8 to 15
+  UINT32 cancelled_quantity;  // bytes 16 to 19
+} ReduceSizeMessage;
+
+// ---- Modify Order Message: 29 bytes ------------------------------------------
+
+// Sent whenever an open order is visibly modified. The Order Id refers to the Order Id of the original Add Order message. Modify Order messages that appear to be no ops (i.e., they do not appear to modify any relevant fields) will still lose priority.
+entrypoint typedef struct _ModifyOrderMessage {
+  UINT64 timestamp;  // bytes 0 to 7
+  UINT64 order_id;   // bytes 8 to 15
+  UINT32 quantity;   // bytes 16 to 19
+  UINT64 price;      // bytes 20 to 27
+  UINT8 reserved_1;  // byte 28
+} ModifyOrderMessage;
+
+// ---- Delete Order Message: 16 bytes ------------------------------------------
+
+// Sent whenever a booked order is cancelled or leaves the order book. The Order Id refers to the Order Id of the original Add Order message.
+entrypoint typedef struct _DeleteOrderMessage {
+  UINT64 timestamp;  // bytes 0 to 7
+  UINT64 order_id;   // bytes 8 to 15
+} DeleteOrderMessage;
+
+// ---- Trade Break Message: 16 bytes -------------------------------------------
+
+// Sent whenever an execution on CXA or off-exchange trade reported to CXA is cancelled. A trade correction is performed by sending a Trade Break message followed by a new Trade message with the corrected size and price. Applications that simply build a CXA book can ignore Trade Break messages.
+entrypoint typedef struct _TradeBreakMessage {
+  UINT64 timestamp;     // bytes 0 to 7
+  UINT64 execution_id;  // bytes 8 to 15
+} TradeBreakMessage;
+
+// ---- Calculated Value Message: 31 bytes --------------------------------------
+
+// Sent when CXA calculates market values for a specified symbol or when a calculated market value is reported to CXA. The specified symbol may not trade on CXA, but instead could represent index or iNAV values reported to CXA from third parties as indicated by the Value Category field. The index values will be reported on each of the unitised CXA PITCH feeds and are not specific to an individual unit.
+entrypoint typedef struct _CalculatedValueMessage {
+  UINT64 timestamp;        // bytes 0 to 7
+  UINT8 symbol[6];         // bytes 8 to 13
+  UINT8 value_category;    // byte 14
+  UINT64 value;            // bytes 15 to 22
+  UINT64 value_timestamp;  // bytes 23 to 30
+} CalculatedValueMessage;
+
+// ---- End Of Session Message: 4 bytes -----------------------------------------
+
+// Sent for each unit when the unit shuts down. No additional sequenced messages will be delivered for this unit, but heartbeats from the unit may be received.
+entrypoint typedef struct _EndOfSessionMessage {
+  UINT32 reserved_4;  // bytes 0 to 3
+} EndOfSessionMessage;
+
+// ---- Auction Update Message: 32 bytes ----------------------------------------
+
+// Sent during Pre-Open and Pre-Close trading states when a symbol has an order update relating to an overlapping order book (where the best bid price is greater than or equal to the best ask price). Includes the potential number of shares and the indicative auction price if the symbol were to undergo an auction now. Only sent if there are updates to the Buy Shares, Sell Shares, or Indicative Price fields.
+entrypoint typedef struct _AuctionUpdateMessage {
+  UINT64 timestamp;         // bytes 0 to 7
+  UINT8 symbol[6];          // bytes 8 to 13
+  UINT8 auction_type;       // byte 14
+  UINT32 buy_shares;        // bytes 15 to 18
+  UINT32 sell_shares;       // bytes 19 to 22
+  UINT64 indicative_price;  // bytes 23 to 30
+  UINT8 reserved_1;         // byte 31
+} AuctionUpdateMessage;
+
+// ---- Auction Summary Message: 28 bytes ---------------------------------------
+
+// Sent at the completion of the Auction per symbol and includes the Auction Price and Shares executed. If there is no overlapping order book at the time of the auction, no auction trades will result, but the Auction Summary message will still be disseminated and contain zeroes in the Price and Shares fields.
+entrypoint typedef struct _AuctionSummaryMessage {
+  UINT64 timestamp;    // bytes 0 to 7
+  UINT8 symbol[6];     // bytes 8 to 13
+  UINT8 auction_type;  // byte 14
+  UINT64 price;        // bytes 15 to 22
+  UINT32 shares;       // bytes 23 to 26
+  UINT8 reserved_1;    // byte 27
+} AuctionSummaryMessage;
+

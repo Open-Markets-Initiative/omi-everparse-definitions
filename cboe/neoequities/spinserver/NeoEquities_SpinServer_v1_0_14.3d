@@ -1,0 +1,113 @@
+// Chicago Board Options Exchange Spin Server
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out NeoEquities_SpinServer_v1_0_14.3d
+//
+// What this definition does not state, and the model does:
+// - a Reassemble rule
+// - a run filling what frames it
+//
+// License: MIT No Attribution
+
+// ---- Packet Header: 8 bytes --------------------------------------------------
+
+entrypoint typedef struct _PacketHeader {
+  UINT16 length;        // bytes 0 to 1
+  UINT8 message_count;  // byte 2
+  UINT8 unit_;          // byte 3
+  UINT32 sequence;      // bytes 4 to 7
+} PacketHeader;
+
+// ---- Message Header: 2 bytes -------------------------------------------------
+
+entrypoint typedef struct _MessageHeader {
+  UINT8 message_length;  // byte 0
+  UINT8 message_type;    // byte 1
+} MessageHeader;
+
+// ---- Login Message: 20 bytes -------------------------------------------------
+
+// The first message the Member process sends to the Spin Server after connection to the Spin Server is established. Failure to login before sending any other message type will result in the connection being dropped by the Spin Server. The format is identical to the GRP Login message.
+entrypoint typedef struct _LoginMessage {
+  UINT8 session_sub_id[4];  // bytes 0 to 3
+  UINT8 username[4];        // bytes 4 to 7
+  UINT8 filler[2];          // bytes 8 to 9
+  UINT8 password[10];       // bytes 10 to 19
+} LoginMessage;
+
+// ---- Login Response Message: 1 byte ------------------------------------------
+
+// Sent by the Spin Server to a Member's process in response to a Login message. The Status field reflects an accepted login or the reason the session was not accepted. If login fails, the connection will be dropped after the Login Response message is sent.
+entrypoint typedef struct _LoginResponseMessage {
+  UINT8 status;  // byte 0
+} LoginResponseMessage;
+
+// ---- Spin Image Available Message: 4 bytes -----------------------------------
+
+// Sent once per second and indicates through what sequence number a spin is available.
+entrypoint typedef struct _SpinImageAvailableMessage {
+  UINT32 sequence;  // bytes 0 to 3
+} SpinImageAvailableMessage;
+
+// ---- Spin Request Message: 4 bytes -------------------------------------------
+
+// Used by a Member's process to request transmission of a spin of the unit's order book.
+entrypoint typedef struct _SpinRequestMessage {
+  UINT32 sequence;  // bytes 0 to 3
+} SpinRequestMessage;
+
+// ---- Spin Response Message: 9 bytes ------------------------------------------
+
+// Sent in response to a Member's Spin Request message indicating whether a spin will be sent.
+entrypoint typedef struct _SpinResponseMessage {
+  UINT32 sequence;     // bytes 0 to 3
+  UINT32 order_count;  // bytes 4 to 7
+  UINT8 status;        // byte 8
+} SpinResponseMessage;
+
+// ---- Spin Finished Message: 4 bytes ------------------------------------------
+
+// Indicates that all messages for the spin requested have been sent. A Spin Finished message is only sent if a Spin Request was not rejected. Upon receipt of a Spin Finished message, any buffered multicast messages should be applied to the Member's copy of the book to make it current.
+entrypoint typedef struct _SpinFinishedMessage {
+  UINT32 sequence;  // bytes 0 to 3
+} SpinFinishedMessage;
+
+// ---- Instrument Definition Request Message: 4 bytes --------------------------
+
+// Used by a Member's process to request transmission of this unit's Instrument Directory messages.
+entrypoint typedef struct _InstrumentDefinitionRequestMessage {
+  UINT32 sequence;  // bytes 0 to 3
+} InstrumentDefinitionRequestMessage;
+
+// ---- Instrument Definition Response Message: 9 bytes -------------------------
+
+// Indicates whether a spin will be sent in response to a Member's Instrument Definition Request message.
+entrypoint typedef struct _InstrumentDefinitionResponseMessage {
+  UINT32 sequence;          // bytes 0 to 3
+  UINT32 instrument_count;  // bytes 4 to 7
+  UINT8 status;             // byte 8
+} InstrumentDefinitionResponseMessage;
+
+// ---- Trade Replay Request Message: 4 bytes -----------------------------------
+
+// Used by a Member's process to request transmission of this unit's Trade, Trade Break, and Trade Correction messages. Note Order Executed messages will be converted to Trade messages.
+entrypoint typedef struct _TradeReplayRequestMessage {
+  UINT32 sequence;  // bytes 0 to 3
+} TradeReplayRequestMessage;
+
+// ---- Trade Replay Response Message: 13 bytes ---------------------------------
+
+// Indicates whether a spin will be sent in response to a Member's Trade Replay Request message.
+entrypoint typedef struct _TradeReplayResponseMessage {
+  UINT32 sequence;     // bytes 0 to 3
+  UINT64 trade_count;  // bytes 4 to 11
+  UINT8 status;        // byte 12
+} TradeReplayResponseMessage;
+

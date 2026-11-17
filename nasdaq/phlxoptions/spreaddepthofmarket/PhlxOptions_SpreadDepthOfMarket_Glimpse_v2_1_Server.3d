@@ -1,0 +1,100 @@
+// National Association of Securities Dealers Automated Quotations (Nasdaq) Spread Depth
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out PhlxOptions_SpreadDepthOfMarket_Glimpse_v2_1_Server.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a length prefix framing what follows
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Server Packet Header: 3 bytes -------------------------------------------
+
+// Packet header of a packet sent by the server
+entrypoint typedef struct _ServerPacketHeader {
+  UINT16BE packet_length;    // bytes 0 to 1
+  UINT8 server_packet_type;  // byte 2
+} ServerPacketHeader;
+
+// ---- Login Accepted Packet: 30 bytes -----------------------------------------
+
+// The SoupBinTCP server sends a Login Accepted Packet in response to receiving a valid Login Request from the client
+entrypoint typedef struct _LoginAcceptedPacket {
+  UINT8 accepted_session[10];          // bytes 0 to 9
+  UINT8 accepted_sequence_number[20];  // bytes 10 to 29
+} LoginAcceptedPacket;
+
+// ---- Login Rejected Packet: 1 byte -------------------------------------------
+
+// The SoupBinTCP server sends this packet in response to an invalid Login Request Packet from the client
+entrypoint typedef struct _LoginRejectedPacket {
+  UINT8 reject_reason_code;  // byte 0
+} LoginRejectedPacket;
+
+// ---- System Event Message: 11 bytes ------------------------------------------
+
+// The system event message type is used to signal a market or data feed handler event.
+entrypoint typedef struct _SystemEventMessage {
+  UINT16BE tracking_number;  // bytes 0 to 1
+  UINT64BE timestamp;        // bytes 2 to 9
+  UINT8 event_code;          // byte 10
+} SystemEventMessage;
+
+// ---- Strategy Trading Action Message: 15 bytes -------------------------------
+
+// The options system uses this administrative message to indicate the current trading status of a strategy within the options market.
+entrypoint typedef struct _StrategyTradingActionMessage {
+  UINT16BE tracking_number;     // bytes 0 to 1
+  UINT64BE timestamp;           // bytes 2 to 9
+  UINT32BE strategy_id;         // bytes 10 to 13
+  UINT8 current_trading_state;  // byte 14
+} StrategyTradingActionMessage;
+
+// ---- Add Order Short Form Message: 32 bytes ----------------------------------
+
+// An Add Order Message indicates that a new order has been accepted and was added to the displayable book.
+entrypoint typedef struct _AddOrderShortFormMessage {
+  UINT16BE tracking_number;         // bytes 0 to 1
+  UINT64BE timestamp;               // bytes 2 to 9
+  UINT32BE strategy_id;             // bytes 10 to 13
+  UINT64BE order_reference_number;  // bytes 14 to 21
+  UINT8 depth_side;                 // byte 22
+  UINT8 order_capacity;             // byte 23
+  UINT16BE price_short;             // bytes 24 to 25
+  UINT16BE volume_short;            // bytes 26 to 27
+  UINT8 scope;                      // byte 28
+  UINT8 reserved_3[3];              // bytes 29 to 31
+} AddOrderShortFormMessage;
+
+// ---- Add Order Long Form Message: 36 bytes -----------------------------------
+
+// An Add Order Message indicates that a new order has been accepted and was added to the displayable book.
+entrypoint typedef struct _AddOrderLongFormMessage {
+  UINT16BE tracking_number;         // bytes 0 to 1
+  UINT64BE timestamp;               // bytes 2 to 9
+  UINT32BE strategy_id;             // bytes 10 to 13
+  UINT64BE order_reference_number;  // bytes 14 to 21
+  UINT8 depth_side;                 // byte 22
+  UINT8 order_capacity;             // byte 23
+  UINT32BE price_long;              // bytes 24 to 27, signed, read here as unsigned
+  UINT32BE volume_long;             // bytes 28 to 31
+  UINT8 scope;                      // byte 32
+  UINT8 reserved_3[3];              // bytes 33 to 35
+} AddOrderLongFormMessage;
+
+// ---- Snapshot Message: 20 bytes ----------------------------------------------
+
+// The Snapshot message reflects the Spread Depth of Market Feed sequence number at the time the GLIMPSE spin was requested.
+entrypoint typedef struct _SnapshotMessage {
+  UINT8 sequence_number[20];  // bytes 0 to 19
+} SnapshotMessage;
+

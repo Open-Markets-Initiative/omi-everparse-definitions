@@ -1,0 +1,208 @@
+// The Securities Industry Automation Corporation Input
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out Siac_Opra_Input_v5_0_i.3d
+//
+// What this definition does not state, and the model does:
+// - a Reassemble rule
+// - a run counted by a field
+// - the dispatch that chooses a message by its type
+// - a length prefix framing what follows
+//
+// License: MIT No Attribution
+
+// ---- Block Timestamp: 8 bytes ------------------------------------------------
+
+// Opra block timestamp
+entrypoint typedef struct _BlockTimestamp {
+  UINT32BE seconds;      // bytes 0 to 3
+  UINT32BE nanoseconds;  // bytes 4 to 7
+} BlockTimestamp;
+
+// ---- Block Header: 21 bytes --------------------------------------------------
+
+// Opra Tcp block header
+entrypoint typedef struct _BlockHeader {
+  UINT8 version;                   // byte 0
+  UINT16BE block_size;             // bytes 1 to 2
+  UINT8 reserved;                  // byte 3
+  UINT8 second_reserved;           // byte 4
+  UINT8 third_reserved;            // byte 5
+  UINT32BE block_sequence_number;  // bytes 6 to 9
+  UINT8 messages_in_block;         // byte 10
+  BlockTimestamp block_timestamp;  // bytes 11 to 18
+  UINT16BE block_checksum;         // bytes 19 to 20
+} BlockHeader;
+
+// ---- Message Header: 2 bytes -------------------------------------------------
+
+// Opra Message Header first level dispatch
+entrypoint typedef struct _MessageHeader {
+  UINT8 participant_id;    // byte 0
+  UINT8 message_category;  // byte 1
+} MessageHeader;
+
+// ---- Expiration Block: 3 bytes -----------------------------------------------
+
+// Expiration Block
+entrypoint typedef struct _ExpirationBlock {
+  UINT8 expiration_month;  // byte 0
+  UINT8 expiration_day;    // byte 1
+  UINT8 expiration_year;   // byte 2
+} ExpirationBlock;
+
+// ---- Equity And Index Last Sale Message: 36 bytes ----------------------------
+
+// Equity and Index Last Sale message used to report equity and index options last sale information
+entrypoint typedef struct _EquityAndIndexLastSaleMessage {
+  UINT8 session_indicator;                // byte 0
+  UINT32BE participant_reference_number;  // bytes 1 to 4
+  UINT8 security_symbol[5];               // bytes 5 to 9
+  UINT8 reserved_1;                       // byte 10
+  ExpirationBlock expiration_block;       // bytes 11 to 13
+  UINT8 strike_price_denominator_code;    // byte 14
+  UINT32BE strike_price;                  // bytes 15 to 18, signed, read here as unsigned
+  UINT32BE volume;                        // bytes 19 to 22
+  UINT8 premium_price_denominator_code;   // byte 23
+  UINT32BE premium_price;                 // bytes 24 to 27, signed, read here as unsigned
+  UINT32BE trade_identifier;              // bytes 28 to 31
+  UINT8 reserved_4[4];                    // bytes 32 to 35
+} EquityAndIndexLastSaleMessage;
+
+// ---- Equity And Index End Of Day Summary Message: 65 bytes -------------------
+
+// Equity and Index End of Day Summary message providing per symbol open high low last net change and underlying information
+entrypoint typedef struct _EquityAndIndexEndOfDaySummaryMessage {
+  UINT8 session_indicator;                  // byte 0
+  UINT32BE participant_reference_number;    // bytes 1 to 4
+  UINT8 security_symbol[5];                 // bytes 5 to 9
+  UINT8 reserved_1;                         // byte 10
+  ExpirationBlock expiration_block;         // bytes 11 to 13
+  UINT8 strike_price_denominator_code;      // byte 14
+  UINT32BE strike_price;                    // bytes 15 to 18, signed, read here as unsigned
+  UINT32BE volume;                          // bytes 19 to 22
+  UINT32BE open_interest_volume;            // bytes 23 to 26
+  UINT8 premium_price_denominator_code;     // byte 27
+  UINT32BE open_price;                      // bytes 28 to 31, signed, read here as unsigned
+  UINT32BE high_price;                      // bytes 32 to 35, signed, read here as unsigned
+  UINT32BE low_price;                       // bytes 36 to 39, signed, read here as unsigned
+  UINT32BE last_price;                      // bytes 40 to 43, signed, read here as unsigned
+  UINT32BE net_change;                      // bytes 44 to 47, signed, read here as unsigned
+  UINT8 underlying_price_denominator_code;  // byte 48
+  UINT64BE underlying_price;                // bytes 49 to 56, signed, read here as unsigned
+  UINT32BE bid_price;                       // bytes 57 to 60, signed, read here as unsigned
+  UINT32BE offer_price;                     // bytes 61 to 64, signed, read here as unsigned
+} EquityAndIndexEndOfDaySummaryMessage;
+
+// ---- Long Equity And Index Quote Message: 36 bytes ---------------------------
+
+// Long Equity and Index Quote message containing a full quote using four byte integers for prices and sizes
+entrypoint typedef struct _LongEquityAndIndexQuoteMessage {
+  UINT8 session_indicator;                // byte 0
+  UINT32BE participant_reference_number;  // bytes 1 to 4
+  UINT8 security_symbol[5];               // bytes 5 to 9
+  UINT8 reserved_1;                       // byte 10
+  ExpirationBlock expiration_block;       // bytes 11 to 13
+  UINT8 strike_price_denominator_code;    // byte 14
+  UINT32BE strike_price;                  // bytes 15 to 18, signed, read here as unsigned
+  UINT8 premium_price_denominator_code;   // byte 19
+  UINT32BE bid_price;                     // bytes 20 to 23, signed, read here as unsigned
+  UINT32BE bid_size;                      // bytes 24 to 27
+  UINT32BE offer_price;                   // bytes 28 to 31, signed, read here as unsigned
+  UINT32BE offer_size;                    // bytes 32 to 35
+} LongEquityAndIndexQuoteMessage;
+
+// ---- Short Equity And Index Quote Message: 22 bytes --------------------------
+
+// Short Equity and Index Quote message containing a short quote using two byte unsigned integers for prices and sizes
+entrypoint typedef struct _ShortEquityAndIndexQuoteMessage {
+  UINT8 session_indicator;                // byte 0
+  UINT32BE participant_reference_number;  // bytes 1 to 4
+  UINT8 security_symbol_short[4];         // bytes 5 to 8
+  ExpirationBlock expiration_block;       // bytes 9 to 11
+  UINT16BE strike_price_short;            // bytes 12 to 13
+  UINT16BE bid_price_short;               // bytes 14 to 15
+  UINT16BE bid_size_short;                // bytes 16 to 17
+  UINT16BE offer_price_short;             // bytes 18 to 19
+  UINT16BE offer_size_short;              // bytes 20 to 21
+} ShortEquityAndIndexQuoteMessage;
+
+// ---- Control Message: 5 bytes ------------------------------------------------
+
+// Control message performs specified control functions consists of standard Message Header only
+entrypoint typedef struct _ControlMessage {
+  UINT8 session_indicator;                // byte 0
+  UINT32BE participant_reference_number;  // bytes 1 to 4
+} ControlMessage;
+
+// ---- Block Sequence Number Status Inquiry Request Message: 13 bytes ----------
+
+// Block Sequence Number Status Inquiry Request sent by the Participant to request the last Block Sequence Number received on that line
+entrypoint typedef struct _BlockSequenceNumberStatusInquiryRequestMessage {
+  UINT8 session_indicator;                // byte 0
+  UINT32BE participant_reference_number;  // bytes 1 to 4
+  UINT8 reserved_4[4];                    // bytes 5 to 8
+  UINT8 second_reserved_4[4];             // bytes 9 to 12
+} BlockSequenceNumberStatusInquiryRequestMessage;
+
+// ---- Block Sequence Number Status Response Message: 13 bytes -----------------
+
+// Block Sequence Number Status Response sent to the Participant by Opra in response to a Type L message contains the last Block Sequence Number received on that input line
+entrypoint typedef struct _BlockSequenceNumberStatusResponseMessage {
+  UINT8 session_indicator;                // byte 0
+  UINT32BE participant_reference_number;  // bytes 1 to 4
+  UINT32BE block_sequence_number;         // bytes 5 to 8
+  UINT8 reserved_4[4];                    // bytes 9 to 12
+} BlockSequenceNumberStatusResponseMessage;
+
+// ---- Message Count Status Inquiry Request Message: 13 bytes ------------------
+
+// Message Count Status Inquiry Request sent by the Participant to request the message count on that line
+entrypoint typedef struct _MessageCountStatusInquiryRequestMessage {
+  UINT8 session_indicator;                // byte 0
+  UINT32BE participant_reference_number;  // bytes 1 to 4
+  UINT8 reserved_8[8];                    // bytes 5 to 12
+} MessageCountStatusInquiryRequestMessage;
+
+// ---- Message Count Status Response Message: 13 bytes -------------------------
+
+// Message Count Status Response sent from Opra to the Participant containing the count of messages received on an individual line since startup
+entrypoint typedef struct _MessageCountStatusResponseMessage {
+  UINT8 session_indicator;                // byte 0
+  UINT32BE participant_reference_number;  // bytes 1 to 4
+  UINT64BE message_count;                 // bytes 5 to 12
+} MessageCountStatusResponseMessage;
+
+// ---- Underlying Value Last Sale Message: 20 bytes ----------------------------
+
+// Underlying Value Last Sale message containing the Last Sale Index Value
+entrypoint typedef struct _UnderlyingValueLastSaleMessage {
+  UINT8 session_indicator;                // byte 0
+  UINT32BE participant_reference_number;  // bytes 1 to 4
+  UINT8 security_symbol[5];               // bytes 5 to 9
+  UINT8 reserved_1;                       // byte 10
+  UINT8 index_value_denominator_code;     // byte 11
+  UINT32BE index_value;                   // bytes 12 to 15, signed, read here as unsigned
+  UINT8 reserved_4[4];                    // bytes 16 to 19
+} UnderlyingValueLastSaleMessage;
+
+// ---- Underlying Value Bid And Offer Message: 20 bytes ------------------------
+
+// Underlying Value Bid and Offer message containing the Last Sale Bid Offer Index Value
+entrypoint typedef struct _UnderlyingValueBidAndOfferMessage {
+  UINT8 session_indicator;                // byte 0
+  UINT32BE participant_reference_number;  // bytes 1 to 4
+  UINT8 security_symbol[5];               // bytes 5 to 9
+  UINT8 reserved_1;                       // byte 10
+  UINT8 index_value_denominator_code;     // byte 11
+  UINT32BE bid_index_value;               // bytes 12 to 15, signed, read here as unsigned
+  UINT32BE offer_index_value;             // bytes 16 to 19, signed, read here as unsigned
+} UnderlyingValueBidAndOfferMessage;
+

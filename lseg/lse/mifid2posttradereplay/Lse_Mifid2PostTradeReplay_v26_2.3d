@@ -1,0 +1,148 @@
+// London Stock Exchange MiFID II Post Trade Replay
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out Lse_Mifid2PostTradeReplay_v26_2.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a run counted by a field
+// - a field read in bits
+//
+// License: MIT No Attribution
+
+// ---- Unit Header: 8 bytes ----------------------------------------------------
+
+// Gtp Tcp Unit Header
+entrypoint typedef struct _UnitHeader {
+  UINT16 length;            // bytes 0 to 1
+  UINT8 message_count;      // byte 2
+  UINT8 market_data_group;  // byte 3
+  UINT32 sequence_number;   // bytes 4 to 7
+} UnitHeader;
+
+// ---- Message Header: 3 bytes -------------------------------------------------
+
+// Gtp Tcp Message Header
+entrypoint typedef struct _MessageHeader {
+  UINT16 message_length;  // bytes 0 to 1
+  UINT8 message_type;     // byte 2
+} MessageHeader;
+
+// ---- Login Request Message: 8 bytes ------------------------------------------
+
+// Used by the client to log in to the replay or recovery channel.
+entrypoint typedef struct _LoginRequestMessage {
+  UINT8 username[8];  // bytes 0 to 7
+} LoginRequestMessage;
+
+// ---- Replay Request Message: 12 bytes ----------------------------------------
+
+// Used by the client to request a retransmission of messages on the replay channel.
+entrypoint typedef struct _ReplayRequestMessage {
+  UINT32 first_message;  // bytes 0 to 3
+  UINT32 count;          // bytes 4 to 7
+  UINT32 request_id;     // bytes 8 to 11
+} ReplayRequestMessage;
+
+// ---- Login Response Message: 1 byte ------------------------------------------
+
+// Used by the server to accept or reject a login request to the replay or recovery channel.
+entrypoint typedef struct _LoginResponseMessage {
+  UINT8 login_status;  // byte 0
+} LoginResponseMessage;
+
+// ---- Replay Response Message: 13 bytes ---------------------------------------
+
+// Used by the server to respond to a retransmission request on the replay channel.
+entrypoint typedef struct _ReplayResponseMessage {
+  UINT32 first_message;  // bytes 0 to 3
+  UINT32 count;          // bytes 4 to 7
+  UINT8 replay_status;   // byte 8
+  UINT32 request_id;     // bytes 9 to 12
+} ReplayResponseMessage;
+
+// ---- Replay And Recovery Complete Message: 5 bytes ---------------------------
+
+// Used by the server to indicate the successful completion of servicing a message replay or a recovery request.
+entrypoint typedef struct _ReplayAndRecoveryCompleteMessage {
+  UINT32 request_id;     // bytes 0 to 3
+  UINT8 trading_status;  // byte 4
+} ReplayAndRecoveryCompleteMessage;
+
+// ---- System Event Message: 11 bytes ------------------------------------------
+
+// Sent to indicate the start and end of the day.
+entrypoint typedef struct _SystemEventMessage {
+  UINT64 timestamp;     // bytes 0 to 7
+  UINT8 event_code;     // byte 8
+  UINT16 source_venue;  // bytes 9 to 10
+} SystemEventMessage;
+
+// ---- Instrument Status Message: 27 bytes -------------------------------------
+
+// Used to communicate scheduled and unscheduled session changes. When sent in the recovery channel, used to indicate the current trading status of an instrument.
+entrypoint typedef struct _InstrumentStatusMessage {
+  UINT64 timestamp;             // bytes 0 to 7
+  UINT64 instrument;            // bytes 8 to 15
+  UINT16 source_venue;          // bytes 16 to 17
+  UINT8 trading_status;         // byte 18
+  UINT8 session_change_reason;  // byte 19
+  UINT8 new_end_time[6];        // bytes 20 to 25
+  UINT8 order_book_type;        // byte 26
+} InstrumentStatusMessage;
+
+// ---- Mifid Ii Trade Message: 283 bytes ---------------------------------------
+
+// Sent to represent different types of MiFID compliant trades published by markets.
+entrypoint typedef struct _MifidIiTradeMessage {
+  UINT64 timestamp;                              // bytes 0 to 7
+  UINT16 source_venue;                           // bytes 8 to 9
+  UINT64 instrument;                             // bytes 10 to 17
+  UINT8 transaction_identification_code[52];     // bytes 18 to 69
+  UINT8 mifid_trade_type;                        // byte 70
+  UINT8 auction_type;                            // byte 71
+  UINT8 mifid_price[20];                         // bytes 72 to 91
+  UINT8 mifid_quantity[20];                      // bytes 92 to 111
+  UINT8 trading_date_and_time[27];               // bytes 112 to 138
+  UINT8 instrument_identification_code_type[4];  // bytes 139 to 142
+  UINT8 instrument_identification_code[12];      // bytes 143 to 154
+  UINT8 price_notation[4];                       // bytes 155 to 158
+  UINT8 price_major_currency[3];                 // bytes 159 to 161
+  UINT8 notional_amount[20];                     // bytes 162 to 181
+  UINT8 notional_currency[3];                    // bytes 182 to 184
+  UINT8 venue_of_execution[4];                   // bytes 185 to 188
+  UINT8 publication_date_and_time[27];           // bytes 189 to 215
+  UINT8 pt_ref_price_waiver_flag[4];             // bytes 216 to 219
+  UINT8 reserved_4[4];                           // bytes 220 to 223
+  UINT8 market_closing_price_flag[4];            // bytes 224 to 227
+  UINT8 pt_algo_trade[4];                        // bytes 228 to 231
+  UINT8 pt_cancellation_flag[4];                 // bytes 232 to 235
+  UINT8 pt_amendment_flag[4];                    // bytes 236 to 239
+  UINT8 reserved_1;                              // byte 240
+  UINT8 reserved_3[3];                           // bytes 241 to 243
+  UINT8 reserved_20[20];                         // bytes 244 to 263
+  UINT8 second_reserved_4[4];                    // bytes 264 to 267
+  UINT8 trade_qualifier;                         // byte 268
+  UINT8 market_mechanism;                        // byte 269
+  UINT8 trading_mode;                            // byte 270
+  UINT8 transaction_category;                    // byte 271
+  UINT8 negotiation_indicator;                   // byte 272
+  UINT8 agency_cross_indicator;                  // byte 273
+  UINT8 modification_indicator;                  // byte 274
+  UINT8 reference_price_indicator;               // byte 275
+  UINT8 special_dividend_indicator;              // byte 276
+  UINT8 off_book_automated_indicator;            // byte 277
+  UINT8 price_formation_indicator;               // byte 278
+  UINT8 algorithmic_indicator;                   // byte 279
+  UINT8 post_trade_deferral_reason;              // byte 280
+  UINT8 deferral_enrichment_type;                // byte 281
+  UINT8 duplicative_indicator;                   // byte 282
+} MifidIiTradeMessage;
+

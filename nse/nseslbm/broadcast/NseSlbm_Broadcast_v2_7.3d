@@ -1,0 +1,150 @@
+// National Stock Exchange of India Ltd
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out NseSlbm_Broadcast_v2_7.3d
+//
+// What this definition does not state, and the model does:
+// - a run counted by a field
+// - a Conversion rule
+// - a field read in bits
+// - a Composite rule
+// - a run of a stated number of entries
+// - the dispatch that chooses a message by its type
+//
+// License: MIT No Attribution
+
+// ---- Bcast Header: 40 bytes --------------------------------------------------
+
+// BCAST_HEADER
+entrypoint typedef struct _BcastHeader {
+  UINT8 reserved_0[2];        // bytes 0 to 1
+  UINT8 reserved_2[2];        // bytes 2 to 3
+  UINT32BE log_time;          // bytes 4 to 7, signed, read here as unsigned
+  UINT8 alpha_char[2];        // bytes 8 to 9
+  UINT16BE transaction_code;  // bytes 10 to 11, signed, read here as unsigned
+  UINT16BE error_code;        // bytes 12 to 13, signed, read here as unsigned
+  UINT32BE bc_seq_no;         // bytes 14 to 17, signed, read here as unsigned
+  UINT8 reserved_18;          // byte 18
+  UINT8 reserved_19[3];       // bytes 19 to 21
+  UINT8 time_stamp_2[8];      // bytes 22 to 29
+  UINT8 filler_2[8];          // bytes 30 to 37
+  UINT16BE message_length;    // bytes 38 to 39, signed, read here as unsigned
+} BcastHeader;
+
+// ---- Sec Info: 12 bytes ------------------------------------------------------
+
+// SEC_INFO
+entrypoint typedef struct _SecInfo {
+  UINT8 symbol[10];  // bytes 0 to 9
+  UINT8 series[2];   // bytes 10 to 11
+} SecInfo;
+
+// ---- Change Participant Status Message: 43 bytes -----------------------------
+
+// Sent as BCAST_PART_MSTR_CHG whenever there is a participant change
+entrypoint typedef struct _ChangeParticipantStatusMessage {
+  UINT8 participant_id[12];               // bytes 0 to 11
+  UINT8 participant_name[25];             // bytes 12 to 36
+  UINT8 participant_status;               // byte 37
+  UINT32BE participant_update_date_time;  // bytes 38 to 41, signed, read here as unsigned
+  UINT8 delete_flag;                      // byte 42
+} ChangeParticipantStatusMessage;
+
+// ---- Turnover Limit Exceeded Message: 37 bytes -------------------------------
+
+// Sent as BCAST_TURNOVER_EXCEEDED when a broker's turnover is about to exceed or has exceeded its limit
+entrypoint typedef struct _TurnoverLimitExceededMessage {
+  UINT8 broker_code[5];          // bytes 0 to 4
+  UINT8 counter_broker_code[5];  // bytes 5 to 9
+  UINT16BE warning_type;         // bytes 10 to 11, signed, read here as unsigned
+  SecInfo sec_info;              // bytes 12 to 23
+  UINT32BE trade_number;         // bytes 24 to 27, signed, read here as unsigned
+  UINT32BE trade_price;          // bytes 28 to 31, signed, read here as unsigned
+  UINT32BE trade_volume;         // bytes 32 to 35, signed, read here as unsigned
+  UINT8 final;                   // byte 36
+} TurnoverLimitExceededMessage;
+
+// ---- Broker Reactivated Message: 37 bytes ------------------------------------
+
+// Sent as BROADCAST_BROKER_ACTIVATED when a deactivated broker is reactivated
+entrypoint typedef struct _BrokerReactivatedMessage {
+  UINT8 broker_code[5];          // bytes 0 to 4
+  UINT8 counter_broker_code[5];  // bytes 5 to 9
+  UINT16BE warning_type;         // bytes 10 to 11, signed, read here as unsigned
+  SecInfo sec_info;              // bytes 12 to 23
+  UINT32BE trade_number;         // bytes 24 to 27, signed, read here as unsigned
+  UINT32BE trade_price;          // bytes 28 to 31, signed, read here as unsigned
+  UINT32BE trade_volume;         // bytes 32 to 35, signed, read here as unsigned
+  UINT8 final;                   // byte 36
+} BrokerReactivatedMessage;
+
+// ---- St Auction Inq Info: 36 bytes -------------------------------------------
+
+// ST_AUCTION_INQ_INFO
+entrypoint typedef struct _StAuctionInqInfo {
+  UINT32BE token;              // bytes 0 to 3, signed, read here as unsigned
+  UINT16BE auction_number;     // bytes 4 to 5, signed, read here as unsigned
+  UINT16BE auction_status;     // bytes 6 to 7, signed, read here as unsigned
+  UINT16BE initiator_type;     // bytes 8 to 9, signed, read here as unsigned
+  UINT32BE total_buy_qty;      // bytes 10 to 13, signed, read here as unsigned
+  UINT32BE best_buy_price;     // bytes 14 to 17, signed, read here as unsigned
+  UINT32BE total_sell_qty;     // bytes 18 to 21, signed, read here as unsigned
+  UINT32BE best_sell_price;    // bytes 22 to 25, signed, read here as unsigned
+  UINT32BE auction_price;      // bytes 26 to 29, signed, read here as unsigned
+  UINT32BE auction_qty;        // bytes 30 to 33, signed, read here as unsigned
+  UINT16BE settlement_period;  // bytes 34 to 35, signed, read here as unsigned
+} StAuctionInqInfo;
+
+// ---- Auction Activity Message: 36 bytes --------------------------------------
+
+// Sent as BCAST_AUCTION_INQUIRY_OUT for any auction related activity in CM
+entrypoint typedef struct _AuctionActivityMessage {
+  StAuctionInqInfo st_auction_inq_info;  // bytes 0 to 35
+} AuctionActivityMessage;
+
+// ---- Security Open Message: 20 bytes -----------------------------------------
+
+// Sent as SECURITY_OPEN_PRICE with the open price of a security when the market opens
+entrypoint typedef struct _SecurityOpenMessage {
+  SecInfo sec_info;        // bytes 0 to 11
+  UINT32BE token;          // bytes 12 to 15, signed, read here as unsigned
+  UINT32BE opening_price;  // bytes 16 to 19, signed, read here as unsigned
+} SecurityOpenMessage;
+
+// ---- Report Header Body: 67 bytes --------------------------------------------
+
+// Report Header Body
+entrypoint typedef struct _ReportHeaderBody {
+  UINT8 reserved_1;        // byte 0
+  UINT32BE report_date;    // bytes 1 to 4, signed, read here as unsigned
+  UINT16BE user_type;      // bytes 5 to 6, signed, read here as unsigned
+  UINT8 broker_id[5];      // bytes 7 to 11
+  UINT8 broker_name[25];   // bytes 12 to 36
+  UINT32BE trader_number;  // bytes 37 to 40, signed, read here as unsigned
+  UINT8 trader_name[26];   // bytes 41 to 66
+} ReportHeaderBody;
+
+// ---- Report Trailer Body: 5 bytes --------------------------------------------
+
+// Report Trailer Body
+entrypoint typedef struct _ReportTrailerBody {
+  UINT32BE number_of_records_long;  // bytes 0 to 3, signed, read here as unsigned
+  UINT8 reserved_1;                 // byte 4
+} ReportTrailerBody;
+
+// ---- Contingency Broadcast Message: 204 bytes --------------------------------
+
+// Sent as BCAST_CONTI_MSG at the start and the end of an outage of one or more streams
+entrypoint typedef struct _ContingencyBroadcastMessage {
+  UINT16BE stream_number;   // bytes 0 to 1, signed, read here as unsigned
+  UINT16BE outage_status;   // bytes 2 to 3, signed, read here as unsigned
+  UINT8 reserved_200[200];  // bytes 4 to 203
+} ContingencyBroadcastMessage;
+

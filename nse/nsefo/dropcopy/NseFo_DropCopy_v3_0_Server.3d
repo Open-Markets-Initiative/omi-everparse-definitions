@@ -1,0 +1,102 @@
+// National Stock Exchange of India Ltd Drop Copy
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out NseFo_DropCopy_v3_0_Server.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a field filling what is left of what holds it
+// - a Composite rule
+// - a field read in bits
+//
+// License: MIT No Attribution
+
+// ---- Packet Header: 22 bytes -------------------------------------------------
+
+// Drop copy twenty two byte packet header
+entrypoint typedef struct _PacketHeader {
+  UINT16BE packet_length;           // bytes 0 to 1
+  UINT32BE packet_sequence_number;  // bytes 2 to 5
+  UINT8 checksum[16];               // bytes 6 to 21
+} PacketHeader;
+
+// ---- Response Message Header: 2 bytes ----------------------------------------
+
+// RESPONSE_MESSAGE_HEADER, present once per packet however many messages are packed behind it
+entrypoint typedef struct _ResponseMessageHeader {
+  UINT8 environment_type;       // byte 0
+  UINT8 compression_indicator;  // byte 1
+} ResponseMessageHeader;
+
+// ---- Message Header: 14 bytes ------------------------------------------------
+
+// MESSAGE_HEADER
+entrypoint typedef struct _MessageHeader {
+  UINT16BE transaction_code;  // bytes 0 to 1, signed, read here as unsigned
+  UINT16BE error_code;        // bytes 2 to 3, signed, read here as unsigned
+  UINT64BE sequence_number;   // bytes 4 to 11, signed, read here as unsigned
+  UINT16BE message_length;    // bytes 12 to 13, signed, read here as unsigned
+} MessageHeader;
+
+// ---- Ip Details Partition Wise: 26 bytes -------------------------------------
+
+// IP_DETAILS_PARTITION_WISE
+entrypoint typedef struct _IpDetailsPartitionWise {
+  UINT8 ip_address[16];   // bytes 0 to 15
+  UINT32BE port;          // bytes 16 to 19, signed, read here as unsigned
+  UINT8 partition_id[6];  // bytes 20 to 25
+} IpDetailsPartitionWise;
+
+// ---- Gr Response Message: 98 bytes -------------------------------------------
+
+// Returns the addresses of every partition the member must connect to, together with the session key and the cryptographic material for those connections
+entrypoint typedef struct _GrResponseMessage {
+  UINT16BE message_indicator;                        // bytes 0 to 1, signed, read here as unsigned
+  UINT16BE partition_count;                          // bytes 2 to 3, signed, read here as unsigned
+  IpDetailsPartitionWise ip_details_partition_wise;  // bytes 4 to 29
+  UINT8 session_key[8];                              // bytes 30 to 37
+  UINT8 cryptographic_key[32];                       // bytes 38 to 69
+  UINT8 static_cryptographic_iv[8];                  // bytes 70 to 77
+  UINT64BE dynamic_cryptographic_iv;                 // bytes 78 to 85, signed, read here as unsigned
+  UINT8 cryptographic_additional_key[12];            // bytes 86 to 97
+} GrResponseMessage;
+
+// ---- Dc Signon Out Message: 12 bytes -----------------------------------------
+
+// Confirms the logon, or terminates the connection when Error Code is set
+entrypoint typedef struct _DcSignonOutMessage {
+  UINT32BE user_id;              // bytes 0 to 3, signed, read here as unsigned
+  UINT8 partition_id[6];         // bytes 4 to 9
+  UINT16BE concurrent_login_id;  // bytes 10 to 11, signed, read here as unsigned
+} DcSignonOutMessage;
+
+// ---- Dc Sign Off Message: 12 bytes -------------------------------------------
+
+// Signs the user off the partition
+entrypoint typedef struct _DcSignOffMessage {
+  UINT32BE user_id;              // bytes 0 to 3, signed, read here as unsigned
+  UINT8 partition_id[6];         // bytes 4 to 9
+  UINT16BE concurrent_login_id;  // bytes 10 to 11, signed, read here as unsigned
+} DcSignOffMessage;
+
+// ---- Dc Error Response Trade Message: 128 bytes ------------------------------
+
+// Rejects a trade only request, the reason given in the Error Code of the Message Header
+entrypoint typedef struct _DcErrorResponseTradeMessage {
+  UINT8 error_message[128];  // bytes 0 to 127
+} DcErrorResponseTradeMessage;
+
+// ---- Dc Error Response Order Message: 128 bytes ------------------------------
+
+// Rejects an order and trade request, the reason given in the Error Code of the Message Header
+entrypoint typedef struct _DcErrorResponseOrderMessage {
+  UINT8 error_message[128];  // bytes 0 to 127
+} DcErrorResponseOrderMessage;
+

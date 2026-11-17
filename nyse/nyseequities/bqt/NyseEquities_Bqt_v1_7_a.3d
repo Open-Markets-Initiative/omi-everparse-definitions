@@ -1,0 +1,292 @@
+// New York Stock Exchange Best Quote And Trade
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out NyseEquities_Bqt_v1_7_a.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a field present only on a condition
+//
+// License: MIT No Attribution
+
+// ---- Send Time: 8 bytes ------------------------------------------------------
+
+// The time when this packet was published to the multicast channel
+entrypoint typedef struct _SendTime {
+  UINT32 seconds;      // bytes 0 to 3
+  UINT32 nanoseconds;  // bytes 4 to 7
+} SendTime;
+
+// ---- Packet Header: 16 bytes -------------------------------------------------
+
+entrypoint typedef struct _PacketHeader {
+  UINT16 packet_size;      // bytes 0 to 1
+  UINT8 delivery_flag;     // byte 2
+  UINT8 message_count;     // byte 3
+  UINT32 sequence_number;  // bytes 4 to 7
+  SendTime send_time;      // bytes 8 to 15
+} PacketHeader;
+
+// ---- Message Header: 4 bytes -------------------------------------------------
+
+entrypoint typedef struct _MessageHeader {
+  UINT16 message_size;  // bytes 0 to 1
+  UINT16 message_type;  // bytes 2 to 3
+} MessageHeader;
+
+// ---- Sequence Number Reset Message: 10 bytes ---------------------------------
+
+// This message is sent to reset the Message Sequence Number at start of day, or in response to failures.
+entrypoint typedef struct _SequenceNumberResetMessage {
+  UINT32 source_time;     // bytes 0 to 3
+  UINT32 source_time_ns;  // bytes 4 to 7
+  UINT8 product_id;       // byte 8
+  UINT8 channel_id;       // byte 9
+} SequenceNumberResetMessage;
+
+// ---- Symbol Index Mapping Message: 40 bytes ----------------------------------
+
+// This message is published over the real-time data channels at system startup or in the context of a refresh sequence after a Matching Engine or XDP Publisher failover. It provides referential data for a single specified symbol.
+entrypoint typedef struct _SymbolIndexMappingMessage {
+  UINT32 symbol_index;       // bytes 0 to 3
+  UINT8 symbol[11];          // bytes 4 to 14
+  UINT8 reserved_1;          // byte 15
+  UINT16 market_id;          // bytes 16 to 17
+  UINT8 system_id;           // byte 18
+  UINT8 exchange_code;       // byte 19
+  UINT8 price_scale_code;    // byte 20
+  UINT8 security_type;       // byte 21
+  UINT16 lot_size;           // bytes 22 to 23
+  UINT32 prev_close_price;   // bytes 24 to 27
+  UINT32 prev_close_volume;  // bytes 28 to 31
+  UINT8 price_resolution;    // byte 32
+  UINT8 round_lot;           // byte 33
+  UINT16 mpv;                // bytes 34 to 35
+  UINT16 unit_of_trade;      // bytes 36 to 37
+  UINT8 reserved_2[2];       // bytes 38 to 39
+} SymbolIndexMappingMessage;
+
+// ---- Retransmission Request Message: 20 bytes --------------------------------
+
+// Clients who have experienced a sequence number gap and need a retransmission of the missed messages should send a Retransmission Request message via TCP to the Request Controller. A Request Response message will be sent over the TCP connection back to the client, and if the request was valid, the requested message(s) will be re-published over the relevant Retransmission multicast channel.
+entrypoint typedef struct _RetransmissionRequestMessage {
+  UINT32 begin_seq_num;  // bytes 0 to 3
+  UINT32 end_seq_num;    // bytes 4 to 7
+  UINT8 source_id[10];   // bytes 8 to 17
+  UINT8 product_id;      // byte 18
+  UINT8 channel_id;      // byte 19
+} RetransmissionRequestMessage;
+
+// ---- Request Response Message: 25 bytes --------------------------------------
+
+// This message will be sent immediately via TCP/IP in response to the client s request for retransmission, refresh or Symbol Mapping messages.
+entrypoint typedef struct _RequestResponseMessage {
+  UINT32 request_seq_num;  // bytes 0 to 3
+  UINT32 begin_seq_num;    // bytes 4 to 7
+  UINT32 end_seq_num;      // bytes 8 to 11
+  UINT8 source_id[10];     // bytes 12 to 21
+  UINT8 product_id;        // byte 22
+  UINT8 channel_id;        // byte 23
+  UINT8 status;            // byte 24
+} RequestResponseMessage;
+
+// ---- Heartbeat Response Message: 10 bytes ------------------------------------
+
+// Clients who remain connected to the Retransmission Server intraday must respond to a Heartbeat with a Heartbeat Response message within 5 seconds. If no timely client response is received, the connection will be closed.
+entrypoint typedef struct _HeartbeatResponseMessage {
+  UINT8 source_id[10];  // bytes 0 to 9
+} HeartbeatResponseMessage;
+
+// ---- Symbol Index Mapping Request Message: 17 bytes --------------------------
+
+// This message is sent by clients via TCP/IP requesting the Symbol Index Mapping messages for one or all symbols in a specified channel.
+entrypoint typedef struct _SymbolIndexMappingRequestMessage {
+  UINT32 symbol_index;      // bytes 0 to 3
+  UINT8 source_id[10];      // bytes 4 to 13
+  UINT8 product_id;         // byte 14
+  UINT8 channel_id;         // byte 15
+  UINT8 retransmit_method;  // byte 16
+} SymbolIndexMappingRequestMessage;
+
+// ---- Refresh Request Message: 16 bytes ---------------------------------------
+
+// Clients who have experienced a failure and need a refresh of the state of one or all symbols in a specific channel should send a Retransmission Request message via TCP to the Request Controller. A Request Response message will be sent over the TCP connection back to the client, and if the request was valid, the requested message(s) will be published over the relevant Refresh multicast channel.
+entrypoint typedef struct _RefreshRequestMessage {
+  UINT32 symbol_index;  // bytes 0 to 3
+  UINT8 source_id[10];  // bytes 4 to 13
+  UINT8 product_id;     // byte 14
+  UINT8 channel_id;     // byte 15
+} RefreshRequestMessage;
+
+// ---- Message Unavailable Message: 10 bytes -----------------------------------
+
+// This message will be sent over the Retransmission multicast channels to inform clients of unavailability of a range of messages (or part of a range) for which they may have requested a retransmission.
+entrypoint typedef struct _MessageUnavailableMessage {
+  UINT32 begin_seq_num;  // bytes 0 to 3
+  UINT32 end_seq_num;    // bytes 4 to 7
+  UINT8 product_id;      // byte 8
+  UINT8 channel_id;      // byte 9
+} MessageUnavailableMessage;
+
+// ---- Consolidated Symbol Clear Message: 18 bytes -----------------------------
+
+// In case of a failure and recovery of a Matching Engine or an XDP Publisher, the publisher may send a full state refresh for every symbol affected. This kind of unrequested refresh is preceded by a Symbol Clear message. The client should react to receipt of a Symbol Clear message by clearing all state information for the specified symbol in anticipation of receiving a full state refresh.
+entrypoint typedef struct _ConsolidatedSymbolClearMessage {
+  UINT32 source_time;          // bytes 0 to 3
+  UINT32 source_time_ns;       // bytes 4 to 7
+  UINT32 symbol_index;         // bytes 8 to 11
+  UINT32 next_source_seq_num;  // bytes 12 to 15
+  UINT16 market_id;            // bytes 16 to 17
+} ConsolidatedSymbolClearMessage;
+
+// ---- Consolidated Trading Session Change Message: 19 bytes -------------------
+
+// This message is sent on both the BBO feed and the Trades feed from the Arca market only.
+entrypoint typedef struct _ConsolidatedTradingSessionChangeMessage {
+  UINT32 source_time;     // bytes 0 to 3
+  UINT32 source_time_ns;  // bytes 4 to 7
+  UINT32 symbol_index;    // bytes 8 to 11
+  UINT32 symbol_seq_num;  // bytes 12 to 15
+  UINT8 trade_session;    // byte 16
+  UINT16 market_id;       // bytes 17 to 18
+} ConsolidatedTradingSessionChangeMessage;
+
+// ---- Consolidated Security Status Message: 42 bytes --------------------------
+
+// This message informs clients of changes in the status of a specific security, such as Trading Halts, Short Sale Restriction state changes, etc.
+entrypoint typedef struct _ConsolidatedSecurityStatusMessage {
+  UINT32 source_time;                // bytes 0 to 3
+  UINT32 source_time_ns;             // bytes 4 to 7
+  UINT32 symbol_index;               // bytes 8 to 11
+  UINT32 symbol_seq_num;             // bytes 12 to 15
+  UINT8 security_status;             // byte 16
+  UINT8 halt_condition;              // byte 17
+  UINT16 market_id;                  // bytes 18 to 19
+  UINT8 reserved_2[2];               // bytes 20 to 21
+  UINT32 price_1;                    // bytes 22 to 25
+  UINT32 price_2;                    // bytes 26 to 29
+  UINT8 ssr_triggering_exchange_id;  // byte 30
+  UINT32 ssr_triggering_volume;      // bytes 31 to 34
+  UINT32 time;                       // bytes 35 to 38
+  UINT8 ssr_state;                   // byte 39
+  UINT8 market_state;                // byte 40
+  UINT8 session_state;               // byte 41
+} ConsolidatedSecurityStatusMessage;
+
+// ---- Bqt Message: 31 bytes ---------------------------------------------------
+
+// This message is sent when an event causes a change in one or both sides of the BBO.
+entrypoint typedef struct _BqtMessage {
+  UINT32 symbol_index;             // bytes 0 to 3
+  UINT32 symbol_seq_number;        // bytes 4 to 7
+  UINT32 ask_price;                // bytes 8 to 11
+  UINT32 ask_volume;               // bytes 12 to 15
+  UINT32 bid_price;                // bytes 16 to 19
+  UINT32 bid_volume;               // bytes 20 to 23
+  UINT8 ask_quote_condition;       // byte 24
+  UINT8 bid_quote_condition;       // byte 25
+  UINT8 retail_pricing_indicator;  // byte 26
+  UINT16 market_id_of_best_ask;    // bytes 27 to 28
+  UINT16 market_id_of_best_bid;    // bytes 29 to 30
+} BqtMessage;
+
+// ---- Consolidated Single Sided Quote Message: 21 bytes -----------------------
+
+// This message is sent when an event causes a change in only one side of a BBO.
+entrypoint typedef struct _ConsolidatedSingleSidedQuoteMessage {
+  UINT32 symbol_index;       // bytes 0 to 3
+  UINT32 symbol_seq_number;  // bytes 4 to 7
+  UINT8 side;                // byte 8
+  UINT32 price;              // bytes 9 to 12
+  UINT32 volume;             // bytes 13 to 16
+  UINT8 quote_condition;     // byte 17
+  UINT8 rpi_indicator;       // byte 18
+  UINT16 market_id;          // bytes 19 to 20
+} ConsolidatedSingleSidedQuoteMessage;
+
+// ---- Consolidated Trade Message: 34 bytes ------------------------------------
+
+// The Trade messages provided on the Trades feed are the same Trade messages provided to the Cta. All Trades are passed through and marked with the originating Market ID.
+entrypoint typedef struct _ConsolidatedTradeMessage {
+  UINT32 source_time;       // bytes 0 to 3
+  UINT32 source_time_ns;    // bytes 4 to 7
+  UINT32 symbol_index;      // bytes 8 to 11
+  UINT32 symbol_seq_num;    // bytes 12 to 15
+  UINT32 trade_id;          // bytes 16 to 19
+  UINT32 price;             // bytes 20 to 23
+  UINT32 volume;            // bytes 24 to 27
+  UINT8 trade_condition_1;  // byte 28
+  UINT8 trade_condition_2;  // byte 29
+  UINT8 trade_condition_3;  // byte 30
+  UINT8 trade_condition_4;  // byte 31
+  UINT16 market_id;         // bytes 32 to 33
+} ConsolidatedTradeMessage;
+
+// ---- Consolidated Trade Cancel Message: 22 bytes -----------------------------
+
+// This message is sent when a trade is cancelled
+entrypoint typedef struct _ConsolidatedTradeCancelMessage {
+  UINT32 source_time;        // bytes 0 to 3
+  UINT32 source_time_ns;     // bytes 4 to 7
+  UINT32 symbol_index;       // bytes 8 to 11
+  UINT32 symbol_seq_number;  // bytes 12 to 15
+  UINT32 trade_id;           // bytes 16 to 19
+  UINT16 market_id;          // bytes 20 to 21
+} ConsolidatedTradeCancelMessage;
+
+// ---- Consolidated Trade Correction Message: 38 bytes -------------------------
+
+// This message is sent when a trade is corrected
+entrypoint typedef struct _ConsolidatedTradeCorrectionMessage {
+  UINT32 source_time;        // bytes 0 to 3
+  UINT32 source_time_ns;     // bytes 4 to 7
+  UINT32 symbol_index;       // bytes 8 to 11
+  UINT32 symbol_seq_number;  // bytes 12 to 15
+  UINT32 original_trade_id;  // bytes 16 to 19
+  UINT32 trade_id;           // bytes 20 to 23
+  UINT32 price;              // bytes 24 to 27
+  UINT32 volume;             // bytes 28 to 31
+  UINT8 trade_condition_1;   // byte 32
+  UINT8 trade_condition_2;   // byte 33
+  UINT8 trade_condition_3;   // byte 34
+  UINT8 trade_condition_4;   // byte 35
+  UINT16 market_id;          // bytes 36 to 37
+} ConsolidatedTradeCorrectionMessage;
+
+// ---- Consolidated Stock Summary Message: 41 bytes ----------------------------
+
+// The stock summary message is sent every 1 minute regardless of whether there is a change to a particular value or not. In the event that there is no volume on the stock, the stock summary message will not be disseminated.
+entrypoint typedef struct _ConsolidatedStockSummaryMessage {
+  UINT32 source_time;              // bytes 0 to 3
+  UINT32 source_time_ns;           // bytes 4 to 7
+  UINT32 symbol_index;             // bytes 8 to 11
+  UINT32 high_price;               // bytes 12 to 15
+  UINT32 low_price;                // bytes 16 to 19
+  UINT32 open_;                    // bytes 20 to 23
+  UINT32 total_volume;             // bytes 24 to 27
+  UINT16 market_id_of_high_price;  // bytes 28 to 29
+  UINT16 market_id_of_low_price;   // bytes 30 to 31
+  UINT16 market_id_of_open_price;  // bytes 32 to 33
+  UINT8 num_close_prices;          // byte 34
+  UINT16 market_id_of_the_close;   // bytes 35 to 36
+  UINT32 close;                    // bytes 37 to 40
+} ConsolidatedStockSummaryMessage;
+
+// ---- Consolidated Volume Message: 14 bytes -----------------------------------
+
+// Published on consolidated volume channels
+entrypoint typedef struct _ConsolidatedVolumeMessage {
+  UINT32 symbol_index;       // bytes 0 to 3
+  UINT32 symbol_seq_number;  // bytes 4 to 7
+  UINT32 total_volume;       // bytes 8 to 11
+  UINT8 reason;              // byte 12
+  UINT8 complete;            // byte 13
+} ConsolidatedVolumeMessage;
+

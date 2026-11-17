@@ -1,0 +1,534 @@
+// Intercontinental Exchange Multicast Data Feed
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out IceFutures_Mdf_v1_1_51.3d
+//
+// What this definition does not state, and the model does:
+// - a run counted by a field
+// - a field read in bits
+// - a field of no fixed width
+//
+// License: MIT No Attribution
+
+// ---- Packet Header: 16 bytes -------------------------------------------------
+
+// iMpact Upd market data packet header
+entrypoint typedef struct _PacketHeader {
+  UINT16BE session;         // bytes 0 to 1
+  UINT32BE sequence;        // bytes 2 to 5
+  UINT16BE number_of_msgs;  // bytes 6 to 7
+  UINT64BE sent_date_time;  // bytes 8 to 15
+} PacketHeader;
+
+// ---- Message Header: 3 bytes -------------------------------------------------
+
+// iMpact message header
+entrypoint typedef struct _MessageHeader {
+  UINT8 message_type;  // byte 0
+  UINT16BE length;     // bytes 1 to 2
+} MessageHeader;
+
+// ---- Market Snapshot Message: 133 bytes --------------------------------------
+
+// The market snapshot message is the same for full order depth and price level snapshot channel.
+entrypoint typedef struct _MarketSnapshotMessage {
+  UINT32BE market_id;                                   // bytes 0 to 3, signed, read here as unsigned
+  UINT16BE market_type;                                 // bytes 4 to 5, signed, read here as unsigned
+  UINT8 trading_status;                                 // byte 6
+  UINT32BE volume;                                      // bytes 7 to 10, signed, read here as unsigned
+  UINT32BE block_volume;                                // bytes 11 to 14, signed, read here as unsigned
+  UINT32BE efs_volume;                                  // bytes 15 to 18, signed, read here as unsigned
+  UINT32BE efp_volume;                                  // bytes 19 to 22, signed, read here as unsigned
+  UINT32BE open_interest;                               // bytes 23 to 26, signed, read here as unsigned
+  UINT64BE opening_price;                               // bytes 27 to 34, signed, read here as unsigned
+  UINT64BE settlement_price_with_deal_price_precision;  // bytes 35 to 42, signed, read here as unsigned
+  UINT64BE high;                                        // bytes 43 to 50, signed, read here as unsigned
+  UINT64BE low;                                         // bytes 51 to 58, signed, read here as unsigned
+  UINT64BE vwap;                                        // bytes 59 to 66, signed, read here as unsigned
+  UINT32BE num_of_book_entries;                         // bytes 67 to 70, signed, read here as unsigned
+  UINT64BE last_trade_price;                            // bytes 71 to 78, signed, read here as unsigned
+  UINT32BE last_trade_quantity;                         // bytes 79 to 82, signed, read here as unsigned
+  UINT64BE last_trade_date_time;                        // bytes 83 to 90, signed, read here as unsigned
+  UINT64BE settle_price_date_time;                      // bytes 91 to 98, signed, read here as unsigned
+  UINT32BE last_message_sequence_id;                    // bytes 99 to 102, signed, read here as unsigned
+  UINT8 reserved_2[2];                                  // bytes 103 to 104
+  UINT8 open_interest_date[10];                         // bytes 105 to 114
+  UINT8 is_settle_price_official;                       // byte 115
+  UINT64BE settlement_price;                            // bytes 116 to 123, signed, read here as unsigned
+  UINT8 has_previous_day_settlement_price;              // byte 124
+  UINT64BE previous_day_settlement_price;               // bytes 125 to 132, signed, read here as unsigned
+} MarketSnapshotMessage;
+
+// ---- Spot Market Trade Message: 50 bytes -------------------------------------
+
+// This message will be sent only upon trade in spot markets and it will be rendered on spot market channels.
+entrypoint typedef struct _SpotMarketTradeMessage {
+  UINT32BE market_id;                 // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE trade_id;                  // bytes 4 to 11, signed, read here as unsigned
+  UINT64BE price;                     // bytes 12 to 19, signed, read here as unsigned
+  UINT32BE quantity;                  // bytes 20 to 23, signed, read here as unsigned
+  UINT64BE transact_date_time;        // bytes 24 to 31, signed, read here as unsigned
+  UINT8 extra_flags;                  // byte 32, signed, read here as unsigned
+  UINT64BE delivery_begin_date_time;  // bytes 33 to 40, signed, read here as unsigned
+  UINT64BE delivery_end_date_time;    // bytes 41 to 48, signed, read here as unsigned
+  UINT8 is_system_priced_leg;         // byte 49
+} SpotMarketTradeMessage;
+
+// ---- Investigated Trade Message: 37 bytes ------------------------------------
+
+// This message is sent when a trade is put under investigation or the investigation is completed. Client can use the market ID and order ID to find and flag the original trade if needed.
+entrypoint typedef struct _InvestigatedTradeMessage {
+  UINT32BE market_id;               // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE trade_id;                // bytes 4 to 11, signed, read here as unsigned
+  UINT64BE price;                   // bytes 12 to 19, signed, read here as unsigned
+  UINT32BE quantity;                // bytes 20 to 23, signed, read here as unsigned
+  UINT8 old_off_market_trade_type;  // byte 24
+  UINT64BE message_date_time;       // bytes 25 to 32, signed, read here as unsigned
+  UINT8 investigation_status;       // byte 33
+  UINT8 off_market_trade_type[3];   // bytes 34 to 36
+} InvestigatedTradeMessage;
+
+// ---- Cancelled Trade Message: 36 bytes ---------------------------------------
+
+// This message is sent when a trade is cancelled.
+entrypoint typedef struct _CancelledTradeMessage {
+  UINT32BE market_id;               // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE trade_id;                // bytes 4 to 11, signed, read here as unsigned
+  UINT64BE price;                   // bytes 12 to 19, signed, read here as unsigned
+  UINT32BE quantity;                // bytes 20 to 23, signed, read here as unsigned
+  UINT8 old_off_market_trade_type;  // byte 24
+  UINT64BE message_date_time;       // bytes 25 to 32, signed, read here as unsigned
+  UINT8 off_market_trade_type[3];   // bytes 33 to 35
+} CancelledTradeMessage;
+
+// ---- Market Statistics Message: 52 bytes -------------------------------------
+
+// This is usually sent after a trade or cancelled trade message.
+entrypoint typedef struct _MarketStatisticsMessage {
+  UINT32BE market_id;          // bytes 0 to 3, signed, read here as unsigned
+  UINT32BE volume;             // bytes 4 to 7, signed, read here as unsigned
+  UINT32BE block_volume;       // bytes 8 to 11, signed, read here as unsigned
+  UINT32BE efs_volume;         // bytes 12 to 15, signed, read here as unsigned
+  UINT32BE efp_volume;         // bytes 16 to 19, signed, read here as unsigned
+  UINT64BE high;               // bytes 20 to 27, signed, read here as unsigned
+  UINT64BE low;                // bytes 28 to 35, signed, read here as unsigned
+  UINT64BE vwap;               // bytes 36 to 43, signed, read here as unsigned
+  UINT64BE message_date_time;  // bytes 44 to 51, signed, read here as unsigned
+} MarketStatisticsMessage;
+
+// ---- Market State Change Message: 13 bytes -----------------------------------
+
+// Market State Change Message
+entrypoint typedef struct _MarketStateChangeMessage {
+  UINT32BE market_id;          // bytes 0 to 3, signed, read here as unsigned
+  UINT8 trading_status;        // byte 4
+  UINT64BE message_date_time;  // bytes 5 to 12, signed, read here as unsigned
+} MarketStateChangeMessage;
+
+// ---- System Text Message: 1008 bytes -----------------------------------------
+
+// System Text Message
+entrypoint typedef struct _SystemTextMessage {
+  UINT8 text_message[200];            // bytes 0 to 199
+  UINT64BE message_date_time;         // bytes 200 to 207, signed, read here as unsigned
+  UINT8 text_message_extra_fld[800];  // bytes 208 to 1007
+} SystemTextMessage;
+
+// ---- Open Interest Message: 30 bytes -----------------------------------------
+
+// Open Interest Message
+entrypoint typedef struct _OpenInterestMessage {
+  UINT32BE market_id;             // bytes 0 to 3, signed, read here as unsigned
+  UINT32BE open_interest;         // bytes 4 to 7, signed, read here as unsigned
+  UINT32BE open_interest_change;  // bytes 8 to 11, signed, read here as unsigned
+  UINT64BE message_date_time;     // bytes 12 to 19, signed, read here as unsigned
+  UINT8 open_interest_date[10];   // bytes 20 to 29
+} OpenInterestMessage;
+
+// ---- Open Price Message: 20 bytes --------------------------------------------
+
+// Open Price Message
+entrypoint typedef struct _OpenPriceMessage {
+  UINT32BE market_id;          // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE open_price;         // bytes 4 to 11, signed, read here as unsigned
+  UINT64BE message_date_time;  // bytes 12 to 19, signed, read here as unsigned
+} OpenPriceMessage;
+
+// ---- Close Price Message: 20 bytes -------------------------------------------
+
+// Close Price Message
+entrypoint typedef struct _ClosePriceMessage {
+  UINT32BE market_id;          // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE close_price;        // bytes 4 to 11, signed, read here as unsigned
+  UINT64BE message_date_time;  // bytes 12 to 19, signed, read here as unsigned
+} ClosePriceMessage;
+
+// ---- Settlement Price Message: 37 bytes --------------------------------------
+
+// Settlement prices could be official or unofficial. For a given market, the exchange usually sends out unofficial price before the official one.
+entrypoint typedef struct _SettlementPriceMessage {
+  UINT32BE market_id;                                   // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE settlement_price_with_deal_price_precision;  // bytes 4 to 11, signed, read here as unsigned
+  UINT64BE message_date_time;                           // bytes 12 to 19, signed, read here as unsigned
+  UINT8 is_official;                                    // byte 20
+  UINT64BE valuation_date_time;                         // bytes 21 to 28, signed, read here as unsigned
+  UINT64BE settlement_price;                            // bytes 29 to 36, signed, read here as unsigned
+} SettlementPriceMessage;
+
+// ---- Index Prices Message: 66 bytes ------------------------------------------
+
+// The exchange sends out Marker/Index Prices when there is an update
+entrypoint typedef struct _IndexPricesMessage {
+  UINT32BE market_id;                      // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE price;                          // bytes 4 to 11, signed, read here as unsigned
+  UINT8 short_name[30];                    // bytes 12 to 41
+  UINT64BE published_date_time;            // bytes 42 to 49, signed, read here as unsigned
+  UINT8 valuation_date_applying_date[10];  // bytes 50 to 59
+  UINT8 endex_status;                      // byte 60
+  UINT32BE alt_market_id;                  // bytes 61 to 64, signed, read here as unsigned
+  UINT8 index_price_denominator;           // byte 65
+} IndexPricesMessage;
+
+// ---- End Of Day Market Summary Message: 80 bytes -----------------------------
+
+// The message is streamed to client when market is closed and settlement price is available for the current trading day.
+entrypoint typedef struct _EndOfDayMarketSummaryMessage {
+  UINT32BE market_id;                                   // bytes 0 to 3, signed, read here as unsigned
+  UINT32BE volume;                                      // bytes 4 to 7, signed, read here as unsigned
+  UINT32BE block_volume;                                // bytes 8 to 11, signed, read here as unsigned
+  UINT32BE efs_volume;                                  // bytes 12 to 15, signed, read here as unsigned
+  UINT32BE efp_volume;                                  // bytes 16 to 19, signed, read here as unsigned
+  UINT64BE opening_price;                               // bytes 20 to 27, signed, read here as unsigned
+  UINT64BE high;                                        // bytes 28 to 35, signed, read here as unsigned
+  UINT64BE low;                                         // bytes 36 to 43, signed, read here as unsigned
+  UINT64BE vwap;                                        // bytes 44 to 51, signed, read here as unsigned
+  UINT64BE settlement_price_with_deal_price_precision;  // bytes 52 to 59, signed, read here as unsigned
+  UINT32BE open_interest;                               // bytes 60 to 63, signed, read here as unsigned
+  UINT64BE message_date_time;                           // bytes 64 to 71, signed, read here as unsigned
+  UINT64BE settlement_price;                            // bytes 72 to 79, signed, read here as unsigned
+} EndOfDayMarketSummaryMessage;
+
+// ---- Market Event Message: 13 bytes ------------------------------------------
+
+// End of Day Market Summary Message
+entrypoint typedef struct _MarketEventMessage {
+  UINT32BE market_id;          // bytes 0 to 3, signed, read here as unsigned
+  UINT8 event_type;            // byte 4
+  UINT64BE message_date_time;  // bytes 5 to 12, signed, read here as unsigned
+} MarketEventMessage;
+
+// ---- Pre Open Price Indicator Message: 25 bytes ------------------------------
+
+// This message contains the estimate of what the opening price could be, based on the orders in the market or previous settlement price.
+entrypoint typedef struct _PreOpenPriceIndicatorMessage {
+  UINT32BE market_id;          // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE pre_open_price;     // bytes 4 to 11, signed, read here as unsigned
+  UINT64BE message_date_time;  // bytes 12 to 19, signed, read here as unsigned
+  UINT8 has_pre_open_volume;   // byte 20
+  UINT32BE pre_open_volume;    // bytes 21 to 24, signed, read here as unsigned
+} PreOpenPriceIndicatorMessage;
+
+// ---- Strip Info Message: 88 bytes --------------------------------------------
+
+// This message will be sent out if there is strip date change during the trading session. If client does not care about strip date changes, client should ignore these messages.
+entrypoint typedef struct _StripInfoMessage {
+  UINT16BE old_strip_id;  // bytes 0 to 1, signed, read here as unsigned
+  UINT8 strip_type[20];   // bytes 2 to 21
+  UINT16BE begin_year;    // bytes 22 to 23, signed, read here as unsigned
+  UINT16BE begin_month;   // bytes 24 to 25, signed, read here as unsigned
+  UINT16BE begin_day;     // bytes 26 to 27, signed, read here as unsigned
+  UINT16BE end_year;      // bytes 28 to 29, signed, read here as unsigned
+  UINT16BE end_month;     // bytes 30 to 31, signed, read here as unsigned
+  UINT16BE end_day;       // bytes 32 to 33, signed, read here as unsigned
+  UINT8 strip_info[50];   // bytes 34 to 83
+  UINT32BE strip_id;      // bytes 84 to 87, signed, read here as unsigned
+} StripInfoMessage;
+
+// ---- Interval Price Limit Notification Message: 35 bytes ---------------------
+
+// Interval Price Limit (IPL) might be enabled for certain markets. IPL check is to prevent sudden movements (in both directions) in the market during a short period of time.
+entrypoint typedef struct _IntervalPriceLimitNotificationMessage {
+  UINT32BE market_id;               // bytes 0 to 3, signed, read here as unsigned
+  UINT8 ipl_tpl_hold_type;          // byte 4
+  UINT64BE notification_date_time;  // bytes 5 to 12, signed, read here as unsigned
+  UINT8 is_up;                      // byte 13
+  UINT32BE ipl_tpl_hold_duration;   // bytes 14 to 17, signed, read here as unsigned
+  UINT64BE ipl_tpl_up;              // bytes 18 to 25, signed, read here as unsigned
+  UINT64BE ipl_tpl_down;            // bytes 26 to 33, signed, read here as unsigned
+  UINT8 ipl_tpl_type;               // byte 34
+} IntervalPriceLimitNotificationMessage;
+
+// ---- New Expiry Message: 515 bytes -------------------------------------------
+
+// New Expiry message will be sent out when a new equity market is created during the day.
+entrypoint typedef struct _NewExpiryMessage {
+  UINT32BE market_id;                            // bytes 0 to 3, signed, read here as unsigned
+  UINT16BE market_type_id;                       // bytes 4 to 5, signed, read here as unsigned
+  UINT8 order_price_denominator;                 // byte 6
+  UINT32BE increment_price;                      // bytes 7 to 10, signed, read here as unsigned
+  UINT32BE increment_qty;                        // bytes 11 to 14, signed, read here as unsigned
+  UINT32BE lot_size;                             // bytes 15 to 18, signed, read here as unsigned
+  UINT8 market_desc[120];                        // bytes 19 to 138
+  UINT16BE maturity_year;                        // bytes 139 to 140, signed, read here as unsigned
+  UINT16BE maturity_month;                       // bytes 141 to 142, signed, read here as unsigned
+  UINT16BE maturity_day;                         // bytes 143 to 144, signed, read here as unsigned
+  UINT8 deal_price_denominator;                  // byte 145
+  UINT32BE min_qty;                              // bytes 146 to 149, signed, read here as unsigned
+  UINT32BE unit_quantity;                        // bytes 150 to 153, signed, read here as unsigned
+  UINT8 currency[20];                            // bytes 154 to 173
+  UINT8 cleared_alias[15];                       // bytes 174 to 188
+  UINT64BE min_price;                            // bytes 189 to 196, signed, read here as unsigned
+  UINT64BE max_price;                            // bytes 197 to 204, signed, read here as unsigned
+  UINT32BE product_id;                           // bytes 205 to 208, signed, read here as unsigned
+  UINT8 product_name[62];                        // bytes 209 to 270
+  UINT32BE hub_id;                               // bytes 271 to 274, signed, read here as unsigned
+  UINT8 hub_alias[80];                           // bytes 275 to 354
+  UINT32BE strip_id;                             // bytes 355 to 358, signed, read here as unsigned
+  UINT8 strip_name[39];                          // bytes 359 to 397
+  UINT8 settle_price_denominator;                // byte 398
+  UINT8 mic_code[4];                             // bytes 399 to 402
+  UINT8 unit_qty_denominator;                    // byte 403
+  UINT8 off_exchange_increment_qty_denominator;  // byte 404
+  UINT32BE off_exchange_increment_qty;           // bytes 405 to 408, signed, read here as unsigned
+  UINT32BE off_exchange_increment_price;         // bytes 409 to 412, signed, read here as unsigned
+  UINT32BE off_exchange_increment_option_price;  // bytes 413 to 416, signed, read here as unsigned
+  UINT8 contract_symbol[35];                     // bytes 417 to 451
+  UINT8 underlying_isin[12];                     // bytes 452 to 463
+  UINT8 num_decimals_options_price;              // byte 464
+  UINT32BE hedge_market_id;                      // bytes 465 to 468, signed, read here as unsigned
+  UINT8 settlement_type;                         // byte 469
+  UINT8 gt_allowed;                              // byte 470
+  UINT8 cross_order_supported;                   // byte 471
+  UINT8 unit_of_measure[30];                     // bytes 472 to 501
+  UINT8 mifid_regulated_market;                  // byte 502
+  UINT16BE screen_last_trade_year;               // bytes 503 to 504, signed, read here as unsigned
+  UINT16BE screen_last_trade_month;              // bytes 505 to 506, signed, read here as unsigned
+  UINT16BE screen_last_trade_day;                // bytes 507 to 508, signed, read here as unsigned
+  UINT16BE old_num_of_cycles;                    // bytes 509 to 510, signed, read here as unsigned
+  UINT32BE num_of_cycles;                        // bytes 511 to 514, signed, read here as unsigned
+} NewExpiryMessage;
+
+// ---- New Options Market Definition Message: 337 bytes ------------------------
+
+// New Options Market Definition messages will be sent out when new options markets are created.
+entrypoint typedef struct _NewOptionsMarketDefinitionMessage {
+  UINT32BE market_id;                 // bytes 0 to 3, signed, read here as unsigned
+  UINT32BE underlying_market_id;      // bytes 4 to 7, signed, read here as unsigned
+  UINT8 futures_contract_symbol[70];  // bytes 8 to 77
+  UINT8 trading_status;               // byte 78
+  UINT8 order_price_denominator;      // byte 79
+  UINT32BE increment_qty;             // bytes 80 to 83, signed, read here as unsigned
+  UINT32BE lot_size;                  // bytes 84 to 87, signed, read here as unsigned
+  UINT8 market_desc[120];             // bytes 88 to 207
+  UINT8 option_type;                  // byte 208
+  UINT64BE strike_price;              // bytes 209 to 216, signed, read here as unsigned
+  UINT8 deal_price_denominator;       // byte 217
+  UINT32BE min_qty;                   // bytes 218 to 221, signed, read here as unsigned
+  UINT8 currency[20];                 // bytes 222 to 241
+  UINT8 num_decimals_strike_price;    // byte 242
+  UINT64BE min_options_price;         // bytes 243 to 250, signed, read here as unsigned
+  UINT64BE max_options_price;         // bytes 251 to 258, signed, read here as unsigned
+  UINT32BE increment_premium_price;   // bytes 259 to 262, signed, read here as unsigned
+  UINT16BE options_expiration_year;   // bytes 263 to 264, signed, read here as unsigned
+  UINT16BE options_expiration_month;  // bytes 265 to 266, signed, read here as unsigned
+  UINT16BE options_expiration_day;    // bytes 267 to 268, signed, read here as unsigned
+  UINT8 options_style;                // byte 269
+  UINT8 options_expiration_type;      // byte 270
+  UINT32BE hedge_market_id;           // bytes 271 to 274, signed, read here as unsigned
+  UINT8 settle_price_denominator;     // byte 275
+  UINT8 unit_qty_denominator;         // byte 276
+  UINT64BE tick_value;                // bytes 277 to 284, signed, read here as unsigned
+  UINT8 flex_allowed;                 // byte 285
+  UINT8 settlement_type;              // byte 286
+  UINT8 is_block_only;                // byte 287
+  UINT8 gt_allowed;                   // byte 288
+  UINT8 cross_order_supported;        // byte 289
+  UINT8 guaranteed_cross_supported;   // byte 290
+  UINT8 unit_of_measure[30];          // bytes 291 to 320
+  UINT8 mifid_regulated_market;       // byte 321
+  UINT16BE screen_last_trade_year;    // bytes 322 to 323, signed, read here as unsigned
+  UINT16BE screen_last_trade_month;   // bytes 324 to 325, signed, read here as unsigned
+  UINT16BE screen_last_trade_day;     // bytes 326 to 327, signed, read here as unsigned
+  UINT8 is_tradable;                  // byte 328
+  UINT16BE old_num_of_cycles;         // bytes 329 to 330, signed, read here as unsigned
+  UINT16BE market_type_id;            // bytes 331 to 332, signed, read here as unsigned
+  UINT32BE num_of_cycles;             // bytes 333 to 336, signed, read here as unsigned
+} NewOptionsMarketDefinitionMessage;
+
+// ---- Option Open Interest Message: 26 bytes ----------------------------------
+
+// Option Open Interest Message
+entrypoint typedef struct _OptionOpenInterestMessage {
+  UINT32BE market_id;            // bytes 0 to 3, signed, read here as unsigned
+  UINT32BE open_interest;        // bytes 4 to 7, signed, read here as unsigned
+  UINT64BE message_date_time;    // bytes 8 to 15, signed, read here as unsigned
+  UINT8 open_interest_date[10];  // bytes 16 to 25
+} OptionOpenInterestMessage;
+
+// ---- Option Settlement Price Message: 53 bytes -------------------------------
+
+// Option settlement prices could be official or unofficial. For a given market, the exchange usually sends out unofficial price before the official one.
+entrypoint typedef struct _OptionSettlementPriceMessage {
+  UINT32BE market_id;                                   // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE settlement_price_with_deal_price_precision;  // bytes 4 to 11, signed, read here as unsigned
+  UINT64BE message_date_time;                           // bytes 12 to 19, signed, read here as unsigned
+  UINT8 is_official;                                    // byte 20
+  UINT64BE valuation_date_time;                         // bytes 21 to 28, signed, read here as unsigned
+  UINT64BE volatility;                                  // bytes 29 to 36, signed, read here as unsigned
+  UINT64BE settlement_price;                            // bytes 37 to 44, signed, read here as unsigned
+  UINT64BE delta;                                       // bytes 45 to 52, signed, read here as unsigned
+} OptionSettlementPriceMessage;
+
+// ---- Market Snapshot Order Message: 41 bytes ---------------------------------
+
+// This message is for orders in snapshot only. It is different from the order message for incremental updates.
+entrypoint typedef struct _MarketSnapshotOrderMessage {
+  UINT32BE market_id;               // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE order_id;                // bytes 4 to 11, signed, read here as unsigned
+  UINT16BE order_sequence_id;       // bytes 12 to 13, signed, read here as unsigned
+  UINT8 side;                       // byte 14
+  UINT64BE price;                   // bytes 15 to 22, signed, read here as unsigned
+  UINT32BE quantity;                // bytes 23 to 26, signed, read here as unsigned
+  UINT8 is_implied;                 // byte 27
+  UINT8 is_rfq;                     // byte 28
+  UINT64BE order_entry_date_time;   // bytes 29 to 36, signed, read here as unsigned
+  UINT32BE sequence_within_millis;  // bytes 37 to 40, signed, read here as unsigned
+} MarketSnapshotOrderMessage;
+
+// ---- Delete Order Message: 32 bytes ------------------------------------------
+
+// Upon receipt of this message, client should remove the order from its local book.
+entrypoint typedef struct _DeleteOrderMessage {
+  UINT32BE market_id;                                  // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE order_id;                                   // bytes 4 to 11, signed, read here as unsigned
+  UINT64BE message_date_time;                          // bytes 12 to 19, signed, read here as unsigned
+  UINT32BE sequence_within_millis;                     // bytes 20 to 23, signed, read here as unsigned
+  UINT64BE request_trading_engine_received_timestamp;  // bytes 24 to 31, signed, read here as unsigned
+} DeleteOrderMessage;
+
+// ---- Message Bundle Marker: 10 bytes -----------------------------------------
+
+// This message indicates where a bundle of messages starts or ends.
+entrypoint typedef struct _MessageBundleMarker {
+  UINT8 start_or_end;             // byte 0
+  UINT64BE trade_transaction_id;  // bytes 1 to 8, signed, read here as unsigned
+  UINT8 is_transaction_end;       // byte 9
+} MessageBundleMarker;
+
+// ---- Fixing Transition Message: 26 bytes -------------------------------------
+
+// This message supports ICE Benchmark Administration s (IBA) electronic Gold Auction and it is disseminated when there is a transition of the fixing market.
+entrypoint typedef struct _FixingTransitionMessage {
+  UINT32BE market_id;                // bytes 0 to 3, signed, read here as unsigned
+  UINT8 fixing_status;               // byte 4
+  UINT64BE auction_end_time;         // bytes 5 to 12, signed, read here as unsigned
+  UINT32BE threshold_imbalance_qty;  // bytes 13 to 16, signed, read here as unsigned
+  UINT64BE message_date_time;        // bytes 17 to 24, signed, read here as unsigned
+  UINT8 num_decimals_quantity;       // byte 25, signed, read here as unsigned
+} FixingTransitionMessage;
+
+// ---- Fixing Lockdown Message: 79 bytes ---------------------------------------
+
+// This message supports ICE Benchmark Administration s (IBA) electronic Gold Auction and it is disseminated when there is a transition of the fixing market.
+entrypoint typedef struct _FixingLockdownMessage {
+  UINT32BE market_id;           // bytes 0 to 3, signed, read here as unsigned
+  UINT8 auction_date[10];       // bytes 4 to 13
+  UINT64BE message_date_time;   // bytes 14 to 21, signed, read here as unsigned
+  UINT8 description[20];        // bytes 22 to 41
+  UINT16BE round;               // bytes 42 to 43, signed, read here as unsigned
+  UINT32BE agg_bid_qty;         // bytes 44 to 47, signed, read here as unsigned
+  UINT32BE agg_offer_qty;       // bytes 48 to 51, signed, read here as unsigned
+  UINT64BE usd_price;           // bytes 52 to 59, signed, read here as unsigned
+  UINT8 is_balanced;            // byte 60
+  UINT8 is_final;               // byte 61
+  UINT64BE gbp_price;           // bytes 62 to 69, signed, read here as unsigned
+  UINT64BE eur_price;           // bytes 70 to 77, signed, read here as unsigned
+  UINT8 num_decimals_quantity;  // byte 78, signed, read here as unsigned
+} FixingLockdownMessage;
+
+// ---- Fixing Indicative Price Message: 25 bytes -------------------------------
+
+// This message supports ICE Benchmark Administration s (IBA) electronic Gold and Silver Auction and is disseminated at the end of the final auction when the final price is published
+entrypoint typedef struct _FixingIndicativePriceMessage {
+  UINT32BE market_id;                // bytes 0 to 3, signed, read here as unsigned
+  UINT8 iba_currency[3];             // bytes 4 to 6
+  UINT64BE price;                    // bytes 7 to 14, signed, read here as unsigned
+  UINT64BE price_in_gram;            // bytes 15 to 22, signed, read here as unsigned
+  UINT8 num_decimals_price;          // byte 23, signed, read here as unsigned
+  UINT8 num_decimals_price_in_gram;  // byte 24, signed, read here as unsigned
+} FixingIndicativePriceMessage;
+
+// ---- Market Snapshot Price Level Message: 26 bytes ---------------------------
+
+// This message is for price level in snapshot only.
+entrypoint typedef struct _MarketSnapshotPriceLevelMessage {
+  UINT32BE market_id;            // bytes 0 to 3, signed, read here as unsigned
+  UINT8 side;                    // byte 4
+  UINT8 price_level_position;    // byte 5, signed, read here as unsigned
+  UINT64BE price;                // bytes 6 to 13, signed, read here as unsigned
+  UINT32BE quantity;             // bytes 14 to 17, signed, read here as unsigned
+  UINT16BE order_count;          // bytes 18 to 19, signed, read here as unsigned
+  UINT32BE implied_quantity;     // bytes 20 to 23, signed, read here as unsigned
+  UINT16BE implied_order_count;  // bytes 24 to 25, signed, read here as unsigned
+} MarketSnapshotPriceLevelMessage;
+
+// ---- Add Price Level Message: 34 bytes ---------------------------------------
+
+// Upon receipt of this message, client should add/insert a price level at the specified position in the book for the given market, and push down the price levels that were previously at or below that position.
+entrypoint typedef struct _AddPriceLevelMessage {
+  UINT32BE market_id;            // bytes 0 to 3, signed, read here as unsigned
+  UINT8 side;                    // byte 4
+  UINT8 price_level_position;    // byte 5, signed, read here as unsigned
+  UINT64BE price;                // bytes 6 to 13, signed, read here as unsigned
+  UINT32BE quantity;             // bytes 14 to 17, signed, read here as unsigned
+  UINT16BE order_count;          // bytes 18 to 19, signed, read here as unsigned
+  UINT32BE implied_quantity;     // bytes 20 to 23, signed, read here as unsigned
+  UINT16BE implied_order_count;  // bytes 24 to 25, signed, read here as unsigned
+  UINT64BE timestamp;            // bytes 26 to 33, signed, read here as unsigned
+} AddPriceLevelMessage;
+
+// ---- Change Price Level Message: 34 bytes ------------------------------------
+
+// Upon receipt of this message, client should update the price level at the specified position in its book for the given market.
+entrypoint typedef struct _ChangePriceLevelMessage {
+  UINT32BE market_id;            // bytes 0 to 3, signed, read here as unsigned
+  UINT8 side;                    // byte 4
+  UINT8 price_level_position;    // byte 5, signed, read here as unsigned
+  UINT64BE price;                // bytes 6 to 13, signed, read here as unsigned
+  UINT32BE quantity;             // bytes 14 to 17, signed, read here as unsigned
+  UINT16BE order_count;          // bytes 18 to 19, signed, read here as unsigned
+  UINT32BE implied_quantity;     // bytes 20 to 23, signed, read here as unsigned
+  UINT16BE implied_order_count;  // bytes 24 to 25, signed, read here as unsigned
+  UINT64BE timestamp;            // bytes 26 to 33, signed, read here as unsigned
+} ChangePriceLevelMessage;
+
+// ---- Delete Price Level Message: 14 bytes ------------------------------------
+
+// Upon receipt of this message, client should remove the price level at the specified position in its book for the given market.
+entrypoint typedef struct _DeletePriceLevelMessage {
+  UINT32BE market_id;          // bytes 0 to 3, signed, read here as unsigned
+  UINT8 side;                  // byte 4
+  UINT8 price_level_position;  // byte 5, signed, read here as unsigned
+  UINT64BE timestamp;          // bytes 6 to 13, signed, read here as unsigned
+} DeletePriceLevelMessage;
+
+// ---- Rfq Message: 31 bytes ---------------------------------------------------
+
+// Request for Quote Message.
+entrypoint typedef struct _RfqMessage {
+  UINT32BE market_id;             // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE message_timestamp;     // bytes 4 to 11, signed, read here as unsigned
+  UINT64BE rfq_system_id;         // bytes 12 to 19, signed, read here as unsigned
+  UINT16BE market_type_id;        // bytes 20 to 21, signed, read here as unsigned
+  UINT32BE underlying_market_id;  // bytes 22 to 25, signed, read here as unsigned
+  UINT32BE quantity;              // bytes 26 to 29, signed, read here as unsigned
+  UINT8 side;                     // byte 30
+} RfqMessage;
+

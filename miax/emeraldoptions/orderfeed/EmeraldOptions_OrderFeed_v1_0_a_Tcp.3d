@@ -1,0 +1,179 @@
+// Miami International Holdings Order Feed
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out EmeraldOptions_OrderFeed_v1_0_a_Tcp.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a length prefix framing what follows
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Sesm Packet Header: 3 bytes ---------------------------------------------
+
+// SesM packet header
+entrypoint typedef struct _SesmPacketHeader {
+  UINT16 sesm_packet_length;  // bytes 0 to 1
+  UINT8 sesm_packet_type;     // byte 2
+} SesmPacketHeader;
+
+// ---- Refresh Request Message: 1 byte -----------------------------------------
+
+// Sent by the firm over the MOR Retransmission Interface (SesM Unsequenced Data Packet) to request a Last Value Refresh of a particular data set identified by Refresh Message Type.
+entrypoint typedef struct _RefreshRequestMessage {
+  UINT8 refresh_message_type;  // byte 0
+} RefreshRequestMessage;
+
+// ---- System Time Message: 4 bytes --------------------------------------------
+
+// This is the message format that will be used to disseminate the seconds part of the timestamp that is applicable to all messages that are sent in the current second.
+entrypoint typedef struct _SystemTimeMessage {
+  UINT32 seconds;  // bytes 0 to 3
+} SystemTimeMessage;
+
+// ---- Simple Series Update Message: 72 bytes ----------------------------------
+
+// This is the message format that will be used to disseminate all Option series traded on Emerald for the current session.
+entrypoint typedef struct _SimpleSeriesUpdateMessage {
+  UINT32 nanoseconds;                              // bytes 0 to 3
+  UINT32 product_id;                               // bytes 4 to 7
+  UINT8 underlying_symbol[11];                     // bytes 8 to 18
+  UINT8 security_symbol[6];                        // bytes 19 to 24
+  UINT8 expiration_date[8];                        // bytes 25 to 32
+  UINT32 strike_price;                             // bytes 33 to 36
+  UINT8 call_or_put;                               // byte 37
+  UINT8 opening_time[8];                           // bytes 38 to 45
+  UINT8 closing_time[8];                           // bytes 46 to 53
+  UINT8 restricted_option;                         // byte 54
+  UINT8 long_term_option;                          // byte 55
+  UINT8 active_on_emerald;                         // byte 56
+  UINT8 emerald_bbo_posting_increment_indicator;   // byte 57
+  UINT8 liquidity_acceptance_increment_indicator;  // byte 58
+  UINT8 opening_underlying_market_code;            // byte 59
+  UINT32 priority_quote_width;                     // bytes 60 to 63
+  UINT8 reserved_8[8];                             // bytes 64 to 71
+} SimpleSeriesUpdateMessage;
+
+// ---- System State Message: 17 bytes ------------------------------------------
+
+// This message format is used to notify the firms of the state changes of the system. This is a notification that applies to each Underlying group. Firms can use notifications as triggers in their system to ensure electronic synchronization of systems.
+entrypoint typedef struct _SystemStateMessage {
+  UINT32 nanoseconds;    // bytes 0 to 3
+  UINT8 mor_version[8];  // bytes 4 to 11
+  UINT32 session_id;     // bytes 12 to 15
+  UINT8 system_status;   // byte 16
+} SystemStateMessage;
+
+// ---- Underlying Trading Status Notification Message: 25 bytes ----------------
+
+// This message format will be used to notify firms of changes to the trading status of all the options of an underlying.
+entrypoint typedef struct _UnderlyingTradingStatusNotificationMessage {
+  UINT32 nanoseconds;                            // bytes 0 to 3
+  UINT8 underlying_symbol[11];                   // bytes 4 to 14
+  UINT8 trading_status;                          // byte 15
+  UINT8 event_reason;                            // byte 16
+  UINT32 expected_event_time_seconds_part;       // bytes 17 to 20
+  UINT32 expected_event_time_nano_seconds_part;  // bytes 21 to 24
+} UnderlyingTradingStatusNotificationMessage;
+
+// ---- Simple Order Message: 71 bytes ------------------------------------------
+
+// This is the message format that will be used to disseminate Emerald Options Simple Orders.
+entrypoint typedef struct _SimpleOrderMessage {
+  UINT32 nanoseconds;               // bytes 0 to 3
+  UINT8 action;                     // byte 4
+  UINT32 product_id;                // bytes 5 to 8
+  UINT64 order_id;                  // bytes 9 to 16
+  UINT8 order_side;                 // byte 17
+  UINT8 order_type;                 // byte 18
+  UINT32 order_price_short;         // bytes 19 to 22
+  UINT32 order_original_volume;     // bytes 23 to 26
+  UINT32 remaining_volume_open;     // bytes 27 to 30
+  UINT8 time_in_force_tif;          // byte 31
+  UINT8 origin;                     // byte 32
+  UINT8 openclose_indicator;        // byte 33
+  UINT8 route_instruction;          // byte 34
+  UINT8 attributed_id[4];           // bytes 35 to 38
+  UINT32 priority_customer_volume;  // bytes 39 to 42
+  UINT8 reserved_28[28];            // bytes 43 to 70
+} SimpleOrderMessage;
+
+// ---- Complex Order Message: 69 bytes -----------------------------------------
+
+// This is the message format that will be used to disseminate Emerald Options Complex Orders.
+entrypoint typedef struct _ComplexOrderMessage {
+  UINT32 nanoseconds;            // bytes 0 to 3
+  UINT8 action;                  // byte 4
+  UINT32 strategy_id;            // bytes 5 to 8
+  UINT64 order_id;               // bytes 9 to 16
+  UINT8 order_side;              // byte 17
+  UINT8 order_type;              // byte 18
+  UINT64 order_price_long;       // bytes 19 to 26, signed, read here as unsigned
+  UINT32 order_original_volume;  // bytes 27 to 30
+  UINT32 remaining_volume_open;  // bytes 31 to 34
+  UINT8 time_in_force_tif;       // byte 35
+  UINT8 origin;                  // byte 36
+  UINT8 reserved_32[32];         // bytes 37 to 68
+} ComplexOrderMessage;
+
+// ---- Order Close Message: 13 bytes -------------------------------------------
+
+// This is the message format that will be used to disseminate Order Close for Emerald Options Simple and Complex Orders.
+entrypoint typedef struct _OrderCloseMessage {
+  UINT32 nanoseconds;             // bytes 0 to 3
+  UINT8 simple_or_complex_order;  // byte 4
+  UINT64 order_id;                // bytes 5 to 12
+} OrderCloseMessage;
+
+// ---- End Of Refresh Notification Message: 1 byte -----------------------------
+
+// Sent by MIAX Emerald over the MOR Retransmission Interface (SesM Unsequenced Data Packet) when the refresh response is complete.
+entrypoint typedef struct _EndOfRefreshNotificationMessage {
+  UINT8 refresh_message_type;  // byte 0
+} EndOfRefreshNotificationMessage;
+
+// ---- Login Request: 35 bytes -------------------------------------------------
+
+// The SesM client must send a Login request packet immediately upon establishing a new TCP/IP socket connection to the server
+entrypoint typedef struct _LoginRequest {
+  UINT8 sesm_version[5];               // bytes 0 to 4
+  UINT8 username[5];                   // bytes 5 to 9
+  UINT8 computer_id[8];                // bytes 10 to 17
+  UINT8 application_protocol[8];       // bytes 18 to 25
+  UINT8 requested_trading_session_id;  // byte 26
+  UINT64 requested_sequence_number;    // bytes 27 to 34
+} LoginRequest;
+
+// ---- Login Response: 11 bytes ------------------------------------------------
+
+// The SesM server sends a Login response packet in response a Login request packet from the client
+entrypoint typedef struct _LoginResponse {
+  UINT8 number_of_matching_engines;  // byte 0
+  UINT8 login_status;                // byte 1
+  UINT8 trading_session_id;          // byte 2
+  UINT64 highest_sequence_number;    // bytes 3 to 10
+} LoginResponse;
+
+// ---- Synchronization Complete: 1 byte ----------------------------------------
+
+// The SesM server sends a Login response packet in response a Login request packet from the client
+entrypoint typedef struct _SynchronizationComplete {
+  UINT8 number_of_matching_engines;  // byte 0
+} SynchronizationComplete;
+
+// ---- Retransmission Request: 16 bytes ----------------------------------------
+
+// The SesM client uses this packet to request a retransmission server to retransmit a range of packets
+entrypoint typedef struct _RetransmissionRequest {
+  UINT64 start_sequence_number;  // bytes 0 to 7
+  UINT64 end_sequence_number;    // bytes 8 to 15
+} RetransmissionRequest;
+

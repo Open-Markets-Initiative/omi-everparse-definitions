@@ -1,0 +1,148 @@
+// OTC Markets Group OTC Depth of Book
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out Overnight_DepthOfBook_v1_0.3d
+//
+// What this definition does not state, and the model does:
+// - a field read in bits
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Message Header: 3 bytes -------------------------------------------------
+
+// Otc Udp Message Header
+entrypoint typedef struct _MessageHeader {
+  UINT16BE message_size;  // bytes 0 to 1
+  UINT8 message_type;     // byte 2
+} MessageHeader;
+
+// ---- Start Of Spin Message: 13 bytes -----------------------------------------
+
+// After a Spin Response Message, with status 'S', this message appears on all channels and indicates the beginning of a spin message cycle.
+entrypoint typedef struct _StartOfSpinMessage {
+  UINT8 spin_type;                 // byte 0
+  UINT64BE spin_start_time_milli;  // bytes 1 to 8
+  UINT32BE spin_last_seq_num;      // bytes 9 to 12
+} StartOfSpinMessage;
+
+// ---- End Of Spin Message: 17 bytes -------------------------------------------
+
+// This message appears on all channels and indicates the end of a spin message cycle. It will be followed by a Spin Response Message, with status 'E'.
+entrypoint typedef struct _EndOfSpinMessage {
+  UINT8 spin_type;               // byte 0
+  UINT32BE spin_msg_ct;          // bytes 1 to 4
+  UINT64BE spin_end_time_milli;  // bytes 5 to 12
+  UINT32BE spin_last_seq_num;    // bytes 13 to 16
+} EndOfSpinMessage;
+
+// ---- Trading Session Message: 9 bytes ----------------------------------------
+
+// This message appears on all channels and is sent out at the start of each Overnight OTC IDQS trading session: Order Acceptance at 7:00 PM, Market Open at 8:00 PM, Market Close at 7:45 AM. The message can also be sent mid-day if a technical outage caused a temporary closure of the market.
+entrypoint typedef struct _TradingSessionMessage {
+  UINT64BE session_time;  // bytes 0 to 7
+  UINT8 trading_session;  // byte 8
+} TradingSessionMessage;
+
+// ---- Order Add Message: 52 bytes ---------------------------------------------
+
+// This message appears on the DOB channel. Indicates a new order added to the book.
+entrypoint typedef struct _OrderAddMessage {
+  UINT32BE time;         // bytes 0 to 3
+  UINT8 order_id[14];    // bytes 4 to 17
+  UINT8 side_indicator;  // byte 18
+  UINT32BE quantity;     // bytes 19 to 22
+  UINT8 symbol[14];      // bytes 23 to 36
+  UINT64BE price;        // bytes 37 to 44
+  UINT8 firm_id[4];      // bytes 45 to 48
+  UINT8 unsolicited;     // byte 49
+  UINT16BE order_flags;  // bytes 50 to 51
+} OrderAddMessage;
+
+// ---- Order Update Message: 32 bytes ------------------------------------------
+
+// This message appears on the DOB channel. Indicates an existing order has been modified.
+entrypoint typedef struct _OrderUpdateMessage {
+  UINT32BE time;         // bytes 0 to 3
+  UINT8 order_id[14];    // bytes 4 to 17
+  UINT32BE quantity;     // bytes 18 to 21
+  UINT64BE price;        // bytes 22 to 29
+  UINT16BE order_flags;  // bytes 30 to 31
+} OrderUpdateMessage;
+
+// ---- Order Delete Message: 18 bytes ------------------------------------------
+
+// This message appears on the DOB channel. Indicates an existing order has been deleted from the book.
+entrypoint typedef struct _OrderDeleteMessage {
+  UINT32BE time;       // bytes 0 to 3
+  UINT8 order_id[14];  // bytes 4 to 17
+} OrderDeleteMessage;
+
+// ---- Order Execution Message: 34 bytes ---------------------------------------
+
+// This message appears on the DOB channel. An Order Executed message will be published when all or some of the displayed quantity of a previously published order executes at the published price.
+entrypoint typedef struct _OrderExecutionMessage {
+  UINT32BE time;                // bytes 0 to 3
+  UINT8 order_id[14];           // bytes 4 to 17
+  UINT32BE executed_quantity;   // bytes 18 to 21
+  UINT32BE remaining_quantity;  // bytes 22 to 25
+  UINT64BE execution_id;        // bytes 26 to 33
+} OrderExecutionMessage;
+
+// ---- Order Execution With Price Message: 42 bytes ----------------------------
+
+// This message appears on the DOB channel. An Order Executed with Price message will be published when all or some of the displayed quantity of a previously published order executes at a price different than the published price.
+entrypoint typedef struct _OrderExecutionWithPriceMessage {
+  UINT32BE time;                // bytes 0 to 3
+  UINT8 order_id[14];           // bytes 4 to 17
+  UINT32BE executed_quantity;   // bytes 18 to 21
+  UINT32BE remaining_quantity;  // bytes 22 to 25
+  UINT64BE execution_id;        // bytes 26 to 33
+  UINT64BE price;               // bytes 34 to 41
+} OrderExecutionWithPriceMessage;
+
+// ---- Trade Message: 47 bytes -------------------------------------------------
+
+// This message appears on the DOB channel. A Trade message will be published when non-displayed quantity of a previously published reserve order executes or when an order executes that is less than Min Quote Size and does not currently have an active Order Add message.
+entrypoint typedef struct _TradeMessage {
+  UINT32BE time;                    // bytes 0 to 3
+  UINT8 side_indicator;             // byte 4
+  UINT32BE quantity;                // bytes 5 to 8
+  UINT8 symbol[14];                 // bytes 9 to 22
+  UINT64BE price;                   // bytes 23 to 30
+  UINT64BE execution_id;            // bytes 31 to 38
+  UINT64BE reserved_binary_long_8;  // bytes 39 to 46
+} TradeMessage;
+
+// ---- Imbalance Message: 52 bytes ---------------------------------------------
+
+// This message appears on all channels. This message is not available in the Overnight TradingSession.
+entrypoint typedef struct _ImbalanceMessage {
+  UINT32BE time;                               // bytes 0 to 3
+  UINT8 symbol[14];                            // bytes 4 to 17
+  UINT32BE current_inside_paired_shares;       // bytes 18 to 21
+  UINT64BE current_inside_closing_price;       // bytes 22 to 29
+  UINT32BE current_inside_imbalance_quantity;  // bytes 30 to 33
+  UINT8 current_inside_imbalance_side;         // byte 34
+  UINT64BE full_closing_price;                 // bytes 35 to 42
+  UINT64BE ocio_only_closing_price;            // bytes 43 to 50
+  UINT8 moc_shares_unmatched;                  // byte 51
+} ImbalanceMessage;
+
+// ---- System Recovery Event Message: 17 bytes ---------------------------------
+
+// In case of a catastrophic issue at the exchange, the system sends a System Recovery Event. The first event (type 'S') instructs clients to prepare and reset caches; clients must clean all cached state. A second event (type 'B') indicates recovery begins, after which the system performs a spin for all symbols and open orders.
+entrypoint typedef struct _SystemRecoveryEventMessage {
+  UINT32BE deprecated;            // bytes 0 to 3
+  UINT8 recovery_type;            // byte 4
+  UINT32BE next_sequence_number;  // bytes 5 to 8
+  UINT64BE recovery_start_time;   // bytes 9 to 16
+} SystemRecoveryEventMessage;
+

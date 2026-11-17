@@ -1,0 +1,240 @@
+// Chicago Board Options Exchange Tcp Depth Of Book
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out BzxEquities_TcpDepthOfBook_v1_15_16.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - the dispatch that chooses a message by its type
+// - a field filling what is left of what holds it
+//
+// License: MIT No Attribution
+
+// ---- Debug Packet: 1 byte ----------------------------------------------------
+
+// Debug packets are intended to provide human readable text that may aid in debugging problems.
+entrypoint typedef struct _DebugPacket {
+  UINT8 text;  // byte 0
+} DebugPacket;
+
+// ---- Login Accepted Packet: 20 bytes -----------------------------------------
+
+// The Soup 2.0 server sends a Login Accepted Packet in response to receiving a valid Login Request from the client.
+entrypoint typedef struct _LoginAcceptedPacket {
+  UINT8 session[10];          // bytes 0 to 9
+  UINT8 sequence_number[10];  // bytes 10 to 19
+} LoginAcceptedPacket;
+
+// ---- Login Rejected Packet: 1 byte -------------------------------------------
+
+// The Soup 2.0 server sends this packet in response to an invalid Login Request Packet from the client.
+entrypoint typedef struct _LoginRejectedPacket {
+  UINT8 reject_reason_code;  // byte 0
+} LoginRejectedPacket;
+
+// ---- Sequenced Message Header: 9 bytes ---------------------------------------
+
+// Sequenced Message Header
+entrypoint typedef struct _SequencedMessageHeader {
+  UINT8 timestamp[8];            // bytes 0 to 7
+  UINT8 sequenced_message_type;  // byte 8
+} SequencedMessageHeader;
+
+// ---- Symbol Clear Message: 8 bytes -------------------------------------------
+
+// The Symbol Clear message instructs feed recipients to clear all orders for the Cboe book in the specified symbol.
+entrypoint typedef struct _SymbolClearMessage {
+  UINT8 stock_symbol_long[8];  // bytes 0 to 7
+} SymbolClearMessage;
+
+// ---- Add Order Short Message: 36 bytes ---------------------------------------
+
+// An Add Order message represents a newly accepted visible order on the Cboe book.
+entrypoint typedef struct _AddOrderShortMessage {
+  UINT8 order_id[12];           // bytes 0 to 11
+  UINT8 side_indicator;         // byte 12
+  UINT8 shares_short[6];        // bytes 13 to 18
+  UINT8 stock_symbol_short[6];  // bytes 19 to 24
+  UINT8 price_short[10];        // bytes 25 to 34
+  UINT8 reserved;               // byte 35
+} AddOrderShortMessage;
+
+// ---- Add Order Long Message: 43 bytes ----------------------------------------
+
+// The long version of the Add Order message accommodates larger symbol sizes possible through the ISRA plan.
+entrypoint typedef struct _AddOrderLongMessage {
+  UINT8 order_id[12];          // bytes 0 to 11
+  UINT8 side_indicator;        // byte 12
+  UINT8 shares_short[6];       // bytes 13 to 18
+  UINT8 stock_symbol_long[8];  // bytes 19 to 26
+  UINT8 price_short[10];       // bytes 27 to 36
+  UINT8 reserved;              // byte 37
+  UINT8 participant_id[4];     // bytes 38 to 41
+  UINT8 customer_indicator;    // byte 42
+} AddOrderLongMessage;
+
+// ---- Add Order Extended Message: 47 bytes ------------------------------------
+
+// The extended version of the Add Order message accommodates larger prices.
+entrypoint typedef struct _AddOrderExtendedMessage {
+  UINT8 order_id[12];          // bytes 0 to 11
+  UINT8 side_indicator;        // byte 12
+  UINT8 shares_short[6];       // bytes 13 to 18
+  UINT8 stock_symbol_long[8];  // bytes 19 to 26
+  UINT8 price_long[14];        // bytes 27 to 40
+  UINT8 display;               // byte 41
+  UINT8 participant_id[4];     // bytes 42 to 45
+  UINT8 customer_indicator;    // byte 46
+} AddOrderExtendedMessage;
+
+// ---- Order Executed Message: 30 bytes ----------------------------------------
+
+// Order Executed messages are sent when a visible order on the Cboe book is executed in whole or in part.
+entrypoint typedef struct _OrderExecutedMessage {
+  UINT8 order_id[12];        // bytes 0 to 11
+  UINT8 executed_shares[6];  // bytes 12 to 17
+  UINT8 execution_id[12];    // bytes 18 to 29
+} OrderExecutedMessage;
+
+// ---- Order Cancel Message: 18 bytes ------------------------------------------
+
+// Order Cancel messages are sent when a visible order on the Cboe book is canceled in whole or in part.
+entrypoint typedef struct _OrderCancelMessage {
+  UINT8 order_id[12];        // bytes 0 to 11
+  UINT8 canceled_shares[6];  // bytes 12 to 17
+} OrderCancelMessage;
+
+// ---- Time Reference Message: 28 bytes ----------------------------------------
+
+// The Time Reference message is used to provide a midnight reference point for recipients of the feed. It is sent whenever the system starts up and when the system crosses a midnight boundary. All subsequent Timestamp values will use the last Midnight Reference until another Time Reference message is received. The Timestamp field will contain the offset from the Trade Date of the Time Reference message.
+entrypoint typedef struct _TimeReferenceMessage {
+  UINT8 midnight_reference[10];  // bytes 0 to 9
+  UINT8 time[10];                // bytes 10 to 19
+  UINT8 trade_date[8];           // bytes 20 to 27
+} TimeReferenceMessage;
+
+// ---- Trade Short Message: 47 bytes -------------------------------------------
+
+// The Trade message provides information about executions of non-displayed orders or shares on the Cboe book and routed orders.
+entrypoint typedef struct _TradeShortMessage {
+  UINT8 order_id[12];           // bytes 0 to 11
+  UINT8 side_indicator;         // byte 12
+  UINT8 shares_short[6];        // bytes 13 to 18
+  UINT8 stock_symbol_short[6];  // bytes 19 to 24
+  UINT8 price_short[10];        // bytes 25 to 34
+  UINT8 execution_id[12];       // bytes 35 to 46
+} TradeShortMessage;
+
+// ---- Trade Long Message: 49 bytes --------------------------------------------
+
+// The long version of the Trade message accommodates larger symbol sizes possible through the ISRA plan.
+entrypoint typedef struct _TradeLongMessage {
+  UINT8 order_id[12];          // bytes 0 to 11
+  UINT8 side_indicator;        // byte 12
+  UINT8 shares_short[6];       // bytes 13 to 18
+  UINT8 stock_symbol_long[8];  // bytes 19 to 26
+  UINT8 price_short[10];       // bytes 27 to 36
+  UINT8 execution_id[12];      // bytes 37 to 48
+} TradeLongMessage;
+
+// ---- Trade Extended Message: 53 bytes ----------------------------------------
+
+// The extended version of the Trade message accommodates larger prices.
+entrypoint typedef struct _TradeExtendedMessage {
+  UINT8 order_id[12];          // bytes 0 to 11
+  UINT8 side_indicator;        // byte 12
+  UINT8 shares_short[6];       // bytes 13 to 18
+  UINT8 stock_symbol_long[8];  // bytes 19 to 26
+  UINT8 price_long[14];        // bytes 27 to 40
+  UINT8 execution_id[12];      // bytes 41 to 52
+} TradeExtendedMessage;
+
+// ---- Trade Break Message: 12 bytes -------------------------------------------
+
+// The Trade Break message is sent whenever an execution on Cboe is broken.
+entrypoint typedef struct _TradeBreakMessage {
+  UINT8 execution_id[12];  // bytes 0 to 11
+} TradeBreakMessage;
+
+// ---- Trading Status Message: 12 bytes ----------------------------------------
+
+// The Trading Status message is used to indicate the current trading status of a security.
+entrypoint typedef struct _TradingStatusMessage {
+  UINT8 stock_symbol_long[8];  // bytes 0 to 7
+  UINT8 halt_status;           // byte 8
+  UINT8 reg_sho_action;        // byte 9
+  UINT8 reserved_1;            // byte 10
+  UINT8 reserved_2;            // byte 11
+} TradingStatusMessage;
+
+// ---- Auction Update Message: 59 bytes ----------------------------------------
+
+// Auction Update messages are used to disseminate Cboe price and size information during auctions for Cboe listed securities on BZX, and for Periodic Auctions on BYX.
+entrypoint typedef struct _AuctionUpdateMessage {
+  UINT8 stock_symbol_long[8];          // bytes 0 to 7
+  UINT8 auction_type;                  // byte 8
+  UINT8 reference_price_short[10];     // bytes 9 to 18
+  UINT8 buy_shares[10];                // bytes 19 to 28
+  UINT8 sell_shares[10];               // bytes 29 to 38
+  UINT8 indicative_price_short[10];    // bytes 39 to 48
+  UINT8 auction_only_price_short[10];  // bytes 49 to 58
+} AuctionUpdateMessage;
+
+// ---- Extended Auction Update Message: 71 bytes -------------------------------
+
+// The extended version of the BZX Auction Update message accommodates larger prices.
+entrypoint typedef struct _ExtendedAuctionUpdateMessage {
+  UINT8 stock_symbol_long[8];         // bytes 0 to 7
+  UINT8 auction_type;                 // byte 8
+  UINT8 reference_price_long[14];     // bytes 9 to 22
+  UINT8 buy_shares[10];               // bytes 23 to 32
+  UINT8 sell_shares[10];              // bytes 33 to 42
+  UINT8 indicative_price_long[14];    // bytes 43 to 56
+  UINT8 auction_only_price_long[14];  // bytes 57 to 70
+} ExtendedAuctionUpdateMessage;
+
+// ---- Auction Summary Message: 29 bytes ---------------------------------------
+
+// Auction Summary messages are used to disseminate the results of an auction of a Cboe listed security on BZX, and for Periodic Auctions on BYX.
+entrypoint typedef struct _AuctionSummaryMessage {
+  UINT8 stock_symbol_long[8];  // bytes 0 to 7
+  UINT8 auction_type;          // byte 8
+  UINT8 price_short[10];       // bytes 9 to 18
+  UINT8 shares_long[10];       // bytes 19 to 28
+} AuctionSummaryMessage;
+
+// ---- Extended Auction Summary Message: 33 bytes ------------------------------
+
+// The extended version of the Auction Summary message accommodates larger prices.
+entrypoint typedef struct _ExtendedAuctionSummaryMessage {
+  UINT8 stock_symbol_long[8];  // bytes 0 to 7
+  UINT8 auction_type;          // byte 8
+  UINT8 price_long[14];        // bytes 9 to 22
+  UINT8 shares_long[10];       // bytes 23 to 32
+} ExtendedAuctionSummaryMessage;
+
+// ---- Retail Price Improvement Message: 9 bytes -------------------------------
+
+// The Retail Price Improvement message is only available on the BYX and EDGX Exchanges. This message is a Retail Liquidity Indicator (RLI) that includes symbol and side, but not price and size.
+entrypoint typedef struct _RetailPriceImprovementMessage {
+  UINT8 stock_symbol_long[8];      // bytes 0 to 7
+  UINT8 retail_price_improvement;  // byte 8
+} RetailPriceImprovementMessage;
+
+// ---- Login Request Packet: 36 bytes ------------------------------------------
+
+// The Soup 2.0 client must send a Login Request Packet immediately upon establishing a new TCP/IP socket connection to the server.
+entrypoint typedef struct _LoginRequestPacket {
+  UINT8 username[6];                    // bytes 0 to 5
+  UINT8 password[10];                   // bytes 6 to 15
+  UINT8 requested_session[10];          // bytes 16 to 25
+  UINT8 requested_sequence_number[10];  // bytes 26 to 35
+} LoginRequestPacket;
+

@@ -1,0 +1,261 @@
+// Canadian Securities Exchange CSE Multicast Market Data Feed
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out Cse_Multicast_v2_8.3d
+//
+// What this definition does not state, and the model does:
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Block Header: 7 bytes ---------------------------------------------------
+
+// Prefix of a block of messages, carrying the unique information to identify and route them
+entrypoint typedef struct _BlockHeader {
+  UINT16BE block_length;           // bytes 0 to 1
+  UINT8 block_number_of_messages;  // byte 2
+  UINT32BE block_start_sequence;   // bytes 3 to 6
+} BlockHeader;
+
+// ---- Message Header: 2 bytes -------------------------------------------------
+
+// Two byte sub header prefixing every message, carrying its length and its type
+entrypoint typedef struct _MessageHeader {
+  UINT8 sub_length;    // byte 0
+  UINT8 message_type;  // byte 1
+} MessageHeader;
+
+// ---- Time Message: 6 bytes ---------------------------------------------------
+
+// Anchors the feed clock. Every following message states its own time as nanoseconds elapsed since this message.
+entrypoint typedef struct _TimeMessage {
+  UINT32BE second;       // bytes 0 to 3
+  UINT16BE millisecond;  // bytes 4 to 5
+} TimeMessage;
+
+// ---- System Event Message: 21 bytes ------------------------------------------
+
+// Signals a market or data feed handler event, either for the system as a whole or for one symbol group.
+entrypoint typedef struct _SystemEventMessage {
+  UINT32BE time_offset;         // bytes 0 to 3
+  UINT64BE group;               // bytes 4 to 11
+  UINT8 event_code;             // byte 12
+  UINT64BE exchange_timestamp;  // bytes 13 to 20
+} SystemEventMessage;
+
+// ---- Symbol Directory Message: 195 bytes -------------------------------------
+
+// Static properties of a symbol. Sent for every symbol in the morning, and again during the day if a symbol changes.
+entrypoint typedef struct _SymbolDirectoryMessage {
+  UINT32BE time_offset;                 // bytes 0 to 3
+  UINT8 symbol[12];                     // bytes 4 to 15
+  UINT8 cusip[12];                      // bytes 16 to 27
+  UINT8 sec_name[15];                   // bytes 28 to 42
+  UINT8 currency[3];                    // bytes 43 to 45
+  UINT64BE stock_group;                 // bytes 46 to 53
+  UINT64BE listing;                     // bytes 54 to 61
+  UINT64BE expiry;                      // bytes 62 to 69
+  UINT32BE lot_size;                    // bytes 70 to 73
+  UINT8 settlement_term[8];             // bytes 74 to 81
+  UINT8 listing_market;                 // byte 82
+  UINT32BE previous_closing_price;      // bytes 83 to 86
+  UINT8 listing_tier;                   // byte 87
+  UINT8 market_maker_name[20];          // bytes 88 to 107
+  UINT8 market_maker_phone_number[12];  // bytes 108 to 119
+  UINT8 full_sec_name[75];              // bytes 120 to 194
+} SymbolDirectoryMessage;
+
+// ---- Symbol Dynamics Message: 35 bytes ---------------------------------------
+
+// Values and rules for a symbol that can be updated intra-day. Sent for every symbol in the morning, and again during the day if a symbol changes.
+entrypoint typedef struct _SymbolDynamicsMessage {
+  UINT32BE time_offset;      // bytes 0 to 3
+  UINT8 symbol[12];          // bytes 4 to 15
+  UINT8 settlement_term[8];  // bytes 16 to 23
+  UINT8 gmf_setting;         // byte 24
+  UINT64BE gmf_volume;       // bytes 25 to 32
+  UINT8 anonymous_setting;   // byte 33
+  UINT8 moc_eligible;        // byte 34
+} SymbolDynamicsMessage;
+
+// ---- Trading Action Message: 25 bytes ----------------------------------------
+
+// Current trading state for a symbol. A symbol suspended intra-day with V is unsuspended with N .
+entrypoint typedef struct _TradingActionMessage {
+  UINT32BE time_offset;         // bytes 0 to 3
+  UINT8 symbol[12];             // bytes 4 to 15
+  UINT8 trading_state;          // byte 16
+  UINT64BE exchange_timestamp;  // bytes 17 to 24
+} TradingActionMessage;
+
+// ---- Add Order Message: 71 bytes ---------------------------------------------
+
+// A new order added to the displayed book.
+entrypoint typedef struct _AddOrderMessage {
+  UINT32BE time_offset;         // bytes 0 to 3
+  UINT8 order_number[18];       // bytes 4 to 21
+  UINT8 order_verb;             // byte 22
+  UINT32BE quantity;            // bytes 23 to 26
+  UINT8 symbol[12];             // bytes 27 to 38
+  UINT32BE price;               // bytes 39 to 42
+  UINT8 firm_id[3];             // bytes 43 to 45
+  UINT8 settlement_term[8];     // bytes 46 to 53
+  UINT8 odd_lot_flag;           // byte 54
+  UINT64BE exchange_timestamp;  // bytes 55 to 62
+  UINT64BE priority_timestamp;  // bytes 63 to 70
+} AddOrderMessage;
+
+// ---- Order Executed Message: 52 bytes ----------------------------------------
+
+// An order on the book executed in whole or in part at the price it was displayed at.
+entrypoint typedef struct _OrderExecutedMessage {
+  UINT32BE time_offset;         // bytes 0 to 3
+  UINT8 order_number[18];       // bytes 4 to 21
+  UINT32BE executed_quantity;   // bytes 22 to 25
+  UINT8 match_number[18];       // bytes 26 to 43
+  UINT64BE exchange_timestamp;  // bytes 44 to 51
+} OrderExecutedMessage;
+
+// ---- Order Executed With Price Message: 56 bytes -----------------------------
+
+// An order on the book executed in whole or in part at a price other than the one it was displayed at.
+entrypoint typedef struct _OrderExecutedWithPriceMessage {
+  UINT32BE time_offset;         // bytes 0 to 3
+  UINT8 order_number[18];       // bytes 4 to 21
+  UINT32BE executed_quantity;   // bytes 22 to 25
+  UINT8 match_number[18];       // bytes 26 to 43
+  UINT32BE execution_price;     // bytes 44 to 47
+  UINT64BE exchange_timestamp;  // bytes 48 to 55
+} OrderExecutedWithPriceMessage;
+
+// ---- Trade Message: 71 bytes -------------------------------------------------
+
+// A trade that does not change the displayed book, carrying the full attribution and classification of the execution.
+entrypoint typedef struct _TradeMessage {
+  UINT32BE time_offset;         // bytes 0 to 3
+  UINT32BE executed_quantity;   // bytes 4 to 7
+  UINT8 symbol[12];             // bytes 8 to 19
+  UINT32BE execution_price;     // bytes 20 to 23
+  UINT8 match_number[18];       // bytes 24 to 41
+  UINT8 firm_id[3];             // bytes 42 to 44
+  UINT8 contra_firm_id[3];      // bytes 45 to 47
+  UINT8 settlement_term[8];     // bytes 48 to 55
+  UINT8 trade_attribute;        // byte 56
+  UINT8 cross_type;             // byte 57
+  UINT8 odd_lot_flag;           // byte 58
+  UINT8 sets_the_last_price;    // byte 59
+  UINT64BE exchange_timestamp;  // bytes 60 to 67
+  UINT8 opening_trade;          // byte 68
+  UINT8 ccp_session_trade;      // byte 69
+  UINT8 moc_trade_marker;       // byte 70
+} TradeMessage;
+
+// ---- Broken Trade Message: 31 bytes ------------------------------------------
+
+// A previously transmitted execution that has been broken, naming the match number it cancels.
+entrypoint typedef struct _BrokenTradeMessage {
+  UINT32BE time_offset;         // bytes 0 to 3
+  UINT8 match_number[18];       // bytes 4 to 21
+  UINT8 reason;                 // byte 22
+  UINT64BE exchange_timestamp;  // bytes 23 to 30
+} BrokenTradeMessage;
+
+// ---- Order Delete Message: 30 bytes ------------------------------------------
+
+// An order cancelled and removed from the displayed book.
+entrypoint typedef struct _OrderDeleteMessage {
+  UINT32BE time_offset;         // bytes 0 to 3
+  UINT8 order_number[18];       // bytes 4 to 21
+  UINT64BE exchange_timestamp;  // bytes 22 to 29
+} OrderDeleteMessage;
+
+// ---- Order Replace Message: 38 bytes -----------------------------------------
+
+// An order on the book replaced with a new quantity and price, keeping its order number.
+entrypoint typedef struct _OrderReplaceMessage {
+  UINT32BE time_offset;         // bytes 0 to 3
+  UINT8 order_number[18];       // bytes 4 to 21
+  UINT32BE quantity;            // bytes 22 to 25
+  UINT32BE price;               // bytes 26 to 29
+  UINT64BE exchange_timestamp;  // bytes 30 to 37
+} OrderReplaceMessage;
+
+// ---- Indicative Price Quantity Message: 36 bytes -----------------------------
+
+// The theoretical opening price and matchable quantity for a symbol during an auction.
+entrypoint typedef struct _IndicativePriceQuantityMessage {
+  UINT32BE time_offset;                   // bytes 0 to 3
+  UINT64BE theoretical_opening_quantity;  // bytes 4 to 11
+  UINT8 symbol[12];                       // bytes 12 to 23
+  UINT32BE theoretical_opening_price;     // bytes 24 to 27
+  UINT64BE exchange_timestamp;            // bytes 28 to 35
+} IndicativePriceQuantityMessage;
+
+// ---- Best Bid Offer Message: 40 bytes ----------------------------------------
+
+// The best bid and offer for a symbol with the quantity at each. During an auction with an indicative price set, the indicative price overwrites both sides.
+entrypoint typedef struct _BestBidOfferMessage {
+  UINT32BE time_offset;         // bytes 0 to 3
+  UINT8 symbol[12];             // bytes 4 to 15
+  UINT32BE best_bid;            // bytes 16 to 19
+  UINT32BE best_bid_size;       // bytes 20 to 23
+  UINT32BE best_offer;          // bytes 24 to 27
+  UINT32BE best_offer_size;     // bytes 28 to 31
+  UINT64BE exchange_timestamp;  // bytes 32 to 39
+} BestBidOfferMessage;
+
+// ---- Closing Price Message: 20 bytes -----------------------------------------
+
+// The closing price for a symbol.
+entrypoint typedef struct _ClosingPriceMessage {
+  UINT32BE time_offset;  // bytes 0 to 3
+  UINT8 symbol[12];      // bytes 4 to 15
+  UINT32BE price;        // bytes 16 to 19
+} ClosingPriceMessage;
+
+// ---- General Message: 132 bytes ----------------------------------------------
+
+// Free text bulletin from the exchange.
+entrypoint typedef struct _GeneralMessage {
+  UINT32BE time_offset;     // bytes 0 to 3
+  UINT8 message_text[128];  // bytes 4 to 131
+} GeneralMessage;
+
+// ---- Moc Imbalance Notification Message: 67 bytes ----------------------------
+
+// The market-on-close imbalance for a symbol, disseminated at regular intervals from the beginning of the MOC Imbalance state until 10 seconds before the close.
+entrypoint typedef struct _MocImbalanceNotificationMessage {
+  UINT32BE time_offset;                        // bytes 0 to 3
+  UINT8 symbol[12];                            // bytes 4 to 15
+  UINT8 moc_and_loc_only_imbalance_side;       // byte 16
+  UINT32BE moc_imbalance_reference_price;      // bytes 17 to 20
+  UINT64BE moc_and_loc_only_imbalance_volume;  // bytes 21 to 28
+  UINT64BE moc_and_loc_only_paired_volume;     // bytes 29 to 36
+  UINT8 market_order_imbalance_side;           // byte 37
+  UINT64BE market_order_imbalance_volume;      // bytes 38 to 45
+  UINT32BE moc_indicative_closing_price;       // bytes 46 to 49
+  UINT32BE moc_and_loc_only_closing_price;     // bytes 50 to 53
+  UINT8 price_variation[5];                    // bytes 54 to 58
+  UINT64BE exchange_timestamp;                 // bytes 59 to 66
+} MocImbalanceNotificationMessage;
+
+// ---- Eop Moc Imbalance Message: 38 bytes -------------------------------------
+
+// The market-on-close imbalance during an Extended Offset Period, which affects only symbols in a Closing Delayed state. Transmitted once, after the MOC closing price calculation is complete.
+entrypoint typedef struct _EopMocImbalanceMessage {
+  UINT32BE time_offset;                        // bytes 0 to 3
+  UINT8 system_event;                          // byte 4
+  UINT8 symbol[12];                            // bytes 5 to 16
+  UINT32BE moc_imbalance_reference_price;      // bytes 17 to 20
+  UINT8 moc_and_loc_only_imbalance_side;       // byte 21
+  UINT64BE moc_and_loc_only_imbalance_volume;  // bytes 22 to 29
+  UINT64BE exchange_timestamp;                 // bytes 30 to 37
+} EopMocImbalanceMessage;
+

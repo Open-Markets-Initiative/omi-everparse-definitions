@@ -1,0 +1,188 @@
+// London Stock Exchange Level 2 MBO Recovery
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out Lse_Level2MboRecovery_v26_2.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a run counted by a field
+// - a field read in bits
+//
+// License: MIT No Attribution
+
+// ---- Unit Header: 8 bytes ----------------------------------------------------
+
+// Gtp Tcp Unit Header
+entrypoint typedef struct _UnitHeader {
+  UINT16 length;            // bytes 0 to 1
+  UINT8 message_count;      // byte 2
+  UINT8 market_data_group;  // byte 3
+  UINT32 sequence_number;   // bytes 4 to 7
+} UnitHeader;
+
+// ---- Message Header: 3 bytes -------------------------------------------------
+
+// Gtp Tcp Message Header
+entrypoint typedef struct _MessageHeader {
+  UINT16 message_length;  // bytes 0 to 1
+  UINT8 message_type;     // byte 2
+} MessageHeader;
+
+// ---- Login Request Message: 8 bytes ------------------------------------------
+
+// Used by the client to log in to the replay or recovery channel.
+entrypoint typedef struct _LoginRequestMessage {
+  UINT8 username[8];  // bytes 0 to 7
+} LoginRequestMessage;
+
+// ---- Recovery Request Message: 27 bytes --------------------------------------
+
+// Used by the client to request data on the recovery channel.
+entrypoint typedef struct _RecoveryRequestMessage {
+  UINT8 request_level;            // byte 0
+  UINT64 instrument;              // bytes 1 to 8
+  UINT8 group_id[6];              // bytes 9 to 14
+  UINT8 request_order_book_type;  // byte 15
+  UINT16 source_venue;            // bytes 16 to 17
+  UINT8 recovery_type;            // byte 18
+  UINT32 sequence_number;         // bytes 19 to 22
+  UINT32 request_id;              // bytes 23 to 26
+} RecoveryRequestMessage;
+
+// ---- Login Response Message: 1 byte ------------------------------------------
+
+// Used by the server to accept or reject a login request to the replay or recovery channel.
+entrypoint typedef struct _LoginResponseMessage {
+  UINT8 login_status;  // byte 0
+} LoginResponseMessage;
+
+// ---- Recovery Response Message: 13 bytes -------------------------------------
+
+// Used by the server to respond to a snapshot request on the Snapshot channel.
+entrypoint typedef struct _RecoveryResponseMessage {
+  UINT32 sequence_number;  // bytes 0 to 3
+  UINT32 count;            // bytes 4 to 7
+  UINT8 recovery_status;   // byte 8
+  UINT32 request_id;       // bytes 9 to 12
+} RecoveryResponseMessage;
+
+// ---- Replay And Recovery Complete Message: 5 bytes ---------------------------
+
+// Used by the server to indicate the successful completion of servicing a message replay or a recovery request.
+entrypoint typedef struct _ReplayAndRecoveryCompleteMessage {
+  UINT32 request_id;     // bytes 0 to 3
+  UINT8 trading_status;  // byte 4
+} ReplayAndRecoveryCompleteMessage;
+
+// ---- System Event Message: 11 bytes ------------------------------------------
+
+// Sent to indicate the start and end of the day.
+entrypoint typedef struct _SystemEventMessage {
+  UINT64 timestamp;     // bytes 0 to 7
+  UINT8 event_code;     // byte 8
+  UINT16 source_venue;  // bytes 9 to 10
+} SystemEventMessage;
+
+// ---- Instrument Status Message: 27 bytes -------------------------------------
+
+// Used to communicate scheduled and unscheduled session changes. When sent in the recovery channel, used to indicate the current trading status of an instrument.
+entrypoint typedef struct _InstrumentStatusMessage {
+  UINT64 timestamp;             // bytes 0 to 7
+  UINT64 instrument;            // bytes 8 to 15
+  UINT16 source_venue;          // bytes 16 to 17
+  UINT8 trading_status;         // byte 18
+  UINT8 session_change_reason;  // byte 19
+  UINT8 new_end_time[6];        // bytes 20 to 25
+  UINT8 order_book_type;        // byte 26
+} InstrumentStatusMessage;
+
+// ---- Add Order Mbo Message: 64 bytes -----------------------------------------
+
+// Indicates the first order of a given side of an MBO snapshot.
+entrypoint typedef struct _AddOrderMboMessage {
+  UINT64 timestamp;       // bytes 0 to 7
+  UINT64 order_id;        // bytes 8 to 15
+  UINT8 side;             // byte 16
+  UINT64 size;            // bytes 17 to 24
+  UINT64 instrument;      // bytes 25 to 32
+  UINT64 price;           // bytes 33 to 40, signed, read here as unsigned
+  UINT8 reserved_8[8];    // bytes 41 to 48
+  UINT16 source_venue;    // bytes 49 to 50
+  UINT8 order_book_type;  // byte 51
+  UINT8 participant[11];  // bytes 52 to 62
+  UINT8 depth;            // byte 63
+} AddOrderMboMessage;
+
+// ---- Add Order Short Mbo Message: 43 bytes -----------------------------------
+
+// Used to indicate individual orders of an MBO snapshot.
+entrypoint typedef struct _AddOrderShortMboMessage {
+  UINT64 order_id;        // bytes 0 to 7
+  UINT64 size;            // bytes 8 to 15
+  UINT64 price;           // bytes 16 to 23, signed, read here as unsigned
+  UINT8 reserved_8[8];    // bytes 24 to 31
+  UINT8 participant[11];  // bytes 32 to 42
+} AddOrderShortMboMessage;
+
+// ---- Order Book Clear Message: 19 bytes --------------------------------------
+
+// Sent to instruct recipients to remove all orders from the order book for the specified instrument.
+entrypoint typedef struct _OrderBookClearMessage {
+  UINT64 timestamp;       // bytes 0 to 7
+  UINT16 source_venue;    // bytes 8 to 9
+  UINT64 instrument;      // bytes 10 to 17
+  UINT8 order_book_type;  // byte 18
+} OrderBookClearMessage;
+
+// ---- Statistics Snapshot Message: 270 bytes ----------------------------------
+
+// A snapshot of an instrument's statistics that is used for recovery.
+entrypoint typedef struct _StatisticsSnapshotMessage {
+  UINT64 timestamp;                      // bytes 0 to 7
+  UINT64 instrument;                     // bytes 8 to 15
+  UINT16 source_venue;                   // bytes 16 to 17
+  UINT64 volume;                         // bytes 18 to 25
+  UINT64 volume_on_book_only;            // bytes 26 to 33
+  UINT64 vwap;                           // bytes 34 to 41, signed, read here as unsigned
+  UINT64 vwap_on_book_only;              // bytes 42 to 49, signed, read here as unsigned
+  UINT32 number_of_trades;               // bytes 50 to 53
+  UINT32 number_of_trades_on_book_only;  // bytes 54 to 57
+  UINT64 turnover;                       // bytes 58 to 65, signed, read here as unsigned
+  UINT64 turnover_on_book_only;          // bytes 66 to 73, signed, read here as unsigned
+  UINT64 official_opening_price;         // bytes 74 to 81, signed, read here as unsigned
+  UINT64 official_closing_price;         // bytes 82 to 89, signed, read here as unsigned
+  UINT64 trade_high_on_book_only;        // bytes 90 to 97, signed, read here as unsigned
+  UINT64 trade_low_on_book_only;         // bytes 98 to 105, signed, read here as unsigned
+  UINT64 trade_high;                     // bytes 106 to 113, signed, read here as unsigned
+  UINT64 trade_low;                      // bytes 114 to 121, signed, read here as unsigned
+  UINT64 fifty_two_week_trade_high;      // bytes 122 to 129, signed, read here as unsigned
+  UINT64 fifty_two_week_trade_low;       // bytes 130 to 137, signed, read here as unsigned
+  UINT8 opening_price_indicator;         // byte 138
+  UINT8 closing_price_indicator;         // byte 139
+  UINT64 iau_price;                      // bytes 140 to 147, signed, read here as unsigned
+  UINT64 iau_paired_size;                // bytes 148 to 155
+  UINT64 imbalance_quantity;             // bytes 156 to 163
+  UINT8 imbalance_direction;             // byte 164
+  UINT64 best_closing_bid_price;         // bytes 165 to 172, signed, read here as unsigned
+  UINT64 best_closing_ask_price;         // bytes 173 to 180, signed, read here as unsigned
+  UINT64 best_closing_bid_size;          // bytes 181 to 188
+  UINT64 best_closing_ask_size;          // bytes 189 to 196
+  UINT8 reserved_8[8];                   // bytes 197 to 204
+  UINT8 second_reserved_8[8];            // bytes 205 to 212
+  UINT8 third_reserved_8[8];             // bytes 213 to 220
+  UINT8 fourth_reserved_8[8];            // bytes 221 to 228
+  UINT8 auction_type;                    // byte 229
+  UINT64 last_trade_price;               // bytes 230 to 237, signed, read here as unsigned
+  UINT64 last_trade_quantity;            // bytes 238 to 245
+  UINT64 last_trade_time;                // bytes 246 to 253
+  UINT64 static_reference_price;         // bytes 254 to 261, signed, read here as unsigned
+  UINT64 dynamic_reference_price;        // bytes 262 to 269, signed, read here as unsigned
+} StatisticsSnapshotMessage;
+

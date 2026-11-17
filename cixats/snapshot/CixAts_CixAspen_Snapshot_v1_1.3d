@@ -1,0 +1,138 @@
+// CIX Trading Inc. CIX Tcp Snapshot
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out CixAts_CixAspen_Snapshot_v1_1.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a length prefix framing what follows
+//
+// License: MIT No Attribution
+
+// ---- Packet Header: 3 bytes --------------------------------------------------
+
+// TcpOut packet header
+entrypoint typedef struct _PacketHeader {
+  UINT16 length;      // bytes 0 to 1
+  UINT8 packet_type;  // byte 2
+} PacketHeader;
+
+// ---- Login Message: 46 bytes -------------------------------------------------
+
+// The client must login to the server before it will receive data
+entrypoint typedef struct _LoginMessage {
+  UINT8 user[6];                   // bytes 0 to 5
+  UINT8 pass[10];                  // bytes 6 to 15
+  UINT8 market_day_identifier[9];  // bytes 16 to 24
+  UINT8 feed_identifier;           // byte 25
+  UINT8 requested_sequence[20];    // bytes 26 to 45
+} LoginMessage;
+
+// ---- Successful Login Message: 30 bytes --------------------------------------
+
+// Sent by the server to accept a Login Message
+entrypoint typedef struct _SuccessfulLoginMessage {
+  UINT8 market_day_identifier[9];  // bytes 0 to 8
+  UINT8 feed_identifier;           // byte 9
+  UINT8 next_sequence[20];         // bytes 10 to 29
+} SuccessfulLoginMessage;
+
+// ---- Login Reject Message: 1 byte --------------------------------------------
+
+// Sent by the server to reject a Login Message
+entrypoint typedef struct _LoginRejectMessage {
+  UINT8 reason_code;  // byte 0
+} LoginRejectMessage;
+
+// ---- Market Event Message: 11 bytes ------------------------------------------
+
+// Transitions in the overall session state
+entrypoint typedef struct _MarketEventMessage {
+  UINT8 reserved_2[2];  // bytes 0 to 1
+  UINT64 timestamp;     // bytes 2 to 9
+  UINT8 event;          // byte 10
+} MarketEventMessage;
+
+// ---- Symbol Information Message: 26 bytes ------------------------------------
+
+// Reference data for each symbol that may be traded
+entrypoint typedef struct _SymbolInformationMessage {
+  UINT64 timestamp;       // bytes 0 to 7
+  UINT16 symbol_id;       // bytes 8 to 9
+  UINT8 symbol[11];       // bytes 10 to 20
+  UINT8 listing_market;   // byte 21
+  UINT32 board_lot_size;  // bytes 22 to 25
+} SymbolInformationMessage;
+
+// ---- Symbol State Message: 27 bytes ------------------------------------------
+
+// Individual symbol trading state (halts)
+entrypoint typedef struct _SymbolStateMessage {
+  UINT64 timestamp;  // bytes 0 to 7
+  UINT16 symbol_id;  // bytes 8 to 9
+  UINT8 symbol[11];  // bytes 10 to 20
+  UINT8 state;       // byte 21
+  UINT8 reserved_1;  // byte 22
+  UINT8 info[4];     // bytes 23 to 26
+} SymbolStateMessage;
+
+// ---- New Order Add Message: 50 bytes -----------------------------------------
+
+// A new resting order added to the book
+entrypoint typedef struct _NewOrderAddMessage {
+  UINT64 timestamp;  // bytes 0 to 7
+  UINT16 symbol_id;  // bytes 8 to 9
+  UINT64 order_id;   // bytes 10 to 17
+  UINT8 side;        // byte 18
+  UINT64 quantity;   // bytes 19 to 26
+  UINT8 symbol[11];  // bytes 27 to 37
+  UINT64 price;      // bytes 38 to 45
+  UINT8 broker[3];   // bytes 46 to 48
+  UINT8 reserved_1;  // byte 49
+} NewOrderAddMessage;
+
+// ---- Order Partial Cancel Message: 24 bytes ----------------------------------
+
+// Part of a resting order is canceled
+entrypoint typedef struct _OrderPartialCancelMessage {
+  UINT64 timestamp;          // bytes 0 to 7
+  UINT64 order_id;           // bytes 8 to 15
+  UINT64 quantity_canceled;  // bytes 16 to 23
+} OrderPartialCancelMessage;
+
+// ---- Order Cancel All Message: 16 bytes --------------------------------------
+
+// Sent when the order is canceled in its entirety
+entrypoint typedef struct _OrderCancelAllMessage {
+  UINT64 timestamp;  // bytes 0 to 7
+  UINT64 order_id;   // bytes 8 to 15
+} OrderCancelAllMessage;
+
+// ---- Order Executed Message: 47 bytes ----------------------------------------
+
+// Sent when an order is executed
+entrypoint typedef struct _OrderExecutedMessage {
+  UINT64 timestamp;        // bytes 0 to 7
+  UINT64 order_id;         // bytes 8 to 15
+  UINT64 quantity;         // bytes 16 to 23
+  UINT64 execution_id;     // bytes 24 to 31
+  UINT8 side;              // byte 32
+  UINT64 price;            // bytes 33 to 40
+  UINT8 broker[3];         // bytes 41 to 43
+  UINT8 contra_broker[3];  // bytes 44 to 46
+} OrderExecutedMessage;
+
+// ---- End Of Snapshot Message: 8 bytes ----------------------------------------
+
+// Sent once the snapshot has completed
+entrypoint typedef struct _EndOfSnapshotMessage {
+  UINT64 sequence;  // bytes 0 to 7
+} EndOfSnapshotMessage;
+

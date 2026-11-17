@@ -1,0 +1,223 @@
+// Databento Normalized
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out Databento_MarketData_Normalized_v2_GatewayStream.3d
+//
+// What this definition does not state, and the model does:
+// - a length prefix framing what follows
+// - a run counted by a field
+// - a run filling what frames it
+// - a field read in bits
+// - a run of a stated number of entries
+//
+// License: MIT No Attribution
+
+// ---- Record Header: 16 bytes -------------------------------------------------
+
+// DBN common header of every record
+entrypoint typedef struct _RecordHeader {
+  UINT8 record_length;   // byte 0
+  UINT8 rtype;           // byte 1
+  UINT16 publisher_id;   // bytes 2 to 3
+  UINT32 instrument_id;  // bytes 4 to 7
+  UINT64 ts_event;       // bytes 8 to 15
+} RecordHeader;
+
+// ---- Bid Ask Pair: 32 bytes --------------------------------------------------
+
+// A level
+entrypoint typedef struct _BidAskPair {
+  UINT64 bid_px;  // bytes 0 to 7, signed, read here as unsigned
+  UINT64 ask_px;  // bytes 8 to 15, signed, read here as unsigned
+  UINT32 bid_sz;  // bytes 16 to 19
+  UINT32 ask_sz;  // bytes 20 to 23
+  UINT32 bid_ct;  // bytes 24 to 27
+  UINT32 ask_ct;  // bytes 28 to 31
+} BidAskPair;
+
+// ---- Ohlcv Msg: 40 bytes -----------------------------------------------------
+
+// Open, high, low, close, and volume; the record of the ohlcv schemas
+entrypoint typedef struct _OhlcvMsg {
+  UINT64 open_;   // bytes 0 to 7, signed, read here as unsigned
+  UINT64 high;    // bytes 8 to 15, signed, read here as unsigned
+  UINT64 low;     // bytes 16 to 23, signed, read here as unsigned
+  UINT64 close;   // bytes 24 to 31, signed, read here as unsigned
+  UINT64 volume;  // bytes 32 to 39
+} OhlcvMsg;
+
+// ---- Status Msg: 24 bytes ----------------------------------------------------
+
+// A trading status update message; the record of the status schema
+entrypoint typedef struct _StatusMsg {
+  UINT64 ts_recv;                  // bytes 0 to 7
+  UINT16 status_action;            // bytes 8 to 9
+  UINT16 status_reason;            // bytes 10 to 11
+  UINT16 trading_event;            // bytes 12 to 13
+  UINT8 is_trading;                // byte 14
+  UINT8 is_quoting;                // byte 15
+  UINT8 is_short_sell_restricted;  // byte 16
+  UINT8 reserved_7[7];             // bytes 17 to 23
+} StatusMsg;
+
+// ---- Instrument Def Msg: 384 bytes -------------------------------------------
+
+// A definition of an instrument; the record of the definition schema
+entrypoint typedef struct _InstrumentDefMsg {
+  UINT64 ts_recv;                     // bytes 0 to 7
+  UINT64 min_price_increment;         // bytes 8 to 15, signed, read here as unsigned
+  UINT64 display_factor;              // bytes 16 to 23, signed, read here as unsigned
+  UINT64 expiration;                  // bytes 24 to 31
+  UINT64 activation;                  // bytes 32 to 39
+  UINT64 high_limit_price;            // bytes 40 to 47, signed, read here as unsigned
+  UINT64 low_limit_price;             // bytes 48 to 55, signed, read here as unsigned
+  UINT64 max_price_variation;         // bytes 56 to 63, signed, read here as unsigned
+  UINT64 trading_reference_price;     // bytes 64 to 71, signed, read here as unsigned
+  UINT64 unit_of_measure_qty;         // bytes 72 to 79, signed, read here as unsigned
+  UINT64 min_price_increment_amount;  // bytes 80 to 87, signed, read here as unsigned
+  UINT64 price_ratio;                 // bytes 88 to 95, signed, read here as unsigned
+  UINT64 strike_price;                // bytes 96 to 103, signed, read here as unsigned
+  UINT32 inst_attrib_value;           // bytes 104 to 107, signed, read here as unsigned
+  UINT32 underlying_id;               // bytes 108 to 111
+  UINT32 raw_instrument_id;           // bytes 112 to 115
+  UINT32 market_depth_implied;        // bytes 116 to 119, signed, read here as unsigned
+  UINT32 market_depth;                // bytes 120 to 123, signed, read here as unsigned
+  UINT32 market_segment_id;           // bytes 124 to 127
+  UINT32 max_trade_vol;               // bytes 128 to 131
+  UINT32 min_lot_size;                // bytes 132 to 135, signed, read here as unsigned
+  UINT32 min_lot_size_block;          // bytes 136 to 139, signed, read here as unsigned
+  UINT32 min_lot_size_round_lot;      // bytes 140 to 143, signed, read here as unsigned
+  UINT32 min_trade_vol;               // bytes 144 to 147
+  UINT32 contract_multiplier;         // bytes 148 to 151, signed, read here as unsigned
+  UINT32 decay_quantity;              // bytes 152 to 155, signed, read here as unsigned
+  UINT32 original_contract_size;      // bytes 156 to 159, signed, read here as unsigned
+  UINT16 trading_reference_date;      // bytes 160 to 161
+  UINT16 appl_id;                     // bytes 162 to 163, signed, read here as unsigned
+  UINT16 maturity_year;               // bytes 164 to 165
+  UINT16 decay_start_date;            // bytes 166 to 167
+  UINT16 channel;                     // bytes 168 to 169
+  UINT8 currency[4];                  // bytes 170 to 173
+  UINT8 settl_currency[4];            // bytes 174 to 177
+  UINT8 secsubtype[6];                // bytes 178 to 183
+  UINT8 raw_symbol[71];               // bytes 184 to 254
+  UINT8 group[21];                    // bytes 255 to 275
+  UINT8 exchange[5];                  // bytes 276 to 280
+  UINT8 asset[7];                     // bytes 281 to 287
+  UINT8 cfi[7];                       // bytes 288 to 294
+  UINT8 security_type[7];             // bytes 295 to 301
+  UINT8 unit_of_measure[31];          // bytes 302 to 332
+  UINT8 underlying[21];               // bytes 333 to 353
+  UINT8 strike_price_currency[4];     // bytes 354 to 357
+  UINT8 instrument_class;             // byte 358
+  UINT8 match_algorithm;              // byte 359
+  UINT8 md_security_trading_status;   // byte 360
+  UINT8 main_fraction;                // byte 361
+  UINT8 price_display_format;         // byte 362
+  UINT8 settl_price_type;             // byte 363
+  UINT8 sub_fraction;                 // byte 364
+  UINT8 underlying_product;           // byte 365
+  UINT8 security_update_action;       // byte 366
+  UINT8 maturity_month;               // byte 367
+  UINT8 maturity_day;                 // byte 368
+  UINT8 maturity_week;                // byte 369
+  UINT8 user_defined_instrument;      // byte 370
+  UINT8 contract_multiplier_unit;     // byte 371, signed, read here as unsigned
+  UINT8 flow_schedule_type;           // byte 372, signed, read here as unsigned
+  UINT8 tick_rule;                    // byte 373
+  UINT8 reserved_10[10];              // bytes 374 to 383
+} InstrumentDefMsg;
+
+// ---- Imbalance Msg: 96 bytes -------------------------------------------------
+
+// An auction imbalance message; the record of the imbalance schema
+entrypoint typedef struct _ImbalanceMsg {
+  UINT64 ts_recv;                  // bytes 0 to 7
+  UINT64 ref_price;                // bytes 8 to 15, signed, read here as unsigned
+  UINT64 auction_time;             // bytes 16 to 23
+  UINT64 cont_book_clr_price;      // bytes 24 to 31, signed, read here as unsigned
+  UINT64 auct_interest_clr_price;  // bytes 32 to 39, signed, read here as unsigned
+  UINT64 ssr_filling_price;        // bytes 40 to 47, signed, read here as unsigned
+  UINT64 ind_match_price;          // bytes 48 to 55, signed, read here as unsigned
+  UINT64 upper_collar;             // bytes 56 to 63, signed, read here as unsigned
+  UINT64 lower_collar;             // bytes 64 to 71, signed, read here as unsigned
+  UINT32 paired_qty;               // bytes 72 to 75
+  UINT32 total_imbalance_qty;      // bytes 76 to 79
+  UINT32 market_imbalance_qty;     // bytes 80 to 83
+  UINT32 unpaired_qty;             // bytes 84 to 87
+  UINT8 auction_type;              // byte 88
+  UINT8 side;                      // byte 89
+  UINT8 auction_status;            // byte 90
+  UINT8 freeze_status;             // byte 91
+  UINT8 num_extensions;            // byte 92
+  UINT8 unpaired_side;             // byte 93
+  UINT8 significant_imbalance;     // byte 94
+  UINT8 reserved_1;                // byte 95
+} ImbalanceMsg;
+
+// ---- Error Msg: 304 bytes ----------------------------------------------------
+
+// An error message from the Databento Live Subscription Gateway (LSG)
+entrypoint typedef struct _ErrorMsg {
+  UINT8 err[302];    // bytes 0 to 301
+  UINT8 error_code;  // byte 302
+  UINT8 is_last;     // byte 303
+} ErrorMsg;
+
+// ---- Symbol Mapping Msg: 160 bytes -------------------------------------------
+
+// A symbol mapping message, which maps a symbol of one SType to another
+entrypoint typedef struct _SymbolMappingMsg {
+  UINT8 stype_in;              // byte 0
+  UINT8 stype_in_symbol[71];   // bytes 1 to 71
+  UINT8 stype_out;             // byte 72
+  UINT8 stype_out_symbol[71];  // bytes 73 to 143
+  UINT64 start_ts;             // bytes 144 to 151
+  UINT64 end_ts;               // bytes 152 to 159
+} SymbolMappingMsg;
+
+// ---- System Msg: 304 bytes ---------------------------------------------------
+
+// A non-error message from the Databento Live Subscription Gateway (LSG); also used for heartbeating
+entrypoint typedef struct _SystemMsg {
+  UINT8 msg[303];     // bytes 0 to 302
+  UINT8 system_code;  // byte 303
+} SystemMsg;
+
+// ---- Stat Msg: 48 bytes ------------------------------------------------------
+
+// A statistics message; the record of the statistics schema
+entrypoint typedef struct _StatMsg {
+  UINT64 ts_recv;       // bytes 0 to 7
+  UINT64 ts_ref;        // bytes 8 to 15
+  UINT64 price;         // bytes 16 to 23, signed, read here as unsigned
+  UINT32 quantity;      // bytes 24 to 27, signed, read here as unsigned
+  UINT32 sequence;      // bytes 28 to 31
+  UINT32 ts_in_delta;   // bytes 32 to 35, signed, read here as unsigned
+  UINT16 stat_type;     // bytes 36 to 37
+  UINT16 channel;       // bytes 38 to 39
+  UINT8 update_action;  // byte 40
+  UINT8 stat_flags;     // byte 41
+  UINT8 reserved_6[6];  // bytes 42 to 47
+} StatMsg;
+
+// ---- Consolidated Bid Ask Pair: 32 bytes -------------------------------------
+
+// A price level consolidated from multiple venues
+entrypoint typedef struct _ConsolidatedBidAskPair {
+  UINT64 bid_px;               // bytes 0 to 7, signed, read here as unsigned
+  UINT64 ask_px;               // bytes 8 to 15, signed, read here as unsigned
+  UINT32 bid_sz;               // bytes 16 to 19
+  UINT32 ask_sz;               // bytes 20 to 23
+  UINT16 bid_pb;               // bytes 24 to 25
+  UINT8 reserved_2[2];         // bytes 26 to 27
+  UINT16 ask_pb;               // bytes 28 to 29
+  UINT8 second_reserved_2[2];  // bytes 30 to 31
+} ConsolidatedBidAskPair;
+

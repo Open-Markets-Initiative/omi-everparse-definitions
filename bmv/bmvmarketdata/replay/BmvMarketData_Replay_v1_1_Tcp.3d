@@ -1,0 +1,769 @@
+// Bolsa Mexicana de Valores Bmv Market Data Replay
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out BmvMarketData_Replay_v1_1_Tcp.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- INTRA Multicast Header: 17 bytes ----------------------------------------
+
+// BMV INTRA Multicast Header
+entrypoint typedef struct _INTRAMulticastHeader {
+  UINT16BE length;           // bytes 0 to 1, signed, read here as unsigned
+  UINT8 total_messages;      // byte 2, signed, read here as unsigned
+  UINT8 market_data_group;   // byte 3, signed, read here as unsigned
+  UINT8 session;             // byte 4, signed, read here as unsigned
+  UINT32BE sequence_number;  // bytes 5 to 8, signed, read here as unsigned
+  UINT64BE datetime;         // bytes 9 to 16, signed, read here as unsigned
+} INTRAMulticastHeader;
+
+// ---- Message Header: 3 bytes -------------------------------------------------
+
+// Message length and message type
+entrypoint typedef struct _MessageHeader {
+  UINT16BE message_length;  // bytes 0 to 1, signed, read here as unsigned
+  UINT8 message_type;       // byte 2
+} MessageHeader;
+
+// ---- Login Response Message: 1 byte ------------------------------------------
+
+// Answers a login request.
+entrypoint typedef struct _LoginResponseMessage {
+  UINT8 login_response_status;  // byte 0
+} LoginResponseMessage;
+
+// ---- Replay Response Message: 8 bytes ----------------------------------------
+
+// Answers a replay request; the replayed messages follow an accepted one.
+entrypoint typedef struct _ReplayResponseMessage {
+  UINT8 market_data_group;       // byte 0, signed, read here as unsigned
+  UINT32BE first_message;        // bytes 1 to 4, signed, read here as unsigned
+  UINT16BE quantity;             // bytes 5 to 6, signed, read here as unsigned
+  UINT8 replay_response_status;  // byte 7
+} ReplayResponseMessage;
+
+// ---- Snapshot Response Message: 6 bytes --------------------------------------
+
+// Answers a snapshot request.
+entrypoint typedef struct _SnapshotResponseMessage {
+  UINT32BE quantity_of_messages;   // bytes 0 to 3, signed, read here as unsigned
+  UINT8 snapshot_response_status;  // byte 4
+  UINT8 snapshot_type;             // byte 5, signed, read here as unsigned
+} SnapshotResponseMessage;
+
+// ---- Snapshot Complete Message: 6 bytes --------------------------------------
+
+// Ends a snapshot with the sequence number it synchronizes with on the online channel.
+entrypoint typedef struct _SnapshotCompleteMessage {
+  UINT32BE sequence_number;  // bytes 0 to 3, signed, read here as unsigned
+  UINT8 market_data_group;   // byte 4, signed, read here as unsigned
+  UINT8 snapshot_type;       // byte 5, signed, read here as unsigned
+} SnapshotCompleteMessage;
+
+// ---- Events System Message: 22 bytes -----------------------------------------
+
+// The system of events message is used to inform that an event has occurred, which needs to be of public domain.
+entrypoint typedef struct _EventsSystemMessage {
+  UINT32BE instrument_number;  // bytes 0 to 3, signed, read here as unsigned
+  UINT8 event_code;            // byte 4
+  UINT8 market;                // byte 5
+  UINT64BE sending_time;       // bytes 6 to 13, signed, read here as unsigned
+  UINT64BE ending_time;        // bytes 14 to 21, signed, read here as unsigned
+} EventsSystemMessage;
+
+// ---- Trade Cancellation Message: 8 bytes -------------------------------------
+
+// This message is sent when a transaction is cancelled from the BMV system.
+entrypoint typedef struct _TradeCancellationMessage {
+  UINT32BE instrument_number;  // bytes 0 to 3, signed, read here as unsigned
+  UINT32BE trade_number;       // bytes 4 to 7, signed, read here as unsigned
+} TradeCancellationMessage;
+
+// ---- Status Changes Message: 5 bytes -----------------------------------------
+
+// All instruments are in a certain status before and during trading session.
+entrypoint typedef struct _StatusChangesMessage {
+  UINT32BE instrument_number;  // bytes 0 to 3, signed, read here as unsigned
+  UINT8 instrument_status;     // byte 4
+} StatusChangesMessage;
+
+// ---- Weighted Average Price Settlement Prices Message: 20 bytes --------------
+
+// For equities market, this message will be sent for each operation containing weighted average price per instrument generated within WAP calculation period (last 20 minutes of trading).
+entrypoint typedef struct _WeightedAveragePriceSettlementPricesMessage {
+  UINT32BE instrument_number;       // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE weighted_average_price;  // bytes 4 to 11, signed, read here as unsigned
+  UINT64BE volatility;              // bytes 12 to 19, signed, read here as unsigned
+} WeightedAveragePriceSettlementPricesMessage;
+
+// ---- Capital Trades Message: 51 bytes ----------------------------------------
+
+// Contains information on any BMV accepted transaction.
+entrypoint typedef struct _CapitalTradesMessage {
+  UINT32BE instrument_number;  // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE trade_time;         // bytes 4 to 11, signed, read here as unsigned
+  UINT32BE volume;             // bytes 12 to 15, signed, read here as unsigned
+  UINT64BE price;              // bytes 16 to 23, signed, read here as unsigned
+  UINT8 concertation_type;     // byte 24
+  UINT32BE trade_number;       // bytes 25 to 28, signed, read here as unsigned
+  UINT8 price_setter;          // byte 29
+  UINT8 operation_type;        // byte 30
+  UINT64BE amount;             // bytes 31 to 38, signed, read here as unsigned
+  UINT8 buy_broker[5];         // bytes 39 to 43
+  UINT8 sell_broker[5];        // bytes 44 to 48
+  UINT8 settlement;            // byte 49
+  UINT8 auction_indicator;     // byte 50
+} CapitalTradesMessage;
+
+// ---- Probable Allocation Price Message: 16 bytes -----------------------------
+
+// Sent during any auction type (Opening, Continuous, Volatility and Intraday) and only on instruments where there is already a virtual match or pre-allocation.
+entrypoint typedef struct _ProbableAllocationPriceMessage {
+  UINT32BE instrument_number;          // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE probable_allocation_price;  // bytes 4 to 11, signed, read here as unsigned
+  UINT32BE volume;                     // bytes 12 to 15, signed, read here as unsigned
+} ProbableAllocationPriceMessage;
+
+// ---- Continuous Auctions Beginning Message: 20 bytes -------------------------
+
+// Sent at the moment one of the Continuous, Volatility or SIC auctions is generated.
+entrypoint typedef struct _ContinuousAuctionsBeginningMessage {
+  UINT32BE instrument_number;          // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE beginning_time_of_auction;  // bytes 4 to 11, signed, read here as unsigned
+  UINT64BE end_auction_time;           // bytes 12 to 19, signed, read here as unsigned
+} ContinuousAuctionsBeginningMessage;
+
+// ---- Middle Price Existing Quotes Message: 5 bytes ---------------------------
+
+// Generated when an instrument enters a posture in the hidden electronic Middle Price book.
+entrypoint typedef struct _MiddlePriceExistingQuotesMessage {
+  UINT32BE instrument_number;  // bytes 0 to 3, signed, read here as unsigned
+  UINT8 existing_postures;     // byte 4
+} MiddlePriceExistingQuotesMessage;
+
+// ---- Registry Operations Message: 61 bytes -----------------------------------
+
+// Sent whenever there is a debt or capital instrument placement.
+entrypoint typedef struct _RegistryOperationsMessage {
+  UINT32BE instrument_number;  // bytes 0 to 3, signed, read here as unsigned
+  UINT8 offer_type;            // byte 4
+  UINT8 income;                // byte 5
+  UINT8 value_type[4];         // bytes 6 to 9
+  UINT8 issuer[7];             // bytes 10 to 16
+  UINT8 series[6];             // bytes 17 to 22
+  UINT64BE maximum_volume;     // bytes 23 to 30, signed, read here as unsigned
+  UINT64BE registered_volume;  // bytes 31 to 38, signed, read here as unsigned
+  UINT64BE price_rate;         // bytes 39 to 46, signed, read here as unsigned
+  UINT64BE settlement_date;    // bytes 47 to 54, signed, read here as unsigned
+  UINT8 firm[5];               // bytes 55 to 59
+  UINT8 movement;              // byte 60
+} RegistryOperationsMessage;
+
+// ---- Mutual Fund Trades Message: 52 bytes ------------------------------------
+
+// Contains any mutual funds operation realized.
+entrypoint typedef struct _MutualFundTradesMessage {
+  UINT32BE instrument_number;             // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE trade_date;                    // bytes 4 to 11, signed, read here as unsigned
+  UINT64BE price;                         // bytes 12 to 19, signed, read here as unsigned
+  UINT64BE book_value;                    // bytes 20 to 27, signed, read here as unsigned
+  UINT32BE number_of_sales_transactions;  // bytes 28 to 31, signed, read here as unsigned
+  UINT64BE sales_volume;                  // bytes 32 to 39, signed, read here as unsigned
+  UINT32BE number_of_buy_transactions;    // bytes 40 to 43, signed, read here as unsigned
+  UINT64BE buy_volume;                    // bytes 44 to 51, signed, read here as unsigned
+} MutualFundTradesMessage;
+
+// ---- Tradability Message: 64 bytes -------------------------------------------
+
+// Message sent every half hour during trading session, informing general tradability by instrument.
+entrypoint typedef struct _TradabilityMessage {
+  UINT32BE instrument_number;     // bytes 0 to 3, signed, read here as unsigned
+  UINT32BE number_of_operations;  // bytes 4 to 7, signed, read here as unsigned
+  UINT64BE volume_long;           // bytes 8 to 15, signed, read here as unsigned
+  UINT64BE amount;                // bytes 16 to 23, signed, read here as unsigned
+  UINT64BE opening_price;         // bytes 24 to 31, signed, read here as unsigned
+  UINT64BE maximum;               // bytes 32 to 39, signed, read here as unsigned
+  UINT64BE minimum;               // bytes 40 to 47, signed, read here as unsigned
+  UINT64BE average;               // bytes 48 to 55, signed, read here as unsigned
+  UINT64BE last;                  // bytes 56 to 63, signed, read here as unsigned
+} TradabilityMessage;
+
+// ---- Virtual Trades Message: 25 bytes ----------------------------------------
+
+// When an operation has been pre-assigned to the at closing and average day Price electronic books, a virtual trade message is sent, where also notifying of this operation.
+entrypoint typedef struct _VirtualTradesMessage {
+  UINT32BE instrument_number;   // bytes 0 to 3, signed, read here as unsigned
+  UINT8 virtual_trades_status;  // byte 4
+  UINT8 operation_type;         // byte 5
+  UINT32BE number;              // bytes 6 to 9, signed, read here as unsigned
+  UINT32BE volume;              // bytes 10 to 13, signed, read here as unsigned
+  UINT8 concertation;           // byte 14
+  UINT8 buy_broker[5];          // bytes 15 to 19
+  UINT8 sell_broker[5];         // bytes 20 to 24
+} VirtualTradesMessage;
+
+// ---- Order Addition Message: 34 bytes ----------------------------------------
+
+// The moment an order is being accepted by the BMV central system; this message is diffused to the corresponding media.
+entrypoint typedef struct _OrderAdditionMessage {
+  UINT32BE instrument_number;  // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE date_and_time;      // bytes 4 to 11, signed, read here as unsigned
+  UINT32BE number;             // bytes 12 to 15, signed, read here as unsigned
+  UINT8 direction;             // byte 16
+  UINT32BE volume;             // bytes 17 to 20, signed, read here as unsigned
+  UINT64BE price;              // bytes 21 to 28, signed, read here as unsigned
+  UINT8 participant[5];        // bytes 29 to 33
+} OrderAdditionMessage;
+
+// ---- Execution Of Orders Message: 32 bytes -----------------------------------
+
+// The message is disseminated at the time there is a matching or closing in BMV s electronic system.
+entrypoint typedef struct _ExecutionOfOrdersMessage {
+  UINT32BE instrument_number;  // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE date;               // bytes 4 to 11, signed, read here as unsigned
+  UINT32BE number;             // bytes 12 to 15, signed, read here as unsigned
+  UINT32BE volume;             // bytes 16 to 19, signed, read here as unsigned
+  UINT32BE trade_number;       // bytes 20 to 23, signed, read here as unsigned
+  UINT64BE execution_price;    // bytes 24 to 31, signed, read here as unsigned
+} ExecutionOfOrdersMessage;
+
+// ---- Order Cancellation Message: 16 bytes ------------------------------------
+
+// This message fully eliminates the order from the trading floor.
+entrypoint typedef struct _OrderCancellationMessage {
+  UINT32BE instrument_number;  // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE date;               // bytes 4 to 11, signed, read here as unsigned
+  UINT32BE number;             // bytes 12 to 15, signed, read here as unsigned
+} OrderCancellationMessage;
+
+// ---- Order Change Message: 41 bytes ------------------------------------------
+
+// Message sent when the order changes one of its data, the system allocates to it a new priority in the electronic book, the order to be replaced is identified with the original Instrument, Date and Number, the new allocation of priority in the electronic book appears in the New Date and Number fields.
+entrypoint typedef struct _OrderChangeMessage {
+  UINT32BE instrument_number;  // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE original_date;      // bytes 4 to 11, signed, read here as unsigned
+  UINT32BE original_number;    // bytes 12 to 15, signed, read here as unsigned
+  UINT64BE new_date;           // bytes 16 to 23, signed, read here as unsigned
+  UINT32BE new_number;         // bytes 24 to 27, signed, read here as unsigned
+  UINT8 direction;             // byte 28
+  UINT32BE volume;             // bytes 29 to 32, signed, read here as unsigned
+  UINT64BE price;              // bytes 33 to 40, signed, read here as unsigned
+} OrderChangeMessage;
+
+// ---- Best Offer Message: 18 bytes --------------------------------------------
+
+// Message sent by instrument when best offer changes in the electronic book.
+entrypoint typedef struct _BestOfferMessage {
+  UINT32BE instrument_number;  // bytes 0 to 3, signed, read here as unsigned
+  UINT32BE volume;             // bytes 4 to 7, signed, read here as unsigned
+  UINT64BE price_rate;         // bytes 8 to 15, signed, read here as unsigned
+  UINT8 offer_direction;       // byte 16
+  UINT8 operation_type;        // byte 17
+} BestOfferMessage;
+
+// ---- Public Offerings Message: 66 bytes --------------------------------------
+
+// Trade from a Public offering.
+entrypoint typedef struct _PublicOfferingsMessage {
+  UINT32BE instrument_number;       // bytes 0 to 3, signed, read here as unsigned
+  UINT32BE number;                  // bytes 4 to 7, signed, read here as unsigned
+  UINT64BE volume_long;             // bytes 8 to 15, signed, read here as unsigned
+  UINT64BE discount_rate_or_price;  // bytes 16 to 23, signed, read here as unsigned
+  UINT32BE rate_of_return;          // bytes 24 to 27, signed, read here as unsigned
+  UINT16BE term_days;               // bytes 28 to 29, signed, read here as unsigned
+  UINT8 currency_type;              // byte 30
+  UINT8 settlement;                 // byte 31
+  UINT8 buy_broker[5];              // bytes 32 to 36
+  UINT8 sell_broker[5];             // bytes 37 to 41
+  UINT64BE placement_date;          // bytes 42 to 49, signed, read here as unsigned
+  UINT64BE issue_date;              // bytes 50 to 57, signed, read here as unsigned
+  UINT64BE maturity_date;           // bytes 58 to 65, signed, read here as unsigned
+} PublicOfferingsMessage;
+
+// ---- Open Interest Message: 8 bytes ------------------------------------------
+
+// Open Interest
+entrypoint typedef struct _OpenInterestMessage {
+  UINT32BE instrument_number;  // bytes 0 to 3, signed, read here as unsigned
+  UINT32BE open_interest;      // bytes 4 to 7, signed, read here as unsigned
+} OpenInterestMessage;
+
+// ---- Derivatives Market Trades Message: 43 bytes -----------------------------
+
+// Contains information on any MexDer accepted transaction.
+entrypoint typedef struct _DerivativesMarketTradesMessage {
+  UINT32BE instrument_number;    // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE trade_time;           // bytes 4 to 11, signed, read here as unsigned
+  UINT32BE volume;               // bytes 12 to 15, signed, read here as unsigned
+  UINT64BE price_rate;           // bytes 16 to 23, signed, read here as unsigned
+  UINT8 concertation_type;       // byte 24
+  UINT32BE trade_number;         // bytes 25 to 28, signed, read here as unsigned
+  UINT8 operation_type;          // byte 29
+  UINT64BE amount;               // bytes 30 to 37, signed, read here as unsigned
+  UINT32BE parent_trade_number;  // bytes 38 to 41, signed, read here as unsigned
+  UINT8 leg_type;                // byte 42
+} DerivativesMarketTradesMessage;
+
+// ---- Statistics Of Instruments Message: 44 bytes -----------------------------
+
+// Update message from derivatives statistics sent each time there is an update on the trading floor at any level price.
+entrypoint typedef struct _StatisticsOfInstrumentsMessage {
+  UINT32BE instrument_number;          // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE previous_settlement_price;  // bytes 4 to 11, signed, read here as unsigned
+  UINT64BE opening_price;              // bytes 12 to 19, signed, read here as unsigned
+  UINT64BE max_price_of_the_day;       // bytes 20 to 27, signed, read here as unsigned
+  UINT64BE lower_price_of_the_day;     // bytes 28 to 35, signed, read here as unsigned
+  UINT64BE last_price_of_the_day;      // bytes 36 to 43, signed, read here as unsigned
+} StatisticsOfInstrumentsMessage;
+
+// ---- General Indices Message: 33 bytes ---------------------------------------
+
+// Information about the MSE Indices.
+entrypoint typedef struct _GeneralIndicesMessage {
+  UINT8 component[2];      // bytes 0 to 1
+  UINT8 sector;            // byte 2, signed, read here as unsigned
+  UINT64BE indices_hour;   // bytes 3 to 10, signed, read here as unsigned
+  UINT64BE volume_long;    // bytes 11 to 18, signed, read here as unsigned
+  UINT32BE indices_value;  // bytes 19 to 22, signed, read here as unsigned
+  UINT32BE variation;      // bytes 23 to 26, signed, read here as unsigned
+  UINT32BE percentage;     // bytes 27 to 30, signed, read here as unsigned
+  UINT8 trend;             // byte 31
+  UINT8 indices_status;    // byte 32
+} GeneralIndicesMessage;
+
+// ---- Indices Components Message: 57 bytes ------------------------------------
+
+// Indices components obtained during the day.
+entrypoint typedef struct _IndicesComponentsMessage {
+  UINT64BE date;            // bytes 0 to 7, signed, read here as unsigned
+  UINT8 component[2];       // bytes 8 to 9
+  UINT8 sector;             // byte 10, signed, read here as unsigned
+  UINT8 type_;              // byte 11
+  UINT8 issuer[7];          // bytes 12 to 18
+  UINT8 series[6];          // bytes 19 to 24
+  UINT64BE indices_stocks;  // bytes 25 to 32, signed, read here as unsigned
+  UINT64BE last_price;      // bytes 33 to 40, signed, read here as unsigned
+  UINT64BE closing_price;   // bytes 41 to 48, signed, read here as unsigned
+  UINT64BE influence;       // bytes 49 to 56, signed, read here as unsigned
+} IndicesComponentsMessage;
+
+// ---- Inav Message: 12 bytes --------------------------------------------------
+
+// TRACS dissemination during continuous market trading hours.
+entrypoint typedef struct _InavMessage {
+  UINT32BE trac_number;                // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE theoretical_current_price;  // bytes 4 to 11, signed, read here as unsigned
+} InavMessage;
+
+// ---- Dollar Buy Sell Message: 38 bytes ---------------------------------------
+
+// Dollar Buy/Sell
+entrypoint typedef struct _DollarBuySellMessage {
+  UINT64BE posture_date;  // bytes 0 to 7, signed, read here as unsigned
+  UINT8 currency[5];      // bytes 8 to 12
+  UINT8 dollar_side;      // byte 13
+  UINT64BE dollar_buy;    // bytes 14 to 21, signed, read here as unsigned
+  UINT64BE dollar_sell;   // bytes 22 to 29, signed, read here as unsigned
+  UINT64BE last_deal;     // bytes 30 to 37, signed, read here as unsigned
+} DollarBuySellMessage;
+
+// ---- Short Sales Balances Per Instrument Message: 44 bytes -------------------
+
+// Short sales balances per instrument
+entrypoint typedef struct _ShortSalesBalancesPerInstrumentMessage {
+  UINT32BE instrument_number;  // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE date;               // bytes 4 to 11, signed, read here as unsigned
+  UINT64BE previous_balance;   // bytes 12 to 19, signed, read here as unsigned
+  UINT64BE amount_traded;      // bytes 20 to 27, signed, read here as unsigned
+  UINT64BE buybacks;           // bytes 28 to 35, signed, read here as unsigned
+  UINT64BE current_balance;    // bytes 36 to 43, signed, read here as unsigned
+} ShortSalesBalancesPerInstrumentMessage;
+
+// ---- Capital Market Multiples Message: 130 bytes -----------------------------
+
+// Capital Market Multiples
+entrypoint typedef struct _CapitalMarketMultiplesMessage {
+  UINT32BE instrument_id;       // bytes 0 to 3, signed, read here as unsigned
+  UINT8 multiple_type;          // byte 4
+  UINT8 registry_number;        // byte 5
+  UINT8 sector;                 // byte 6, signed, read here as unsigned
+  UINT8 subsector;              // byte 7, signed, read here as unsigned
+  UINT8 business_line;          // byte 8, signed, read here as unsigned
+  UINT8 sub_line;               // byte 9, signed, read here as unsigned
+  UINT64BE pflepa_multiple;     // bytes 10 to 17, signed, read here as unsigned
+  UINT64BE pfepa_multiple;      // bytes 18 to 25, signed, read here as unsigned
+  UINT64BE ve_uaiida_multiple;  // bytes 26 to 33, signed, read here as unsigned
+  UINT64BE p_u;                 // bytes 34 to 41, signed, read here as unsigned
+  UINT64BE p_vl;                // bytes 42 to 49, signed, read here as unsigned
+  UINT64BE f_1_p_unoc;          // bytes 50 to 57, signed, read here as unsigned
+  UINT64BE f_2_p_unoc;          // bytes 58 to 65, signed, read here as unsigned
+  UINT64BE f_1_p_ue;            // bytes 66 to 73, signed, read here as unsigned
+  UINT64BE f_2_p_ue;            // bytes 74 to 81, signed, read here as unsigned
+  UINT64BE f_1_ve_uaiida;       // bytes 82 to 89, signed, read here as unsigned
+  UINT64BE f_2_ve_uaiida;       // bytes 90 to 97, signed, read here as unsigned
+  UINT64BE f_1_p_u;             // bytes 98 to 105, signed, read here as unsigned
+  UINT64BE f_2_p_u;             // bytes 106 to 113, signed, read here as unsigned
+  UINT64BE f_1_p_vl;            // bytes 114 to 121, signed, read here as unsigned
+  UINT64BE f_2_p_vl;            // bytes 122 to 129, signed, read here as unsigned
+} CapitalMarketMultiplesMessage;
+
+// ---- Benchmark Message: 149 bytes --------------------------------------------
+
+// Benchmark
+entrypoint typedef struct _BenchmarkMessage {
+  UINT8 benchmark_name[40];                      // bytes 0 to 39
+  UINT64BE benchmark_date;                       // bytes 40 to 47, signed, read here as unsigned
+  UINT64BE outstanding;                          // bytes 48 to 55, signed, read here as unsigned
+  UINT64BE integer_amount;                       // bytes 56 to 63, signed, read here as unsigned
+  UINT32BE decimal_amount;                       // bytes 64 to 67, signed, read here as unsigned
+  UINT64BE benchmark_value;                      // bytes 68 to 75, signed, read here as unsigned
+  UINT64BE indices_24;                           // bytes 76 to 83, signed, read here as unsigned
+  UINT8 rebalance;                               // byte 84
+  UINT64BE daily_performance;                    // bytes 85 to 92, signed, read here as unsigned
+  UINT64BE annual_performance;                   // bytes 93 to 100, signed, read here as unsigned
+  UINT64BE monthly_performance;                  // bytes 101 to 108, signed, read here as unsigned
+  UINT64BE last_12_months_performance;           // bytes 109 to 116, signed, read here as unsigned
+  UINT64BE v24_hours_daily_performance;          // bytes 117 to 124, signed, read here as unsigned
+  UINT64BE v24_hours_annual_performance;         // bytes 125 to 132, signed, read here as unsigned
+  UINT64BE v24_hours_monthly_performance;        // bytes 133 to 140, signed, read here as unsigned
+  UINT64BE last_12_months_24_hours_performance;  // bytes 141 to 148, signed, read here as unsigned
+} BenchmarkMessage;
+
+// ---- Capitalization Rules Message: 39 bytes ----------------------------------
+
+// Capitalization Rules
+entrypoint typedef struct _CapitalizationRulesMessage {
+  UINT32BE instrument_number;          // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE date_indicators;            // bytes 4 to 11, signed, read here as unsigned
+  UINT32BE bursatility_indices;        // bytes 12 to 15, signed, read here as unsigned
+  UINT8 bursatility_indices_sign;      // byte 16
+  UINT64BE beta_coefficient;           // bytes 17 to 24, signed, read here as unsigned
+  UINT8 beta_coefficient_sign;         // byte 25
+  UINT64BE correlation_coefficient;    // bytes 26 to 33, signed, read here as unsigned
+  UINT8 correlation_coefficient_sign;  // byte 34
+  UINT32BE delta_difference;           // bytes 35 to 38, signed, read here as unsigned
+} CapitalizationRulesMessage;
+
+// ---- Closing Price Origin Message: 13 bytes ----------------------------------
+
+// Closing price origin
+entrypoint typedef struct _ClosingPriceOriginMessage {
+  UINT32BE instrument_number;  // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE origin_price;       // bytes 4 to 11, signed, read here as unsigned
+  UINT8 sending;               // byte 12
+} ClosingPriceOriginMessage;
+
+// ---- Mutual Funds Trades Message: 53 bytes -----------------------------------
+
+// Any transaction made in mutual funds is reported.
+entrypoint typedef struct _MutualFundsTradesMessage {
+  UINT32BE instrument_number;          // bytes 0 to 3, signed, read here as unsigned
+  UINT8 origin;                        // byte 4
+  UINT64BE date_of_the_trade;          // bytes 5 to 12, signed, read here as unsigned
+  UINT64BE price;                      // bytes 13 to 20, signed, read here as unsigned
+  UINT64BE book_value;                 // bytes 21 to 28, signed, read here as unsigned
+  UINT32BE number_of_sales_trades;     // bytes 29 to 32, signed, read here as unsigned
+  UINT64BE sales_volume;               // bytes 33 to 40, signed, read here as unsigned
+  UINT32BE number_of_purchase_trades;  // bytes 41 to 44, signed, read here as unsigned
+  UINT64BE purchase_volume;            // bytes 45 to 52, signed, read here as unsigned
+} MutualFundsTradesMessage;
+
+// ---- Opening Of Continuous Auctions Message: 21 bytes ------------------------
+
+// The message is sent when one of the ongoing, volatility or SIC bidding sessions is generated.
+entrypoint typedef struct _OpeningOfContinuousAuctionsMessage {
+  UINT32BE instrument_number;             // bytes 0 to 3, signed, read here as unsigned
+  UINT8 origin;                           // byte 4
+  UINT64BE auction_session_startup_time;  // bytes 5 to 12, signed, read here as unsigned
+  UINT64BE auction_session_end_time;      // bytes 13 to 20, signed, read here as unsigned
+} OpeningOfContinuousAuctionsMessage;
+
+// ---- Existence Of Bids At Mid Price Message: 6 bytes -------------------------
+
+// This message is generated when an instrument enters a bid in the hidden electronic book At Mean Price.
+entrypoint typedef struct _ExistenceOfBidsAtMidPriceMessage {
+  UINT32BE instrument_number;  // bytes 0 to 3, signed, read here as unsigned
+  UINT8 origin;                // byte 4
+  UINT8 bids_existing;         // byte 5
+} ExistenceOfBidsAtMidPriceMessage;
+
+// ---- Catalogue Of Debt And Metals Instruments Message: 103 bytes -------------
+
+// Catalogue sent for instruments pertaining to the Local Fixed rate, Global Fixed rate and metals markets.
+entrypoint typedef struct _CatalogueOfDebtAndMetalsInstrumentsMessage {
+  UINT32BE number_of_the_instrument;  // bytes 0 to 3, signed, read here as unsigned
+  UINT8 origin;                       // byte 4
+  UINT8 type_of_value[2];             // bytes 5 to 6
+  UINT8 issuing_company[7];           // bytes 7 to 13
+  UINT8 issuance[6];                  // bytes 14 to 19
+  UINT64BE date_of_issuance;          // bytes 20 to 27, signed, read here as unsigned
+  UINT64BE date_of_maturity;          // bytes 28 to 35, signed, read here as unsigned
+  UINT64BE price_rate_of_reference;   // bytes 36 to 43, signed, read here as unsigned
+  UINT64BE date_of_reference;         // bytes 44 to 51, signed, read here as unsigned
+  UINT8 reference;                    // byte 52
+  UINT16BE term_days;                 // bytes 53 to 54, signed, read here as unsigned
+  UINT16BE coupon_period;             // bytes 55 to 56, signed, read here as unsigned
+  UINT8 isin[12];                     // bytes 57 to 68
+  UINT8 market;                       // byte 69
+  UINT64BE current_nominal_value;     // bytes 70 to 77, signed, read here as unsigned
+  UINT64BE original_nominal_value;    // bytes 78 to 85, signed, read here as unsigned
+  UINT64BE outstanding_shares;        // bytes 86 to 93, signed, read here as unsigned
+  UINT64BE amount_placed;             // bytes 94 to 101, signed, read here as unsigned
+  UINT8 trades_rate_price;            // byte 102
+} CatalogueOfDebtAndMetalsInstrumentsMessage;
+
+// ---- Catalog Sent For Instruments Belonging To Mutual Funds Message: 78 bytes ----
+
+// Catalogue sent for instrument pertaining to the investment companies.
+entrypoint typedef struct _CatalogSentForInstrumentsBelongingToMutualFundsMessage {
+  UINT32BE number_of_the_instrument;  // bytes 0 to 3, signed, read here as unsigned
+  UINT8 origin;                       // byte 4
+  UINT8 type_of_value[2];             // bytes 5 to 6
+  UINT8 issuing_company[7];           // bytes 7 to 13
+  UINT8 series[6];                    // bytes 14 to 19
+  UINT8 sector;                       // byte 20, signed, read here as unsigned
+  UINT8 subsector;                    // byte 21, signed, read here as unsigned
+  UINT8 industry;                     // byte 22, signed, read here as unsigned
+  UINT8 sub_industry;                 // byte 23, signed, read here as unsigned
+  UINT8 trading_company[10];          // bytes 24 to 33
+  UINT64BE reference_price;           // bytes 34 to 41, signed, read here as unsigned
+  UINT64BE reference_date;            // bytes 42 to 49, signed, read here as unsigned
+  UINT8 reference;                    // byte 50
+  UINT8 isin[12];                     // bytes 51 to 62
+  UINT8 rating[15];                   // bytes 63 to 77
+} CatalogSentForInstrumentsBelongingToMutualFundsMessage;
+
+// ---- Weighted Average Price Message: 21 bytes --------------------------------
+
+// This message will have the weighted average price (WAP) per instrument and is sent for each transaction generated within the calculation period of the WAP (last 20 minutes of the trading session); when there are no more trades in this period, the message is sent with the Weighted Average Price in zeros.
+entrypoint typedef struct _WeightedAveragePriceMessage {
+  UINT32BE instrument_number;       // bytes 0 to 3, signed, read here as unsigned
+  UINT8 origin;                     // byte 4
+  UINT64BE weighted_average_price;  // bytes 5 to 12, signed, read here as unsigned
+  UINT64BE volatility;              // bytes 13 to 20, signed, read here as unsigned
+} WeightedAveragePriceMessage;
+
+// ---- System Events Message: 31 bytes -----------------------------------------
+
+// The system events message is used to inform that an event has taken place, which needs to be disclosed to the public for its attention.
+entrypoint typedef struct _SystemEventsMessage {
+  UINT32BE instrument_number;  // bytes 0 to 3, signed, read here as unsigned
+  UINT8 origin;                // byte 4
+  UINT8 code_of_event;         // byte 5
+  UINT8 market;                // byte 6
+  UINT64BE send_time;          // bytes 7 to 14, signed, read here as unsigned
+  UINT64BE end_time;           // bytes 15 to 22, signed, read here as unsigned
+  UINT8 group[8];              // bytes 23 to 30
+} SystemEventsMessage;
+
+// ---- Reference Price Message: 14 bytes ---------------------------------------
+
+// This message is sent to define the reference price of an instrument.
+entrypoint typedef struct _ReferencePriceMessage {
+  UINT32BE instrument_number;  // bytes 0 to 3, signed, read here as unsigned
+  UINT8 origin;                // byte 4
+  UINT64BE price;              // bytes 5 to 12, signed, read here as unsigned
+  UINT8 price_type;            // byte 13
+} ReferencePriceMessage;
+
+// ---- Changes In Status Message: 7 bytes --------------------------------------
+
+// This message is sent when there has been a change in the status of the instruments.
+entrypoint typedef struct _ChangesInStatusMessage {
+  UINT32BE instrument_number;  // bytes 0 to 3, signed, read here as unsigned
+  UINT8 origin;                // byte 4
+  UINT8 status;                // byte 5
+  UINT8 reason;                // byte 6
+} ChangesInStatusMessage;
+
+// ---- Catalog For Instruments Belonging To The Capital Warrants Market Message: 66 bytes ----
+
+// Catalogue for instruments pertaining to the Equities Warrants market.
+entrypoint typedef struct _CatalogForInstrumentsBelongingToTheCapitalWarrantsMarketMessage {
+  UINT32BE number_of_the_instrument;  // bytes 0 to 3, signed, read here as unsigned
+  UINT8 origin;                       // byte 4
+  UINT8 type_of_value[2];             // bytes 5 to 6
+  UINT8 issuing_company[7];           // bytes 7 to 13
+  UINT8 series[6];                    // bytes 14 to 19
+  UINT8 type_of_warrant;              // byte 20
+  UINT64BE date_of_maturity;          // bytes 21 to 28, signed, read here as unsigned
+  UINT64BE price_of_exercise;         // bytes 29 to 36, signed, read here as unsigned
+  UINT64BE reference_price;           // bytes 37 to 44, signed, read here as unsigned
+  UINT64BE reference_date;            // bytes 45 to 52, signed, read here as unsigned
+  UINT8 reference;                    // byte 53
+  UINT8 isin[12];                     // bytes 54 to 65
+} CatalogForInstrumentsBelongingToTheCapitalWarrantsMarketMessage;
+
+// ---- Catalog Sent For Instruments Belonging To Capital Tracs Message: 82 bytes ----
+
+// Catalogue sent for instruments pertaining to the equities TRACS.
+entrypoint typedef struct _CatalogSentForInstrumentsBelongingToCapitalTracsMessage {
+  UINT32BE number_of_the_trac;          // bytes 0 to 3, signed, read here as unsigned
+  UINT8 origin;                         // byte 4
+  UINT8 name_of_the_trac[8];            // bytes 5 to 12
+  UINT8 underlying_issuing_company[7];  // bytes 13 to 19
+  UINT8 underlying_series[6];           // bytes 20 to 25
+  UINT64BE securities;                  // bytes 26 to 33, signed, read here as unsigned
+  UINT64BE excluded_securities;         // bytes 34 to 41, signed, read here as unsigned
+  UINT64BE price;                       // bytes 42 to 49, signed, read here as unsigned
+  UINT64BE component_in_cash;           // bytes 50 to 57, signed, read here as unsigned
+  UINT64BE excluded_value;              // bytes 58 to 65, signed, read here as unsigned
+  UINT64BE number_of_certificates;      // bytes 66 to 73, signed, read here as unsigned
+  UINT64BE theoretical_price;           // bytes 74 to 81, signed, read here as unsigned
+} CatalogSentForInstrumentsBelongingToCapitalTracsMessage;
+
+// ---- Consolidated Inav Message: 13 bytes -------------------------------------
+
+// Disclosure of the TRACS during the trading hours of the ongoing market.
+entrypoint typedef struct _ConsolidatedInavMessage {
+  UINT32BE number_of_the_trac;         // bytes 0 to 3, signed, read here as unsigned
+  UINT8 origin;                        // byte 4
+  UINT64BE current_theoretical_price;  // bytes 5 to 12, signed, read here as unsigned
+} ConsolidatedInavMessage;
+
+// ---- Catalog For Instruments Belonging To The Local And Global Stock Market Message: 73 bytes ----
+
+// Catalog of instruments from the local and global stock markets.
+entrypoint typedef struct _CatalogForInstrumentsBelongingToTheLocalAndGlobalStockMar_gc6yau {
+  UINT32BE mse_instrument_number;       // bytes 0 to 3, signed, read here as unsigned
+  UINT8 value_of_type[2];               // bytes 4 to 5
+  UINT8 issuing_company[7];             // bytes 6 to 12
+  UINT8 series[6];                      // bytes 13 to 18
+  UINT64BE last_price;                  // bytes 19 to 26, signed, read here as unsigned
+  UINT64BE ppp_weighted_average_price;  // bytes 27 to 34, signed, read here as unsigned
+  UINT64BE reference_date;              // bytes 35 to 42, signed, read here as unsigned
+  UINT8 reference;                      // byte 43
+  UINT16BE coupon_in_effect;            // bytes 44 to 45, signed, read here as unsigned
+  UINT8 marketability;                  // byte 46
+  UINT32BE numerical_marketability;     // bytes 47 to 50, signed, read here as unsigned
+  UINT8 isin[12];                       // bytes 51 to 62
+  UINT8 market;                         // byte 63
+  UINT64BE registered_values;           // bytes 64 to 71, signed, read here as unsigned
+  UINT8 exchange;                       // byte 72
+} CatalogForInstrumentsBelongingToTheLocalAndGlobalStockMar_gc6yau;
+
+// ---- Probable Price Of Allocation Message: 21 bytes --------------------------
+
+// The message is sent during any type of bidding (Opening, Ongoing, Volatility and Intraday) and only in the instruments where there already is a virtual term matching or pre-allotment.
+entrypoint typedef struct _ProbablePriceOfAllocationMessage {
+  UINT32BE instrument_number;             // bytes 0 to 3, signed, read here as unsigned
+  UINT8 origin;                           // byte 4
+  UINT64BE probable_price_of_allocation;  // bytes 5 to 12, signed, read here as unsigned
+  UINT64BE volume_long;                   // bytes 13 to 20, signed, read here as unsigned
+} ProbablePriceOfAllocationMessage;
+
+// ---- Relation Between Bmvbiva Instruments Message: 9 bytes -------------------
+
+// Relation between identifiers of instruments between BIVA and BMV.
+entrypoint typedef struct _RelationBetweenBmvbivaInstrumentsMessage {
+  UINT32BE number_of_the_bmv_instrument;  // bytes 0 to 3, signed, read here as unsigned
+  UINT32BE biva_instrument;               // bytes 4 to 7, signed, read here as unsigned
+  UINT8 type_of_trading;                  // byte 8
+} RelationBetweenBmvbivaInstrumentsMessage;
+
+// ---- Equities Market Trades Message: 61 bytes --------------------------------
+
+// Informs about any transaction which was accepted at the BMV or BIVA.
+entrypoint typedef struct _EquitiesMarketTradesMessage {
+  UINT32BE instrument_number;                // bytes 0 to 3, signed, read here as unsigned
+  UINT8 origin;                              // byte 4
+  UINT64BE time_of_the_trade;                // bytes 5 to 12, signed, read here as unsigned
+  UINT64BE volume_long;                      // bytes 13 to 20, signed, read here as unsigned
+  UINT64BE price;                            // bytes 21 to 28, signed, read here as unsigned
+  UINT8 type_of_agreement;                   // byte 29
+  UINT64BE consecutive_number_of_the_trade;  // bytes 30 to 37, signed, read here as unsigned
+  UINT8 sets_price;                          // byte 38
+  UINT8 type_of_trading;                     // byte 39
+  UINT64BE amount;                           // bytes 40 to 47, signed, read here as unsigned
+  UINT8 purchases[5];                        // bytes 48 to 52
+  UINT8 sells[5];                            // bytes 53 to 57
+  UINT8 settlement;                          // byte 58
+  UINT8 auction_indicator;                   // byte 59
+  UINT8 indicator;                           // byte 60
+} EquitiesMarketTradesMessage;
+
+// ---- Consolidated Trade Cancellation Message: 13 bytes -----------------------
+
+// This message in sent when a transaction is cancelled from BMV or BIVA system.
+entrypoint typedef struct _ConsolidatedTradeCancellationMessage {
+  UINT32BE instrument_number;                // bytes 0 to 3, signed, read here as unsigned
+  UINT8 origin;                              // byte 4
+  UINT64BE consecutive_number_of_the_trade;  // bytes 5 to 12, signed, read here as unsigned
+} ConsolidatedTradeCancellationMessage;
+
+// ---- Pricevolume Indicator Message: 38 bytes ---------------------------------
+
+// Price/volume indicator for the messages coming from BIVA.
+entrypoint typedef struct _PricevolumeIndicatorMessage {
+  UINT32BE instrument_number;            // bytes 0 to 3, signed, read here as unsigned
+  UINT8 origin;                          // byte 4
+  UINT64BE probable_price_of_allotment;  // bytes 5 to 12, signed, read here as unsigned
+  UINT64BE volume_long;                  // bytes 13 to 20, signed, read here as unsigned
+  UINT64BE best_selling_price;           // bytes 21 to 28, signed, read here as unsigned
+  UINT64BE best_purchasing_price;        // bytes 29 to 36, signed, read here as unsigned
+  UINT8 type_of_cross_trading;           // byte 37
+} PricevolumeIndicatorMessage;
+
+// ---- Consolidated Execution Of Orders Message: 52 bytes ----------------------
+
+// The message is published when there is a term matching or closing in the electronic system of the BMV or BIVA.
+entrypoint typedef struct _ConsolidatedExecutionOfOrdersMessage {
+  UINT32BE instrument_number;                // bytes 0 to 3, signed, read here as unsigned
+  UINT8 origin;                              // byte 4
+  UINT64BE date;                             // bytes 5 to 12, signed, read here as unsigned
+  UINT64BE consecutive_number;               // bytes 13 to 20, signed, read here as unsigned
+  UINT64BE volume_long;                      // bytes 21 to 28, signed, read here as unsigned
+  UINT64BE consecutive_number_of_the_trade;  // bytes 29 to 36, signed, read here as unsigned
+  UINT64BE execution_price;                  // bytes 37 to 44, signed, read here as unsigned
+  UINT8 indicator;                           // byte 45
+  UINT8 sets_price;                          // byte 46
+  UINT8 participant[5];                      // bytes 47 to 51
+} ConsolidatedExecutionOfOrdersMessage;
+
+// ---- Registration Of Order Message: 43 bytes ---------------------------------
+
+// When the order is accepted by the central system of the BMV or BIVA, this message is sent to the appropriate media.
+entrypoint typedef struct _RegistrationOfOrderMessage {
+  UINT32BE instrument_number;   // bytes 0 to 3, signed, read here as unsigned
+  UINT8 origin;                 // byte 4
+  UINT64BE date_and_time;       // bytes 5 to 12, signed, read here as unsigned
+  UINT64BE consecutive_number;  // bytes 13 to 20, signed, read here as unsigned
+  UINT8 direction;              // byte 21
+  UINT64BE volume_long;         // bytes 22 to 29, signed, read here as unsigned
+  UINT64BE price;               // bytes 30 to 37, signed, read here as unsigned
+  UINT8 participant[5];         // bytes 38 to 42
+} RegistrationOfOrderMessage;
+
+// ---- Cancellations Of Orders Message: 21 bytes -------------------------------
+
+// This message deletes the trading floor order.
+entrypoint typedef struct _CancellationsOfOrdersMessage {
+  UINT32BE instrument_number;   // bytes 0 to 3, signed, read here as unsigned
+  UINT8 origin;                 // byte 4
+  UINT64BE date;                // bytes 5 to 12, signed, read here as unsigned
+  UINT64BE consecutive_number;  // bytes 13 to 20, signed, read here as unsigned
+} CancellationsOfOrdersMessage;
+
+// ---- Last Quote Message: 23 bytes --------------------------------------------
+
+// Message sent by instrument when the best bid is modified in the electronic book by the Origin Exchange; denotes the side that is modified, the sale or the purchase.
+entrypoint typedef struct _LastQuoteMessage {
+  UINT32BE instrument_number;  // bytes 0 to 3, signed, read here as unsigned
+  UINT8 origin;                // byte 4
+  UINT64BE volume_long;        // bytes 5 to 12, signed, read here as unsigned
+  UINT64BE price_rate;         // bytes 13 to 20, signed, read here as unsigned
+  UINT8 direction_of_the_bid;  // byte 21
+  UINT8 type_of_trading;       // byte 22
+} LastQuoteMessage;
+

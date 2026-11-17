@@ -1,0 +1,212 @@
+// Currenex Order Service
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out CurrenexForex_OrderService_v26.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+//
+// License: MIT No Attribution
+
+// ---- Message Header: 9 bytes -------------------------------------------------
+
+// Currenex Market Data Message Header
+entrypoint typedef struct _MessageHeader {
+  UINT32BE sequence_number;  // bytes 0 to 3
+  UINT32BE timestamp;        // bytes 4 to 7
+  UINT8 message_type;        // byte 8
+} MessageHeader;
+
+// ---- Logon: 44 bytes ---------------------------------------------------------
+
+// Client initiates a session by submitting a Logon message
+entrypoint typedef struct _Logon {
+  UINT8 user_id[20];    // bytes 0 to 19
+  UINT8 password[20];   // bytes 20 to 39
+  UINT32BE session_id;  // bytes 40 to 43, signed, read here as unsigned
+} Logon;
+
+// ---- Logout: 27 bytes --------------------------------------------------------
+
+// Terminate a session by sending a Logout message
+entrypoint typedef struct _Logout {
+  UINT8 user_id[20];    // bytes 0 to 19
+  UINT32BE session_id;  // bytes 20 to 23, signed, read here as unsigned
+  UINT8 reason[3];      // bytes 24 to 26
+} Logout;
+
+// ---- Heartbeat: 4 bytes ------------------------------------------------------
+
+// Keep-alive ping sent every three seconds; client must respond
+entrypoint typedef struct _Heartbeat {
+  UINT32BE session_id;  // bytes 0 to 3, signed, read here as unsigned
+} Heartbeat;
+
+// ---- Instrument Info Request: 4 bytes ----------------------------------------
+
+// Request list of supported instruments
+entrypoint typedef struct _InstrumentInfoRequest {
+  UINT32BE session_id;  // bytes 0 to 3, signed, read here as unsigned
+} InstrumentInfoRequest;
+
+// ---- Instrument Info: 35 bytes -----------------------------------------------
+
+// Definition of a currency or metal instrument
+entrypoint typedef struct _InstrumentInfo {
+  UINT32BE session_id;        // bytes 0 to 3, signed, read here as unsigned
+  UINT16BE instrument_index;  // bytes 4 to 5, signed, read here as unsigned
+  UINT8 instrument_type;      // byte 6
+  UINT8 instrument_id[20];    // bytes 7 to 26
+  UINT64BE settlement_date;   // bytes 27 to 34, signed, read here as unsigned
+} InstrumentInfo;
+
+// ---- New Order Request: 37 bytes ---------------------------------------------
+
+// Submit a new order request
+entrypoint typedef struct _NewOrderRequest {
+  UINT32BE cl_order_id;       // bytes 0 to 3, signed, read here as unsigned
+  UINT8 order_type;           // byte 4
+  UINT16BE instrument_index;  // bytes 5 to 6, signed, read here as unsigned
+  UINT8 side;                 // byte 7
+  UINT64BE order_amt;         // bytes 8 to 15, signed, read here as unsigned
+  UINT64BE min_amt;           // bytes 16 to 23, signed, read here as unsigned
+  UINT32BE price;             // bytes 24 to 27, signed, read here as unsigned
+  UINT64BE show_amt;          // bytes 28 to 35, signed, read here as unsigned
+  UINT8 expire_type;          // byte 36
+} NewOrderRequest;
+
+// ---- New Order Ack: 15 bytes -------------------------------------------------
+
+// Acknowledge new order
+entrypoint typedef struct _NewOrderAck {
+  UINT32BE cl_order_id;  // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE order_id;     // bytes 4 to 11, signed, read here as unsigned
+  UINT8 ack_status;      // byte 12
+  UINT16BE error_code;   // bytes 13 to 14, signed, read here as unsigned
+} NewOrderAck;
+
+// ---- Order Cancel Request: 10 bytes ------------------------------------------
+
+// Request cancellation of an order
+entrypoint typedef struct _OrderCancelRequest {
+  UINT32BE new_cl_order_id;   // bytes 0 to 3, signed, read here as unsigned
+  UINT32BE prev_cl_order_id;  // bytes 4 to 7, signed, read here as unsigned
+  UINT16BE instrument_index;  // bytes 8 to 9, signed, read here as unsigned
+} OrderCancelRequest;
+
+// ---- Order Cancel Reject: 10 bytes -------------------------------------------
+
+// Rejection of Order Cancel Request
+entrypoint typedef struct _OrderCancelReject {
+  UINT32BE new_cl_order_id;   // bytes 0 to 3, signed, read here as unsigned
+  UINT32BE prev_cl_order_id;  // bytes 4 to 7, signed, read here as unsigned
+  UINT16BE error_code;        // bytes 8 to 9, signed, read here as unsigned
+} OrderCancelReject;
+
+// ---- Order Replace Or Cancel Request: 22 bytes -------------------------------
+
+// Replace or cancel an order
+entrypoint typedef struct _OrderReplaceOrCancelRequest {
+  UINT32BE new_cl_order_id;   // bytes 0 to 3, signed, read here as unsigned
+  UINT32BE orig_cl_order_id;  // bytes 4 to 7, signed, read here as unsigned
+  UINT64BE order_amt;         // bytes 8 to 15, signed, read here as unsigned
+  UINT32BE price;             // bytes 16 to 19, signed, read here as unsigned
+  UINT16BE instrument_index;  // bytes 20 to 21, signed, read here as unsigned
+} OrderReplaceOrCancelRequest;
+
+// ---- Order Replace Or Cancel Ack: 11 bytes -----------------------------------
+
+// Acknowledge replace/cancel
+entrypoint typedef struct _OrderReplaceOrCancelAck {
+  UINT32BE new_cl_order_id;   // bytes 0 to 3, signed, read here as unsigned
+  UINT32BE prev_cl_order_id;  // bytes 4 to 7, signed, read here as unsigned
+  UINT8 status;               // byte 8
+  UINT16BE error_code;        // bytes 9 to 10, signed, read here as unsigned
+} OrderReplaceOrCancelAck;
+
+// ---- Order Canceled Or Expired: 15 bytes -------------------------------------
+
+// Unsolicited cancellation/expiry notice
+entrypoint typedef struct _OrderCanceledOrExpired {
+  UINT32BE cl_order_id;  // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE order_id;     // bytes 4 to 11, signed, read here as unsigned
+  UINT8 status;          // byte 12
+  UINT16BE type_;        // bytes 13 to 14, signed, read here as unsigned
+} OrderCanceledOrExpired;
+
+// ---- Trade: 85 bytes ---------------------------------------------------------
+
+// Trade execution notification
+entrypoint typedef struct _Trade {
+  UINT32BE cl_order_id;       // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE order_id;          // bytes 4 to 11, signed, read here as unsigned
+  UINT16BE instrument_index;  // bytes 12 to 13, signed, read here as unsigned
+  UINT8 side;                 // byte 14
+  UINT64BE fill_amt;          // bytes 15 to 22, signed, read here as unsigned
+  UINT32BE fill_rate;         // bytes 23 to 26, signed, read here as unsigned
+  UINT8 exec_broker[4];       // bytes 27 to 30
+  UINT8 execution_id[20];     // bytes 31 to 50
+  UINT8 exec_type;            // byte 51
+  UINT64BE settle_date;       // bytes 52 to 59, signed, read here as unsigned
+  UINT64BE trade_date;        // bytes 60 to 67, signed, read here as unsigned
+  UINT64BE transact_time;     // bytes 68 to 75, signed, read here as unsigned
+  UINT64BE leaves_amt;        // bytes 76 to 83, signed, read here as unsigned
+  UINT8 aggressor_flag;       // byte 84
+} Trade;
+
+// ---- Pending Fill: 33 bytes --------------------------------------------------
+
+// Notification of expected fill
+entrypoint typedef struct _PendingFill {
+  UINT32BE cl_order_id;    // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE order_id;       // bytes 4 to 11, signed, read here as unsigned
+  UINT32BE trade_link_id;  // bytes 12 to 15, signed, read here as unsigned
+  UINT64BE fill_amt;       // bytes 16 to 23, signed, read here as unsigned
+  UINT32BE fill_rate;      // bytes 24 to 27, signed, read here as unsigned
+  UINT8 aggressor_flag;    // byte 28
+  UINT8 exec_broker[4];    // bytes 29 to 32
+} PendingFill;
+
+// ---- Pending Fill Cancel: 16 bytes -------------------------------------------
+
+// Notification of pending fill cancellation
+entrypoint typedef struct _PendingFillCancel {
+  UINT32BE cl_order_id;    // bytes 0 to 3, signed, read here as unsigned
+  UINT64BE order_id;       // bytes 4 to 11, signed, read here as unsigned
+  UINT32BE trade_link_id;  // bytes 12 to 15, signed, read here as unsigned
+} PendingFillCancel;
+
+// ---- Trade Pending: 34 bytes -------------------------------------------------
+
+// Trade notification linked to pending fill
+entrypoint typedef struct _TradePending {
+  UINT8 exec_type;         // byte 0
+  UINT64BE settle_date;    // bytes 1 to 8, signed, read here as unsigned
+  UINT64BE trade_date;     // bytes 9 to 16, signed, read here as unsigned
+  UINT64BE transact_time;  // bytes 17 to 24, signed, read here as unsigned
+  UINT64BE leaves_amt;     // bytes 25 to 32, signed, read here as unsigned
+  UINT8 aggressor_flag;    // byte 33
+} TradePending;
+
+// ---- Resend Request: 4 bytes -------------------------------------------------
+
+// Request retransmission of missed messages
+entrypoint typedef struct _ResendRequest {
+  UINT32BE begin_seq_no;  // bytes 0 to 3, signed, read here as unsigned
+} ResendRequest;
+
+// ---- Gap Fill: 5 bytes -------------------------------------------------------
+
+// Skip non-resendable or unavailable messages
+entrypoint typedef struct _GapFill {
+  UINT32BE new_seq_no;  // bytes 0 to 3, signed, read here as unsigned
+  UINT8 reason_code;    // byte 4
+} GapFill;
+

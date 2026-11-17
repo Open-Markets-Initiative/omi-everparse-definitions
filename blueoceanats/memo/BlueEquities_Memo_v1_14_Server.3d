@@ -1,0 +1,161 @@
+// Blue Ocean Technologies Members Orders
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out BlueEquities_Memo_v1_14_Server.3d
+//
+// What this definition does not state, and the model does:
+// - a Reassemble rule
+// - the dispatch that chooses a message by its type
+// - a field read in bits
+// - a block whose stated length holds more than its fields
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Common Header: 3 bytes --------------------------------------------------
+
+// Tcp Common Header
+entrypoint typedef struct _CommonHeader {
+  UINT8 message_type;       // byte 0
+  UINT16BE message_length;  // bytes 1 to 2
+} CommonHeader;
+
+// ---- Login Accepted Message: 1 byte ------------------------------------------
+
+// BlueOceanAts Tcp Login Accepted Message
+entrypoint typedef struct _LoginAcceptedMessage {
+  UINT8 supported_request_mode;  // byte 0
+} LoginAcceptedMessage;
+
+// ---- Login Rejected Message: 1 byte ------------------------------------------
+
+// BlueOceanAts Tcp Login Rejected Message
+entrypoint typedef struct _LoginRejectedMessage {
+  UINT8 login_reject_code;  // byte 0
+} LoginRejectedMessage;
+
+// ---- Start Of Session Message: 8 bytes ---------------------------------------
+
+// BlueOceanAts Tcp Start of Session Message
+entrypoint typedef struct _StartOfSessionMessage {
+  UINT64BE session_id;  // bytes 0 to 7
+} StartOfSessionMessage;
+
+// ---- Replay Begin Message: 12 bytes ------------------------------------------
+
+// BlueOceanAts Tcp Replay Begin Message
+entrypoint typedef struct _ReplayBeginMessage {
+  UINT64BE next_sequence_number;   // bytes 0 to 7
+  UINT32BE pending_message_count;  // bytes 8 to 11
+} ReplayBeginMessage;
+
+// ---- Replay Rejected Message: 1 byte -----------------------------------------
+
+// BlueOceanAts Tcp Replay Rejected Message
+entrypoint typedef struct _ReplayRejectedMessage {
+  UINT8 replay_reject_code;  // byte 0
+} ReplayRejectedMessage;
+
+// ---- Replay Complete Message: 8 bytes ----------------------------------------
+
+// BlueOceanAts Tcp Replay Complete Message
+entrypoint typedef struct _ReplayCompleteMessage {
+  UINT64BE message_count;  // bytes 0 to 7
+} ReplayCompleteMessage;
+
+// ---- Stream Begin Message: 16 bytes ------------------------------------------
+
+// BlueOceanAts Tcp Stream Begin Message
+entrypoint typedef struct _StreamBeginMessage {
+  UINT64BE next_sequence_number;  // bytes 0 to 7
+  UINT64BE max_sequence_number;   // bytes 8 to 15
+} StreamBeginMessage;
+
+// ---- Stream Rejected Message: 1 byte -----------------------------------------
+
+// BlueOceanAts Tcp Stream Rejected Message
+entrypoint typedef struct _StreamRejectedMessage {
+  UINT8 stream_reject_code;  // byte 0
+} StreamRejectedMessage;
+
+// ---- Stream Complete Message: 8 bytes ----------------------------------------
+
+// BlueOceanAts Tcp Stream Complete Message
+entrypoint typedef struct _StreamCompleteMessage {
+  UINT64BE total_sequence_count;  // bytes 0 to 7
+} StreamCompleteMessage;
+
+// ---- Sbe Header: 7 bytes -----------------------------------------------------
+
+// Sbe Header
+entrypoint typedef struct _SbeHeader {
+  UINT16BE block_length;  // bytes 0 to 1
+  UINT8 template_id;      // byte 2
+  UINT8 schema_id;        // byte 3
+  UINT16BE version;       // bytes 4 to 5
+  UINT8 num_groups;       // byte 6
+} SbeHeader;
+
+// ---- Repeating Group Dimensions: 2 bytes -------------------------------------
+
+// Block preceding each repeating group, the space reserved for a single entry and the number of entries
+entrypoint typedef struct _RepeatingGroupDimensions {
+  UINT8 block_length_short;  // byte 0
+  UINT8 num_in_group;        // byte 1
+} RepeatingGroupDimensions;
+
+// ---- Pending Mass Cancel Message: 55 bytes -----------------------------------
+
+// Response to Mass Cancel Request saying the request reached the exchange and is being handled
+entrypoint typedef struct _PendingMassCancelMessage {
+  UINT64BE sending_time;       // bytes 0 to 7
+  UINT8 cl_ord_id[16];         // bytes 8 to 23
+  UINT8 symbol[6];             // bytes 24 to 29
+  UINT8 symbol_sfx[6];         // bytes 30 to 35
+  UINT8 side_optional;         // byte 36
+  UINT64BE lower_than_price;   // bytes 37 to 44, signed, read here as unsigned
+  UINT64BE higher_than_price;  // bytes 45 to 52, signed, read here as unsigned
+  UINT16BE cancel_group_id;    // bytes 53 to 54
+} PendingMassCancelMessage;
+
+// ---- Mass Cancel Done Message: 24 bytes --------------------------------------
+
+// Every order named by the Mass Cancel Request has been processed
+entrypoint typedef struct _MassCancelDoneMessage {
+  UINT64BE sending_time;  // bytes 0 to 7
+  UINT8 cl_ord_id[16];    // bytes 8 to 23
+} MassCancelDoneMessage;
+
+// ---- Order Cancel Reject Message: 30 bytes -----------------------------------
+
+// A cancel request or cancel replace request cannot be honored; Fix message type 9
+entrypoint typedef struct _OrderCancelRejectMessage {
+  UINT64BE sending_time;      // bytes 0 to 7
+  UINT8 cl_ord_id[16];        // bytes 8 to 23
+  UINT8 cxl_rej_response_to;  // byte 24
+  UINT8 cxl_rej_reason;       // byte 25
+  UINT8 link_id_optional[4];  // bytes 26 to 29
+} OrderCancelRejectMessage;
+
+// ---- Mass Cancel Reject Message: 56 bytes ------------------------------------
+
+// A mass cancel request cannot be honored as sent
+entrypoint typedef struct _MassCancelRejectMessage {
+  UINT64BE sending_time;            // bytes 0 to 7
+  UINT8 cl_ord_id[16];              // bytes 8 to 23
+  UINT8 symbol[6];                  // bytes 24 to 29
+  UINT8 symbol_sfx[6];              // bytes 30 to 35
+  UINT8 side_optional;              // byte 36
+  UINT64BE lower_than_price;        // bytes 37 to 44, signed, read here as unsigned
+  UINT64BE higher_than_price;       // bytes 45 to 52, signed, read here as unsigned
+  UINT16BE cancel_group_id;         // bytes 53 to 54
+  UINT8 mass_cancel_reject_reason;  // byte 55
+} MassCancelRejectMessage;
+

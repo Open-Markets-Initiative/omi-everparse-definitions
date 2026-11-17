@@ -1,0 +1,123 @@
+// Chicago Board Options Exchange Multicast Depth Of Book
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out CxjEquities_MulticastDepthOfBook_Pitch_v1_0_6.3d
+//
+// What this definition does not state, and the model does:
+// - the dispatch that chooses a message by its type
+// - a run filling what frames it
+// - a field read in bits
+//
+// License: MIT No Attribution
+
+// ---- Packet Header: 8 bytes --------------------------------------------------
+
+entrypoint typedef struct _PacketHeader {
+  UINT16 length;        // bytes 0 to 1
+  UINT8 message_count;  // byte 2
+  UINT8 unit_;          // byte 3
+  UINT32 sequence;      // bytes 4 to 7
+} PacketHeader;
+
+// ---- Message Header: 2 bytes -------------------------------------------------
+
+entrypoint typedef struct _MessageHeader {
+  UINT8 message_length;  // byte 0
+  UINT8 message_type;    // byte 1
+} MessageHeader;
+
+// ---- Unit Clear Message: 4 bytes ---------------------------------------------
+
+// Instructs feed recipients to clear all orders for the Cboe Japan book in the unit specified in the Sequenced Unit Header. It would be distributed in rare recovery events such as a datacenter fail-over.
+entrypoint typedef struct _UnitClearMessage {
+  UINT32 reserved_4;  // bytes 0 to 3
+} UnitClearMessage;
+
+// ---- Add Order Message: 36 bytes ---------------------------------------------
+
+// Represents a newly accepted order on the Cboe Japan book. It includes a day-specific Order Id assigned by Cboe Japan to the order.
+entrypoint typedef struct _AddOrderMessage {
+  UINT64 timestamp;      // bytes 0 to 7
+  UINT64 order_id;       // bytes 8 to 15
+  UINT8 side_indicator;  // byte 16
+  UINT32 quantity;       // bytes 17 to 20
+  UINT8 symbol[6];       // bytes 21 to 26
+  UINT64 price;          // bytes 27 to 34
+  UINT8 reserved_1;      // byte 35
+} AddOrderMessage;
+
+// ---- Order Executed Message: 37 bytes ----------------------------------------
+
+// Sent when a visible order on the Cboe Japan book is executed in whole or in part. The execution price equals the order price found in the original Add Order message or the order price in the latest Modify Order message referencing the Order Id.
+entrypoint typedef struct _OrderExecutedMessage {
+  UINT64 timestamp;          // bytes 0 to 7
+  UINT64 order_id;           // bytes 8 to 15
+  UINT32 executed_quantity;  // bytes 16 to 19
+  UINT64 execution_id;       // bytes 20 to 27
+  UINT64 contra_order_id;    // bytes 28 to 35
+  UINT8 tick_direction;      // byte 36
+} OrderExecutedMessage;
+
+// ---- Reduce Size Message: 20 bytes -------------------------------------------
+
+// Sent when a visible order on the Cboe Japan book is partially reduced.
+entrypoint typedef struct _ReduceSizeMessage {
+  UINT64 timestamp;           // bytes 0 to 7
+  UINT64 order_id;            // bytes 8 to 15
+  UINT32 cancelled_quantity;  // bytes 16 to 19
+} ReduceSizeMessage;
+
+// ---- Modify Order Message: 29 bytes ------------------------------------------
+
+// Sent whenever an open order is visibly modified. The Order Id refers to the Order Id of the original Add Order message.
+entrypoint typedef struct _ModifyOrderMessage {
+  UINT64 timestamp;  // bytes 0 to 7
+  UINT64 order_id;   // bytes 8 to 15
+  UINT32 quantity;   // bytes 16 to 19
+  UINT64 price;      // bytes 20 to 27
+  UINT8 reserved_1;  // byte 28
+} ModifyOrderMessage;
+
+// ---- Delete Order Message: 16 bytes ------------------------------------------
+
+// Sent whenever a booked order is cancelled or leaves the order book. The Order Id refers to the Order Id of the original Add Order message.
+entrypoint typedef struct _DeleteOrderMessage {
+  UINT64 timestamp;  // bytes 0 to 7
+  UINT64 order_id;   // bytes 8 to 15
+} DeleteOrderMessage;
+
+// ---- Trade Message: 50 bytes -------------------------------------------------
+
+// Sent when there is an execution against any non-displayed portion of an iceberg order. Trade messages do not alter the book and can be ignored if messages are being used solely to build a book.
+entrypoint typedef struct _TradeMessage {
+  UINT64 timestamp;        // bytes 0 to 7
+  UINT8 symbol[6];         // bytes 8 to 13
+  UINT32 quantity;         // bytes 14 to 17
+  UINT64 price;            // bytes 18 to 25
+  UINT64 execution_id;     // bytes 26 to 33
+  UINT64 order_id;         // bytes 34 to 41
+  UINT64 contra_order_id;  // bytes 42 to 49
+} TradeMessage;
+
+// ---- Trade Break Message: 16 bytes -------------------------------------------
+
+// Sent whenever an execution on Cboe Japan is cancelled.
+entrypoint typedef struct _TradeBreakMessage {
+  UINT64 timestamp;     // bytes 0 to 7
+  UINT64 execution_id;  // bytes 8 to 15
+} TradeBreakMessage;
+
+// ---- End Of Session Message: 4 bytes -----------------------------------------
+
+// Sent for each unit when the unit shuts down. No additional sequenced messages will be delivered for this unit, but heartbeats from the unit may be received.
+entrypoint typedef struct _EndOfSessionMessage {
+  UINT32 reserved_4;  // bytes 0 to 3
+} EndOfSessionMessage;
+

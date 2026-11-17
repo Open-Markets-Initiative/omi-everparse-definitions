@@ -1,0 +1,104 @@
+// Chicago Board Options Exchange Multicast Market By Price
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out NeoEquities_MulticastMarketByPrice_v1_0_14.3d
+//
+// What this definition does not state, and the model does:
+// - the dispatch that chooses a message by its type
+// - a run filling what frames it
+// - a field read in bits
+//
+// License: MIT No Attribution
+
+// ---- Packet Header: 8 bytes --------------------------------------------------
+
+entrypoint typedef struct _PacketHeader {
+  UINT16 length;        // bytes 0 to 1
+  UINT8 message_count;  // byte 2
+  UINT8 unit_;          // byte 3
+  UINT32 sequence;      // bytes 4 to 7
+} PacketHeader;
+
+// ---- Message Header: 2 bytes -------------------------------------------------
+
+entrypoint typedef struct _MessageHeader {
+  UINT8 message_length;  // byte 0
+  UINT8 message_type;    // byte 1
+} MessageHeader;
+
+// ---- Unit Clear Message: 4 bytes ---------------------------------------------
+
+// Instructs feed recipients to clear all orders for the Cboe Canada order book in the unit specified in the Sequenced Unit Header. Distributed in rare recovery events such as a data center fail-over.
+entrypoint typedef struct _UnitClearMessage {
+  UINT8 reserved_4[4];  // bytes 0 to 3
+} UnitClearMessage;
+
+// ---- Trading Status Message: 26 bytes ----------------------------------------
+
+// Indicates the current trading status of a security on the Cboe Canada NEO system. Sequenced Trading Status messages are sent upon system startup for all active securities with Trading Status = S (suspended).
+entrypoint typedef struct _TradingStatusMessage {
+  UINT64 timestamp;          // bytes 0 to 7
+  UINT8 order_book_type;     // byte 8
+  UINT8 symbol[14];          // bytes 9 to 22
+  UINT8 trading_status;      // byte 23
+  UINT8 trading_sub_status;  // byte 24
+  UINT8 halt_reason;         // byte 25
+} TradingStatusMessage;
+
+// ---- Trade Break Message: 43 bytes -------------------------------------------
+
+// Sent whenever an execution on Cboe Canada NEO is cancelled. Applications that simply build a Cboe Canada NEO book can ignore Trade Break messages.
+entrypoint typedef struct _TradeBreakMessage {
+  UINT64 timestamp;          // bytes 0 to 7
+  UINT8 order_book_type;     // byte 8
+  UINT8 symbol[14];          // bytes 9 to 22
+  UINT32 original_quantity;  // bytes 23 to 26
+  UINT64 original_price;     // bytes 27 to 34
+  UINT64 execution_id;       // bytes 35 to 42
+} TradeBreakMessage;
+
+// ---- Trade Correction Message: 65 bytes --------------------------------------
+
+// Sent whenever an execution on Cboe Canada NEO is corrected. Applications that simply build a Cboe Canada NEO book can ignore Trade Correction messages.
+entrypoint typedef struct _TradeCorrectionMessage {
+  UINT64 timestamp;                  // bytes 0 to 7
+  UINT8 order_book_type;             // byte 8
+  UINT8 symbol[14];                  // bytes 9 to 22
+  UINT32 original_quantity;          // bytes 23 to 26
+  UINT64 original_price;             // bytes 27 to 34
+  UINT8 original_settlement_type;    // byte 35
+  UINT32 original_settlement_date;   // bytes 36 to 39
+  UINT32 corrected_quantity;         // bytes 40 to 43
+  UINT64 corrected_price;            // bytes 44 to 51
+  UINT8 corrected_settlement_type;   // byte 52
+  UINT32 corrected_settlement_date;  // bytes 53 to 56
+  UINT64 execution_id;               // bytes 57 to 64
+} TradeCorrectionMessage;
+
+// ---- Single Side Update Message: 37 bytes ------------------------------------
+
+// Provides an updated displayed price and size for a single side of a Symbol. Used on NEO-N (market by price book).
+entrypoint typedef struct _SingleSideUpdateMessage {
+  UINT64 timestamp;       // bytes 0 to 7
+  UINT8 order_book_type;  // byte 8
+  UINT8 symbol[14];       // bytes 9 to 22
+  UINT8 side_indicator;   // byte 23
+  UINT32 quantity;        // bytes 24 to 27
+  UINT64 price;           // bytes 28 to 35
+  UINT8 reserved_1;       // byte 36
+} SingleSideUpdateMessage;
+
+// ---- End Of Session Message: 4 bytes -----------------------------------------
+
+// Sent for each unit when the unit shuts down. No additional sequenced messages will be delivered for this unit, but heartbeats from the unit may be received.
+entrypoint typedef struct _EndOfSessionMessage {
+  UINT8 reserved_4[4];  // bytes 0 to 3
+} EndOfSessionMessage;
+

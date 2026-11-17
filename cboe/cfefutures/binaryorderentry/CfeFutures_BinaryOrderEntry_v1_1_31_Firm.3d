@@ -1,0 +1,145 @@
+// Chicago Board Options Exchange Futures Binary Order Entry
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out CfeFutures_BinaryOrderEntry_v1_1_31_Firm.3d
+//
+// What this definition does not state, and the model does:
+// - a Reassemble rule
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Firm Message Header: 12 bytes -------------------------------------------
+
+// Message header of a packet sent by the firm
+entrypoint typedef struct _FirmMessageHeader {
+  UINT16 start_of_message;   // bytes 0 to 1
+  UINT16 message_length;     // bytes 2 to 3
+  UINT16 firm_message_type;  // bytes 4 to 5
+  UINT8 matching_unit;       // byte 6
+  UINT8 reserved_field;      // byte 7
+  UINT32 sequence_number;    // bytes 8 to 11
+} FirmMessageHeader;
+
+// ---- Prevent Match: 3 bytes --------------------------------------------------
+
+entrypoint typedef struct _PreventMatch {
+  UINT8 mtp_modifier;      // byte 0
+  UINT8 unique_id_level;   // byte 1
+  UINT8 trading_group_id;  // byte 2
+} PreventMatch;
+
+// ---- New Order: 131 bytes ----------------------------------------------------
+
+// New order futures message
+entrypoint typedef struct _NewOrder {
+  UINT8 cl_ord_id[20];             // bytes 0 to 19
+  UINT8 side;                      // byte 20
+  UINT32 order_qty;                // bytes 21 to 24
+  UINT8 clearing_firm[4];          // bytes 25 to 28
+  UINT8 clearing_account[4];       // bytes 29 to 32
+  UINT64 price;                    // bytes 33 to 40, signed, read here as unsigned
+  UINT8 ord_type;                  // byte 41
+  UINT8 time_in_force;             // byte 42
+  UINT32 min_qty;                  // bytes 43 to 46
+  UINT8 symbol[8];                 // bytes 47 to 54
+  UINT8 capacity;                  // byte 55
+  UINT8 account[16];               // bytes 56 to 71
+  PreventMatch prevent_match;      // bytes 72 to 74
+  UINT64 expire_time;              // bytes 75 to 82
+  UINT32 maturity_date;            // bytes 83 to 86
+  UINT8 open_close;                // byte 87
+  UINT32 cmta_number;              // bytes 88 to 91
+  UINT64 stop_px;                  // bytes 92 to 99, signed, read here as unsigned
+  UINT16 custom_group_id;          // bytes 100 to 101
+  UINT8 cti_code;                  // byte 102
+  UINT8 manual_order_indicator;    // byte 103
+  UINT8 oeo_id[18];                // bytes 104 to 121
+  UINT8 frequent_trader_id[6];     // bytes 122 to 127
+  UINT8 cust_order_handling_inst;  // byte 128
+  UINT8 country_code[2];           // bytes 129 to 130
+} NewOrder;
+
+// ---- Modify Order: 92 bytes --------------------------------------------------
+
+// Request to modify an order
+entrypoint typedef struct _ModifyOrder {
+  UINT8 cl_ord_id[20];             // bytes 0 to 19
+  UINT8 orig_cl_ord_id[20];        // bytes 20 to 39
+  UINT8 clearing_firm[4];          // bytes 40 to 43
+  UINT32 order_qty;                // bytes 44 to 47
+  UINT64 price;                    // bytes 48 to 55, signed, read here as unsigned
+  UINT8 ord_type;                  // byte 56
+  UINT8 cancel_orig_on_reject;     // byte 57
+  UINT64 stop_px;                  // bytes 58 to 65, signed, read here as unsigned
+  UINT8 manual_order_indicator;    // byte 66
+  UINT8 oeo_id[18];                // bytes 67 to 84
+  UINT8 frequent_trader_id[6];     // bytes 85 to 90
+  UINT8 cust_order_handling_inst;  // byte 91
+} ModifyOrder;
+
+// ---- Cancel Order: 43 bytes --------------------------------------------------
+
+// Request to cancel a single order or quote
+entrypoint typedef struct _CancelOrder {
+  UINT8 orig_cl_ord_id[20];      // bytes 0 to 19
+  UINT8 clearing_firm[4];        // bytes 20 to 23
+  UINT8 manual_order_indicator;  // byte 24
+  UINT8 oeo_id[18];              // bytes 25 to 42
+} CancelOrder;
+
+// ---- Mass Cancel Inst: 16 bytes ----------------------------------------------
+
+entrypoint typedef struct _MassCancelInst {
+  UINT8 clearing_firm_filter;     // byte 0
+  UINT8 acknowledgement_style;    // byte 1
+  UINT8 lockout_instruction;      // byte 2
+  UINT8 instrument_type_filter;   // byte 3
+  UINT8 gtc_order_filter;         // byte 4
+  UINT8 instruction_details[11];  // bytes 5 to 15
+} MassCancelInst;
+
+// ---- Mass Cancel Order: 65 bytes ---------------------------------------------
+
+// A Mass Cancel Order message is a request to cancel a group of orders or quotes
+entrypoint typedef struct _MassCancelOrder {
+  UINT8 mass_cancel_id[20];         // bytes 0 to 19
+  UINT8 clearing_firm[4];           // bytes 20 to 23
+  UINT8 product_name[6];            // bytes 24 to 29
+  MassCancelInst mass_cancel_inst;  // bytes 30 to 45
+  UINT8 manual_order_indicator;     // byte 46
+  UINT8 oeo_id[18];                 // bytes 47 to 64
+} MassCancelOrder;
+
+// ---- Purge Orders: 68 bytes --------------------------------------------------
+
+// Request to cancel a group of orders or quotes across all the TPH's sessions for that port s matching unit
+entrypoint typedef struct _PurgeOrders {
+  UINT8 mass_cancel_id[20];         // bytes 0 to 19
+  UINT8 clearing_firm[4];           // bytes 20 to 23
+  UINT8 product_name[6];            // bytes 24 to 29
+  MassCancelInst mass_cancel_inst;  // bytes 30 to 45
+  UINT8 manual_order_indicator;     // byte 46
+  UINT8 oeo_id[18];                 // bytes 47 to 64
+  UINT8 custom_group_id_cnt;        // byte 65
+  UINT16 custom_group_id;           // bytes 66 to 67
+} PurgeOrders;
+
+// ---- Reset Risk: 36 bytes ----------------------------------------------------
+
+// Reset or release Firm/EFID, Product, or Custom Group Id level lockout conditions resulting from risk profile trips or self-imposed lockouts issued viaMass Cancel Order or Purge Orders messages
+entrypoint typedef struct _ResetRisk {
+  UINT8 risk_status_id[16];  // bytes 0 to 15
+  UINT8 risk_reset[8];       // bytes 16 to 23
+  UINT8 clearing_firm[4];    // bytes 24 to 27
+  UINT8 product_name[6];     // bytes 28 to 33
+  UINT16 custom_group_id;    // bytes 34 to 35
+} ResetRisk;
+

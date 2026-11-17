@@ -1,0 +1,88 @@
+// National Association of Securities Dealers Automated Quotations (Nasdaq) Ise Depth Combo Market Data Feed
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out IseOptions_DepthComboFeed_v1_0_Server.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a length prefix framing what follows
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Server Packet Header: 3 bytes -------------------------------------------
+
+// Packet header of a packet sent by the server
+entrypoint typedef struct _ServerPacketHeader {
+  UINT16BE packet_length;    // bytes 0 to 1
+  UINT8 server_packet_type;  // byte 2
+} ServerPacketHeader;
+
+// ---- Login Accepted Packet: 30 bytes -----------------------------------------
+
+// The SoupBinTCP server sends a Login Accepted Packet in response to receiving a valid Login Request from the client
+entrypoint typedef struct _LoginAcceptedPacket {
+  UINT8 accepted_session[10];          // bytes 0 to 9
+  UINT8 accepted_sequence_number[20];  // bytes 10 to 29
+} LoginAcceptedPacket;
+
+// ---- Login Rejected Packet: 1 byte -------------------------------------------
+
+// The SoupBinTCP server sends this packet in response to an invalid Login Request Packet from the client
+entrypoint typedef struct _LoginRejectedPacket {
+  UINT8 reject_reason_code;  // byte 0
+} LoginRejectedPacket;
+
+// ---- System Event Message: 13 bytes ------------------------------------------
+
+// The system event message type is used to signal a market or data feed handler event.
+entrypoint typedef struct _SystemEventMessage {
+  UINT8 timestamp[6];     // bytes 0 to 5
+  UINT8 event_code;       // byte 6
+  UINT16BE current_year;  // bytes 7 to 8
+  UINT8 current_month;    // byte 9
+  UINT8 current_day;      // byte 10
+  UINT8 version;          // byte 11
+  UINT8 sub_version;      // byte 12
+} SystemEventMessage;
+
+// ---- Strategy Trading Action Message: 11 bytes -------------------------------
+
+// ISE uses this administrative message to indicate the current trading status of a strategy within the ISE Options Market. Messages will be sent when the strategy is halted or is released for trading.
+entrypoint typedef struct _StrategyTradingActionMessage {
+  UINT8 timestamp[6];           // bytes 0 to 5
+  UINT32BE strategy_id;         // bytes 6 to 9
+  UINT8 current_trading_state;  // byte 10
+} StrategyTradingActionMessage;
+
+// ---- Strategy Open Closed Message: 11 bytes ----------------------------------
+
+// The options system uses this administrative message to indicate when a strategy has completed the opening process and is now available for auto execution or when the option has closed and is no longer available for auto execution.
+entrypoint typedef struct _StrategyOpenClosedMessage {
+  UINT8 timestamp[6];    // bytes 0 to 5
+  UINT32BE strategy_id;  // bytes 6 to 9
+  UINT8 open_state;      // byte 10
+} StrategyOpenClosedMessage;
+
+// ---- Complex Strategy Ticker Message: 51 bytes -------------------------------
+
+// The ticker message is used to send real time trade information.
+entrypoint typedef struct _ComplexStrategyTickerMessage {
+  UINT8 timestamp[6];     // bytes 0 to 5
+  UINT32BE strategy_id;   // bytes 6 to 9
+  UINT64BE last_price;    // bytes 10 to 17, signed, read here as unsigned
+  UINT32BE size;          // bytes 18 to 21
+  UINT32BE volume;        // bytes 22 to 25
+  UINT64BE high;          // bytes 26 to 33, signed, read here as unsigned
+  UINT64BE low;           // bytes 34 to 41, signed, read here as unsigned
+  UINT64BE first;         // bytes 42 to 49, signed, read here as unsigned
+  UINT8 trade_condition;  // byte 50
+} ComplexStrategyTickerMessage;
+

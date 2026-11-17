@@ -1,0 +1,490 @@
+// Bolsas y Mercados Espa oles MEFF Top Of Book Five Levels
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out Meff_TopOfBook5_v1_6.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Message Header: 3 bytes -------------------------------------------------
+
+// What every message carries, in either direction: its length and its type. Section 2.1 gives a published message a third field, the sequence number that lets a listener continue an interrupted session without gaps and without repeated messages, and the message tables state it as the message's own first field - which is where it is declared, since a client's Logon, Replay Request and Logout do not carry one
+entrypoint typedef struct _MessageHeader {
+  UINT16 message_size;  // bytes 0 to 1
+  UINT8 message_type;   // byte 2
+} MessageHeader;
+
+// ---- Logon Response Message: 26 bytes ----------------------------------------
+
+// The Logon Response message is used by the Server to accept a new session. In this message the sequence number will always be 0
+entrypoint typedef struct _LogonResponseMessage {
+  UINT32 sequence_number;           // bytes 0 to 3
+  UINT8 heart_bt_int;               // byte 4
+  UINT8 protocol_version[6];        // bytes 5 to 10
+  UINT8 test_production_ind;        // byte 11
+  UINT8 environment_code[2];        // bytes 12 to 13
+  UINT32 session_date;              // bytes 14 to 17, signed, read here as unsigned
+  UINT32 expected_sequence_number;  // bytes 18 to 21
+  UINT32 sequence_number_to;        // bytes 22 to 25
+} LogonResponseMessage;
+
+// ---- Logout Response Message: 5 bytes ----------------------------------------
+
+// The Logout message is used by the Server to notify the end of a session, whether it is solicited or unsolicited. It may also be the answer to a failed logon attempt (see Logon message)
+entrypoint typedef struct _LogoutResponseMessage {
+  UINT32 sequence_number;  // bytes 0 to 3
+  UINT8 logout_reason;     // byte 4
+} LogoutResponseMessage;
+
+// ---- Heartbeat Message: 4 bytes ----------------------------------------------
+
+// The Heartbeat message is used by the Server to indicate that the communication is active. In the Heartbeat message, the SequenceNumber of the previously received message will be repeated
+entrypoint typedef struct _HeartbeatMessage {
+  UINT32 sequence_number;  // bytes 0 to 3
+} HeartbeatMessage;
+
+// ---- Network Status Message: 5 bytes -----------------------------------------
+
+// Message sent by the server with information about the connectivity between the Server and the central systems. In the Network Status message, the SequenceNumber of the previously received message will be repeated
+entrypoint typedef struct _NetworkStatusMessage {
+  UINT32 sequence_number;      // bytes 0 to 3
+  UINT8 network_status_value;  // byte 4
+} NetworkStatusMessage;
+
+// ---- Trading Session Status Message: 15 bytes --------------------------------
+
+// Sent by the server to inform about the session status in each Trading Mode
+entrypoint typedef struct _TradingSessionStatusMessage {
+  UINT32 sequence_number;            // bytes 0 to 3
+  UINT8 trading_session_id;          // byte 4
+  UINT8 trading_session_sub_id;      // byte 5
+  UINT8 trad_ses_status;             // byte 6
+  UINT64 transaction_date_and_time;  // bytes 7 to 14, signed, read here as unsigned
+} TradingSessionStatusMessage;
+
+// ---- News Message: 82 bytes --------------------------------------------------
+
+// Used by the Server to communicate a Market Surveillance or system-wide text message
+entrypoint typedef struct _NewsMessage {
+  UINT32 sequence_number;  // bytes 0 to 3
+  UINT8 news_text[78];     // bytes 4 to 81
+} NewsMessage;
+
+// ---- Security List Cancellation Report Message: 50 bytes ---------------------
+
+// Message sent by the server for cancelling previously defined securities
+entrypoint typedef struct _SecurityListCancellationReportMessage {
+  UINT32 sequence_number;      // bytes 0 to 3
+  UINT8 market_id[4];          // bytes 4 to 7
+  UINT8 market_segment_id[4];  // bytes 8 to 11
+  UINT32 security_code;        // bytes 12 to 15
+  UINT8 symbol[22];            // bytes 16 to 37
+  UINT8 symbol_isin[12];       // bytes 38 to 49
+} SecurityListCancellationReportMessage;
+
+// ---- Security List Message: 713 bytes ----------------------------------------
+
+// Message sent by the server to provide the definition of one security. It shares the same layout as the Security List Update Report message, but with a different Message Type
+entrypoint typedef struct _SecurityListMessage {
+  UINT32 sequence_number;                       // bytes 0 to 3
+  UINT8 market_id[4];                           // bytes 4 to 7
+  UINT8 market_segment_id[4];                   // bytes 8 to 11
+  UINT32 security_code;                         // bytes 12 to 15
+  UINT8 symbol[22];                             // bytes 16 to 37
+  UINT8 symbol_isin[12];                        // bytes 38 to 49
+  UINT8 fisn[35];                               // bytes 50 to 84
+  UINT8 issuer_lei[20];                         // bytes 85 to 104
+  UINT8 security_group[2];                      // bytes 105 to 106
+  UINT8 family_code[5];                         // bytes 107 to 111
+  UINT8 cfi_code[6];                            // bytes 112 to 117
+  UINT8 security_type[2];                       // bytes 118 to 119
+  UINT32 maturity_date;                         // bytes 120 to 123, signed, read here as unsigned
+  UINT32 issue_date;                            // bytes 124 to 127, signed, read here as unsigned
+  UINT64 contract_multiplier;                   // bytes 128 to 135, signed, read here as unsigned
+  UINT64 li_spre;                               // bytes 136 to 143, signed, read here as unsigned
+  UINT64 sst_ipre;                              // bytes 144 to 151, signed, read here as unsigned
+  UINT64 li_spost;                              // bytes 152 to 159, signed, read here as unsigned
+  UINT64 sst_ipost;                             // bytes 160 to 167, signed, read here as unsigned
+  UINT8 liquid_instrument;                      // byte 168
+  UINT8 admission_requested_by_issuer;          // byte 169
+  UINT32 min_trade_vol;                         // bytes 170 to 173
+  UINT32 round_lot;                             // bytes 174 to 177
+  UINT8 currency[3];                            // bytes 178 to 180
+  UINT32 modality_mask_b_4;                     // bytes 181 to 184
+  UINT8 security_description[80];               // bytes 185 to 264
+  UINT8 trading_obligation;                     // byte 265
+  UINT8 sec_description[20];                    // bytes 266 to 285
+  UINT8 underlying_asset[22];                   // bytes 286 to 307
+  UINT8 security_sub_type[12];                  // bytes 308 to 319
+  UINT8 maturity_month_year[8];                 // bytes 320 to 327
+  UINT64 strike_price;                          // bytes 328 to 335, signed, read here as unsigned
+  UINT64 strike_value;                          // bytes 336 to 343, signed, read here as unsigned
+  UINT8 opt_attribute;                          // byte 344
+  UINT64 min_price_increment;                   // bytes 345 to 352, signed, read here as unsigned
+  UINT8 unit_of_measure[20];                    // bytes 353 to 372
+  UINT8 settl_method;                           // byte 373
+  UINT8 exercise_style;                         // byte 374
+  UINT8 put_or_call;                            // byte 375
+  UINT8 flexible_indicator;                     // byte 376
+  UINT32 last_trading_day;                      // bytes 377 to 380, signed, read here as unsigned
+  UINT8 number_of_decimals;                     // byte 381
+  UINT8 order_number_of_decimals;               // byte 382
+  UINT8 adjustments_rule;                       // byte 383
+  UINT64 maximum_order_size;                    // bytes 384 to 391, signed, read here as unsigned
+  UINT8 self_match_prevention;                  // byte 392
+  UINT8 commodity_derivative_indicator;         // byte 393
+  UINT8 stock_when_underlying_is_dividend[22];  // bytes 394 to 415
+  UINT8 base_product[4];                        // bytes 416 to 419
+  UINT8 sub_product[4];                         // bytes 420 to 423
+  UINT8 further_sub_product[4];                 // bytes 424 to 427
+  UINT8 base_currency[3];                       // bytes 428 to 430
+  UINT8 quoted_currency[3];                     // bytes 431 to 433
+  UINT8 maturity_month_year_increment_units;    // byte 434
+  UINT8 start_maturity_month_year[8];           // bytes 435 to 442
+  UINT8 end_maturity_month_year[8];             // bytes 443 to 450
+  UINT8 maturity_month_year_increment;          // byte 451
+  UINT8 underlying_symbol[22];                  // bytes 452 to 473
+  UINT8 underlying_isin[12];                    // bytes 474 to 485
+  UINT8 underlying_currency[3];                 // bytes 486 to 488
+  UINT8 underlying_security_issuer_lei[20];     // bytes 489 to 508
+  UINT8 x_rolling_closing_type;                 // byte 509
+  UINT8 x_rolling_reference_buyer_rate;         // byte 510
+  UINT64 x_rolling_buyer_markup;                // bytes 511 to 518, signed, read here as unsigned
+  UINT8 x_rolling_reference_seller_rate;        // byte 519
+  UINT64 x_rolling_seller_markup;               // bytes 520 to 527, signed, read here as unsigned
+  UINT64 x_rolling_dividend_percentage;         // bytes 528 to 535, signed, read here as unsigned
+  UINT16 x_rolling_dividend_pay_date_diff;      // bytes 536 to 537
+  UINT8 leg_symbol_1[22];                       // bytes 538 to 559
+  UINT32 leg_ratio_qty_1;                       // bytes 560 to 563
+  UINT8 leg_side_1;                             // byte 564
+  UINT64 leg_price_1;                           // bytes 565 to 572, signed, read here as unsigned
+  UINT8 leg_symbol_2[22];                       // bytes 573 to 594
+  UINT32 leg_ratio_qty_2;                       // bytes 595 to 598
+  UINT8 leg_side_2;                             // byte 599
+  UINT64 leg_price_2;                           // bytes 600 to 607, signed, read here as unsigned
+  UINT8 leg_symbol_3[22];                       // bytes 608 to 629
+  UINT32 leg_ratio_qty_3;                       // bytes 630 to 633
+  UINT8 leg_side_3;                             // byte 634
+  UINT64 leg_price_3;                           // bytes 635 to 642, signed, read here as unsigned
+  UINT8 leg_symbol_4[22];                       // bytes 643 to 664
+  UINT32 leg_ratio_qty_4;                       // bytes 665 to 668
+  UINT8 leg_side_4;                             // byte 669
+  UINT64 leg_price_4;                           // bytes 670 to 677, signed, read here as unsigned
+  UINT8 leg_symbol_5[22];                       // bytes 678 to 699
+  UINT32 leg_ratio_qty_5;                       // bytes 700 to 703
+  UINT8 leg_side_5;                             // byte 704
+  UINT64 leg_price_5;                           // bytes 705 to 712, signed, read here as unsigned
+} SecurityListMessage;
+
+// ---- Security List Update Report Message: 713 bytes --------------------------
+
+// Message sent by the server for reporting updates, during the session, to the security definition
+entrypoint typedef struct _SecurityListUpdateReportMessage {
+  UINT32 sequence_number;                       // bytes 0 to 3
+  UINT8 market_id[4];                           // bytes 4 to 7
+  UINT8 market_segment_id[4];                   // bytes 8 to 11
+  UINT32 security_code;                         // bytes 12 to 15
+  UINT8 symbol[22];                             // bytes 16 to 37
+  UINT8 symbol_isin[12];                        // bytes 38 to 49
+  UINT8 fisn[35];                               // bytes 50 to 84
+  UINT8 issuer_lei[20];                         // bytes 85 to 104
+  UINT8 security_group[2];                      // bytes 105 to 106
+  UINT8 family_code[5];                         // bytes 107 to 111
+  UINT8 cfi_code[6];                            // bytes 112 to 117
+  UINT8 security_type[2];                       // bytes 118 to 119
+  UINT32 maturity_date;                         // bytes 120 to 123, signed, read here as unsigned
+  UINT32 issue_date;                            // bytes 124 to 127, signed, read here as unsigned
+  UINT64 contract_multiplier;                   // bytes 128 to 135, signed, read here as unsigned
+  UINT64 li_spre;                               // bytes 136 to 143, signed, read here as unsigned
+  UINT64 sst_ipre;                              // bytes 144 to 151, signed, read here as unsigned
+  UINT64 li_spost;                              // bytes 152 to 159, signed, read here as unsigned
+  UINT64 sst_ipost;                             // bytes 160 to 167, signed, read here as unsigned
+  UINT8 liquid_instrument;                      // byte 168
+  UINT8 admission_requested_by_issuer;          // byte 169
+  UINT32 min_trade_vol;                         // bytes 170 to 173
+  UINT32 round_lot;                             // bytes 174 to 177
+  UINT8 currency[3];                            // bytes 178 to 180
+  UINT32 modality_mask_b_4;                     // bytes 181 to 184
+  UINT8 security_description[80];               // bytes 185 to 264
+  UINT8 trading_obligation;                     // byte 265
+  UINT8 sec_description[20];                    // bytes 266 to 285
+  UINT8 underlying_asset[22];                   // bytes 286 to 307
+  UINT8 security_sub_type[12];                  // bytes 308 to 319
+  UINT8 maturity_month_year[8];                 // bytes 320 to 327
+  UINT64 strike_price;                          // bytes 328 to 335, signed, read here as unsigned
+  UINT64 strike_value;                          // bytes 336 to 343, signed, read here as unsigned
+  UINT8 opt_attribute;                          // byte 344
+  UINT64 min_price_increment;                   // bytes 345 to 352, signed, read here as unsigned
+  UINT8 unit_of_measure[20];                    // bytes 353 to 372
+  UINT8 settl_method;                           // byte 373
+  UINT8 exercise_style;                         // byte 374
+  UINT8 put_or_call;                            // byte 375
+  UINT8 flexible_indicator;                     // byte 376
+  UINT32 last_trading_day;                      // bytes 377 to 380, signed, read here as unsigned
+  UINT8 number_of_decimals;                     // byte 381
+  UINT8 order_number_of_decimals;               // byte 382
+  UINT8 adjustments_rule;                       // byte 383
+  UINT64 maximum_order_size;                    // bytes 384 to 391, signed, read here as unsigned
+  UINT8 self_match_prevention;                  // byte 392
+  UINT8 commodity_derivative_indicator;         // byte 393
+  UINT8 stock_when_underlying_is_dividend[22];  // bytes 394 to 415
+  UINT8 base_product[4];                        // bytes 416 to 419
+  UINT8 sub_product[4];                         // bytes 420 to 423
+  UINT8 further_sub_product[4];                 // bytes 424 to 427
+  UINT8 base_currency[3];                       // bytes 428 to 430
+  UINT8 quoted_currency[3];                     // bytes 431 to 433
+  UINT8 maturity_month_year_increment_units;    // byte 434
+  UINT8 start_maturity_month_year[8];           // bytes 435 to 442
+  UINT8 end_maturity_month_year[8];             // bytes 443 to 450
+  UINT8 maturity_month_year_increment;          // byte 451
+  UINT8 underlying_symbol[22];                  // bytes 452 to 473
+  UINT8 underlying_isin[12];                    // bytes 474 to 485
+  UINT8 underlying_currency[3];                 // bytes 486 to 488
+  UINT8 underlying_security_issuer_lei[20];     // bytes 489 to 508
+  UINT8 x_rolling_closing_type;                 // byte 509
+  UINT8 x_rolling_reference_buyer_rate;         // byte 510
+  UINT64 x_rolling_buyer_markup;                // bytes 511 to 518, signed, read here as unsigned
+  UINT8 x_rolling_reference_seller_rate;        // byte 519
+  UINT64 x_rolling_seller_markup;               // bytes 520 to 527, signed, read here as unsigned
+  UINT64 x_rolling_dividend_percentage;         // bytes 528 to 535, signed, read here as unsigned
+  UINT16 x_rolling_dividend_pay_date_diff;      // bytes 536 to 537
+  UINT8 leg_symbol_1[22];                       // bytes 538 to 559
+  UINT32 leg_ratio_qty_1;                       // bytes 560 to 563
+  UINT8 leg_side_1;                             // byte 564
+  UINT64 leg_price_1;                           // bytes 565 to 572, signed, read here as unsigned
+  UINT8 leg_symbol_2[22];                       // bytes 573 to 594
+  UINT32 leg_ratio_qty_2;                       // bytes 595 to 598
+  UINT8 leg_side_2;                             // byte 599
+  UINT64 leg_price_2;                           // bytes 600 to 607, signed, read here as unsigned
+  UINT8 leg_symbol_3[22];                       // bytes 608 to 629
+  UINT32 leg_ratio_qty_3;                       // bytes 630 to 633
+  UINT8 leg_side_3;                             // byte 634
+  UINT64 leg_price_3;                           // bytes 635 to 642, signed, read here as unsigned
+  UINT8 leg_symbol_4[22];                       // bytes 643 to 664
+  UINT32 leg_ratio_qty_4;                       // bytes 665 to 668
+  UINT8 leg_side_4;                             // byte 669
+  UINT64 leg_price_4;                           // bytes 670 to 677, signed, read here as unsigned
+  UINT8 leg_symbol_5[22];                       // bytes 678 to 699
+  UINT32 leg_ratio_qty_5;                       // bytes 700 to 703
+  UINT8 leg_side_5;                             // byte 704
+  UINT64 leg_price_5;                           // bytes 705 to 712, signed, read here as unsigned
+} SecurityListUpdateReportMessage;
+
+// ---- Security Status Message: 34 bytes ---------------------------------------
+
+// Message sent by the server to inform on the status of one security
+entrypoint typedef struct _SecurityStatusMessage {
+  UINT32 sequence_number;            // bytes 0 to 3
+  UINT32 security_code;              // bytes 4 to 7
+  UINT64 transaction_date_and_time;  // bytes 8 to 15, signed, read here as unsigned
+  UINT8 security_trading_status;     // byte 16
+  UINT8 non_availability_reason;     // byte 17
+  UINT64 high_limit_price;           // bytes 18 to 25, signed, read here as unsigned
+  UINT64 low_limit_price;            // bytes 26 to 33, signed, read here as unsigned
+} SecurityStatusMessage;
+
+// ---- Family Status Message: 21 bytes -----------------------------------------
+
+// Message sent by the server in the Derivatives environment to inform about the status a Family of products
+entrypoint typedef struct _FamilyStatusMessage {
+  UINT32 sequence_number;            // bytes 0 to 3
+  UINT8 security_group[2];           // bytes 4 to 5
+  UINT8 family_code[5];              // bytes 6 to 10
+  UINT64 transaction_date_and_time;  // bytes 11 to 18, signed, read here as unsigned
+  UINT8 security_trading_status;     // byte 19
+  UINT8 non_availability_reason;     // byte 20
+} FamilyStatusMessage;
+
+// ---- Trade Market Post Transparency Information Top Of Book Message: 54 bytes ----
+
+// Used by the server to communicate trade information related to trades resulting from order matching in channels C/D and E/F. It is also used in channels A/B when the trade is the result of order matching at the end of an auction period (where only top-of-book information is shown)
+entrypoint typedef struct _TradeMarketPostTransparencyInformationTopOfBookMessage {
+  UINT32 sequence_number;            // bytes 0 to 3
+  UINT32 security_code;              // bytes 4 to 7
+  UINT64 transaction_date_and_time;  // bytes 8 to 15, signed, read here as unsigned
+  UINT8 market_segment_id[4];        // bytes 16 to 19
+  UINT8 trading_session_id;          // byte 20
+  UINT32 trd_match_id;               // bytes 21 to 24
+  UINT8 trade_type;                  // byte 25
+  UINT64 last_px;                    // bytes 26 to 33, signed, read here as unsigned
+  UINT32 last_qty;                   // bytes 34 to 37
+  UINT64 gross_trade_amt;            // bytes 38 to 45, signed, read here as unsigned
+  UINT8 designation;                 // byte 46
+  UINT8 market_mechanism;            // byte 47
+  UINT8 algo_flag;                   // byte 48
+  UINT8 transaction_category;        // byte 49
+  UINT32 strategy_trd_match_id;      // bytes 50 to 53
+} TradeMarketPostTransparencyInformationTopOfBookMessage;
+
+// ---- Trade Trade Amendment Or Cancellation Message: 89 bytes -----------------
+
+// Sent by the server to inform about a trade produced due to any reason other than order matching, also to inform about trades produced due to order matching in a Dark pool. In this message, all fields with the suffix 2 refer to the sell order, and the ones without the suffix refer either to both legs or the buy order
+entrypoint typedef struct _TradeTradeAmendmentOrCancellationMessage {
+  UINT32 sequence_number;                // bytes 0 to 3
+  UINT32 security_code;                  // bytes 4 to 7
+  UINT64 transaction_date_and_time;      // bytes 8 to 15, signed, read here as unsigned
+  UINT8 market_segment_id[4];            // bytes 16 to 19
+  UINT8 trading_session_id;              // byte 20
+  UINT32 trd_match_id;                   // bytes 21 to 24
+  UINT8 trade_type;                      // byte 25
+  UINT64 last_px;                        // bytes 26 to 33, signed, read here as unsigned
+  UINT32 last_qty;                       // bytes 34 to 37
+  UINT64 gross_trade_amt;                // bytes 38 to 45, signed, read here as unsigned
+  UINT8 designation;                     // byte 46
+  UINT8 market_mechanism;                // byte 47
+  UINT8 algo_flag;                       // byte 48
+  UINT8 transaction_category;            // byte 49
+  UINT32 strategy_trd_match_id;          // bytes 50 to 53
+  UINT8 last_change_flag;                // byte 54
+  UINT8 benc_rfpt_flag;                  // byte 55
+  UINT8 trade_price_condition;           // byte 56
+  UINT8 pre_trade_transparency_waiver;   // byte 57
+  UINT8 deferral_waiver;                 // byte 58
+  UINT8 post_deferral_publication_type;  // byte 59
+  UINT64 publish_date_and_time;          // bytes 60 to 67, signed, read here as unsigned
+  UINT64 trade_date;                     // bytes 68 to 75, signed, read here as unsigned
+  UINT32 trade_session_date;             // bytes 76 to 79, signed, read here as unsigned
+  UINT8 amended_trade_type;              // byte 80
+  UINT32 exec_ref_id;                    // bytes 81 to 84
+  UINT32 amended_trade_date;             // bytes 85 to 88, signed, read here as unsigned
+} TradeTradeAmendmentOrCancellationMessage;
+
+// ---- Indication Of Interest Message: 36 bytes --------------------------------
+
+// Used by the Server to notify an indication of interest on a specific instrument. This functionality is available in Fixed Income and Derivatives
+entrypoint typedef struct _IndicationOfInterestMessage {
+  UINT32 sequence_number;            // bytes 0 to 3
+  UINT32 security_code;              // bytes 4 to 7
+  UINT64 transaction_date_and_time;  // bytes 8 to 15, signed, read here as unsigned
+  UINT32 ioiid;                      // bytes 16 to 19
+  UINT8 ioi_trans_type;              // byte 20
+  UINT8 side;                        // byte 21
+  UINT32 ioi_qty;                    // bytes 22 to 25
+  UINT64 ioi_price;                  // bytes 26 to 33, signed, read here as unsigned
+  UINT8 ioi_qlty_ind;                // byte 34
+  UINT8 trading_session_id;          // byte 35
+} IndicationOfInterestMessage;
+
+// ---- Rfq Market Pre Transparency Information Message: 189 bytes --------------
+
+// Used by the server to communicate price information about RFQs. The contents of the RFQID field match those of the field IOIID in the corresponding Indication of Interest message
+entrypoint typedef struct _RfqMarketPreTransparencyInformationMessage {
+  UINT32 sequence_number;            // bytes 0 to 3
+  UINT32 rfqid;                      // bytes 4 to 7
+  UINT8 trading_session_id;          // byte 8
+  UINT32 security_code;              // bytes 9 to 12
+  UINT64 transaction_date_and_time;  // bytes 13 to 20, signed, read here as unsigned
+  UINT64 mid_buy_price;              // bytes 21 to 28, signed, read here as unsigned
+  UINT32 mid_buy_volume;             // bytes 29 to 32
+  UINT16 buy_rf_qs_number;           // bytes 33 to 34
+  UINT64 mid_sell_price;             // bytes 35 to 42, signed, read here as unsigned
+  UINT32 mid_sell_volume;            // bytes 43 to 46
+  UINT16 sell_rf_qs_number;          // bytes 47 to 48
+  UINT16 bid_orders_1;               // bytes 49 to 50
+  UINT32 bid_size_1;                 // bytes 51 to 54
+  UINT64 bid_px_1;                   // bytes 55 to 62, signed, read here as unsigned
+  UINT16 ask_orders_1;               // bytes 63 to 64
+  UINT32 ask_size_1;                 // bytes 65 to 68
+  UINT64 ask_px_1;                   // bytes 69 to 76, signed, read here as unsigned
+  UINT16 bid_orders_2;               // bytes 77 to 78
+  UINT32 bid_size_2;                 // bytes 79 to 82
+  UINT64 bid_px_2;                   // bytes 83 to 90, signed, read here as unsigned
+  UINT16 ask_orders_2;               // bytes 91 to 92
+  UINT32 ask_size_2;                 // bytes 93 to 96
+  UINT64 ask_px_2;                   // bytes 97 to 104, signed, read here as unsigned
+  UINT16 bid_orders_3;               // bytes 105 to 106
+  UINT32 bid_size_3;                 // bytes 107 to 110
+  UINT64 bid_px_3;                   // bytes 111 to 118, signed, read here as unsigned
+  UINT16 ask_orders_3;               // bytes 119 to 120
+  UINT32 ask_size_3;                 // bytes 121 to 124
+  UINT64 ask_px_3;                   // bytes 125 to 132, signed, read here as unsigned
+  UINT16 bid_orders_4;               // bytes 133 to 134
+  UINT32 bid_size_4;                 // bytes 135 to 138
+  UINT64 bid_px_4;                   // bytes 139 to 146, signed, read here as unsigned
+  UINT16 ask_orders_4;               // bytes 147 to 148
+  UINT32 ask_size_4;                 // bytes 149 to 152
+  UINT64 ask_px_4;                   // bytes 153 to 160, signed, read here as unsigned
+  UINT16 bid_orders_5;               // bytes 161 to 162
+  UINT32 bid_size_5;                 // bytes 163 to 166
+  UINT64 bid_px_5;                   // bytes 167 to 174, signed, read here as unsigned
+  UINT16 ask_orders_5;               // bytes 175 to 176
+  UINT32 ask_size_5;                 // bytes 177 to 180
+  UINT64 ask_px_5;                   // bytes 181 to 188, signed, read here as unsigned
+} RfqMarketPreTransparencyInformationMessage;
+
+// ---- Top Of Book Message: 46 bytes -------------------------------------------
+
+// Used by the UDP Servers to communicate Top-of-book price information during auctions. When there is an indicative match price, the fields BidPx1 and AskPx1 will have the same value
+entrypoint typedef struct _TopOfBookMessage {
+  UINT32 sequence_number;            // bytes 0 to 3
+  UINT32 security_code;              // bytes 4 to 7
+  UINT64 transaction_date_and_time;  // bytes 8 to 15, signed, read here as unsigned
+  UINT16 bid_orders_1;               // bytes 16 to 17
+  UINT32 bid_size_1;                 // bytes 18 to 21
+  UINT64 bid_px_1;                   // bytes 22 to 29, signed, read here as unsigned
+  UINT8 retail_cl_bid_flag_1;        // byte 30
+  UINT16 ask_orders_1;               // bytes 31 to 32
+  UINT32 ask_size_1;                 // bytes 33 to 36
+  UINT64 ask_px_1;                   // bytes 37 to 44, signed, read here as unsigned
+  UINT8 retail_cl_ask_flag_1;        // byte 45
+} TopOfBookMessage;
+
+// ---- Top Of Book 5 Levels Message: 166 bytes ---------------------------------
+
+// Used by the UDP 5 level top-of-book Servers to communicate Top-of-book price information during open market. During auctions, only the first level is shown, and therefore this message is not published, and the message Top-of-book (Msg Type = 0x82) is used instead
+entrypoint typedef struct _TopOfBook5LevelsMessage {
+  UINT32 sequence_number;            // bytes 0 to 3
+  UINT32 security_code;              // bytes 4 to 7
+  UINT64 transaction_date_and_time;  // bytes 8 to 15, signed, read here as unsigned
+  UINT16 bid_orders_1;               // bytes 16 to 17
+  UINT32 bid_size_1;                 // bytes 18 to 21
+  UINT64 bid_px_1;                   // bytes 22 to 29, signed, read here as unsigned
+  UINT8 retail_cl_bid_flag_1;        // byte 30
+  UINT16 ask_orders_1;               // bytes 31 to 32
+  UINT32 ask_size_1;                 // bytes 33 to 36
+  UINT64 ask_px_1;                   // bytes 37 to 44, signed, read here as unsigned
+  UINT8 retail_cl_ask_flag_1;        // byte 45
+  UINT16 bid_orders_2;               // bytes 46 to 47
+  UINT32 bid_size_2;                 // bytes 48 to 51
+  UINT64 bid_px_2;                   // bytes 52 to 59, signed, read here as unsigned
+  UINT8 retail_cl_bid_flag_2;        // byte 60
+  UINT16 ask_orders_2;               // bytes 61 to 62
+  UINT32 ask_size_2;                 // bytes 63 to 66
+  UINT64 ask_px_2;                   // bytes 67 to 74, signed, read here as unsigned
+  UINT8 retail_cl_ask_flag_2;        // byte 75
+  UINT16 bid_orders_3;               // bytes 76 to 77
+  UINT32 bid_size_3;                 // bytes 78 to 81
+  UINT64 bid_px_3;                   // bytes 82 to 89, signed, read here as unsigned
+  UINT8 retail_cl_bid_flag_3;        // byte 90
+  UINT16 ask_orders_3;               // bytes 91 to 92
+  UINT32 ask_size_3;                 // bytes 93 to 96
+  UINT64 ask_px_3;                   // bytes 97 to 104, signed, read here as unsigned
+  UINT8 retail_cl_ask_flag_3;        // byte 105
+  UINT16 bid_orders_4;               // bytes 106 to 107
+  UINT32 bid_size_4;                 // bytes 108 to 111
+  UINT64 bid_px_4;                   // bytes 112 to 119, signed, read here as unsigned
+  UINT8 retail_cl_bid_flag_4;        // byte 120
+  UINT16 ask_orders_4;               // bytes 121 to 122
+  UINT32 ask_size_4;                 // bytes 123 to 126
+  UINT64 ask_px_4;                   // bytes 127 to 134, signed, read here as unsigned
+  UINT8 retail_cl_ask_flag_4;        // byte 135
+  UINT16 bid_orders_5;               // bytes 136 to 137
+  UINT32 bid_size_5;                 // bytes 138 to 141
+  UINT64 bid_px_5;                   // bytes 142 to 149, signed, read here as unsigned
+  UINT8 retail_cl_bid_flag_5;        // byte 150
+  UINT16 ask_orders_5;               // bytes 151 to 152
+  UINT32 ask_size_5;                 // bytes 153 to 156
+  UINT64 ask_px_5;                   // bytes 157 to 164, signed, read here as unsigned
+  UINT8 retail_cl_ask_flag_5;        // byte 165
+} TopOfBook5LevelsMessage;
+

@@ -1,0 +1,166 @@
+// JSE Limited Enhanced Native Trading Recovery
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out Jse_Itac_EnhancedNativeTradingRecovery_v4_04.3d
+//
+// What this definition does not state, and the model does:
+// - a length prefix framing what follows
+// - a field read in bits
+//
+// License: MIT No Attribution
+
+// ---- Message Header: 4 bytes -------------------------------------------------
+
+// Jse Native Trading Gateway Message Header
+entrypoint typedef struct _MessageHeader {
+  UINT8 start_of_message;  // byte 0
+  UINT16 message_length;   // bytes 1 to 2
+  UINT8 message_type;      // byte 3
+} MessageHeader;
+
+// ---- Logon Message: 60 bytes -------------------------------------------------
+
+// Allows the client to login to the server.
+entrypoint typedef struct _LogonMessage {
+  UINT8 comp_id[6];         // bytes 0 to 5
+  UINT8 password[25];       // bytes 6 to 30
+  UINT8 new_password[25];   // bytes 31 to 55
+  UINT32 protocol_version;  // bytes 56 to 59, signed, read here as unsigned
+} LogonMessage;
+
+// ---- Logon Response Message: 8 bytes -----------------------------------------
+
+// Used by the server to accept or reject a login request.
+entrypoint typedef struct _LogonResponseMessage {
+  UINT32 reject_code;      // bytes 0 to 3, signed, read here as unsigned
+  UINT32 password_expiry;  // bytes 4 to 7, signed, read here as unsigned
+} LogonResponseMessage;
+
+// ---- Logout Message: 20 bytes ------------------------------------------------
+
+// Used by the client or server to terminate a session.
+entrypoint typedef struct _LogoutMessage {
+  UINT8 reason[20];  // bytes 0 to 19
+} LogoutMessage;
+
+// ---- Reject Message: 55 bytes ------------------------------------------------
+
+// Used by the server to reject a message that does not comply with the specifications.
+entrypoint typedef struct _RejectMessage {
+  UINT32 reject_code;         // bytes 0 to 3, signed, read here as unsigned
+  UINT8 reject_reason[30];    // bytes 4 to 33
+  UINT8 message_type;         // byte 34
+  UINT8 client_order_id[20];  // bytes 35 to 54
+} RejectMessage;
+
+// ---- Missed Message Request Message: 5 bytes ---------------------------------
+
+// Used by the client to recover missed messages through the Recovery Channel.
+entrypoint typedef struct _MissedMessageRequestMessage {
+  UINT8 partition_id;      // byte 0
+  UINT32 sequence_number;  // bytes 1 to 4, signed, read here as unsigned
+} MissedMessageRequestMessage;
+
+// ---- Missed Message Request Ack Message: 1 byte ------------------------------
+
+// Used by the server to accept or reject a request for missed messages.
+entrypoint typedef struct _MissedMessageRequestAckMessage {
+  UINT8 missed_message_status;  // byte 0
+} MissedMessageRequestAckMessage;
+
+// ---- Transmission Complete Message: 1 byte -----------------------------------
+
+// Used by the server to indicate that the transmission of missed messages is complete.
+entrypoint typedef struct _TransmissionCompleteMessage {
+  UINT8 transmission_status;  // byte 0
+} TransmissionCompleteMessage;
+
+// ---- System Status Message: 2 bytes ------------------------------------------
+
+// Disseminated in the recovery channel to indicate the status of a partition.
+entrypoint typedef struct _SystemStatusMessage {
+  UINT8 partition_id;   // byte 0
+  UINT8 system_status;  // byte 1
+} SystemStatusMessage;
+
+// ---- Transact Time: 8 bytes --------------------------------------------------
+
+// Time the Execution Report was generated
+entrypoint typedef struct _TransactTime {
+  UINT32 transact_time_seconds;      // bytes 0 to 3
+  UINT32 transact_time_nanoseconds;  // bytes 4 to 7
+} TransactTime;
+
+// ---- Order Cancel Reject Message: 60 bytes -----------------------------------
+
+// Indicates that an order cancel or cancel replace request has been rejected.
+entrypoint typedef struct _OrderCancelRejectMessage {
+  UINT8 partition_id;          // byte 0
+  UINT32 sequence_number;      // bytes 1 to 4, signed, read here as unsigned
+  UINT8 client_order_id[20];   // bytes 5 to 24
+  UINT8 order_id[12];          // bytes 25 to 36
+  TransactTime transact_time;  // bytes 37 to 44
+  UINT32 reject_code;          // bytes 45 to 48, signed, read here as unsigned
+  UINT8 order_book;            // byte 49
+  UINT8 rfq_id[10];            // bytes 50 to 59
+} OrderCancelRejectMessage;
+
+// ---- Order Mass Cancel Report Message: 39 bytes ------------------------------
+
+// Indicates the outcome of an order mass cancel request.
+entrypoint typedef struct _OrderMassCancelReportMessage {
+  UINT8 partition_id;          // byte 0
+  UINT32 sequence_number;      // bytes 1 to 4, signed, read here as unsigned
+  UINT8 client_order_id[20];   // bytes 5 to 24
+  UINT8 mass_cancel_status;    // byte 25
+  UINT32 reject_code;          // bytes 26 to 29, signed, read here as unsigned
+  TransactTime transact_time;  // bytes 30 to 37
+  UINT8 order_book;            // byte 38
+} OrderMassCancelReportMessage;
+
+// ---- Security Definition Response Message: 20 bytes --------------------------
+
+// Indicates that a Security Definition Request has been accepted or rejected.
+entrypoint typedef struct _SecurityDefinitionResponseMessage {
+  UINT8 security_request_id[10];  // bytes 0 to 9
+  UINT8 security_response_type;   // byte 10
+  UINT32 reject_code;             // bytes 11 to 14, signed, read here as unsigned
+  UINT32 security_id;             // bytes 15 to 18, signed, read here as unsigned
+  UINT8 security_type;            // byte 19
+} SecurityDefinitionResponseMessage;
+
+// ---- News Message: 1188 bytes ------------------------------------------------
+
+// Carries a market operations announcement.
+entrypoint typedef struct _NewsMessage {
+  UINT8 partition_id;      // byte 0
+  UINT32 sequence_number;  // bytes 1 to 4, signed, read here as unsigned
+  UINT8 orig_time[24];     // bytes 5 to 28
+  UINT8 urgency;           // byte 29
+  UINT8 headline[100];     // bytes 30 to 129
+  UINT8 text[750];         // bytes 130 to 879
+  UINT8 instruments[100];  // bytes 880 to 979
+  UINT8 underlyings[100];  // bytes 980 to 1079
+  UINT8 firm_list[54];     // bytes 1080 to 1133
+  UINT8 user_list[54];     // bytes 1134 to 1187
+} NewsMessage;
+
+// ---- Business Reject Message: 49 bytes ---------------------------------------
+
+// Indicates that an application message could not be processed.
+entrypoint typedef struct _BusinessRejectMessage {
+  UINT8 partition_id;          // byte 0
+  UINT32 sequence_number;      // bytes 1 to 4, signed, read here as unsigned
+  UINT32 reject_code;          // bytes 5 to 8, signed, read here as unsigned
+  UINT8 client_order_id[20];   // bytes 9 to 28
+  UINT8 order_id[12];          // bytes 29 to 40
+  TransactTime transact_time;  // bytes 41 to 48
+} BusinessRejectMessage;
+

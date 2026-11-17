@@ -1,0 +1,239 @@
+// London Stock Exchange MiFID II Post Trade Recovery
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out TradeEcho_Mifid2PostTradeRecovery_v27_2_2.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a run counted by a field
+// - a field read in bits
+//
+// License: MIT No Attribution
+
+// ---- Unit Header: 8 bytes ----------------------------------------------------
+
+// Gtp Tcp Unit Header
+entrypoint typedef struct _UnitHeader {
+  UINT16 length;            // bytes 0 to 1
+  UINT8 message_count;      // byte 2
+  UINT8 market_data_group;  // byte 3
+  UINT32 sequence_number;   // bytes 4 to 7
+} UnitHeader;
+
+// ---- Message Header: 3 bytes -------------------------------------------------
+
+// Gtp Tcp Message Header
+entrypoint typedef struct _MessageHeader {
+  UINT16 message_length;  // bytes 0 to 1
+  UINT8 message_type;     // byte 2
+} MessageHeader;
+
+// ---- Login Request Message: 8 bytes ------------------------------------------
+
+// Used by the client to log in to the replay or recovery channel.
+entrypoint typedef struct _LoginRequestMessage {
+  UINT8 username[8];  // bytes 0 to 7
+} LoginRequestMessage;
+
+// ---- Recovery Request Message: 27 bytes --------------------------------------
+
+// Used by the client to request data on the recovery channel.
+entrypoint typedef struct _RecoveryRequestMessage {
+  UINT8 request_level;            // byte 0
+  UINT64 instrument;              // bytes 1 to 8
+  UINT8 group_id[6];              // bytes 9 to 14
+  UINT8 request_order_book_type;  // byte 15
+  UINT16 source_venue;            // bytes 16 to 17
+  UINT8 recovery_type;            // byte 18
+  UINT32 sequence_number;         // bytes 19 to 22
+  UINT32 request_id;              // bytes 23 to 26
+} RecoveryRequestMessage;
+
+// ---- Login Response Message: 1 byte ------------------------------------------
+
+// Used by the server to accept or reject a login request to the replay or recovery channel.
+entrypoint typedef struct _LoginResponseMessage {
+  UINT8 login_status;  // byte 0
+} LoginResponseMessage;
+
+// ---- Recovery Response Message: 13 bytes -------------------------------------
+
+// Used by the server to respond to a snapshot request on the recovery channel.
+entrypoint typedef struct _RecoveryResponseMessage {
+  UINT32 sequence_number;  // bytes 0 to 3
+  UINT32 count;            // bytes 4 to 7
+  UINT8 recovery_status;   // byte 8
+  UINT32 request_id;       // bytes 9 to 12
+} RecoveryResponseMessage;
+
+// ---- Replay And Recovery Complete Message: 5 bytes ---------------------------
+
+// Used by the server to indicate the successful completion of servicing a message replay or a recovery request.
+entrypoint typedef struct _ReplayAndRecoveryCompleteMessage {
+  UINT32 request_id;     // bytes 0 to 3
+  UINT8 trading_status;  // byte 4
+} ReplayAndRecoveryCompleteMessage;
+
+// ---- System Event Message: 11 bytes ------------------------------------------
+
+// Broadcast at the start and end of day on TRADEcho. Session transition is advertised via one system event message for all instruments allocated to the same multicast channel
+entrypoint typedef struct _SystemEventMessage {
+  UINT64 timestamp;     // bytes 0 to 7
+  UINT8 event_code;     // byte 8
+  UINT16 source_venue;  // bytes 9 to 10
+} SystemEventMessage;
+
+// ---- Instrument Status Message: 27 bytes -------------------------------------
+
+// Should a specific instrument be subject to individual status change, such as suspension or halt, this will be communicated by the instrument status message
+entrypoint typedef struct _InstrumentStatusMessage {
+  UINT64 timestamp;             // bytes 0 to 7
+  UINT64 instrument;            // bytes 8 to 15
+  UINT16 source_venue;          // bytes 16 to 17
+  UINT8 trading_status;         // byte 18
+  UINT8 session_change_reason;  // byte 19
+  UINT8 new_end_time[6];        // bytes 20 to 25
+  UINT8 order_book_type;        // byte 26
+} InstrumentStatusMessage;
+
+// ---- Statistics Snapshot Message: 270 bytes ----------------------------------
+
+// A snapshot of an instrument's statistics that is used for recovery
+entrypoint typedef struct _StatisticsSnapshotMessage {
+  UINT64 timestamp;                      // bytes 0 to 7
+  UINT64 instrument;                     // bytes 8 to 15
+  UINT16 source_venue;                   // bytes 16 to 17
+  UINT64 volume;                         // bytes 18 to 25
+  UINT64 volume_on_book_only;            // bytes 26 to 33
+  UINT64 vwap;                           // bytes 34 to 41, signed, read here as unsigned
+  UINT64 vwap_on_book_only;              // bytes 42 to 49, signed, read here as unsigned
+  UINT32 number_of_trades;               // bytes 50 to 53
+  UINT32 number_of_trades_on_book_only;  // bytes 54 to 57
+  UINT64 turnover;                       // bytes 58 to 65, signed, read here as unsigned
+  UINT64 turnover_on_book_only;          // bytes 66 to 73, signed, read here as unsigned
+  UINT64 official_opening_price;         // bytes 74 to 81, signed, read here as unsigned
+  UINT64 official_closing_price;         // bytes 82 to 89, signed, read here as unsigned
+  UINT64 trade_high_on_book_only;        // bytes 90 to 97, signed, read here as unsigned
+  UINT64 trade_low_on_book_only;         // bytes 98 to 105, signed, read here as unsigned
+  UINT64 trade_high;                     // bytes 106 to 113, signed, read here as unsigned
+  UINT64 trade_low;                      // bytes 114 to 121, signed, read here as unsigned
+  UINT64 fifty_two_week_trade_high;      // bytes 122 to 129, signed, read here as unsigned
+  UINT64 fifty_two_week_trade_low;       // bytes 130 to 137, signed, read here as unsigned
+  UINT8 opening_price_indicator;         // byte 138
+  UINT8 closing_price_indicator;         // byte 139
+  UINT64 iau_price;                      // bytes 140 to 147, signed, read here as unsigned
+  UINT64 iau_paired_size;                // bytes 148 to 155
+  UINT64 imbalance_quantity;             // bytes 156 to 163
+  UINT8 imbalance_direction;             // byte 164
+  UINT64 best_closing_bid_price;         // bytes 165 to 172, signed, read here as unsigned
+  UINT64 best_closing_ask_price;         // bytes 173 to 180, signed, read here as unsigned
+  UINT64 best_closing_bid_size;          // bytes 181 to 188
+  UINT64 best_closing_ask_size;          // bytes 189 to 196
+  UINT64 trade_high_off_book;            // bytes 197 to 204, signed, read here as unsigned
+  UINT64 trade_low_off_book;             // bytes 205 to 212, signed, read here as unsigned
+  UINT8 reserved_8[8];                   // bytes 213 to 220
+  UINT8 second_reserved_8[8];            // bytes 221 to 228
+  UINT8 auction_type;                    // byte 229
+  UINT64 last_trade_price;               // bytes 230 to 237, signed, read here as unsigned
+  UINT64 last_trade_quantity;            // bytes 238 to 245
+  UINT64 last_trade_time;                // bytes 246 to 253
+  UINT64 static_reference_price;         // bytes 254 to 261, signed, read here as unsigned
+  UINT64 dynamic_reference_price;        // bytes 262 to 269, signed, read here as unsigned
+} StatisticsSnapshotMessage;
+
+// ---- Mifid Ii Trade Report Message: 533 bytes --------------------------------
+
+// Sent to report the MiFID compliant details of a privately negotiated trade
+entrypoint typedef struct _MifidIiTradeReportMessage {
+  UINT64 timestamp;                                        // bytes 0 to 7
+  UINT64 instrument;                                       // bytes 8 to 15
+  UINT8 transaction_identification_code[52];               // bytes 16 to 67
+  UINT32 total_number_of_transactions;                     // bytes 68 to 71
+  UINT8 reserved_8[8];                                     // bytes 72 to 79
+  UINT16 source_venue;                                     // bytes 80 to 81
+  UINT8 price[20];                                         // bytes 82 to 101
+  UINT8 quantity[20];                                      // bytes 102 to 121
+  UINT8 trading_date_and_time[27];                         // bytes 122 to 148
+  UINT8 instrument_identification_code_type[4];            // bytes 149 to 152
+  UINT8 instrument_identification_code[12];                // bytes 153 to 164
+  UINT8 price_notation[4];                                 // bytes 165 to 168
+  UINT8 price_major_currency_price_currency[3];            // bytes 169 to 171
+  UINT8 notional_amount[20];                               // bytes 172 to 191
+  UINT8 notional_currency[3];                              // bytes 192 to 194
+  UINT8 venue_of_execution[4];                             // bytes 195 to 198
+  UINT8 publication_date_and_time[27];                     // bytes 199 to 225
+  UINT8 benchmark_transaction_flag[4];                     // bytes 226 to 229
+  UINT8 agency_cross_trade_flag[4];                        // bytes 230 to 233
+  UINT8 non_price_forming_transactions_flag[4];            // bytes 234 to 237
+  UINT8 non_price_contribution_to_discovery[4];            // bytes 238 to 241
+  UINT8 special_dividend_flag[4];                          // bytes 242 to 245
+  UINT8 pt_deferral_reason_flag[4];                        // bytes 246 to 249
+  UINT8 reference_price_transaction_flag[4];               // bytes 250 to 253
+  UINT8 nt_liquidity_flag[4];                              // bytes 254 to 257
+  UINT8 nt_price_conditions_flag[4];                       // bytes 258 to 261
+  UINT8 algo_transaction_flag[4];                          // bytes 262 to 265
+  UINT8 pt_illiquid_flag[4];                               // bytes 266 to 269
+  UINT8 price_improvement_flag[4];                         // bytes 270 to 273
+  UINT8 cancellation_flag[4];                              // bytes 274 to 277
+  UINT8 amendment_flag[4];                                 // bytes 278 to 281
+  UINT8 duplicate_flag[4];                                 // bytes 282 to 285
+  UINT8 exchange_for_physicals_flag[4];                    // bytes 286 to 289
+  UINT8 limited_details_flag[4];                           // bytes 290 to 293
+  UINT8 ld_full_details_flag[4];                           // bytes 294 to 297
+  UINT8 daily_aggregated_transaction_flag[4];              // bytes 298 to 301
+  UINT8 da_full_details_flag[4];                           // bytes 302 to 305
+  UINT8 volume_omission_flag[4];                           // bytes 306 to 309
+  UINT8 vo_full_details_flag[4];                           // bytes 310 to 313
+  UINT8 four_weeks_aggregation_flag[4];                    // bytes 314 to 317
+  UINT8 fa_full_details_flag[4];                           // bytes 318 to 321
+  UINT8 indefinite_aggregation_flag[4];                    // bytes 322 to 325
+  UINT8 volume_omission_for_sovereign_debt_flag[4];        // bytes 326 to 329
+  UINT8 consecutive_aggregation_flag[4];                   // bytes 330 to 333
+  UINT8 reserved_1;                                        // byte 334
+  UINT8 venue_type;                                        // byte 335
+  UINT8 venue_book_definition_id;                          // byte 336
+  UINT8 notation_of_the_quantity_in_measurement_unit[25];  // bytes 337 to 361
+  UINT8 quantity_in_measurement_unit[20];                  // bytes 362 to 381
+  UINT8 transaction_to_be_cleared;                         // byte 382
+  UINT8 emission_allowance_type[4];                        // bytes 383 to 386
+  UINT8 venue_of_publication[4];                           // bytes 387 to 390
+  UINT8 market_mechanism;                                  // byte 391
+  UINT8 trading_mode;                                      // byte 392
+  UINT8 transaction_category;                              // byte 393
+  UINT8 negotiation_indicator;                             // byte 394
+  UINT8 agency_cross_indicator;                            // byte 395
+  UINT8 modification_indicator;                            // byte 396
+  UINT8 reference_price_indicator;                         // byte 397
+  UINT8 special_dividend_indicator;                        // byte 398
+  UINT8 off_book_automated_indicator;                      // byte 399
+  UINT8 price_formation_indicator;                         // byte 400
+  UINT8 algorithmic_indicator;                             // byte 401
+  UINT8 post_trade_deferral_reason;                        // byte 402
+  UINT8 deferral_enrichment_type;                          // byte 403
+  UINT8 duplicative_indicator;                             // byte 404
+  UINT8 third_country_trading_venue_of_execution[4];       // bytes 405 to 408
+  UINT8 portfolio_transaction_flag[4];                     // bytes 409 to 412
+  UINT8 contingent_transaction_flag[4];                    // bytes 413 to 416
+  UINT8 missing_price_price_conditions[4];                 // bytes 417 to 420
+  UINT8 market_closing_price_flag[4];                      // bytes 421 to 424
+  UINT8 nt_large_in_scale_flag[4];                         // bytes 425 to 428
+  UINT8 nt_pre_trade_transparency_flag[4];                 // bytes 429 to 432
+  UINT8 effective_date_of_the_contract[10];                // bytes 433 to 442
+  UINT8 maturity_date_of_the_contract[10];                 // bytes 443 to 452
+  UINT8 spread[20];                                        // bytes 453 to 472
+  UINT8 upfront_payment[20];                               // bytes 473 to 492
+  UINT8 lei_of_clearing_house[20];                         // bytes 493 to 512
+  UINT8 matched_principal_trade_flag[4];                   // bytes 513 to 516
+  UINT8 esma_standard_deferral_flags[4];                   // bytes 517 to 520
+  UINT8 negotiation_trade_flag[4];                         // bytes 521 to 524
+  UINT8 esma_supplementary_deferral_flags[4];              // bytes 525 to 528
+  UINT8 trading_system[4];                                 // bytes 529 to 532
+} MifidIiTradeReportMessage;
+

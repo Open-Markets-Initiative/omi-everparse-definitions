@@ -1,0 +1,63 @@
+// New York Stock Exchange Trades
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out NyseBonds_Trades_v1_07_a_Client.3d
+//
+// What this definition does not state, and the model does:
+// - the dispatch that chooses a message by its type
+//
+// License: MIT No Attribution
+
+// ---- Client Message Header: 1 byte -------------------------------------------
+
+// The single Ascii type code that opens every client message
+entrypoint typedef struct _ClientMessageHeader {
+  UINT8 client_message_type;  // byte 0
+} ClientMessageHeader;
+
+// ---- Login Message: 40 bytes -------------------------------------------------
+
+// Authenticates the subscriber and names which trade data the session subscribes to. A starting sequence number of 0 requests current data; a greater number than the exchange holds is treated as 0, and a negative one is rejected
+entrypoint typedef struct _LoginMessage {
+  UINT8 username[8];                // bytes 0 to 7
+  UINT8 password[10];               // bytes 8 to 17
+  UINT8 login_sequence_number[10];  // bytes 18 to 27
+  UINT8 listed_subscription;        // byte 28
+  UINT8 etf_subscription;           // byte 29
+  UINT8 otc_subscription;           // byte 30
+  UINT8 arca_edge_subscription;     // byte 31
+  UINT8 bond_subscription;          // byte 32
+  UINT8 options_subscription;       // byte 33
+  UINT8 client_padding[5];          // bytes 34 to 38
+  UINT8 etx;                        // byte 39
+} LoginMessage;
+
+// ---- Logoff Message: 1 byte --------------------------------------------------
+
+// Closes the session. Carries only its type code and the terminator
+entrypoint typedef struct _LogoffMessage {
+  UINT8 etx;  // byte 0
+} LogoffMessage;
+
+// ---- Heartbeat Response Message: 1 byte --------------------------------------
+
+// Answers a Heartbeat Request. The exchange closes the connection if no response arrives within 60 seconds. Table 9 of the specification labels the second field Username , which is a copy and paste slip - its own description reads Message Terminating Character
+entrypoint typedef struct _HeartbeatResponseMessage {
+  UINT8 etx;  // byte 0
+} HeartbeatResponseMessage;
+
+// ---- Test Request Message: 21 bytes ------------------------------------------
+
+// Signals or tests that the Tcp connection is open. Any text given is echoed back in a Test Response
+entrypoint typedef struct _TestRequestMessage {
+  UINT8 test_request_text[20];  // bytes 0 to 19
+  UINT8 etx;                    // byte 20
+} TestRequestMessage;
+

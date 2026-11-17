@@ -1,0 +1,135 @@
+// Japan Exchange Group Market By Order
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out NseEquities_MarketByOrder_v1_1_Udp.3d
+//
+// What this definition does not state, and the model does:
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Packet Header: 26 bytes -------------------------------------------------
+
+// Jpx Flex 26 byte packet header
+entrypoint typedef struct _PacketHeader {
+  UINT8 multicast_group_number;    // byte 0
+  UINT8 number_of_system_reboots;  // byte 1
+  UINT32BE sequence_number;        // bytes 2 to 5
+  UINT8 issue_code[12];            // bytes 6 to 17
+  UINT32BE update_number;          // bytes 18 to 21
+  UINT8 packet_number;             // byte 22
+  UINT8 total_number_of_packets;   // byte 23
+  UINT8 utility_flag;              // byte 24
+  UINT8 message_count;             // byte 25
+} PacketHeader;
+
+// ---- Message Header: 2 bytes -------------------------------------------------
+
+// Jpx Flex tag header carrying length prefix and message type discriminator
+entrypoint typedef struct _MessageHeader {
+  UINT8 tag_length;    // byte 0
+  UINT8 message_type;  // byte 1
+} MessageHeader;
+
+// ---- Seconds Timestamp Message: 4 bytes --------------------------------------
+
+// Provides information about the time of processing on the Trading Server to the nearest second. Always delivered at the time the information is generated, except for Reset and Communication Control. Only one tag is delivered per process and stored at the top of the first packet.
+entrypoint typedef struct _SecondsTimestampMessage {
+  UINT32BE time_seconds;  // bytes 0 to 3
+} SecondsTimestampMessage;
+
+// ---- Trading Status Message: 17 bytes ----------------------------------------
+
+// Provides information about the status of trading on a per-issue basis. Delivered when there is a change in the tag.
+entrypoint typedef struct _TradingStatusMessage {
+  UINT32BE time_microseconds;  // bytes 0 to 3
+  UINT8 market_status;         // byte 4
+  UINT8 status_flag[2];        // bytes 5 to 6
+  UINT8 short_selling_status;  // byte 7
+  UINT8 pricing_method;        // byte 8
+  UINT64BE book_center_price;  // bytes 9 to 16
+} TradingStatusMessage;
+
+// ---- Execution Summary Message: 45 bytes -------------------------------------
+
+// Provides summary information about execution. Delivered when an execution occurs.
+entrypoint typedef struct _ExecutionSummaryMessage {
+  UINT32BE time_microseconds;   // bytes 0 to 3
+  UINT8 triggered_side;         // byte 4
+  UINT8 total_volume[6];        // bytes 5 to 10
+  UINT8 total_invalidation[6];  // bytes 11 to 16
+  UINT64BE last_price;          // bytes 17 to 24
+  UINT32BE match_id;            // bytes 25 to 28
+  UINT64BE best_offer;          // bytes 29 to 36
+  UINT64BE best_bid;            // bytes 37 to 44
+} ExecutionSummaryMessage;
+
+// ---- Add Order Message: 25 bytes ---------------------------------------------
+
+// Provides information about book registration. Delivered when a new order or modification order is registered.
+entrypoint typedef struct _AddOrderMessage {
+  UINT32BE time_microseconds;  // bytes 0 to 3
+  UINT32BE order_id;           // bytes 4 to 7
+  UINT8 side;                  // byte 8
+  UINT8 quantity[6];           // bytes 9 to 14
+  UINT64BE price;              // bytes 15 to 22
+  UINT8 order_condition;       // byte 23
+  UINT8 modification_flag;     // byte 24
+} AddOrderMessage;
+
+// ---- Order Executed Message: 19 bytes ----------------------------------------
+
+// Provides information about registered orders in case of Zaraba execution. Delivered when an execution occurs in Zaraba.
+entrypoint typedef struct _OrderExecutedMessage {
+  UINT32BE time_microseconds;  // bytes 0 to 3
+  UINT32BE order_id;           // bytes 4 to 7
+  UINT8 side;                  // byte 8
+  UINT8 volume[6];             // bytes 9 to 14
+  UINT32BE match_id;           // bytes 15 to 18
+} OrderExecutedMessage;
+
+// ---- Order Executed With Price Message: 28 bytes -----------------------------
+
+// Provides information about registered orders in case of Itayose execution. Delivered when an execution occurs by the Itayose method or while an SQ or STQ is displayed.
+entrypoint typedef struct _OrderExecutedWithPriceMessage {
+  UINT32BE time_microseconds;    // bytes 0 to 3
+  UINT32BE order_id;             // bytes 4 to 7
+  UINT8 side;                    // byte 8
+  UINT8 volume[6];               // bytes 9 to 14
+  UINT32BE match_id;             // bytes 15 to 18
+  UINT64BE execution_price;      // bytes 19 to 26
+  UINT8 adopted_pricing_method;  // byte 27
+} OrderExecutedWithPriceMessage;
+
+// ---- Order Delete Message: 10 bytes ------------------------------------------
+
+// Provides information about order deletion from the order book. Delivered when an order is deleted via a cancel order or a modification order or when a registered order expires.
+entrypoint typedef struct _OrderDeleteMessage {
+  UINT32BE time_microseconds;  // bytes 0 to 3
+  UINT32BE order_id;           // bytes 4 to 7
+  UINT8 side;                  // byte 8
+  UINT8 modification_flag;     // byte 9
+} OrderDeleteMessage;
+
+// ---- Reset Message: 1 byte ---------------------------------------------------
+
+// A tag requesting the resetting (i.e. cancellation) of all distributed information. When the user receives this tag, the user must clear all valid A tags.
+entrypoint typedef struct _ResetMessage {
+  UINT8 reset_start_end_flag;  // byte 0
+} ResetMessage;
+
+// ---- Communication Control Message: 2 bytes ----------------------------------
+
+// Provides information about communication control. Delivered when communication starts and ends, and in between at minute intervals.
+entrypoint typedef struct _CommunicationControlMessage {
+  UINT8 test_mode_flag;                // byte 0
+  UINT8 communication_start_end_flag;  // byte 1
+} CommunicationControlMessage;
+

@@ -1,0 +1,84 @@
+// New York Stock Exchange Depth Feed Request
+//
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+//
+// Verify and write the validators: everparse.sh --odir out NyseEquities_DepthFeedRequest_v1_7_Client.3d
+//
+// What this definition does not state, and the model does:
+// - a Reassemble rule
+// - a run counted by a field
+//
+// License: MIT No Attribution
+
+// ---- Send Time: 8 bytes ------------------------------------------------------
+
+// The time when this packet was sent on the request channel
+entrypoint typedef struct _SendTime {
+  UINT32 seconds;      // bytes 0 to 3
+  UINT32 nanoseconds;  // bytes 4 to 7
+} SendTime;
+
+// ---- Packet Header: 16 bytes -------------------------------------------------
+
+// Pillar common client tcp packet header
+entrypoint typedef struct _PacketHeader {
+  UINT16 pkt_size;      // bytes 0 to 1
+  UINT8 delivery_flag;  // byte 2
+  UINT8 number_msgs;    // byte 3
+  UINT32 seq_num;       // bytes 4 to 7
+  SendTime send_time;   // bytes 8 to 15
+} PacketHeader;
+
+// ---- Message Header: 4 bytes -------------------------------------------------
+
+// Pillar message header
+entrypoint typedef struct _MessageHeader {
+  UINT16 message_size;  // bytes 0 to 1
+  UINT16 message_type;  // bytes 2 to 3
+} MessageHeader;
+
+// ---- Retransmission Request Message: 20 bytes --------------------------------
+
+// Clients who have experienced a sequence number gap and need a retransmission of the missed messages should send a Retransmission Request message via TCP to the Request Controller.
+entrypoint typedef struct _RetransmissionRequestMessage {
+  UINT32 begin_seq_num;  // bytes 0 to 3
+  UINT32 end_seq_num;    // bytes 4 to 7
+  UINT8 source_id[10];   // bytes 8 to 17
+  UINT8 product_id;      // byte 18
+  UINT8 channel_id;      // byte 19
+} RetransmissionRequestMessage;
+
+// ---- Heartbeat Response Message: 10 bytes ------------------------------------
+
+// Clients who remain connected to the Retransmission Server intraday must respond to a Heartbeat with a Heartbeat Response message within 5 seconds. If no timely client response is received, the connection will be closed.
+entrypoint typedef struct _HeartbeatResponseMessage {
+  UINT8 source_id[10];  // bytes 0 to 9
+} HeartbeatResponseMessage;
+
+// ---- Symbol Index Mapping Request Message: 17 bytes --------------------------
+
+// This message is sent by clients via TCP/IP requesting the Symbol Index Mapping messages for one or all symbols in a specified channel.
+entrypoint typedef struct _SymbolIndexMappingRequestMessage {
+  UINT32 symbol_index;      // bytes 0 to 3
+  UINT8 source_id[10];      // bytes 4 to 13
+  UINT8 product_id;         // byte 14
+  UINT8 channel_id;         // byte 15
+  UINT8 retransmit_method;  // byte 16
+} SymbolIndexMappingRequestMessage;
+
+// ---- Refresh Request Message: 16 bytes ---------------------------------------
+
+// Clients who have experienced a failure and need a refresh of the state of one or all symbols in a specific channel should send a Refresh Request message via TCP to the Request Controller.
+entrypoint typedef struct _RefreshRequestMessage {
+  UINT32 symbol_index;  // bytes 0 to 3
+  UINT8 source_id[10];  // bytes 4 to 13
+  UINT8 product_id;     // byte 14
+  UINT8 channel_id;     // byte 15
+} RefreshRequestMessage;
+
