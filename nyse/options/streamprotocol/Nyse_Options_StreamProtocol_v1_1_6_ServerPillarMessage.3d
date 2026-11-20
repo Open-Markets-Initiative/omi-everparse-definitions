@@ -1,50 +1,138 @@
-// New York Stock Exchange Stream Protocol
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nyse Options StreamProtocol PillarStream v1.1.6
 //
+// Protocol:
+//   Organization: New York Stock Exchange
+//   Protocol: Stream Protocol
+//   Encoding: Pillar Stream Protocol
+//   Version: 1.1.6
+//   Date: 8/26/2019
+//   Specification: NYSE_Pillar_Stream_Protocol_Specification.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ServerPillarMessage, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out Nyse_Options_StreamProtocol_v1_1_6_ServerPillarMessage.3d
-//
-// What this definition does not state, and the model does:
-// - a Reassemble rule
-// - a length prefix framing what follows
-//
-// License: MIT No Attribution
 
-// ---- Msg Header: 4 bytes -----------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Pillar Stream Message Header
-entrypoint typedef struct _MsgHeader {
-  UINT16 msg_type;    // bytes 0 to 1
-  UINT16 msg_length;  // bytes 2 to 3
-} MsgHeader;
+// Msg Type: 2 byte code
+#define MSG_TYPE_LOGIN 0x0201           // Login
+#define MSG_TYPE_LOGIN_RESPONSE 0x0202  // Login Response
+#define MSG_TYPE_STREAM_AVAIL 0x0203    // Stream Avail
+#define MSG_TYPE_HEARTBEAT 0x0204       // Heartbeat
+#define MSG_TYPE_OPEN 0x0205            // Open
+#define MSG_TYPE_OPEN_RESPONSE 0x0206   // Open Response
+#define MSG_TYPE_CLOSE 0x0207           // Close
+#define MSG_TYPE_CLOSE_RESPONSE 0x0208  // Close Response
+#define MSG_TYPE_SEQ_MSG 0x0905         // Seq Msg
 
-// ---- Stream Id: 8 bytes ------------------------------------------------------
+// Status: one byte code
+#define STATUS_REQUEST_PROCESSED_SUCCESSFULLY 0x00  // Request Processed Successfully
+#define STATUS_NOT_LOGGED_IN 0x12                   // Not Logged In
+
+// ---- Types -------------------------------------------------------------------
+
+// Pillar Stream Login Response Message Branch
+typedef struct _LoginResponse {
+  UINT8 username[16];  // bytes 0 to 15
+  UINT8 status;        // byte 16
+} LoginResponse;
 
 // Pillar Stream Protocol Stream Identifier
-entrypoint typedef struct _StreamId {
+typedef struct _StreamId {
   UINT32 sess;  // bytes 0 to 3
   UINT32 user;  // bytes 4 to 7
 } StreamId;
 
-// ---- Seq Msg Id: 16 bytes ----------------------------------------------------
+// The message contains stream ID and sequence of next message on stream
+typedef struct _StreamAvail {
+  StreamId stream_id;  // bytes 0 to 7
+  UINT64 next_seq;     // bytes 8 to 15
+  UINT8 access;        // byte 16
+} StreamAvail;
+
+// Heartbeat must be sent once a second
+typedef struct _Heartbeat {
+  unit empty;
+} Heartbeat;
+
+// Response to Open
+typedef struct _OpenResponse {
+  StreamId stream_id;  // bytes 0 to 7
+  UINT8 status;        // byte 8
+  UINT8 access;        // byte 9
+} OpenResponse;
+
+// Response to Close Message
+typedef struct _CloseResponse {
+  StreamId stream_id;  // bytes 0 to 7
+  UINT8 status;        // byte 8
+} CloseResponse;
 
 // Pillar Stream Sequenced Message Identifier
-entrypoint typedef struct _SeqMsgId {
+typedef struct _SeqMsgId {
   StreamId stream_id;  // bytes 0 to 7
   UINT64 seq;          // bytes 8 to 15
 } SeqMsgId;
 
-// ---- Seq Msg Header: 4 bytes -------------------------------------------------
+// Used to transmit a stream message
+typedef struct _ServerSeqMsg {
+  SeqMsgId seq_msg_id;                                              // bytes 0 to 15
+  UINT32 reserved_4;                                                // bytes 16 to 19
+  UINT64 timestamp;                                                 // bytes 20 to 27
+  UINT16 seq_msg_type;                                              // bytes 28 to 29
+  UINT16 seq_msg_length { seq_msg_length >= 4 };                    // bytes 30 to 31
+  UINT8 server_sequenced_message[(((UINT32) seq_msg_length) - 4)];
+} ServerSeqMsg;
 
-// Pillar Stream Sequenced Message Header
-entrypoint typedef struct _SeqMsgHeader {
-  UINT16 seq_msg_type;    // bytes 0 to 1
-  UINT16 seq_msg_length;  // bytes 2 to 3
-} SeqMsgHeader;
+// Branch
+casetype _ServerMessage (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x0202: LoginResponse login_response;
+    case 0x0203: StreamAvail stream_avail;
+    case 0x0204: Heartbeat heartbeat;
+    case 0x0206: OpenResponse open_response;
+    case 0x0208: CloseResponse close_response;
+    case 0x0905: ServerSeqMsg server_seq_msg;
+    default: UINT8 unknown[available];
+  }
+} ServerMessage;
+
+// ---- Packet: ServerPillarMessage ---------------------------------------------
+
+// Pillar Stream message sent by the exchange
+entrypoint typedef struct _ServerPillarMessage (UINT32 available) where (available >= 4) {
+  UINT16 msg_type;                                                                                           // bytes 0 to 1
+  UINT16 msg_length;                                                                                         // bytes 2 to 3
+  ServerMessage(msg_type, (available - 4)) server_message[:byte-size-single-element-array (available - 4)];
+} ServerPillarMessage;
 

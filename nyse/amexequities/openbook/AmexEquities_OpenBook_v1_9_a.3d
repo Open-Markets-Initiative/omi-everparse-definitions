@@ -1,49 +1,110 @@
-// New York Stock Exchange Open Book
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nyse AmexEquities OpenBook Xdp v1.9.a
 //
+// Protocol:
+//   Organization: New York Stock Exchange
+//   Protocol: Open Book
+//   Encoding: Exchange Data Publisher
+//   Version: 1.9.a
+//   Date: 03/24/2014
+//   Specification: XDP_Depth_of_Book_Client_Spec.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out AmexEquities_OpenBook_v1_9_a.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-//
-// License: MIT No Attribution
 
-// ---- Send Time: 8 bytes ------------------------------------------------------
+// ---- Values ------------------------------------------------------------------
+
+// Delivery Flag: one byte code
+#define DELIVERY_FLAG_HEARTBEAT 0x01                        // Heartbeat
+#define DELIVERY_FLAG_XDP_FAILOVER 0x0A                     // Xdp Failover
+#define DELIVERY_FLAG_ORIGINAL_MESSAGE 0x0B                 // Original Message
+#define DELIVERY_FLAG_SEQUENCE_NUMBER_RESET_MESSAGE 0x0C    // Sequence Number Reset Message
+#define DELIVERY_FLAG_ONE_RETRANSMISSION_PACKET 0x0D        // One Retransmission Packet
+#define DELIVERY_FLAG_RETRANSMISSION_SEQUENCE_MESSAGE 0x0F  // Retransmission Sequence Message
+#define DELIVERY_FLAG_ONE_REFRESH_PACKET 0x11               // One Refresh Packet
+#define DELIVERY_FLAG_REFRESH_SEQUENCE_START 0x12           // Refresh Sequence Start
+#define DELIVERY_FLAG_REFRESH_SEQUENCE_MESSAGE 0x13         // Refresh Sequence Message
+#define DELIVERY_FLAG_REFRESH_SEQUENCE_END 0x14             // Refresh Sequence End
+#define DELIVERY_FLAG_MESSAGE_UNAVAILABLE 0x15              // Message Unavailable
+
+// Message Type: 2 byte code
+#define MESSAGE_TYPE_ADD_ORDER_MESSAGE 0x0064                     // Add Order Message
+#define MESSAGE_TYPE_ATTRIBUTED_ADD_ORDER_MESSAGE 0x006B          // Attributed Add Order Message
+#define MESSAGE_TYPE_MODIFY_ORDER_MESSAGE 0x0065                  // Modify Order Message
+#define MESSAGE_TYPE_DELETE_ORDER_MESSAGE 0x0066                  // Delete Order Message
+#define MESSAGE_TYPE_EXECUTION_MESSAGE 0x0067                     // Execution Message
+#define MESSAGE_TYPE_ADD_ORDER_REFRESH_MESSAGE 0x006A             // Add Order Refresh Message
+#define MESSAGE_TYPE_ATTRIBUTED_ADD_ORDER_REFRESH_MESSAGE 0x006C  // Attributed Add Order Refresh Message
+#define MESSAGE_TYPE_IMBALANCE_MESSAGE 0x0069                     // Imbalance Message
+
+// Side: one byte code
+#define SIDE_BUY 0x42   // Buy
+#define SIDE_SELL 0x53  // Sell
+
+// Order Idgtc Indicator: one byte code
+#define ORDER_IDGTC_INDICATOR_DAY_ORDER 0x00  // Day Order
+#define ORDER_IDGTC_INDICATOR_GTC_ORDER 0x01  // Gtc Order
+
+// Trade Session: one byte code
+#define TRADE_SESSION_OK_FOR_MORNING_HOURS 0x01          // Ok For Morning Hours
+#define TRADE_SESSION_OK_FOR_NATIONAL_HOURS_CORE 0x02    // Ok For National Hours Core
+#define TRADE_SESSION_OK_FOR_MORNING_AND_CORE 0x03       // Ok For Morning And Core
+#define TRADE_SESSION_OK_FOR_LATE_HOURS 0x04             // Ok For Late Hours
+#define TRADE_SESSION_OK_FOR_CORE_AND_LATE 0x06          // Ok For Core And Late
+#define TRADE_SESSION_OK_FOR_MORNING_CORE_AND_LATE 0x07  // Ok For Morning Core And Late
+
+// Auction Type: one byte code
+#define AUCTION_TYPE_OPEN_4_AM_ARCA_ONLY 0x4F   // Open 4 Am Arca Only
+#define AUCTION_TYPE_MARKET_930_AM 0x4D         // Market 930 Am
+#define AUCTION_TYPE_HALT 0x48                  // Halt
+#define AUCTION_TYPE_CLOSING 0x43               // Closing
+#define AUCTION_TYPE_REGULATORY_IMBALANCE 0x52  // Regulatory Imbalance
+
+// Imbalance Side: one byte code
+#define IMBALANCE_SIDE_BUY 0x42           // Buy
+#define IMBALANCE_SIDE_SELL 0x53          // Sell
+#define IMBALANCE_SIDE_NO_IMBALANCE 0x20  // No Imbalance
+
+// ---- Types -------------------------------------------------------------------
 
 // The time when this packet was published to the multicast channel
-entrypoint typedef struct _SendTime {
+typedef struct _SendTime {
   UINT32 seconds;      // bytes 0 to 3
   UINT32 nanoseconds;  // bytes 4 to 7
 } SendTime;
 
-// ---- Packet Header: 16 bytes -------------------------------------------------
-
-entrypoint typedef struct _PacketHeader {
-  UINT16 packet_size;      // bytes 0 to 1
-  UINT8 delivery_flag;     // byte 2
-  UINT8 message_count;     // byte 3
-  UINT32 sequence_number;  // bytes 4 to 7
-  SendTime send_time;      // bytes 8 to 15
-} PacketHeader;
-
-// ---- Message Header: 4 bytes -------------------------------------------------
-
-entrypoint typedef struct _MessageHeader {
-  UINT16 message_size;  // bytes 0 to 1
-  UINT16 message_type;  // bytes 2 to 3
-} MessageHeader;
-
-// ---- Add Order Message: 27 bytes ---------------------------------------------
-
 // Order Book Add Order message. Size of the message: 31 bytes (NYSE, NYSE MKT and NYSE Arca).
-entrypoint typedef struct _AddOrderMessage {
+typedef struct _AddOrderMessage {
   UINT32 source_time_ns;        // bytes 0 to 3
   UINT32 symbol_index;          // bytes 4 to 7
   UINT32 symbol_seq_num;        // bytes 8 to 11
@@ -55,10 +116,8 @@ entrypoint typedef struct _AddOrderMessage {
   UINT8 trade_session;          // byte 26
 } AddOrderMessage;
 
-// ---- Attributed Add Order Message: 32 bytes ----------------------------------
-
 // Order Book Attribution Add Order message. Size of the message: NYSE 31 bytes, NYSE MKT 31 bytes, NYSE Arca 36 bytes.
-entrypoint typedef struct _AttributedAddOrderMessage {
+typedef struct _AttributedAddOrderMessage {
   UINT32 source_time_ns;        // bytes 0 to 3
   UINT32 symbol_index;          // bytes 4 to 7
   UINT32 symbol_seq_num;        // bytes 8 to 11
@@ -71,10 +130,8 @@ entrypoint typedef struct _AttributedAddOrderMessage {
   UINT8 firm_id[5];             // bytes 27 to 31
 } AttributedAddOrderMessage;
 
-// ---- Modify Order Message: 27 bytes ------------------------------------------
-
 // Sent when an order in the Order Book is modified: the price or the size of the order changes, or the order is routed to an away market with some shares remaining in the Order Book. The Order ID refers to the original order sent in the add order message. Size of the message: 31 bytes (NYSE, NYSE MKT and NYSE Arca).
-entrypoint typedef struct _ModifyOrderMessage {
+typedef struct _ModifyOrderMessage {
   UINT32 source_time_ns;        // bytes 0 to 3
   UINT32 symbol_index;          // bytes 4 to 7
   UINT32 symbol_seq_num;        // bytes 8 to 11
@@ -86,10 +143,8 @@ entrypoint typedef struct _ModifyOrderMessage {
   UINT8 reason_code;            // byte 26
 } ModifyOrderMessage;
 
-// ---- Delete Order Message: 19 bytes ------------------------------------------
-
 // Sent when an order is taken off of the order book: the order is cancelled, expires, or is routed to an away market. Size of the message: 23 bytes (NYSE, NYSE MKT and NYSE Arca).
-entrypoint typedef struct _DeleteOrderMessage {
+typedef struct _DeleteOrderMessage {
   UINT32 source_time_ns;        // bytes 0 to 3
   UINT32 symbol_index;          // bytes 4 to 7
   UINT32 symbol_seq_num;        // bytes 8 to 11
@@ -99,10 +154,8 @@ entrypoint typedef struct _DeleteOrderMessage {
   UINT8 reason_code;            // byte 18
 } DeleteOrderMessage;
 
-// ---- Execution Message: 30 bytes ---------------------------------------------
-
 // Order Book Execution message. With reason codes set to zero, a partial fill is followed by a modify message and a full fill by a delete message for the executed OrderID; with reason codes in use, only the execution message is sent, with reason code 7 (reduce the order's volume) or 3 (remove the order). Size of the message: 34 bytes (NYSE, NYSE MKT and NYSE Arca).
-entrypoint typedef struct _ExecutionMessage {
+typedef struct _ExecutionMessage {
   UINT32 source_time_ns;        // bytes 0 to 3
   UINT32 symbol_index;          // bytes 4 to 7
   UINT32 symbol_seq_num;        // bytes 8 to 11
@@ -114,10 +167,8 @@ entrypoint typedef struct _ExecutionMessage {
   UINT32 trade_id;              // bytes 26 to 29
 } ExecutionMessage;
 
-// ---- Add Order Refresh Message: 31 bytes -------------------------------------
-
 // Sent only during a refresh or after a symbol clear which will result in a book refresh. Size of the message: 35 bytes (NYSE, NYSE MKT and NYSE Arca).
-entrypoint typedef struct _AddOrderRefreshMessage {
+typedef struct _AddOrderRefreshMessage {
   UINT32 source_time;           // bytes 0 to 3
   UINT32 source_time_ns;        // bytes 4 to 7
   UINT32 symbol_index;          // bytes 8 to 11
@@ -130,10 +181,8 @@ entrypoint typedef struct _AddOrderRefreshMessage {
   UINT8 trade_session;          // byte 30
 } AddOrderRefreshMessage;
 
-// ---- Attributed Add Order Refresh Message: 36 bytes --------------------------
-
 // Sent by NYSE Arca only during a refresh or after a symbol clear which will result in a book refresh. Size of the message: NYSE 35 bytes, NYSE MKT 35 bytes, NYSE Arca 40 bytes.
-entrypoint typedef struct _AttributedAddOrderRefreshMessage {
+typedef struct _AttributedAddOrderRefreshMessage {
   UINT32 source_time;           // bytes 0 to 3
   UINT32 source_time_ns;        // bytes 4 to 7
   UINT32 symbol_index;          // bytes 8 to 11
@@ -147,10 +196,8 @@ entrypoint typedef struct _AttributedAddOrderRefreshMessage {
   UINT8 firm_id[5];             // bytes 31 to 35
 } AttributedAddOrderRefreshMessage;
 
-// ---- Imbalance Message: 48 bytes ---------------------------------------------
-
 // Imbalance message. Size of the message: 52 bytes (NYSE, NYSE MKT and NYSE Arca).
-entrypoint typedef struct _ImbalanceMessage {
+typedef struct _ImbalanceMessage {
   UINT32 source_time;                     // bytes 0 to 3
   UINT32 source_time_ns;                  // bytes 4 to 7
   UINT32 symbol_index;                    // bytes 8 to 11
@@ -166,4 +213,40 @@ entrypoint typedef struct _ImbalanceMessage {
   UINT32 closing_only_clearing_price;     // bytes 40 to 43
   UINT32 ssr_filing_price;                // bytes 44 to 47
 } ImbalanceMessage;
+
+// Branch
+casetype _Payload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x0064: AddOrderMessage add_order_message;
+    case 0x006B: AttributedAddOrderMessage attributed_add_order_message;
+    case 0x0065: ModifyOrderMessage modify_order_message;
+    case 0x0066: DeleteOrderMessage delete_order_message;
+    case 0x0067: ExecutionMessage execution_message;
+    case 0x006A: AddOrderRefreshMessage add_order_refresh_message;
+    case 0x006C: AttributedAddOrderRefreshMessage attributed_add_order_refresh_message;
+    case 0x0069: ImbalanceMessage imbalance_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16 message_size { message_size >= 4 };                                                                                                                       // bytes 0 to 1
+  UINT16 message_type;                                                                                                                                             // bytes 2 to 3
+  Payload(message_type, (((UINT32) message_size) - 4)) payload[:byte-size-single-element-array (((UINT32) message_size) - 4)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Xdp Udp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 16) {
+  UINT16 packet_size;                                                                                                       // bytes 0 to 1
+  UINT8 delivery_flag;                                                                                                      // byte 2
+  UINT8 message_count;                                                                                                      // byte 3
+  UINT32 sequence_number;                                                                                                   // bytes 4 to 7
+  SendTime send_time;                                                                                                       // bytes 8 to 15
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size (available - 16)];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} Packet;
 

@@ -1,50 +1,101 @@
-// CIX Trading Inc. CIX Market Data Feed
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: CixAts MarketDataFeed Aspen v1.4
 //
+// Protocol:
+//   Organization: CIX Trading Inc.
+//   Protocol: CIX Market Data Feed
+//   Encoding: Aspen
+//   Version: 1.4
+//   Date: 4/9/2026
+//   Specification: Market Data Feed Specification-1.4.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out CixAts_CixAspen_MarketDataFeed_v1_4.3d
-//
-// What this definition does not state, and the model does:
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 20 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-entrypoint typedef struct _PacketHeader {
-  UINT8 market_day_identifier[9];  // bytes 0 to 8
-  UINT8 feed_identifier;           // byte 9
-  UINT64 sequence;                 // bytes 10 to 17
-  UINT16 count;                    // bytes 18 to 19
-} PacketHeader;
+// Feed Identifier: one byte code
+#define FEED_IDENTIFIER_ASPEN 0x41           // Aspen
+#define FEED_IDENTIFIER_ASPEN_VERT 0x56      // Aspen Vert
+#define FEED_IDENTIFIER_MIDPOINT 0x4D        // Midpoint
+#define FEED_IDENTIFIER_ASPEN_UAT 0x42       // Aspen Uat
+#define FEED_IDENTIFIER_ASPEN_VERT_UAT 0x57  // Aspen Vert Uat
+#define FEED_IDENTIFIER_MIDPOINT_UAT 0x4E    // Midpoint Uat
 
-// ---- Message Header: 3 bytes -------------------------------------------------
+// Message Type: one byte code
+#define MESSAGE_TYPE_MARKET_EVENT_MESSAGE 0x41          // Market Event Message
+#define MESSAGE_TYPE_SYMBOL_INFORMATION_MESSAGE 0x42    // Symbol Information Message
+#define MESSAGE_TYPE_SYMBOL_STATE_MESSAGE 0x43          // Symbol State Message
+#define MESSAGE_TYPE_NEW_ORDER_ADD_MESSAGE 0x44         // New Order Add Message
+#define MESSAGE_TYPE_ORDER_PARTIAL_CANCEL_MESSAGE 0x46  // Order Partial Cancel Message
+#define MESSAGE_TYPE_ORDER_CANCEL_ALL_MESSAGE 0x47      // Order Cancel All Message
+#define MESSAGE_TYPE_ORDER_EXECUTED_MESSAGE 0x4A        // Order Executed Message
+#define MESSAGE_TYPE_TRADE_MESSAGE 0x4B                 // Trade Message
+#define MESSAGE_TYPE_TRADE_CANCEL_MESSAGE 0x4C          // Trade Cancel Message
+#define MESSAGE_TYPE_TRADE_CORRECT_MESSAGE 0x4D         // Trade Correct Message
 
-// Length of the message
-entrypoint typedef struct _MessageHeader {
-  UINT16 length;       // bytes 0 to 1
-  UINT8 message_type;  // byte 2
-} MessageHeader;
+// Event: one byte code
+#define EVENT_START_OF_SESSION 0x4F           // Start Of Session
+#define EVENT_MARKET_ACCEPTING_ORDERS 0x53    // Market Accepting Orders
+#define EVENT_MARKET_OPEN_FOR_TRADING 0x51    // Market Open For Trading
+#define EVENT_MARKET_CLOSED_FOR_TRADING 0x45  // Market Closed For Trading
+#define EVENT_END_OF_SESSION 0x43             // End Of Session
 
-// ---- Market Event Message: 11 bytes ------------------------------------------
+// Listing Market: one byte code
+#define LISTING_MARKET_TSX 0x54      // Tsx
+#define LISTING_MARKET_VENTURE 0x56  // Venture
+#define LISTING_MARKET_CSE 0x43      // Cse
+#define LISTING_MARKET_NEO 0x4E      // Neo
+
+// State: one byte code
+#define STATE_HALTED 0x48   // Halted
+#define STATE_TRADING 0x54  // Trading
+
+// Side: one byte code
+#define SIDE_BUY 0x42   // Buy
+#define SIDE_SELL 0x53  // Sell
+
+// ---- Types -------------------------------------------------------------------
 
 // Transitions in the overall session state
-entrypoint typedef struct _MarketEventMessage {
+typedef struct _MarketEventMessage {
   UINT8 reserved_2[2];  // bytes 0 to 1
   UINT64 timestamp;     // bytes 2 to 9
   UINT8 event;          // byte 10
 } MarketEventMessage;
 
-// ---- Symbol Information Message: 26 bytes ------------------------------------
-
 // Reference data for each symbol that may be traded
-entrypoint typedef struct _SymbolInformationMessage {
+typedef struct _SymbolInformationMessage {
   UINT64 timestamp;       // bytes 0 to 7
   UINT16 symbol_id;       // bytes 8 to 9
   UINT8 symbol[11];       // bytes 10 to 20
@@ -52,10 +103,8 @@ entrypoint typedef struct _SymbolInformationMessage {
   UINT32 board_lot_size;  // bytes 22 to 25
 } SymbolInformationMessage;
 
-// ---- Symbol State Message: 27 bytes ------------------------------------------
-
 // Individual symbol trading state (halts)
-entrypoint typedef struct _SymbolStateMessage {
+typedef struct _SymbolStateMessage {
   UINT64 timestamp;  // bytes 0 to 7
   UINT16 symbol_id;  // bytes 8 to 9
   UINT8 symbol[11];  // bytes 10 to 20
@@ -64,10 +113,8 @@ entrypoint typedef struct _SymbolStateMessage {
   UINT8 info[4];     // bytes 23 to 26
 } SymbolStateMessage;
 
-// ---- New Order Add Message: 50 bytes -----------------------------------------
-
 // A new resting order added to the book
-entrypoint typedef struct _NewOrderAddMessage {
+typedef struct _NewOrderAddMessage {
   UINT64 timestamp;  // bytes 0 to 7
   UINT16 symbol_id;  // bytes 8 to 9
   UINT64 order_id;   // bytes 10 to 17
@@ -79,27 +126,21 @@ entrypoint typedef struct _NewOrderAddMessage {
   UINT8 reserved_1;  // byte 49
 } NewOrderAddMessage;
 
-// ---- Order Partial Cancel Message: 24 bytes ----------------------------------
-
 // Part of a resting order is canceled
-entrypoint typedef struct _OrderPartialCancelMessage {
+typedef struct _OrderPartialCancelMessage {
   UINT64 timestamp;          // bytes 0 to 7
   UINT64 order_id;           // bytes 8 to 15
   UINT64 quantity_canceled;  // bytes 16 to 23
 } OrderPartialCancelMessage;
 
-// ---- Order Cancel All Message: 16 bytes --------------------------------------
-
 // Sent when the order is canceled in its entirety
-entrypoint typedef struct _OrderCancelAllMessage {
+typedef struct _OrderCancelAllMessage {
   UINT64 timestamp;  // bytes 0 to 7
   UINT64 order_id;   // bytes 8 to 15
 } OrderCancelAllMessage;
 
-// ---- Order Executed Message: 47 bytes ----------------------------------------
-
 // Sent when an order is executed
-entrypoint typedef struct _OrderExecutedMessage {
+typedef struct _OrderExecutedMessage {
   UINT64 timestamp;        // bytes 0 to 7
   UINT64 order_id;         // bytes 8 to 15
   UINT64 quantity;         // bytes 16 to 23
@@ -110,10 +151,8 @@ entrypoint typedef struct _OrderExecutedMessage {
   UINT8 contra_broker[3];  // bytes 44 to 46
 } OrderExecutedMessage;
 
-// ---- Trade Message: 60 bytes -------------------------------------------------
-
 // Sent when a hidden order is executed
-entrypoint typedef struct _TradeMessage {
+typedef struct _TradeMessage {
   UINT16 symbol_id;        // bytes 0 to 1
   UINT64 timestamp;        // bytes 2 to 9
   UINT64 reserved_8;       // bytes 10 to 17
@@ -126,10 +165,8 @@ entrypoint typedef struct _TradeMessage {
   UINT8 contra_broker[3];  // bytes 57 to 59
 } TradeMessage;
 
-// ---- Trade Cancel Message: 60 bytes ------------------------------------------
-
 // Sent whenever an execution on CIX ATS is cancelled
-entrypoint typedef struct _TradeCancelMessage {
+typedef struct _TradeCancelMessage {
   UINT16 symbol_id;        // bytes 0 to 1
   UINT64 timestamp;        // bytes 2 to 9
   UINT64 reserved_8;       // bytes 10 to 17
@@ -142,10 +179,8 @@ entrypoint typedef struct _TradeCancelMessage {
   UINT8 contra_broker[3];  // bytes 57 to 59
 } TradeCancelMessage;
 
-// ---- Trade Correct Message: 84 bytes -----------------------------------------
-
 // Sent whenever an execution on CIX ATS is amended
-entrypoint typedef struct _TradeCorrectMessage {
+typedef struct _TradeCorrectMessage {
   UINT16 symbol_id;                 // bytes 0 to 1
   UINT64 timestamp;                 // bytes 2 to 9
   UINT64 reserved_8;                // bytes 10 to 17
@@ -160,4 +195,41 @@ entrypoint typedef struct _TradeCorrectMessage {
   UINT64 corrected_trade_price;     // bytes 68 to 75, signed, read here as unsigned
   UINT64 corrected_trade_quantity;  // bytes 76 to 83
 } TradeCorrectMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x41: MarketEventMessage market_event_message;
+    case 0x42: SymbolInformationMessage symbol_information_message;
+    case 0x43: SymbolStateMessage symbol_state_message;
+    case 0x44: NewOrderAddMessage new_order_add_message;
+    case 0x46: OrderPartialCancelMessage order_partial_cancel_message;
+    case 0x47: OrderCancelAllMessage order_cancel_all_message;
+    case 0x4A: OrderExecutedMessage order_executed_message;
+    case 0x4B: TradeMessage trade_message;
+    case 0x4C: TradeCancelMessage trade_cancel_message;
+    case 0x4D: TradeCorrectMessage trade_correct_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16 length { length >= 1 };                                                                                                                                   // bytes 0 to 1
+  UINT8 message_type;                                                                                                                                              // byte 2
+  Payload(message_type, (((UINT32) length) - 1)) payload[:byte-size-single-element-array (((UINT32) length) - 1)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Aspen Udp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 20) {
+  UINT8 market_day_identifier[9];                                                                                   // bytes 0 to 8
+  UINT8 feed_identifier;                                                                                            // byte 9
+  UINT64 sequence;                                                                                                  // bytes 10 to 17
+  UINT16 count;                                                                                                     // bytes 18 to 19
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size (available - 20)];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) count); };
+} Packet;
 

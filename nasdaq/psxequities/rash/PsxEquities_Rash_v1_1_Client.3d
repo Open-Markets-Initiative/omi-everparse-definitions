@@ -1,43 +1,133 @@
-// National Association of Securities Dealers Automated Quotations (Nasdaq) Rash
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nasdaq PsxEquities Rash AsciiRash v1.1
 //
+// Protocol:
+//   Organization: National Association of Securities Dealers Automated Quotations (Nasdaq)
+//   Protocol: Rash
+//   Encoding: Ascii Rash
+//   Version: 1.1
+//   Date: 03/13/2026
+//   Specification: psxrashsb.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ClientPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out PsxEquities_Rash_v1_1_Client.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a length prefix framing what follows
-//
-// License: MIT No Attribution
 
-// ---- Client Packet Header: 3 bytes -------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Packet header of a packet sent by the client
-entrypoint typedef struct _ClientPacketHeader {
-  UINT16BE packet_length;    // bytes 0 to 1
-  UINT8 client_packet_type;  // byte 2
-} ClientPacketHeader;
+// Client Packet Type: one byte code
+#define CLIENT_PACKET_TYPE_DEBUG_PACKET 0x2B             // Debug Packet
+#define CLIENT_PACKET_TYPE_LOGIN_REQUEST_PACKET 0x4C     // Login Request Packet
+#define CLIENT_PACKET_TYPE_UNSEQUENCED_DATA_PACKET 0x55  // Unsequenced Data Packet
+#define CLIENT_PACKET_TYPE_CLIENT_HEARTBEAT_PACKET 0x52  // Client Heartbeat Packet
+#define CLIENT_PACKET_TYPE_LOGOUT_REQUEST_PACKET 0x4F    // Logout Request Packet
 
-// ---- Login Request Packet: 46 bytes ------------------------------------------
+// Unsequenced Message Type: one byte code
+#define UNSEQUENCED_MESSAGE_TYPE_ENTER_ORDER_MESSAGE 0x4F                           // Enter Order Message
+#define UNSEQUENCED_MESSAGE_TYPE_ENTER_ORDER_MESSAGE_WITH_CROSS_FUNCTIONALITY 0x51  // Enter Order Message With Cross Functionality
+#define UNSEQUENCED_MESSAGE_TYPE_CANCEL_ORDER_MESSAGE 0x58                          // Cancel Order Message
+
+// Side: one byte code
+#define SIDE_BUY 0x42           // Buy
+#define SIDE_SELL 0x53          // Sell
+#define SIDE_SHORT 0x54         // Short
+#define SIDE_SHORT_EXEMPT 0x45  // Short Exempt
+
+// Display: one byte code
+#define DISPLAY_ANONYMOUS_PRICE_TO_COMPLY 0x59      // Anonymous Price To Comply
+#define DISPLAY_NON_DISPLAYED 0x4E                  // Non Displayed
+#define DISPLAY_ATTRIBUTABLE_PRICE_TO_DISPLAY 0x41  // Attributable Price To Display
+#define DISPLAY_IMBALANCE_ONLY 0x49                 // Imbalance Only
+#define DISPLAY_POST_ONLY 0x50                      // Post Only
+#define DISPLAY_MID_POINT_PEG 0x4D                  // Mid Point Peg
+#define DISPLAY_MID_POINT_PEG_POST_ONLY 0x57        // Mid Point Peg Post Only
+#define DISPLAY_DIRECT_LISTING_CAPITAL_RAISE 0x64   // Direct Listing Capital Raise
+
+// Peg Type: one byte code
+#define PEG_TYPE_MIDPOINT 0x4D  // Midpoint
+#define PEG_TYPE_NO_PEG 0x4E    // No Peg
+#define PEG_TYPE_MARKET 0x50    // Market
+#define PEG_TYPE_PRIMARY 0x52   // Primary
+
+// Peg Difference Sign: one byte code
+#define PEG_DIFFERENCE_SIGN_PLUS 0x2B   // Plus
+#define PEG_DIFFERENCE_SIGN_MINUS 0x2D  // Minus
+
+// Discretion Peg Type: one byte code
+#define DISCRETION_PEG_TYPE_MIDPOINT 0x4D  // Midpoint
+#define DISCRETION_PEG_TYPE_NO_PEG 0x4E    // No Peg
+#define DISCRETION_PEG_TYPE_MARKET 0x50    // Market
+#define DISCRETION_PEG_TYPE_PRIMARY 0x52   // Primary
+
+// Discretion Peg Difference Sign: one byte code
+#define DISCRETION_PEG_DIFFERENCE_SIGN_PLUS 0x2B   // Plus
+#define DISCRETION_PEG_DIFFERENCE_SIGN_MINUS 0x2D  // Minus
+
+// Customer Type: one byte code
+#define CUSTOMER_TYPE_RETAIL_DESIGNATED_ORDER 0x52        // Retail Designated Order
+#define CUSTOMER_TYPE_NOT_A_RETAIL_DESIGNATED_ORDER 0x4E  // Not A Retail Designated Order
+
+// Trade Now: one byte code
+#define TRADE_NOW_TRADE_NOW 0x42        // Trade Now
+#define TRADE_NOW_NOT_A_TRADE_NOW 0x4E  // Not A Trade Now
+
+// Inter Market Sweep Eligibility: one byte code
+#define INTER_MARKET_SWEEP_ELIGIBILITY_ELIGIBLE 0x59                          // Eligible
+#define INTER_MARKET_SWEEP_ELIGIBILITY_NOT_ELIGIBLE 0x4E                      // Not Eligible
+#define INTER_MARKET_SWEEP_ELIGIBILITY_TRADE_AT_INTERMARKET_SWEEP_ORDER 0x79  // Trade At Intermarket Sweep Order
+
+// Cross Type: one byte code
+#define CROSS_TYPE_OPENING_CROSS 0x4F     // Opening Cross
+#define CROSS_TYPE_CLOSING_CROSS 0x43     // Closing Cross
+#define CROSS_TYPE_INTRADAY_CROSS 0x49    // Intraday Cross
+#define CROSS_TYPE_IMMEDIATELY_LIVE 0x4E  // Immediately Live
+
+// ---- Types -------------------------------------------------------------------
+
+// Debug packets are intended to provide human readable text that may aid in debugging problems
+typedef struct _DebugPacket (UINT16 packet_length) where (packet_length >= 1) {
+  UINT8 debug_text[(((UINT32) packet_length) - 1)];
+} DebugPacket;
 
 // The SoupBinTCP client must send a Login Request Packet immediately upon establishing a new TCP/IP socket connection to the server
-entrypoint typedef struct _LoginRequestPacket {
+typedef struct _LoginRequestPacket {
   UINT8 username[6];                    // bytes 0 to 5
   UINT8 password[10];                   // bytes 6 to 15
   UINT8 requested_session[10];          // bytes 16 to 25
   UINT8 requested_sequence_number[20];  // bytes 26 to 45
 } LoginRequestPacket;
 
-// ---- Enter Order Message: 140 bytes ------------------------------------------
-
 // The Enter Order Message lets you enter a new order. Each new order must have a Token that is unique to the day and that logical RASH Port account. If you send a valid order, you should receive an Accepted Order Message.
-entrypoint typedef struct _EnterOrderMessage {
+typedef struct _EnterOrderMessage {
   UINT8 order_token_client_order_id[14];     // bytes 0 to 13
   UINT8 side;                                // byte 14
   UINT8 shares_order_qty[6];                 // bytes 15 to 20
@@ -63,10 +153,8 @@ entrypoint typedef struct _EnterOrderMessage {
   UINT8 trade_now;                           // byte 139
 } EnterOrderMessage;
 
-// ---- Enter Order Message With Cross Functionality: 142 bytes -----------------
-
 // Enters orders in much the same way as the Enter Order Message, with a few additional fields. Notably, the Cross Type Flag allows you to specify that an order begins participation in a cross.
-entrypoint typedef struct _EnterOrderMessageWithCrossFunctionality {
+typedef struct _EnterOrderMessageWithCrossFunctionality {
   UINT8 order_token_client_order_id[14];     // bytes 0 to 13
   UINT8 side;                                // byte 14
   UINT8 shares_order_qty[6];                 // bytes 15 to 20
@@ -94,11 +182,51 @@ entrypoint typedef struct _EnterOrderMessageWithCrossFunctionality {
   UINT8 trade_now;                           // byte 141
 } EnterOrderMessageWithCrossFunctionality;
 
-// ---- Cancel Order Message: 20 bytes ------------------------------------------
-
 // Requests that an order be canceled. A Shares field of zero cancels the entire balance of the order; otherwise Shares is the new intended order size.
-entrypoint typedef struct _CancelOrderMessage {
+typedef struct _CancelOrderMessage {
   UINT8 order_token_client_order_id[14];  // bytes 0 to 13
   UINT8 shares[6];                        // bytes 14 to 19
 } CancelOrderMessage;
+
+// The unsequenced (client to server) message carried by the packet, opaque bytes unless an application source dispatches it
+casetype _UnsequencedMessage (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x4F: EnterOrderMessage enter_order_message;
+    case 0x51: EnterOrderMessageWithCrossFunctionality enter_order_message_with_cross_functionality;
+    case 0x58: CancelOrderMessage cancel_order_message;
+    default: UINT8 unknown[available];
+  }
+} UnsequencedMessage;
+
+// The Unsequenced Data Packets act as an envelope to carry the actual data messages that are transferred from the client to the server
+typedef struct _UnsequencedDataPacket (UINT16 packet_length) where (packet_length >= 2) {
+  UINT8 unsequenced_message_type;                                                                                                                                    // byte 0
+  UnsequencedMessage(unsequenced_message_type, (((UINT32) packet_length) - 2)) unsequenced_message[:byte-size-single-element-array (((UINT32) packet_length) - 2)];
+} UnsequencedDataPacket;
+
+// Branch
+casetype _ClientPayload (UINT8 selector, UINT32 length, UINT16 packet_length, UINT32 available) {
+  switch (selector) {
+    case 0x2B: DebugPacket(packet_length) debug_packet;
+    case 0x4C: LoginRequestPacket login_request_packet;
+    case 0x55: UnsequencedDataPacket(packet_length) unsequenced_data_packet[:byte-size-single-element-array length];
+    case 0x52: unit client_heartbeat;
+    case 0x4F: unit logout_request;
+    default: UINT8 unknown[available];
+  }
+} ClientPayload;
+
+// Soup Bin Tcp Packet sent by the client
+typedef struct _ClientSoupBinTcpPacket {
+  UINT16BE packet_length { packet_length >= 1 };                                                                                                                                                                // bytes 0 to 1
+  UINT8 client_packet_type;                                                                                                                                                                                     // byte 2
+  ClientPayload(client_packet_type, (((UINT32) packet_length) - 1), packet_length, ((((UINT32) packet_length) + 2) - 3)) client_payload[:byte-size-single-element-array ((((UINT32) packet_length) + 2) - 3)];
+} ClientSoupBinTcpPacket;
+
+// ---- Packet: ClientPacket ----------------------------------------------------
+
+// Rash Packet sent by the client
+entrypoint typedef struct _ClientPacket (UINT32 available) {
+  ClientSoupBinTcpPacket client_soup_bin_tcp_packet[:byte-size available];
+} ClientPacket;
 

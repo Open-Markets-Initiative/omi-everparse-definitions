@@ -1,71 +1,147 @@
-// CME Group Us Treasuries
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Cme BrokerTec UsTreasury Sbe v10.1
 //
+// Protocol:
+//   Organization: CME Group
+//   Protocol: Us Treasuries
+//   Encoding: Simple Binary Encoding
+//   Version: 10.1
+//   Date: 4/13/2023
+//   Specification: btecstreammktdata_v1.xml
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, TcpPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out BrokerTec_UsTreasury_v10_1_Tcp.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - the dispatch that chooses a message by its type
-// - a block whose stated length holds more than its fields
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Technical Header: 14 bytes ----------------------------------------------
+// ---- Values ------------------------------------------------------------------
+
+// Template Id: 2 byte code
+#define TEMPLATE_ID_MD_INCREMENTAL_REFRESH_BTEC 0x0195  // Md Incremental Refresh Btec
+#define TEMPLATE_ID_ADMIN_HEARTBEAT 0x019B              // Admin Heartbeat
+
+// Md Update Action: one byte code
+#define MD_UPDATE_ACTION_NEW 0x00     // New
+#define MD_UPDATE_ACTION_UPDATE 0x01  // Update
+#define MD_UPDATE_ACTION_DELETE 0x02  // Delete
+
+// Md Entry Type: one byte code
+#define MD_ENTRY_TYPE_BID 0x30               // Bid
+#define MD_ENTRY_TYPE_OFFER 0x31             // Offer
+#define MD_ENTRY_TYPE_TRADE 0x32             // Trade
+#define MD_ENTRY_TYPE_OPEN_PRICE 0x34        // Open Price
+#define MD_ENTRY_TYPE_CLOSE_PRICE 0x35       // Close Price
+#define MD_ENTRY_TYPE_HIGH_TRADE_PRICE 0x37  // High Trade Price
+#define MD_ENTRY_TYPE_LOW_TRADE_PRICE 0x38   // Low Trade Price
+#define MD_ENTRY_TYPE_VWAP 0x39              // Vwap
+#define MD_ENTRY_TYPE_IMPLIED_BID 0x45       // Implied Bid
+#define MD_ENTRY_TYPE_IMPLIED_OFFER 0x46     // Implied Offer
+#define MD_ENTRY_TYPE_BOOK_RESET 0x4A        // Book Reset
+
+// ---- Types -------------------------------------------------------------------
 
 // Cme Technical Header
-entrypoint typedef struct _TechnicalHeader {
+typedef struct _TechnicalHeader {
   UINT16 encoding_type;            // bytes 0 to 1
   UINT32 message_sequence_number;  // bytes 2 to 5
   UINT64 tcp_sending_time;         // bytes 6 to 13
 } TechnicalHeader;
 
-// ---- Simple Binary Header: 8 bytes -------------------------------------------
-
-// Template ID and length of message root
-entrypoint typedef struct _SimpleBinaryHeader {
-  UINT16 block_length;  // bytes 0 to 1
-  UINT16 template_id;   // bytes 2 to 3
-  UINT16 schema_id;     // bytes 4 to 5
-  UINT16 version;       // bytes 6 to 7
-} SimpleBinaryHeader;
-
-// ---- Message Header: 10 bytes ------------------------------------------------
-
-// Message Size followed by the Simple Binary Header
-entrypoint typedef struct _MessageHeader {
-  UINT16 message_size;                      // bytes 0 to 1
-  SimpleBinaryHeader simple_binary_header;  // bytes 2 to 9
-} MessageHeader;
-
-// ---- Group Size: 3 bytes -----------------------------------------------------
-
-// Repeating group dimensions
-entrypoint typedef struct _GroupSize {
-  UINT16 block_length;  // bytes 0 to 1
-  UINT8 num_in_group;   // byte 2
-} GroupSize;
-
-// ---- Md Entry Px: 9 bytes ----------------------------------------------------
-
 // Number of data blocks
-entrypoint typedef struct _MdEntryPx {
+typedef struct _MdEntryPx {
   UINT64 mantissa;  // bytes 0 to 7, signed, read here as unsigned
   UINT8 exponent;   // byte 8, signed, read here as unsigned
 } MdEntryPx;
 
-// ---- Coupon Rate: 5 bytes ----------------------------------------------------
-
 // Number of data blocks
-entrypoint typedef struct _CouponRate {
+typedef struct _CouponRate {
   UINT32 mantissa_32;  // bytes 0 to 3, signed, read here as unsigned
   UINT8 exponent;      // byte 4, signed, read here as unsigned
 } CouponRate;
+
+// Number of data blocks
+typedef struct _IncrementalRefreshBtecGroup {
+  UINT8 md_update_action;        // byte 0
+  UINT8 md_entry_type;           // byte 1
+  MdEntryPx md_entry_px;         // bytes 2 to 10
+  UINT32 md_entry_size;          // bytes 11 to 14
+  UINT8 md_price_level;          // byte 15
+  UINT32 trade_volume;           // bytes 16 to 19
+  UINT8 symbol[20];              // bytes 20 to 39
+  UINT16 maturity_date;          // bytes 40 to 41
+  UINT8 security_alt_id[12];     // bytes 42 to 53
+  UINT8 security_alt_id_source;  // byte 54
+  CouponRate coupon_rate;        // bytes 55 to 59
+  UINT8 trade_condition;         // byte 60
+  UINT8 price_type;              // byte 61
+} IncrementalRefreshBtecGroup;
+
+// NoMDEntries Block
+typedef struct _IncrementalRefreshBtecGroups {
+  UINT16 block_length;                                                                                    // bytes 0 to 1
+  UINT8 num_in_group;                                                                                     // byte 2
+  IncrementalRefreshBtecGroup incremental_refresh_btec_group[:byte-size (((UINT32) num_in_group) * 62)];
+} IncrementalRefreshBtecGroups;
+
+// MDIncrementalRefreshBtec
+typedef struct _MdIncrementalRefreshBtec {
+  UINT16 trade_date;                                             // bytes 0 to 1
+  UINT64 transact_time;                                          // bytes 2 to 9
+  IncrementalRefreshBtecGroups incremental_refresh_btec_groups;
+} MdIncrementalRefreshBtec;
+
+// Branch
+casetype _Payload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x0195: MdIncrementalRefreshBtec md_incremental_refresh_btec;
+    case 0x019B: unit admin_heartbeat;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// One technical header framed Cme Sbe message
+typedef struct _TcpFrame {
+  TechnicalHeader technical_header;                                                                                                            // bytes 0 to 13
+  UINT16 message_size { message_size >= 10 };                                                                                                  // bytes 14 to 15
+  UINT16 block_length;                                                                                                                         // bytes 16 to 17
+  UINT16 template_id;                                                                                                                          // bytes 18 to 19
+  UINT16 schema_id;                                                                                                                            // bytes 20 to 21
+  UINT16 version;                                                                                                                              // bytes 22 to 23
+  Payload(template_id, ((((UINT32) message_size) + 14) - 24)) payload[:byte-size-single-element-array ((((UINT32) message_size) + 14) - 24)];
+} TcpFrame;
+
+// ---- Packet: TcpPacket -------------------------------------------------------
+
+// Cme Sbe Tcp Packet
+entrypoint typedef struct _TcpPacket (UINT32 available) {
+  TcpFrame tcp_frame[:byte-size available];
+} TcpPacket;
 

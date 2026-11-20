@@ -1,68 +1,172 @@
-// National Association of Securities Dealers Automated Quotations (Nasdaq) MRX Options Spread Top Of Market
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nasdaq MrxOptions SpreadTopOfMarket Glimpse v2.02
 //
+// Protocol:
+//   Organization: National Association of Securities Dealers Automated Quotations (Nasdaq)
+//   Protocol: MRX Options Spread Top Of Market
+//   Encoding: Glimpse
+//   Version: 2.02
+//   Date: 04/01/2024
+//   Specification: 0538-Q24_ISE_MRX_Spread_Top_of_Market_Glimpse_Feed.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ServerPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out MrxOptions_SpreadTopOfMarket_v2_02_Server.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a length prefix framing what follows
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Server Packet Header: 3 bytes -------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Packet header of a packet sent by the server
-entrypoint typedef struct _ServerPacketHeader {
-  UINT16BE packet_length;    // bytes 0 to 1
-  UINT8 server_packet_type;  // byte 2
-} ServerPacketHeader;
+// Server Packet Type: one byte code
+#define SERVER_PACKET_TYPE_DEBUG_PACKET 0x2B             // Debug Packet
+#define SERVER_PACKET_TYPE_LOGIN_ACCEPTED_PACKET 0x41    // Login Accepted Packet
+#define SERVER_PACKET_TYPE_LOGIN_REJECTED_PACKET 0x4A    // Login Rejected Packet
+#define SERVER_PACKET_TYPE_SEQUENCED_DATA_PACKET 0x53    // Sequenced Data Packet
+#define SERVER_PACKET_TYPE_SERVER_HEARTBEAT_PACKET 0x48  // Server Heartbeat Packet
+#define SERVER_PACKET_TYPE_END_OF_SESSION_PACKET 0x5A    // End Of Session Packet
 
-// ---- Login Accepted Packet: 30 bytes -----------------------------------------
+// Reject Reason Code: one byte code
+#define REJECT_REASON_CODE_NOT_AUTHORIZED 0x41         // Not Authorized
+#define REJECT_REASON_CODE_SESSION_NOT_AVAILABLE 0x53  // Session Not Available
+
+// Sequenced Message Type: one byte code
+#define SEQUENCED_MESSAGE_TYPE_SYSTEM_EVENT_MESSAGE 0x53                      // System Event Message
+#define SEQUENCED_MESSAGE_TYPE_COMPLEX_STRATEGY_DIRECTORY_MESSAGE 0x4E        // Complex Strategy Directory Message
+#define SEQUENCED_MESSAGE_TYPE_STRATEGY_TRADING_ACTION_MESSAGE 0x48           // Strategy Trading Action Message
+#define SEQUENCED_MESSAGE_TYPE_STRATEGY_BEST_BID_AND_ASK_UPDATE_MESSAGE 0x45  // Strategy Best Bid And Ask Update Message
+#define SEQUENCED_MESSAGE_TYPE_STRATEGY_BEST_BID_UPDATE_MESSAGE 0x63          // Strategy Best Bid Update Message
+#define SEQUENCED_MESSAGE_TYPE_STRATEGY_BEST_ASK_UPDATE_MESSAGE 0x64          // Strategy Best Ask Update Message
+#define SEQUENCED_MESSAGE_TYPE_SNAPSHOT_MESSAGE 0x4D                          // Snapshot Message
+
+// Event Code: one byte code
+#define EVENT_CODE_START_OF_MESSAGES 0x4F                      // Start Of Messages
+#define EVENT_CODE_START_OF_SYSTEM_HOURS 0x53                  // Start Of System Hours
+#define EVENT_CODE_START_OF_OPENING_PROCESS 0x51               // Start Of Opening Process
+#define EVENT_CODE_START_OF_NORMAL_HOURS_CLOSING_PROCESS 0x4E  // Start Of Normal Hours Closing Process
+#define EVENT_CODE_START_OF_LATE_HOURS_CLOSING_PROCESS 0x4C    // Start Of Late Hours Closing Process
+#define EVENT_CODE_END_OF_SYSTEM_HOURS 0x45                    // End Of System Hours
+#define EVENT_CODE_END_OF_MESSAGES 0x43                        // End Of Messages
+#define EVENT_CODE_END_OF_WCO_EARLY_CLOSING 0x57               // End Of Wco Early Closing
+
+// Strategy Type: one byte code
+#define STRATEGY_TYPE_VERTICAL_SPREAD 0x56   // Vertical Spread
+#define STRATEGY_TYPE_TIME_SPREAD 0x54       // Time Spread
+#define STRATEGY_TYPE_DIAGONAL_SPREAD 0x44   // Diagonal Spread
+#define STRATEGY_TYPE_STRADDLE 0x53          // Straddle
+#define STRATEGY_TYPE_STRANGLE 0x47          // Strangle
+#define STRATEGY_TYPE_COMBO 0x43             // Combo
+#define STRATEGY_TYPE_RISK_REVERSAL 0x52     // Risk Reversal
+#define STRATEGY_TYPE_RATIO_SPREAD 0x41      // Ratio Spread
+#define STRATEGY_TYPE_BOX_SPREAD 0x42        // Box Spread
+#define STRATEGY_TYPE_BUTTERFLY_SPREAD 0x46  // Butterfly Spread
+#define STRATEGY_TYPE_CUSTOM 0x55            // Custom
+
+// Option Type: one byte code
+#define OPTION_TYPE_CALL_OPTION 0x43  // Call Option
+#define OPTION_TYPE_PUT_OPTION 0x50   // Put Option
+#define OPTION_TYPE_STOCK_LEG 0x20    // Stock Leg
+
+// Side: one byte code
+#define SIDE_LEG_IS_ON_BUY_SIDE 0x42   // Leg Is On Buy Side
+#define SIDE_LEG_IS_ON_SELL_SIDE 0x53  // Leg Is On Sell Side
+
+// Current Trading State: one byte code
+#define CURRENT_TRADING_STATE_HALT_IN_EFFECT 0x48      // Halt In Effect
+#define CURRENT_TRADING_STATE_CONTINUOUS_TRADING 0x54  // Continuous Trading
+#define CURRENT_TRADING_STATE_PRE_OPEN 0x49            // Pre Open
+#define CURRENT_TRADING_STATE_OPENING_AUCTION 0x4F     // Opening Auction
+#define CURRENT_TRADING_STATE_RE_OPENING 0x52          // Re Opening
+#define CURRENT_TRADING_STATE_CLOSED 0x58              // Closed
+
+// Quote Condition: one byte code
+#define QUOTE_CONDITION_REGULAR_QUOTEAUTOX_ELIGIBLE 0x20  // Regular Quoteautox Eligible
+
+// ---- Types -------------------------------------------------------------------
+
+// Debug packets are intended to provide human readable text that may aid in debugging problems
+typedef struct _DebugPacket (UINT16 packet_length) where (packet_length >= 1) {
+  UINT8 debug_text[(((UINT32) packet_length) - 1)];
+} DebugPacket;
 
 // The SoupBinTCP server sends a Login Accepted Packet in response to receiving a valid Login Request from the client
-entrypoint typedef struct _LoginAcceptedPacket {
+typedef struct _LoginAcceptedPacket {
   UINT8 accepted_session[10];          // bytes 0 to 9
   UINT8 accepted_sequence_number[20];  // bytes 10 to 29
 } LoginAcceptedPacket;
 
-// ---- Login Rejected Packet: 1 byte -------------------------------------------
-
 // The SoupBinTCP server sends this packet in response to an invalid Login Request Packet from the client
-entrypoint typedef struct _LoginRejectedPacket {
+typedef struct _LoginRejectedPacket {
   UINT8 reject_reason_code;  // byte 0
 } LoginRejectedPacket;
 
-// ---- System Event Message: 11 bytes ------------------------------------------
-
 // The system event message type is used to signal a market or data feed handler event.
-entrypoint typedef struct _SystemEventMessage {
+typedef struct _SystemEventMessage {
   UINT16BE tracking_number;  // bytes 0 to 1
   UINT64BE timestamp;        // bytes 2 to 9
   UINT8 event_code;          // byte 10
 } SystemEventMessage;
 
-// ---- Strategy Trading Action Message: 15 bytes -------------------------------
+// Leg Information, legs repeated
+typedef struct _LegInformation {
+  UINT32BE option_id;              // bytes 0 to 3
+  UINT8 security_symbol[6];        // bytes 4 to 9
+  UINT8 expiration_year;           // byte 10
+  UINT8 expiration_month;          // byte 11
+  UINT8 expiration_day;            // byte 12
+  UINT32BE explicit_strike_price;  // bytes 13 to 16, signed, read here as unsigned
+  UINT8 option_type;               // byte 17
+  UINT8 side;                      // byte 18
+  UINT32BE leg_ratio;              // bytes 19 to 22
+} LegInformation;
+
+// A Complex Strategy Directory Message containing the strategy definition will be sent whenever a complex order is added in the system.
+typedef struct _ComplexStrategyDirectoryMessage {
+  UINT16BE tracking_number;                                                     // bytes 0 to 1
+  UINT64BE timestamp;                                                           // bytes 2 to 9
+  UINT32BE strategy_id;                                                         // bytes 10 to 13
+  UINT8 strategy_type;                                                          // byte 14
+  UINT8 underlying_symbol[13];                                                  // bytes 15 to 27
+  UINT8 number_of_legs;                                                         // byte 28
+  LegInformation leg_information[:byte-size (((UINT32) number_of_legs) * 23)];
+} ComplexStrategyDirectoryMessage;
 
 // The options system uses this administrative message to indicate the current trading status of a strategy within the options market.
-entrypoint typedef struct _StrategyTradingActionMessage {
+typedef struct _StrategyTradingActionMessage {
   UINT16BE tracking_number;     // bytes 0 to 1
   UINT64BE timestamp;           // bytes 2 to 9
   UINT32BE strategy_id;         // bytes 10 to 13
   UINT8 current_trading_state;  // byte 14
 } StrategyTradingActionMessage;
 
-// ---- Strategy Best Bid And Ask Update Message: 71 bytes ----------------------
-
 // Whenever the best bid and ask position changes on both sides, the options system will send its best bid and ask update via the data feed for the affected strategy.
-entrypoint typedef struct _StrategyBestBidAndAskUpdateMessage {
+typedef struct _StrategyBestBidAndAskUpdateMessage {
   UINT16BE tracking_number;       // bytes 0 to 1
   UINT64BE timestamp;             // bytes 2 to 9
   UINT32BE strategy_id;           // bytes 10 to 13
@@ -83,10 +187,8 @@ entrypoint typedef struct _StrategyBestBidAndAskUpdateMessage {
   UINT32BE ask_dntt_market_size;  // bytes 67 to 70
 } StrategyBestBidAndAskUpdateMessage;
 
-// ---- Strategy Best Bid Update Message: 43 bytes ------------------------------
-
 // Whenever the best bid position changes but not the other side, the options system will send its best bid update via this feed for the affected strategy.
-entrypoint typedef struct _StrategyBestBidUpdateMessage {
+typedef struct _StrategyBestBidUpdateMessage {
   UINT16BE tracking_number;   // bytes 0 to 1
   UINT64BE timestamp;         // bytes 2 to 9
   UINT32BE strategy_id;       // bytes 10 to 13
@@ -100,10 +202,8 @@ entrypoint typedef struct _StrategyBestBidUpdateMessage {
   UINT32BE dntt_market_size;  // bytes 39 to 42
 } StrategyBestBidUpdateMessage;
 
-// ---- Strategy Best Ask Update Message: 43 bytes ------------------------------
-
 // Whenever the best ask position changes but not the other side, the options system will send its best ask update via this feed for the affected strategy.
-entrypoint typedef struct _StrategyBestAskUpdateMessage {
+typedef struct _StrategyBestAskUpdateMessage {
   UINT16BE tracking_number;   // bytes 0 to 1
   UINT64BE timestamp;         // bytes 2 to 9
   UINT32BE strategy_id;       // bytes 10 to 13
@@ -117,10 +217,55 @@ entrypoint typedef struct _StrategyBestAskUpdateMessage {
   UINT32BE dntt_market_size;  // bytes 39 to 42
 } StrategyBestAskUpdateMessage;
 
-// ---- Snapshot Message: 20 bytes ----------------------------------------------
-
 // The Snapshot message reflects the Top of Market Spread Feed sequence number at the time the GLIMPSE spin was requested.
-entrypoint typedef struct _SnapshotMessage {
+typedef struct _SnapshotMessage {
   UINT8 sequence_number[20];  // bytes 0 to 19
 } SnapshotMessage;
+
+// The sequenced (server to client) message carried by the packet, opaque bytes unless an application source dispatches it
+casetype _SequencedMessage (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x53: SystemEventMessage system_event_message;
+    case 0x4E: ComplexStrategyDirectoryMessage complex_strategy_directory_message;
+    case 0x48: StrategyTradingActionMessage strategy_trading_action_message;
+    case 0x45: StrategyBestBidAndAskUpdateMessage strategy_best_bid_and_ask_update_message;
+    case 0x63: StrategyBestBidUpdateMessage strategy_best_bid_update_message;
+    case 0x64: StrategyBestAskUpdateMessage strategy_best_ask_update_message;
+    case 0x4D: SnapshotMessage snapshot_message;
+    default: UINT8 unknown[available];
+  }
+} SequencedMessage;
+
+// The Sequenced Data Packets act as an envelope to carry the actual sequenced data messages that are transferred from the server to the client. Each Sequenced Data Packet carries one message from the higher-lever protocol
+typedef struct _SequencedDataPacket (UINT16 packet_length) where (packet_length >= 2) {
+  UINT8 sequenced_message_type;                                                                                                                                // byte 0
+  SequencedMessage(sequenced_message_type, (((UINT32) packet_length) - 2)) sequenced_message[:byte-size-single-element-array (((UINT32) packet_length) - 2)];
+} SequencedDataPacket;
+
+// Branch
+casetype _ServerPayload (UINT8 selector, UINT32 length, UINT16 packet_length, UINT32 available) {
+  switch (selector) {
+    case 0x2B: DebugPacket(packet_length) debug_packet;
+    case 0x41: LoginAcceptedPacket login_accepted_packet;
+    case 0x4A: LoginRejectedPacket login_rejected_packet;
+    case 0x53: SequencedDataPacket(packet_length) sequenced_data_packet[:byte-size-single-element-array length];
+    case 0x48: unit server_heartbeat;
+    case 0x5A: unit end_of_session;
+    default: UINT8 unknown[available];
+  }
+} ServerPayload;
+
+// Soup Bin Tcp Packet sent by the server
+typedef struct _ServerSoupBinTcpPacket {
+  UINT16BE packet_length { packet_length >= 1 };                                                                                                                                                                // bytes 0 to 1
+  UINT8 server_packet_type;                                                                                                                                                                                     // byte 2
+  ServerPayload(server_packet_type, (((UINT32) packet_length) - 1), packet_length, ((((UINT32) packet_length) + 2) - 3)) server_payload[:byte-size-single-element-array ((((UINT32) packet_length) + 2) - 3)];
+} ServerSoupBinTcpPacket;
+
+// ---- Packet: ServerPacket ----------------------------------------------------
+
+// SoupBinTCP Packet sent by the server
+entrypoint typedef struct _ServerPacket (UINT32 available) {
+  ServerSoupBinTcpPacket server_soup_bin_tcp_packet[:byte-size available];
+} ServerPacket;
 

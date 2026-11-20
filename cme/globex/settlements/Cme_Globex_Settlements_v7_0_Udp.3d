@@ -1,106 +1,245 @@
-// CME Group Settlements
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Cme Globex Settlements Sbe v7.0
 //
+// Protocol:
+//   Organization: CME Group
+//   Protocol: Settlements
+//   Encoding: Simple Binary Encoding
+//   Version: 7.0
+//   Date: 12/03/2018
+//   Specification: svstreammkktdata.xml
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, UdpPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out Cme_Globex_Settlements_v7_0_Udp.3d
-//
-// What this definition does not state, and the model does:
-// - a length prefix framing what follows
-// - a block whose stated length holds more than its fields
-// - a run counted by a field
-// - a field read in bits
-//
-// License: MIT No Attribution
 
-// ---- Binary Packet Header: 12 bytes ------------------------------------------
+// ---- Values ------------------------------------------------------------------
+
+// Template Id: 2 byte code
+#define TEMPLATE_ID_MD_INCREMENTAL_REFRESH_SETTLE 0x0191    // Md Incremental Refresh Settle
+#define TEMPLATE_ID_MD_INCREMENTAL_REFRESH_VOI 0x0192       // Md Incremental Refresh Voi
+#define TEMPLATE_ID_MD_INCREMENTAL_REFRESH_HIGH_LOW 0x0193  // Md Incremental Refresh High Low
+#define TEMPLATE_ID_ADMIN_HEARTBEAT 0x0197                  // Admin Heartbeat
+
+// Md Update Action: one byte code
+#define MD_UPDATE_ACTION_NEW 0x00     // New
+#define MD_UPDATE_ACTION_CHANGE 0x01  // Change
+#define MD_UPDATE_ACTION_DELETE 0x02  // Delete
+
+// Put Or Call: one byte code
+#define PUT_OR_CALL_PUT 0x00   // Put
+#define PUT_OR_CALL_CALL 0x01  // Call
+
+// Open Close Settl Flag: one byte code
+#define OPEN_CLOSE_SETTL_FLAG_ESTIMATED 0x03        // Estimated
+#define OPEN_CLOSE_SETTL_FLAG_ACTUAL_ADJUSTED 0x04  // Actual Adjusted
+
+// Low Px Ind: one byte code
+#define LOW_PX_IND_ASK 0x41    // Ask
+#define LOW_PX_IND_BID 0x42    // Bid
+#define LOW_PX_IND_TRADE 0x54  // Trade
+
+// High Px Ind: one byte code
+#define HIGH_PX_IND_ASK 0x41    // Ask
+#define HIGH_PX_IND_BID 0x42    // Bid
+#define HIGH_PX_IND_TRADE 0x54  // Trade
+
+// ---- Types -------------------------------------------------------------------
 
 // Cme Mdp Packet Header
-entrypoint typedef struct _BinaryPacketHeader {
+typedef struct _BinaryPacketHeader {
   UINT32 packet_sequence_number;  // bytes 0 to 3
   UINT64 sending_time;            // bytes 4 to 11
 } BinaryPacketHeader;
 
-// ---- Simple Binary Header: 8 bytes -------------------------------------------
-
-// Template ID and length of message root
-entrypoint typedef struct _SimpleBinaryHeader {
-  UINT16 block_length;  // bytes 0 to 1
-  UINT16 template_id;   // bytes 2 to 3
-  UINT16 schema_id;     // bytes 4 to 5
-  UINT16 version;       // bytes 6 to 7
-} SimpleBinaryHeader;
-
-// ---- Message Header: 10 bytes ------------------------------------------------
-
-// Message Size followed by the Simple Binary Header
-entrypoint typedef struct _MessageHeader {
-  UINT16 message_size;                      // bytes 0 to 1
-  SimpleBinaryHeader simple_binary_header;  // bytes 2 to 9
-} MessageHeader;
-
-// ---- Group Size: 3 bytes -----------------------------------------------------
-
-// Repeating group dimensions
-entrypoint typedef struct _GroupSize {
-  UINT16 block_length;  // bytes 0 to 1
-  UINT8 num_in_group;   // byte 2
-} GroupSize;
-
-// ---- Maturity Month Year: 5 bytes --------------------------------------------
-
 // Number of data blocks
-entrypoint typedef struct _MaturityMonthYear {
+typedef struct _MaturityMonthYear {
   UINT16 year;  // bytes 0 to 1
   UINT8 month;  // byte 2
   UINT8 day;    // byte 3
   UINT8 week;   // byte 4
 } MaturityMonthYear;
 
-// ---- Strike Price: 9 bytes ---------------------------------------------------
-
 // Number of data blocks
-entrypoint typedef struct _StrikePrice {
+typedef struct _StrikePrice {
   UINT64 mantissa;  // bytes 0 to 7, signed, read here as unsigned
   UINT8 exponent;   // byte 8, signed, read here as unsigned
 } StrikePrice;
 
-// ---- Underlying Maturity Month Year: 5 bytes ---------------------------------
+// Number of data blocks
+typedef struct _IncrementalRefreshSettleGroup {
+  UINT8 md_update_action;                            // byte 0
+  UINT8 md_entry_type;                               // byte 1
+  UINT64 product_guid;                               // bytes 2 to 9
+  UINT8 clearing_product_code[12];                   // bytes 10 to 21
+  UINT8 security_type[6];                            // bytes 22 to 27
+  UINT8 security_exchange[8];                        // bytes 28 to 35
+  MaturityMonthYear maturity_month_year;             // bytes 36 to 40
+  UINT8 put_or_call;                                 // byte 41
+  StrikePrice strike_price;                          // bytes 42 to 50
+  UINT64 underlying_product_guid;                    // bytes 51 to 58
+  UINT8 underlying_clearing_product_code[12];        // bytes 59 to 70
+  UINT8 underlying_security_type[6];                 // bytes 71 to 76
+  UINT8 underlying_security_exchange[8];             // bytes 77 to 84
+  MaturityMonthYear underlying_maturity_month_year;  // bytes 85 to 89
+  UINT8 symbol[20];                                  // bytes 90 to 109
+  UINT64 instrument_guid;                            // bytes 110 to 117
+  UINT32 security_id;                                // bytes 118 to 121
+  StrikePrice formatted_last_px;                     // bytes 122 to 130
+  UINT64 md_entry_px;                                // bytes 131 to 138, signed, read here as unsigned
+  UINT8 final_daily : 1;                             // byte 139
+  UINT8 actual : 1;                                  // byte 139
+  UINT8 rounded : 1;                                 // byte 139
+  UINT8 intraday : 1;                                // byte 139
+  UINT8 cabinet : 1;                                 // byte 139
+  UINT8 reserved_bits : 1;                           // byte 139
+  UINT8 unused_bit_6 : 1;                            // byte 139
+  UINT8 null_value : 1;                              // byte 139
+  UINT16 trading_reference_date;                     // bytes 140 to 141
+  UINT8 md_statistic_desc[40];                       // bytes 142 to 181
+} IncrementalRefreshSettleGroup;
+
+// NoMDEntries Block
+typedef struct _IncrementalRefreshSettleGroups {
+  UINT16 block_length;                                                                                         // bytes 0 to 1
+  UINT8 num_in_group;                                                                                          // byte 2
+  IncrementalRefreshSettleGroup incremental_refresh_settle_group[:byte-size (((UINT32) num_in_group) * 182)];
+} IncrementalRefreshSettleGroups;
+
+// MDIncrementalRefreshSettle
+typedef struct _MdIncrementalRefreshSettle {
+  UINT64 transact_time;                                              // bytes 0 to 7
+  IncrementalRefreshSettleGroups incremental_refresh_settle_groups;
+} MdIncrementalRefreshSettle;
 
 // Number of data blocks
-entrypoint typedef struct _UnderlyingMaturityMonthYear {
-  UINT16 year;  // bytes 0 to 1
-  UINT8 month;  // byte 2
-  UINT8 day;    // byte 3
-  UINT8 week;   // byte 4
-} UnderlyingMaturityMonthYear;
+typedef struct _IncrementalRefreshVoiGroup {
+  UINT64 product_guid;                               // bytes 0 to 7
+  UINT8 clearing_product_code[12];                   // bytes 8 to 19
+  UINT8 security_type[6];                            // bytes 20 to 25
+  UINT8 security_exchange[8];                        // bytes 26 to 33
+  MaturityMonthYear maturity_month_year;             // bytes 34 to 38
+  UINT8 put_or_call;                                 // byte 39
+  StrikePrice strike_price;                          // bytes 40 to 48
+  UINT64 underlying_product_guid;                    // bytes 49 to 56
+  UINT8 underlying_clearing_product_code[12];        // bytes 57 to 68
+  UINT8 underlying_security_type[6];                 // bytes 69 to 74
+  UINT8 underlying_security_exchange[8];             // bytes 75 to 82
+  MaturityMonthYear underlying_maturity_month_year;  // bytes 83 to 87
+  UINT8 symbol[20];                                  // bytes 88 to 107
+  UINT64 instrument_guid;                            // bytes 108 to 115
+  UINT32 security_id;                                // bytes 116 to 119
+  UINT32 cleared_volume;                             // bytes 120 to 123
+  UINT32 open_interest_qty;                          // bytes 124 to 127
+  UINT8 open_close_settl_flag;                       // byte 128
+  UINT16 trading_reference_date;                     // bytes 129 to 130
+} IncrementalRefreshVoiGroup;
 
-// ---- Formatted Last Px: 9 bytes ----------------------------------------------
+// NoMDEntries Block
+typedef struct _IncrementalRefreshVoiGroups {
+  UINT16 block_length;                                                                                   // bytes 0 to 1
+  UINT8 num_in_group;                                                                                    // byte 2
+  IncrementalRefreshVoiGroup incremental_refresh_voi_group[:byte-size (((UINT32) num_in_group) * 131)];
+} IncrementalRefreshVoiGroups;
+
+// MDIncrementalRefreshVOI
+typedef struct _MdIncrementalRefreshVoi {
+  UINT64 transact_time;                                        // bytes 0 to 7
+  IncrementalRefreshVoiGroups incremental_refresh_voi_groups;
+} MdIncrementalRefreshVoi;
 
 // Number of data blocks
-entrypoint typedef struct _FormattedLastPx {
-  UINT64 mantissa;  // bytes 0 to 7, signed, read here as unsigned
-  UINT8 exponent;   // byte 8, signed, read here as unsigned
-} FormattedLastPx;
+typedef struct _IncrementalRefreshHighLowGroup {
+  UINT64 product_guid;                               // bytes 0 to 7
+  UINT8 clearing_product_code[12];                   // bytes 8 to 19
+  UINT8 security_type[6];                            // bytes 20 to 25
+  UINT8 security_exchange[8];                        // bytes 26 to 33
+  MaturityMonthYear maturity_month_year;             // bytes 34 to 38
+  UINT8 put_or_call;                                 // byte 39
+  StrikePrice strike_price;                          // bytes 40 to 48
+  UINT64 underlying_product_guid;                    // bytes 49 to 56
+  UINT8 underlying_clearing_product_code[12];        // bytes 57 to 68
+  UINT8 underlying_security_type[6];                 // bytes 69 to 74
+  UINT8 underlying_security_exchange[8];             // bytes 75 to 82
+  MaturityMonthYear underlying_maturity_month_year;  // bytes 83 to 87
+  UINT8 symbol[20];                                  // bytes 88 to 107
+  UINT64 instrument_guid;                            // bytes 108 to 115
+  UINT32 security_id;                                // bytes 116 to 119
+  StrikePrice low_px;                                // bytes 120 to 128
+  UINT8 low_px_ind;                                  // byte 129
+  StrikePrice high_px;                               // bytes 130 to 138
+  UINT8 high_px_ind;                                 // byte 139
+  UINT16 trading_reference_date;                     // bytes 140 to 141
+} IncrementalRefreshHighLowGroup;
 
-// ---- Low Px: 9 bytes ---------------------------------------------------------
+// NoMDEntries Block
+typedef struct _IncrementalRefreshHighLowGroups {
+  UINT16 block_length;                                                                                            // bytes 0 to 1
+  UINT8 num_in_group;                                                                                             // byte 2
+  IncrementalRefreshHighLowGroup incremental_refresh_high_low_group[:byte-size (((UINT32) num_in_group) * 142)];
+} IncrementalRefreshHighLowGroups;
 
-// Number of data blocks
-entrypoint typedef struct _LowPx {
-  UINT64 mantissa;  // bytes 0 to 7, signed, read here as unsigned
-  UINT8 exponent;   // byte 8, signed, read here as unsigned
-} LowPx;
+// MDIncrementalRefreshHighLow
+typedef struct _MdIncrementalRefreshHighLow {
+  UINT64 transact_time;                                                 // bytes 0 to 7
+  IncrementalRefreshHighLowGroups incremental_refresh_high_low_groups;
+} MdIncrementalRefreshHighLow;
 
-// ---- High Px: 9 bytes --------------------------------------------------------
+// Branch
+casetype _Payload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x0191: MdIncrementalRefreshSettle md_incremental_refresh_settle;
+    case 0x0192: MdIncrementalRefreshVoi md_incremental_refresh_voi;
+    case 0x0193: MdIncrementalRefreshHighLow md_incremental_refresh_high_low;
+    case 0x0197: unit admin_heartbeat;
+    default: UINT8 unknown[available];
+  }
+} Payload;
 
-// Number of data blocks
-entrypoint typedef struct _HighPx {
-  UINT64 mantissa;  // bytes 0 to 7, signed, read here as unsigned
-  UINT8 exponent;   // byte 8, signed, read here as unsigned
-} HighPx;
+// Cme Market Data Message
+typedef struct _Mdp3Message {
+  UINT16 message_size { message_size >= 10 };                                                                                    // bytes 0 to 1
+  UINT16 block_length;                                                                                                           // bytes 2 to 3
+  UINT16 template_id;                                                                                                            // bytes 4 to 5
+  UINT16 schema_id;                                                                                                              // bytes 6 to 7
+  UINT16 version;                                                                                                                // bytes 8 to 9
+  Payload(template_id, (((UINT32) message_size) - 10)) payload[:byte-size-single-element-array (((UINT32) message_size) - 10)];
+} Mdp3Message;
+
+// ---- Packet: UdpPacket -------------------------------------------------------
+
+// Cme Mdp Packet
+entrypoint typedef struct _UdpPacket (UINT32 available) where (available >= 12) {
+  BinaryPacketHeader binary_packet_header;                // bytes 0 to 11
+  Mdp3Message mdp3_message[:byte-size (available - 12)];
+} UdpPacket;
 

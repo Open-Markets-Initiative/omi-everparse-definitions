@@ -1,45 +1,116 @@
-// Moscow Exchange SIMBA Spectra Orders Log Historical Replay
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Moex Spectra OrdersLogReplay Simba v1.0.4
 //
+// Protocol:
+//   Organization: Moscow Exchange
+//   Protocol: SIMBA Spectra Orders Log Historical Replay
+//   Encoding: SIMBA
+//   Version: 1.0.4
+//   Date: 11/10/2021
+//   Specification: spectra_simba_en.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ClientPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out Spectra_OrdersLogReplay_v1_0_4_Client.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a field read in bits
-// - the dispatch that chooses a message by its type
-// - a block whose stated length holds more than its fields
-//
-// License: MIT No Attribution
 
-// ---- Sbe Header: 8 bytes -----------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Root block length, message template id, message schema id and schema version
-entrypoint typedef struct _SbeHeader {
-  UINT16 block_length;  // bytes 0 to 1
-  UINT16 template_id;   // bytes 2 to 3
-  UINT16 schema_id;     // bytes 4 to 5
-  UINT16 version;       // bytes 6 to 7
-} SbeHeader;
+// Template Id: 2 byte code
+#define TEMPLATE_ID_HEARTBEAT_MESSAGE 0x0001                          // Heartbeat Message
+#define TEMPLATE_ID_SEQUENCE_RESET_MESSAGE 0x0002                     // Sequence Reset Message
+#define TEMPLATE_ID_BEST_PRICES_MESSAGE 0x0003                        // Best Prices Message
+#define TEMPLATE_ID_EMPTY_BOOK_MESSAGE 0x0004                         // Empty Book Message
+#define TEMPLATE_ID_ORDER_UPDATE_MESSAGE 0x0005                       // Order Update Message
+#define TEMPLATE_ID_ORDER_EXECUTION_MESSAGE 0x0006                    // Order Execution Message
+#define TEMPLATE_ID_ORDER_BOOK_SNAPSHOT_MESSAGE 0x0007                // Order Book Snapshot Message
+#define TEMPLATE_ID_SECURITY_DEFINITION_MESSAGE 0x0008                // Security Definition Message
+#define TEMPLATE_ID_SECURITY_STATUS_MESSAGE 0x0009                    // Security Status Message
+#define TEMPLATE_ID_SECURITY_DEFINITION_UPDATE_REPORT_MESSAGE 0x000A  // Security Definition Update Report Message
+#define TEMPLATE_ID_TRADING_SESSION_STATUS_MESSAGE 0x000B             // Trading Session Status Message
+#define TEMPLATE_ID_LOGON_MESSAGE 0x03E8                              // Logon Message
+#define TEMPLATE_ID_LOGOUT_MESSAGE 0x03E9                             // Logout Message
+#define TEMPLATE_ID_MARKET_DATA_REQUEST_MESSAGE 0x03EA                // Market Data Request Message
+#define TEMPLATE_ID_MARKET_DATA_DUMMY_MESSAGE 0x03EB                  // Market Data Dummy Message
 
-// ---- Logout Message: 256 bytes -----------------------------------------------
+// ---- Types -------------------------------------------------------------------
 
 // LogoutMessage
-entrypoint typedef struct _LogoutMessage {
+typedef struct _LogoutMessage {
   UINT8 text[256];  // bytes 0 to 255
 } LogoutMessage;
 
-// ---- Market Data Request Message: 8 bytes ------------------------------------
-
 // MarketDataRequestMessage
-entrypoint typedef struct _MarketDataRequestMessage {
+typedef struct _MarketDataRequestMessage {
   UINT32 appl_beg_seq_num;  // bytes 0 to 3
   UINT32 appl_end_seq_num;  // bytes 4 to 7
 } MarketDataRequestMessage;
+
+// Branch
+casetype _ClientPayload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x03E8: unit logon_message;
+    case 0x03E9: LogoutMessage logout_message;
+    case 0x03EA: MarketDataRequestMessage market_data_request_message;
+    default: UINT8 unknown[available];
+  }
+} ClientPayload;
+
+// Moex Simba Replay Request Message
+typedef struct _ClientMessage (UINT32 available) where (available >= 8) {
+  UINT16 block_length;                                                                                          // bytes 0 to 1
+  UINT16 template_id;                                                                                           // bytes 2 to 3
+  UINT16 schema_id;                                                                                             // bytes 4 to 5
+  UINT16 version;                                                                                               // bytes 6 to 7
+  ClientPayload(template_id, (available - 8)) client_payload[:byte-size-single-element-array (available - 8)];
+} ClientMessage;
+
+// One snapshot packet sent by the firm: the unit the Tcp stream repeats
+typedef struct _ClientFrame {
+  UINT32 msg_seq_num;                                        // bytes 0 to 3
+  UINT16 msg_size { msg_size >= 16 };                        // bytes 4 to 5
+  UINT16 last_fragment : 1;                                  // bytes 6 to 7
+  UINT16 start_of_snapshot : 1;                              // bytes 6 to 7
+  UINT16 end_of_snapshot : 1;                                // bytes 6 to 7
+  UINT16 incremental_packet : 1;                             // bytes 6 to 7
+  UINT16 poss_dup_flag : 1;                                  // bytes 6 to 7
+  UINT16 reserved_bits : 11;                                 // bytes 6 to 7
+  UINT64 sending_time;                                       // bytes 8 to 15
+  ClientMessage((((UINT32) msg_size) - 16)) client_message;
+} ClientFrame;
+
+// ---- Packet: ClientPacket ----------------------------------------------------
+
+// Moex Simba Replay Packets Sent By The Firm
+entrypoint typedef struct _ClientPacket (UINT32 available) {
+  ClientFrame client_frame[:byte-size available];
+} ClientPacket;
 

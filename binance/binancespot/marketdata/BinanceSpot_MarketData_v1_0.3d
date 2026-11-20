@@ -1,46 +1,199 @@
-// Binance Market Data
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Binance BinanceSpot MarketData Sbe v1.0
 //
+// Protocol:
+//   Organization: Binance
+//   Protocol: Market Data
+//   Encoding: Simple Binary Encoding
+//   Version: 1.0
+//   Date: 2026-09-18
+//   Specification: sbe-market-data-streams.md
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Frame, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out BinanceSpot_MarketData_v1_0.3d
-//
-// What this definition does not state, and the model does:
-// - the dispatch that chooses a message by its type
-// - a block whose stated length holds more than its fields
-// - a run counted by a field
-// - a field present only on a condition
-//
-// License: MIT No Attribution
 
-// ---- Message Header: 8 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Binance Sbe message header block length, template id, schema id and version of the message root
-entrypoint typedef struct _MessageHeader {
-  UINT16 block_length;  // bytes 0 to 1
-  UINT16 template_id;   // bytes 2 to 3
-  UINT16 schema_id;     // bytes 4 to 5
-  UINT16 version;       // bytes 6 to 7
-} MessageHeader;
+// Template Id: 2 byte code
+#define TEMPLATE_ID_TRADES_STREAM_EVENT_MESSAGE 0x2710          // Trades Stream Event Message
+#define TEMPLATE_ID_BEST_BID_ASK_STREAM_EVENT_MESSAGE 0x2711    // Best Bid Ask Stream Event Message
+#define TEMPLATE_ID_DEPTH_SNAPSHOT_STREAM_EVENT_MESSAGE 0x2712  // Depth Snapshot Stream Event Message
+#define TEMPLATE_ID_DEPTH_DIFF_STREAM_EVENT_MESSAGE 0x2713      // Depth Diff Stream Event Message
 
-// ---- Group Size Encoding: 6 bytes --------------------------------------------
+// Is Buyer Maker: one byte code
+#define IS_BUYER_MAKER_FALSE 0x00  // False
+#define IS_BUYER_MAKER_TRUE 0x01   // True
 
-// groupSizeEncoding
-entrypoint typedef struct _GroupSizeEncoding {
-  UINT16 block_length;          // bytes 0 to 1
-  UINT32 num_in_group_uint_32;  // bytes 2 to 5
-} GroupSizeEncoding;
+// ---- Types -------------------------------------------------------------------
 
-// ---- Group Size 16 Encoding: 4 bytes -----------------------------------------
+// trades
+typedef struct _TradesStreamEventMessageTradesGroup {
+  UINT64 id;             // bytes 0 to 7, signed, read here as unsigned
+  UINT64 price;          // bytes 8 to 15, signed, read here as unsigned
+  UINT64 qty;            // bytes 16 to 23, signed, read here as unsigned
+  UINT8 is_buyer_maker;  // byte 24
+} TradesStreamEventMessageTradesGroup;
 
-// groupSize16Encoding
-entrypoint typedef struct _GroupSize16Encoding {
-  UINT16 block_length;          // bytes 0 to 1
-  UINT16 num_in_group_uint_16;  // bytes 2 to 3
-} GroupSize16Encoding;
+// trades Block
+typedef struct _TradesStreamEventMessageTradesGroups {
+  UINT16 block_length;                                                                                                   // bytes 0 to 1
+  UINT32 num_in_group_uint_32 { num_in_group_uint_32 <= 171798691 };                                                     // bytes 2 to 5
+  TradesStreamEventMessageTradesGroup trades_stream_event_message_trades_group[:byte-size (num_in_group_uint_32 * 25)];
+} TradesStreamEventMessageTradesGroups;
+
+casetype _OptionalSymbolData (Bool present, UINT32 length) {
+  switch (present) {
+    case true: UINT8 symbol_data[length];
+    case false: unit absent;
+  }
+} OptionalSymbolData;
+
+// symbol data struct
+typedef struct _Symbol {
+  UINT8 symbol_length;                                                               // byte 0
+  OptionalSymbolData((symbol_length > 0x00), ((UINT32) symbol_length)) symbol_data;
+} Symbol;
+
+// TradesStreamEventMessage
+typedef struct _TradesStreamEventMessage {
+  UINT64 event_time;                                                               // bytes 0 to 7, signed, read here as unsigned
+  UINT64 transact_time;                                                            // bytes 8 to 15, signed, read here as unsigned
+  UINT8 price_exponent;                                                            // byte 16, signed, read here as unsigned
+  UINT8 qty_exponent;                                                              // byte 17, signed, read here as unsigned
+  TradesStreamEventMessageTradesGroups trades_stream_event_message_trades_groups;
+  Symbol symbol;
+} TradesStreamEventMessage;
+
+// BestBidAskStreamEventMessage
+typedef struct _BestBidAskStreamEventMessage {
+  UINT64 event_time;      // bytes 0 to 7, signed, read here as unsigned
+  UINT64 book_update_id;  // bytes 8 to 15, signed, read here as unsigned
+  UINT8 price_exponent;   // byte 16, signed, read here as unsigned
+  UINT8 qty_exponent;     // byte 17, signed, read here as unsigned
+  UINT64 bid_price;       // bytes 18 to 25, signed, read here as unsigned
+  UINT64 bid_qty;         // bytes 26 to 33, signed, read here as unsigned
+  UINT64 ask_price;       // bytes 34 to 41, signed, read here as unsigned
+  UINT64 ask_qty;         // bytes 42 to 49, signed, read here as unsigned
+  Symbol symbol;
+} BestBidAskStreamEventMessage;
+
+// bids
+typedef struct _DepthSnapshotStreamEventMessageBidsGroup {
+  UINT64 price;  // bytes 0 to 7, signed, read here as unsigned
+  UINT64 qty;    // bytes 8 to 15, signed, read here as unsigned
+} DepthSnapshotStreamEventMessageBidsGroup;
+
+// bids Block
+typedef struct _DepthSnapshotStreamEventMessageBidsGroups {
+  UINT16 block_length;                                                                                                                         // bytes 0 to 1
+  UINT16 num_in_group_uint_16;                                                                                                                 // bytes 2 to 3
+  DepthSnapshotStreamEventMessageBidsGroup depth_snapshot_stream_event_message_bids_group[:byte-size (((UINT32) num_in_group_uint_16) * 16)];
+} DepthSnapshotStreamEventMessageBidsGroups;
+
+// asks
+typedef struct _DepthSnapshotStreamEventMessageAsksGroup {
+  UINT64 price;  // bytes 0 to 7, signed, read here as unsigned
+  UINT64 qty;    // bytes 8 to 15, signed, read here as unsigned
+} DepthSnapshotStreamEventMessageAsksGroup;
+
+// asks Block
+typedef struct _DepthSnapshotStreamEventMessageAsksGroups {
+  UINT16 block_length;                                                                                                                         // bytes 0 to 1
+  UINT16 num_in_group_uint_16;                                                                                                                 // bytes 2 to 3
+  DepthSnapshotStreamEventMessageAsksGroup depth_snapshot_stream_event_message_asks_group[:byte-size (((UINT32) num_in_group_uint_16) * 16)];
+} DepthSnapshotStreamEventMessageAsksGroups;
+
+// DepthSnapshotStreamEventMessage
+typedef struct _DepthSnapshotStreamEventMessage {
+  UINT64 event_time;                                                                          // bytes 0 to 7, signed, read here as unsigned
+  UINT64 book_update_id;                                                                      // bytes 8 to 15, signed, read here as unsigned
+  UINT8 price_exponent;                                                                       // byte 16, signed, read here as unsigned
+  UINT8 qty_exponent;                                                                         // byte 17, signed, read here as unsigned
+  DepthSnapshotStreamEventMessageBidsGroups depth_snapshot_stream_event_message_bids_groups;
+  DepthSnapshotStreamEventMessageAsksGroups depth_snapshot_stream_event_message_asks_groups;
+  Symbol symbol;
+} DepthSnapshotStreamEventMessage;
+
+// bids Block
+typedef struct _DepthDiffStreamEventMessageBidsGroups {
+  UINT16 block_length;                                                                                                                     // bytes 0 to 1
+  UINT16 num_in_group_uint_16;                                                                                                             // bytes 2 to 3
+  DepthSnapshotStreamEventMessageBidsGroup depth_diff_stream_event_message_bids_group[:byte-size (((UINT32) num_in_group_uint_16) * 16)];
+} DepthDiffStreamEventMessageBidsGroups;
+
+// asks Block
+typedef struct _DepthDiffStreamEventMessageAsksGroups {
+  UINT16 block_length;                                                                                                                     // bytes 0 to 1
+  UINT16 num_in_group_uint_16;                                                                                                             // bytes 2 to 3
+  DepthSnapshotStreamEventMessageAsksGroup depth_diff_stream_event_message_asks_group[:byte-size (((UINT32) num_in_group_uint_16) * 16)];
+} DepthDiffStreamEventMessageAsksGroups;
+
+// DepthDiffStreamEventMessage
+typedef struct _DepthDiffStreamEventMessage {
+  UINT64 event_time;                                                                  // bytes 0 to 7, signed, read here as unsigned
+  UINT64 first_book_update_id;                                                        // bytes 8 to 15, signed, read here as unsigned
+  UINT64 last_book_update_id;                                                         // bytes 16 to 23, signed, read here as unsigned
+  UINT8 price_exponent;                                                               // byte 24, signed, read here as unsigned
+  UINT8 qty_exponent;                                                                 // byte 25, signed, read here as unsigned
+  DepthDiffStreamEventMessageBidsGroups depth_diff_stream_event_message_bids_groups;
+  DepthDiffStreamEventMessageAsksGroups depth_diff_stream_event_message_asks_groups;
+  Symbol symbol;
+} DepthDiffStreamEventMessage;
+
+// Branch
+casetype _Payload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x2710: TradesStreamEventMessage trades_stream_event_message;
+    case 0x2711: BestBidAskStreamEventMessage best_bid_ask_stream_event_message;
+    case 0x2712: DepthSnapshotStreamEventMessage depth_snapshot_stream_event_message;
+    case 0x2713: DepthDiffStreamEventMessage depth_diff_stream_event_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// Binance Sbe message
+typedef struct _SbeMessage (UINT32 available) where (available >= 8) {
+  UINT16 block_length;                                                                             // bytes 0 to 1
+  UINT16 template_id;                                                                              // bytes 2 to 3
+  UINT16 schema_id;                                                                                // bytes 4 to 5
+  UINT16 version;                                                                                  // bytes 6 to 7
+  Payload(template_id, (available - 8)) payload[:byte-size-single-element-array (available - 8)];
+} SbeMessage;
+
+// ---- Packet: Frame -----------------------------------------------------------
+
+// Binance WebSocket binary frame payload: one Sbe message
+entrypoint typedef struct _Frame (UINT32 available) {
+  SbeMessage(available) sbe_message;
+} Frame;
 

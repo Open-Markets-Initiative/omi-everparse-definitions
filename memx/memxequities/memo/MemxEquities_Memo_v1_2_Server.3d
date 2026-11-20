@@ -1,110 +1,519 @@
-// The Members Exchange Members Orders
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Memx MemxEquities Memo Sbe v1.2
 //
+// Protocol:
+//   Organization: The Members Exchange
+//   Protocol: Members Orders
+//   Encoding: Simple Binary Encoding
+//   Version: 1.2
+//   Date: 9/23/2020
+//   Specification: MEMO SBE-v1_1.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ServerPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out MemxEquities_Memo_v1_2_Server.3d
-//
-// What this definition does not state, and the model does:
-// - a Reassemble rule
-// - the dispatch that chooses a message by its type
-// - a field read in bits
-// - a block whose stated length holds more than its fields
-//
-// License: MIT No Attribution
 
-// ---- Common Header: 3 bytes --------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Tcp Common Header
-entrypoint typedef struct _CommonHeader {
-  UINT8 message_type;       // byte 0
-  UINT16BE message_length;  // bytes 1 to 2
-} CommonHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_HEARTBEAT 0x00            // Heartbeat
+#define MESSAGE_TYPE_LOGIN_REQUEST 0x64        // Login Request
+#define MESSAGE_TYPE_REPLAY_REQUEST 0x65       // Replay Request
+#define MESSAGE_TYPE_REPLAY_ALL_REQUEST 0x66   // Replay All Request
+#define MESSAGE_TYPE_STREAM_REQUEST 0x67       // Stream Request
+#define MESSAGE_TYPE_UNSEQUENCED_MESSAGE 0x68  // Unsequenced Message
+#define MESSAGE_TYPE_LOGIN_ACCEPTED 0x01       // Login Accepted
+#define MESSAGE_TYPE_LOGIN_REJECTED 0x02       // Login Rejected
+#define MESSAGE_TYPE_START_OF_SESSION 0x03     // Start Of Session
+#define MESSAGE_TYPE_END_OF_SESSION 0x04       // End Of Session
+#define MESSAGE_TYPE_REPLAY_BEGIN 0x05         // Replay Begin
+#define MESSAGE_TYPE_REPLAY_REJECTED 0x06      // Replay Rejected
+#define MESSAGE_TYPE_REPLAY_COMPLETE 0x07      // Replay Complete
+#define MESSAGE_TYPE_STREAM_BEGIN 0x08         // Stream Begin
+#define MESSAGE_TYPE_STREAM_REJECTED 0x09      // Stream Rejected
+#define MESSAGE_TYPE_STREAM_COMPLETE 0x0A      // Stream Complete
+#define MESSAGE_TYPE_SEQUENCED_MESSAGE 0x0B    // Sequenced Message
 
-// ---- Login Accepted Message: 1 byte ------------------------------------------
+// Supported Request Mode: one byte code
+#define SUPPORTED_REQUEST_MODE_STREAM 0x53         // Stream
+#define SUPPORTED_REQUEST_MODE_REPLAY 0x52         // Replay
+#define SUPPORTED_REQUEST_MODE_SNAPSHOT_MODE 0x54  // Snapshot Mode
+
+// Login Reject Code: one byte code
+#define LOGIN_REJECT_CODE_MALFORMED_TOKEN 0x54         // Malformed Token
+#define LOGIN_REJECT_CODE_TOKEN_TYPE_UNSUPPORTED 0x55  // Token Type Unsupported
+#define LOGIN_REJECT_CODE_TOKEN_TYPE_INVALID 0x56      // Token Type Invalid
+#define LOGIN_REJECT_CODE_AUTHORIZATION_FAILED 0x41    // Authorization Failed
+
+// Replay Reject Code: one byte code
+#define REPLAY_REJECT_CODE_REPLAY_REQUESTS_ARE_NOT_ALLOWED 0x52      // Replay Requests Are Not Allowed
+#define REPLAY_REJECT_CODE_REPLAY_ALL_REQUESTS_ARE_NOT_ALLOWED 0x41  // Replay All Requests Are Not Allowed
+#define REPLAY_REJECT_CODE_NOT_THE_ACTIVE_SESSION 0x50               // Not The Active Session
+#define REPLAY_REJECT_CODE_SEQUENCE_NUMBER_OUT_OF_RANGE 0x53         // Sequence Number Out Of Range
+
+// Stream Reject Code: one byte code
+#define STREAM_REJECT_CODE_STREAM_REQUESTS_ARE_NOT_ALLOWED 0x52  // Stream Requests Are Not Allowed
+#define STREAM_REJECT_CODE_NOT_THE_ACTIVE_SESSION 0x50           // Not The Active Session
+#define STREAM_REJECT_CODE_SEQUENCE_NUMBER_OUT_OF_RANGE 0x53     // Sequence Number Out Of Range
+
+// Template Id: one byte code
+#define TEMPLATE_ID_NEW_ORDER_SINGLE_MESSAGE 0x01                   // New Order Single Message
+#define TEMPLATE_ID_ORDER_CANCEL_REPLACE_REQUEST_MESSAGE 0x02       // Order Cancel Replace Request Message
+#define TEMPLATE_ID_ORDER_CANCEL_REQUEST_MESSAGE 0x03               // Order Cancel Request Message
+#define TEMPLATE_ID_MASS_CANCEL_REQUEST_MESSAGE 0x04                // Mass Cancel Request Message
+#define TEMPLATE_ID_EXECUTION_REPORT_PENDING_NEW_MESSAGE 0x05       // Execution Report Pending New Message
+#define TEMPLATE_ID_EXECUTION_REPORT_NEW_MESSAGE 0x06               // Execution Report New Message
+#define TEMPLATE_ID_EXECUTION_REPORT_REJECTED_MESSAGE 0x07          // Execution Report Rejected Message
+#define TEMPLATE_ID_EXECUTION_REPORT_TRADE_MESSAGE 0x08             // Execution Report Trade Message
+#define TEMPLATE_ID_EXECUTION_REPORT_PENDING_CANCEL_MESSAGE 0x09    // Execution Report Pending Cancel Message
+#define TEMPLATE_ID_PENDING_MASS_CANCEL_MESSAGE 0x0A                // Pending Mass Cancel Message
+#define TEMPLATE_ID_EXECUTION_REPORT_CANCELED_MESSAGE 0x0B          // Execution Report Canceled Message
+#define TEMPLATE_ID_MASS_CANCEL_DONE_MESSAGE 0x0C                   // Mass Cancel Done Message
+#define TEMPLATE_ID_EXECUTION_REPORT_PENDING_REPLACE_MESSAGE 0x0D   // Execution Report Pending Replace Message
+#define TEMPLATE_ID_EXECUTION_REPORT_REPLACED_MESSAGE 0x0E          // Execution Report Replaced Message
+#define TEMPLATE_ID_EXECUTION_REPORT_TRADE_CORRECTION_MESSAGE 0x0F  // Execution Report Trade Correction Message
+#define TEMPLATE_ID_EXECUTION_REPORT_TRADE_BREAK_MESSAGE 0x10       // Execution Report Trade Break Message
+#define TEMPLATE_ID_EXECUTION_REPORT_RESTATEMENT_MESSAGE 0x11       // Execution Report Restatement Message
+#define TEMPLATE_ID_ORDER_CANCEL_REJECT_MESSAGE 0x12                // Order Cancel Reject Message
+#define TEMPLATE_ID_MASS_CANCEL_REJECT_MESSAGE 0x14                 // Mass Cancel Reject Message
+
+// Ord Status: one byte code
+#define ORD_STATUS_NEW 0x01              // New
+#define ORD_STATUS_PARTIAL_FILLED 0x02   // Partial Filled
+#define ORD_STATUS_FILLED 0x03           // Filled
+#define ORD_STATUS_CANCELED 0x04         // Canceled
+#define ORD_STATUS_PENDING_CANCEL 0x05   // Pending Cancel
+#define ORD_STATUS_REJECTED 0x06         // Rejected
+#define ORD_STATUS_PENDING_NEW 0x07      // Pending New
+#define ORD_STATUS_PENDING_REPLACE 0x08  // Pending Replace
+#define ORD_STATUS_EXPIRED 0x09          // Expired
+#define ORD_STATUS_NULL_VALUE 0xFF       // Null Value
+
+// Side: one byte code
+#define SIDE_BUY 0x01                // Buy
+#define SIDE_SELL 0x02               // Sell
+#define SIDE_SELL_SHORT 0x03         // Sell Short
+#define SIDE_SELL_SHORT_EXEMPT 0x04  // Sell Short Exempt
+#define SIDE_NULL_VALUE 0xFF         // Null Value
+
+// Ord Type: one byte code
+#define ORD_TYPE_MARKET 0x01      // Market
+#define ORD_TYPE_LIMIT 0x02       // Limit
+#define ORD_TYPE_PEGGED 0x03      // Pegged
+#define ORD_TYPE_NULL_VALUE 0xFF  // Null Value
+
+// Time In Force: one byte code
+#define TIME_IN_FORCE_DAY 0x01                  // Day
+#define TIME_IN_FORCE_IMMEDIATE_OR_CANCEL 0x02  // Immediate Or Cancel
+#define TIME_IN_FORCE_FILL_OR_KILL 0x03         // Fill Or Kill
+#define TIME_IN_FORCE_GOOD_FOR_TIME 0x04        // Good For Time
+#define TIME_IN_FORCE_REGULAR_HOURS_ONLY 0x05   // Regular Hours Only
+#define TIME_IN_FORCE_NULL_VALUE 0xFF           // Null Value
+
+// Order Capacity: one byte code
+#define ORDER_CAPACITY_AGENCY 0x01              // Agency
+#define ORDER_CAPACITY_PRINCIPAL 0x02           // Principal
+#define ORDER_CAPACITY_RISKLESS_PRINCIPAL 0x03  // Riskless Principal
+#define ORDER_CAPACITY_NULL_VALUE 0xFF          // Null Value
+
+// Cust Order Capacity: one byte code
+#define CUST_ORDER_CAPACITY_MEMBER_TRADING_ON_THEIR_OWN_ACCOUNT 0x01  // Member Trading On Their Own Account
+#define CUST_ORDER_CAPACITY_NULL_VALUE 0xFF                           // Null Value
+
+// Peg Price Type: one byte code
+#define PEG_PRICE_TYPE_MID_PRICE_PEG 0x01  // Mid Price Peg
+#define PEG_PRICE_TYPE_PRIMARY_PEG 0x02    // Primary Peg
+#define PEG_PRICE_TYPE_NULL_VALUE 0xFF     // Null Value
+
+// Display Method: one byte code
+#define DISPLAY_METHOD_INITIAL 0x01      // Initial
+#define DISPLAY_METHOD_RANDOM 0x02       // Random
+#define DISPLAY_METHOD_UNDISCLOSED 0x03  // Undisclosed
+#define DISPLAY_METHOD_NULL_VALUE 0xFF   // Null Value
+
+// Reserve Replenish Timing: one byte code
+#define RESERVE_REPLENISH_TIMING_IMMEDIATE 0x01   // Immediate
+#define RESERVE_REPLENISH_TIMING_RANDOM 0x02      // Random
+#define RESERVE_REPLENISH_TIMING_NULL_VALUE 0xFF  // Null Value
+
+// Reprice Frequency: one byte code
+#define REPRICE_FREQUENCY_SINGLE_REPRICE 0x01      // Single Reprice
+#define REPRICE_FREQUENCY_CONTINUOUS_REPRICE 0x02  // Continuous Reprice
+#define REPRICE_FREQUENCY_NONE 0x03                // None
+#define REPRICE_FREQUENCY_NULL_VALUE 0xFF          // Null Value
+
+// Reprice Behavior: one byte code
+#define REPRICE_BEHAVIOR_REPRICE_LOCK_CANCEL_CROSS 0x01   // Reprice Lock Cancel Cross
+#define REPRICE_BEHAVIOR_REPRICE_LOCK_REPRICE_CROSS 0x02  // Reprice Lock Reprice Cross
+#define REPRICE_BEHAVIOR_NULL_VALUE 0xFF                  // Null Value
+
+// Self Trade Prevention: one byte code
+#define SELF_TRADE_PREVENTION_CANCEL_NEWEST 0x01         // Cancel Newest
+#define SELF_TRADE_PREVENTION_CANCEL_OLDEST 0x02         // Cancel Oldest
+#define SELF_TRADE_PREVENTION_DECREMENT_AND_CANCEL 0x03  // Decrement And Cancel
+#define SELF_TRADE_PREVENTION_CANCEL_BOTH 0x04           // Cancel Both
+#define SELF_TRADE_PREVENTION_CANCEL_SMALLEST 0x05       // Cancel Smallest
+#define SELF_TRADE_PREVENTION_NULL_VALUE 0xFF            // Null Value
+
+// Order Reject Reason: one byte code
+#define ORDER_REJECT_REASON_OTHER 0x00                                                        // Other
+#define ORDER_REJECT_REASON_MISSING_SYMBOL 0x01                                               // Missing Symbol
+#define ORDER_REJECT_REASON_MISSING_LOCATE 0x02                                               // Missing Locate
+#define ORDER_REJECT_REASON_MISSING_CL_ORD_ID 0x03                                            // Missing Cl Ord Id
+#define ORDER_REJECT_REASON_MISSING_SIDE 0x04                                                 // Missing Side
+#define ORDER_REJECT_REASON_MISSING_ORDER_QUANTITY 0x05                                       // Missing Order Quantity
+#define ORDER_REJECT_REASON_MISSING_ORDER_TYPE 0x06                                           // Missing Order Type
+#define ORDER_REJECT_REASON_MISSING_TIME_IN_FORCE 0x07                                        // Missing Time In Force
+#define ORDER_REJECT_REASON_MISSING_ORDER_CAPACITY 0x08                                       // Missing Order Capacity
+#define ORDER_REJECT_REASON_MISSING_EXEC_INST 0x09                                            // Missing Exec Inst
+#define ORDER_REJECT_REASON_MISSING_LIMIT_PRICE 0x0A                                          // Missing Limit Price
+#define ORDER_REJECT_REASON_MISSING_MAX_FLOOR 0x0B                                            // Missing Max Floor
+#define ORDER_REJECT_REASON_MISSING_RESERVE_REPLENISH_AMOUNT_TYPE 0x0C                        // Missing Reserve Replenish Amount Type
+#define ORDER_REJECT_REASON_MISSING_RESERVE_REPLENISH_TIME_TYPE 0x0D                          // Missing Reserve Replenish Time Type
+#define ORDER_REJECT_REASON_MISSING_RANDOM_REPLENISH_VALUE 0x0E                               // Missing Random Replenish Value
+#define ORDER_REJECT_REASON_MISSING_REPRICE_FREQUENCY_TYPE 0x0F                               // Missing Reprice Frequency Type
+#define ORDER_REJECT_REASON_MISSING_REPRICE_BEHAVIOR_TYPE 0x10                                // Missing Reprice Behavior Type
+#define ORDER_REJECT_REASON_MISSING_CUSTOMER_CAPACITY_TYPE 0x11                               // Missing Customer Capacity Type
+#define ORDER_REJECT_REASON_MISSING_EXPIRE_TIME 0x12                                          // Missing Expire Time
+#define ORDER_REJECT_REASON_MISSING_PEG_TYPE 0x13                                             // Missing Peg Type
+#define ORDER_REJECT_REASON_INVALID_MODIFIER_FOR_ORDER_TYPE 0x14                              // Invalid Modifier For Order Type
+#define ORDER_REJECT_REASON_INVALID_MODIFIERS_COMBINATION 0x15                                // Invalid Modifiers Combination
+#define ORDER_REJECT_REASON_INVALID_TRADING_SESSION_FOR_ORDER_TYPE 0x16                       // Invalid Trading Session For Order Type
+#define ORDER_REJECT_REASON_INVALID_TIME_IN_FORCE_FOR_ORDER_TYPE 0x17                         // Invalid Time In Force For Order Type
+#define ORDER_REJECT_REASON_INVALID_MIN_QUANTITY 0x18                                         // Invalid Min Quantity
+#define ORDER_REJECT_REASON_INVALID_ORDER_QUANTITY 0x19                                       // Invalid Order Quantity
+#define ORDER_REJECT_REASON_INVALID_SIDE 0x1A                                                 // Invalid Side
+#define ORDER_REJECT_REASON_INVALID_ORDER_TYPE 0x1B                                           // Invalid Order Type
+#define ORDER_REJECT_REASON_INVALID_TIME_IN_FORCE 0x1C                                        // Invalid Time In Force
+#define ORDER_REJECT_REASON_INVALID_ORDER_CAPACITY 0x1D                                       // Invalid Order Capacity
+#define ORDER_REJECT_REASON_INVALID_CUSTOMER_CAPACITY 0x1E                                    // Invalid Customer Capacity
+#define ORDER_REJECT_REASON_INVALID_SYMBOL 0x1F                                               // Invalid Symbol
+#define ORDER_REJECT_REASON_INVALID_EXPIRE_TIME 0x20                                          // Invalid Expire Time
+#define ORDER_REJECT_REASON_INVALID_LIMIT_PRICE 0x21                                          // Invalid Limit Price
+#define ORDER_REJECT_REASON_INVALID_LIMIT_PRICE_INCREMENT 0x22                                // Invalid Limit Price Increment
+#define ORDER_REJECT_REASON_INVALID_MAX_FLOOR 0x23                                            // Invalid Max Floor
+#define ORDER_REJECT_REASON_INVALID_RANDOM_REPLENISH_VALUE 0x24                               // Invalid Random Replenish Value
+#define ORDER_REJECT_REASON_INVALID_RANDOM_REPLENISH_VALUE_FOR_RESERVE_TYPE 0x25              // Invalid Random Replenish Value For Reserve Type
+#define ORDER_REJECT_REASON_INVALID_RESERVE_REPLENISH_AMOUNT_TYPE 0x26                        // Invalid Reserve Replenish Amount Type
+#define ORDER_REJECT_REASON_INVALID_RESERVE_REPLENISH_TIME_TYPE 0x27                          // Invalid Reserve Replenish Time Type
+#define ORDER_REJECT_REASON_INVALID_REPRICE_FREQUENCY_TYPE 0x28                               // Invalid Reprice Frequency Type
+#define ORDER_REJECT_REASON_INVALID_REPRICE_BEHAVIOR_TYPE 0x29                                // Invalid Reprice Behavior Type
+#define ORDER_REJECT_REASON_INVALID_REPRICE_BEHAVIOR_FOR_REPRICE_FREQUENCY 0x2A               // Invalid Reprice Behavior For Reprice Frequency
+#define ORDER_REJECT_REASON_INVALID_MPID_VALUE 0x2B                                           // Invalid Mpid Value
+#define ORDER_REJECT_REASON_INVALID_PEG_TYPE 0x2C                                             // Invalid Peg Type
+#define ORDER_REJECT_REASON_INVALID_MODIFIER_FOR_PEG_TYPE 0x2D                                // Invalid Modifier For Peg Type
+#define ORDER_REJECT_REASON_INVALID_LOCATE 0x2E                                               // Invalid Locate
+#define ORDER_REJECT_REASON_SYMBOL_HALTED_OR_PAUSED 0x2F                                      // Symbol Halted Or Paused
+#define ORDER_REJECT_REASON_EXCHANGE_CLOSED 0x30                                              // Exchange Closed
+#define ORDER_REJECT_REASON_DUPLICATE_CL_ORD_ID 0x31                                          // Duplicate Cl Ord Id
+#define ORDER_REJECT_REASON_ORDER_SIZE_EXCEEDS_LIMIT 0x32                                     // Order Size Exceeds Limit
+#define ORDER_REJECT_REASON_ORDER_NOTIONAL_EXCEEDS_LIMIT 0x33                                 // Order Notional Exceeds Limit
+#define ORDER_REJECT_REASON_BLOCK_ISO_RISK_RULE_VIOLATED 0x34                                 // Block Iso Risk Rule Violated
+#define ORDER_REJECT_REASON_BLOCK_SESSION_RISK_RULE_VIOLATED 0x35                             // Block Session Risk Rule Violated
+#define ORDER_REJECT_REASON_BLOCK_SELL_SHORT_RISK_RULE_VIOLATED 0x36                          // Block Sell Short Risk Rule Violated
+#define ORDER_REJECT_REASON_BLOCK_NON_TEST_SYMBOLS_RISK_RULE_VIOLATED 0x37                    // Block Non Test Symbols Risk Rule Violated
+#define ORDER_REJECT_REASON_MAX_SHARES_PER_ORDER_RISK_RULE_BREACH 0x38                        // Max Shares Per Order Risk Rule Breach
+#define ORDER_REJECT_REASON_MAX_NOTIONAL_VALUE_PER_ORDER_RISK_RULE_BREACH 0x39                // Max Notional Value Per Order Risk Rule Breach
+#define ORDER_REJECT_REASON_PRICE_PERCENT_COLLAR_RISK_RULE_VIOLATED 0x3A                      // Price Percent Collar Risk Rule Violated
+#define ORDER_REJECT_REASON_PRICE_VALUE_COLLAR_RISK_RULE_VIOLATED 0x3B                        // Price Value Collar Risk Rule Violated
+#define ORDER_REJECT_REASON_MAX_ADV_PERCENT_PER_ORDER_RISK_RULE_BREACH 0x3C                   // Max Adv Percent Per Order Risk Rule Breach
+#define ORDER_REJECT_REASON_DAILY_GROSS_NOTIONAL_EXPOSURE_RISK_RULE_BREACH 0x3D               // Daily Gross Notional Exposure Risk Rule Breach
+#define ORDER_REJECT_REASON_DAILY_NET_NOTIONAL_EXPOSURE_RISK_RULE_BREACH 0x3E                 // Daily Net Notional Exposure Risk Rule Breach
+#define ORDER_REJECT_REASON_MAX_NUM_DUPLICATE_ORDERS_RISK_RULE_BREACH 0x3F                    // Max Num Duplicate Orders Risk Rule Breach
+#define ORDER_REJECT_REASON_MAX_ORDER_RATE_RISK_RULE_BREACH 0x40                              // Max Order Rate Risk Rule Breach
+#define ORDER_REJECT_REASON_RESTRICTED_SECURITY_RISK_RULE_VIOLATED 0x41                       // Restricted Security Risk Rule Violated
+#define ORDER_REJECT_REASON_HARD_TO_BORROW_SECURITY_RISK_RULE_VIOLATED 0x42                   // Hard To Borrow Security Risk Rule Violated
+#define ORDER_REJECT_REASON_INVALID_SELF_TRADE_PREVENTION_CONFIGURATION 0x43                  // Invalid Self Trade Prevention Configuration
+#define ORDER_REJECT_REASON_INVALID_SELF_TRADE_PREVENTION_TYPE 0x44                           // Invalid Self Trade Prevention Type
+#define ORDER_REJECT_REASON_INVALID_RISK_GROUP_ID 0x45                                        // Invalid Risk Group Id
+#define ORDER_REJECT_REASON_FIRM_DISABLED 0x46                                                // Firm Disabled
+#define ORDER_REJECT_REASON_MPID_DISABLED 0x47                                                // Mpid Disabled
+#define ORDER_REJECT_REASON_ACCOUNT_DISABLED 0x48                                             // Account Disabled
+#define ORDER_REJECT_REASON_NO_NBBO_AVAILABLE 0x49                                            // No Nbbo Available
+#define ORDER_REJECT_REASON_CANNOT_TRADE_NON_TEST_SYMBOL 0x4A                                 // Cannot Trade Non Test Symbol
+#define ORDER_REJECT_REASON_MISSING_FIRM 0x4B                                                 // Missing Firm
+#define ORDER_REJECT_REASON_MISSING_ACCOUNT 0x4C                                              // Missing Account
+#define ORDER_REJECT_REASON_MISSING_MPID 0x4D                                                 // Missing Mpid
+#define ORDER_REJECT_REASON_MISSING_RISK_GROUP 0x4E                                           // Missing Risk Group
+#define ORDER_REJECT_REASON_DAILY_MARKET_ORDER_GROSS_NOTIONAL_EXPOSURE_RISK_RULE_BREACH 0x4F  // Daily Market Order Gross Notional Exposure Risk Rule Breach
+#define ORDER_REJECT_REASON_DAILY_MARKET_ORDER_NET_NOTIONAL_EXPOSURE_RISK_RULE_BREACH 0x50    // Daily Market Order Net Notional Exposure Risk Rule Breach
+#define ORDER_REJECT_REASON_MISSING_DISP_METHOD_TYPE 0x51                                     // Missing Disp Method Type
+#define ORDER_REJECT_REASON_MISSING_FIRM_RISK_SETTING 0x52                                    // Missing Firm Risk Setting
+#define ORDER_REJECT_REASON_INVALID_ACCOUNT_MPID_TO_FIRM 0x53                                 // Invalid Account Mpid To Firm
+#define ORDER_REJECT_REASON_INVALID_PEG_OFFSET_VALUE 0x54                                     // Invalid Peg Offset Value
+#define ORDER_REJECT_REASON_NULL_VALUE 0xFF                                                   // Null Value
+
+// Last Liquidity Ind: one byte code
+#define LAST_LIQUIDITY_IND_ADD_DISPLAYED 0x01               // Add Displayed
+#define LAST_LIQUIDITY_IND_REMOVED 0x02                     // Removed
+#define LAST_LIQUIDITY_IND_ROUTED 0x03                      // Routed
+#define LAST_LIQUIDITY_IND_CROSS 0x04                       // Cross
+#define LAST_LIQUIDITY_IND_ADD_HIDDEN 0x05                  // Add Hidden
+#define LAST_LIQUIDITY_IND_ADD_MIDPOINT_PEG 0x06            // Add Midpoint Peg
+#define LAST_LIQUIDITY_IND_ADD_DISPLAYED_NBBO_IMPROVE 0x07  // Add Displayed Nbbo Improve
+#define LAST_LIQUIDITY_IND_NULL_VALUE 0xFF                  // Null Value
+
+// Last Mkt: one byte code
+#define LAST_MKT_MEMX 0x55           // Memx
+#define LAST_MKT_NASDAQ 0x51         // Nasdaq
+#define LAST_MKT_NASDAQ_BX 0x42      // Nasdaq Bx
+#define LAST_MKT_NASDAQ_PSX 0x58     // Nasdaq Psx
+#define LAST_MKT_NYSE 0x4E           // Nyse
+#define LAST_MKT_ARCA 0x50           // Arca
+#define LAST_MKT_NYSE_AMERICAN 0x41  // Nyse American
+#define LAST_MKT_NYSE_CHICAGO 0x4D   // Nyse Chicago
+#define LAST_MKT_NYSE_NATIONAL 0x43  // Nyse National
+#define LAST_MKT_EDGX 0x4B           // Edgx
+#define LAST_MKT_EDGA 0x4A           // Edga
+#define LAST_MKT_BATS 0x5A           // Bats
+#define LAST_MKT_BATSY 0x59          // Batsy
+#define LAST_MKT_IEX 0x56            // Iex
+#define LAST_MKT_LTSE 0x4C           // Ltse
+#define LAST_MKT_EPRL 0x48           // Eprl
+#define LAST_MKT_NULL_VALUE 0x20     // Null Value
+
+// Side Optional: one byte code
+#define SIDE_OPTIONAL_BUY 0x01                // Buy
+#define SIDE_OPTIONAL_SELL 0x02               // Sell
+#define SIDE_OPTIONAL_SELL_SHORT 0x03         // Sell Short
+#define SIDE_OPTIONAL_SELL_SHORT_EXEMPT 0x04  // Sell Short Exempt
+#define SIDE_OPTIONAL_NULL_VALUE 0xFF         // Null Value
+
+// Cancel Reason: one byte code
+#define CANCEL_REASON_OTHER 0x00                    // Other
+#define CANCEL_REASON_USER_REQUESTED_CANCEL 0x01    // User Requested Cancel
+#define CANCEL_REASON_END_OF_TRADING 0x04           // End Of Trading
+#define CANCEL_REASON_LIMIT_UP_LIMIT_DOWN 0x05      // Limit Up Limit Down
+#define CANCEL_REASON_HALTED 0x06                   // Halted
+#define CANCEL_REASON_EXCHANGE_SUPERVISORY 0x07     // Exchange Supervisory
+#define CANCEL_REASON_ORDER_EXPIRED 0x08            // Order Expired
+#define CANCEL_REASON_LOCK_OR_CROSS_BOOK 0x09       // Lock Or Cross Book
+#define CANCEL_REASON_SELF_TRADE_PREVENTION 0x0A    // Self Trade Prevention
+#define CANCEL_REASON_INSUFFICIENT_QUOTES 0x0B      // Insufficient Quotes
+#define CANCEL_REASON_NON_COMPLIANT_PRICE 0x0C      // Non Compliant Price
+#define CANCEL_REASON_PARTICIPANT_DISCONNECT 0x0D   // Participant Disconnect
+#define CANCEL_REASON_ORDER_NOT_BOOKABLE 0x0E       // Order Not Bookable
+#define CANCEL_REASON_TRADE_PROTECTION_LIMITS 0x0F  // Trade Protection Limits
+#define CANCEL_REASON_UNABLE_TO_ROUTE 0x10          // Unable To Route
+#define CANCEL_REASON_NULL_VALUE 0xFF               // Null Value
+
+// Exec Restatement Reason: one byte code
+#define EXEC_RESTATEMENT_REASON_ORDER_REPRICE 0x01          // Order Reprice
+#define EXEC_RESTATEMENT_REASON_SELF_TRADE_PREVENTION 0x02  // Self Trade Prevention
+#define EXEC_RESTATEMENT_REASON_NULL_VALUE 0xFF             // Null Value
+
+// Cxl Rej Response To: one byte code
+#define CXL_REJ_RESPONSE_TO_ORDER_CANCEL_REQUEST 0x01          // Order Cancel Request
+#define CXL_REJ_RESPONSE_TO_ORDER_CANCEL_REPLACE_REQUEST 0x02  // Order Cancel Replace Request
+#define CXL_REJ_RESPONSE_TO_NULL_VALUE 0xFF                    // Null Value
+
+// Cxl Rej Reason: one byte code
+#define CXL_REJ_REASON_OTHER 0x00                                          // Other
+#define CXL_REJ_REASON_MISSING_SYMBOL 0x01                                 // Missing Symbol
+#define CXL_REJ_REASON_MISSING_CL_ORD_ID 0x02                              // Missing Cl Ord Id
+#define CXL_REJ_REASON_MISSING_ORIG_ORDER_IDENTIFIERS 0x03                 // Missing Orig Order Identifiers
+#define CXL_REJ_REASON_AMBIGUOUS_ORIG_ORDER_IDENTIFIERS 0x04               // Ambiguous Orig Order Identifiers
+#define CXL_REJ_REASON_UNKNOWN_ORIG_ORDER 0x05                             // Unknown Orig Order
+#define CXL_REJ_REASON_ORIG_ORDER_SYMBOL_NOT_MATCHING_REQUEST_SYMBOL 0x06  // Orig Order Symbol Not Matching Request Symbol
+#define CXL_REJ_REASON_MISSING_LOCATE 0x07                                 // Missing Locate
+#define CXL_REJ_REASON_INVALID_ORDER_QUANTITY 0x08                         // Invalid Order Quantity
+#define CXL_REJ_REASON_INVALID_SYMBOL 0x09                                 // Invalid Symbol
+#define CXL_REJ_REASON_INVALID_LIMIT_PRICE 0x0A                            // Invalid Limit Price
+#define CXL_REJ_REASON_INVALID_LIMIT_PRICE_INCREMENT 0x0B                  // Invalid Limit Price Increment
+#define CXL_REJ_REASON_INVALID_LOCATE 0x0C                                 // Invalid Locate
+#define CXL_REJ_REASON_SYMBOL_HALTED_OR_PAUSED 0x0D                        // Symbol Halted Or Paused
+#define CXL_REJ_REASON_EXCHANGE_CLOSED 0x0E                                // Exchange Closed
+#define CXL_REJ_REASON_DUPLICATE_CL_ORD_ID 0x0F                            // Duplicate Cl Ord Id
+#define CXL_REJ_REASON_ORDER_SIZE_EXCEEDS_LIMIT 0x10                       // Order Size Exceeds Limit
+#define CXL_REJ_REASON_EXCEEDED_MAX_NOTIONAL_ORDER_AMT 0x11                // Exceeded Max Notional Order Amt
+#define CXL_REJ_REASON_UNSUPPORTED_DISPLAY_QUANTITY_CHANGE 0x12            // Unsupported Display Quantity Change
+#define CXL_REJ_REASON_UNSUPPORTED_ORD_TYPE_CHANGE 0x13                    // Unsupported Ord Type Change
+#define CXL_REJ_REASON_UNSUPPORTED_SIDE_CHANGE 0x14                        // Unsupported Side Change
+#define CXL_REJ_REASON_UNSUPPORTED_QUANTITY_CHANGE 0x15                    // Unsupported Quantity Change
+#define CXL_REJ_REASON_ORDER_IN_PENDING_STATE 0x16                         // Order In Pending State
+#define CXL_REJ_REASON_BLOCK_SESSION_RISK_RULE_VIOLATED 0x17               // Block Session Risk Rule Violated
+#define CXL_REJ_REASON_BLOCK_SELL_SHORT_RISK_RULE_VIOLATED 0x18            // Block Sell Short Risk Rule Violated
+#define CXL_REJ_REASON_MAX_SHARES_PER_ORDER_RISK_RULE_BREACH 0x19          // Max Shares Per Order Risk Rule Breach
+#define CXL_REJ_REASON_NO_NBBO_AVAILABLE 0x1A                              // No Nbbo Available
+#define CXL_REJ_REASON_MAX_NOTIONAL_VALUE_PER_ORDER_RISK_RULE_BREACH 0x1B  // Max Notional Value Per Order Risk Rule Breach
+#define CXL_REJ_REASON_MAX_ADV_PERCENT_PER_ORDER_RISK_RULE_BREACH 0x1C     // Max Adv Percent Per Order Risk Rule Breach
+#define CXL_REJ_REASON_PRICE_PERCENT_COLLAR_RISK_RULE_VIOLATED 0x1D        // Price Percent Collar Risk Rule Violated
+#define CXL_REJ_REASON_PRICE_VALUE_COLLAR_RISK_RULE_VIOLATED 0x1E          // Price Value Collar Risk Rule Violated
+#define CXL_REJ_REASON_HARD_TO_BORROW_SECURITY_RISK_RULE_VIOLATED 0x1F     // Hard To Borrow Security Risk Rule Violated
+#define CXL_REJ_REASON_NULL_VALUE 0xFF                                     // Null Value
+
+// Mass Cancel Reject Reason: one byte code
+#define MASS_CANCEL_REJECT_REASON_OTHER 0x00                                       // Other
+#define MASS_CANCEL_REJECT_REASON_UNKNOWN_PRODUCT 0x01                             // Unknown Product
+#define MASS_CANCEL_REJECT_REASON_UNKNOWN_SIDE 0x02                                // Unknown Side
+#define MASS_CANCEL_REJECT_REASON_UNKNOWN_GROUP_ID 0x03                            // Unknown Group Id
+#define MASS_CANCEL_REJECT_REASON_HIGHER_PRICE_LOWER_OR_EQUAL_TO_LOWER_PRICE 0x04  // Higher Price Lower Or Equal To Lower Price
+#define MASS_CANCEL_REJECT_REASON_PRODUCT_MISSING_FOR_PRICE_RESTRICTION 0x05       // Product Missing For Price Restriction
+#define MASS_CANCEL_REJECT_REASON_DUPLICATE_CL_ORD_ID 0x06                         // Duplicate Cl Ord Id
+#define MASS_CANCEL_REJECT_REASON_MALFORMED_REQUEST_MISSING_CL_ORD_ID_FIELD 0x07   // Malformed Request Missing Cl Ord Id Field
+#define MASS_CANCEL_REJECT_REASON_NULL_VALUE 0xFF                                  // Null Value
+
+// ---- Types -------------------------------------------------------------------
 
 // Memx Tcp Login Accepted Message
-entrypoint typedef struct _LoginAcceptedMessage {
+typedef struct _LoginAcceptedMessage {
   UINT8 supported_request_mode;  // byte 0
 } LoginAcceptedMessage;
 
-// ---- Login Rejected Message: 1 byte ------------------------------------------
-
 // Memx Tcp Login Rejected Message
-entrypoint typedef struct _LoginRejectedMessage {
+typedef struct _LoginRejectedMessage {
   UINT8 login_reject_code;  // byte 0
 } LoginRejectedMessage;
 
-// ---- Start Of Session Message: 8 bytes ---------------------------------------
-
 // Memx Tcp Start of Session Message
-entrypoint typedef struct _StartOfSessionMessage {
+typedef struct _StartOfSessionMessage {
   UINT64BE session_id;  // bytes 0 to 7
 } StartOfSessionMessage;
 
-// ---- Replay Begin Message: 12 bytes ------------------------------------------
-
 // Memx Tcp Replay Begin Message
-entrypoint typedef struct _ReplayBeginMessage {
+typedef struct _ReplayBeginMessage {
   UINT64BE next_sequence_number;   // bytes 0 to 7
   UINT32BE pending_message_count;  // bytes 8 to 11
 } ReplayBeginMessage;
 
-// ---- Replay Rejected Message: 1 byte -----------------------------------------
-
 // Memx Tcp Replay Rejected Message
-entrypoint typedef struct _ReplayRejectedMessage {
+typedef struct _ReplayRejectedMessage {
   UINT8 replay_reject_code;  // byte 0
 } ReplayRejectedMessage;
 
-// ---- Replay Complete Message: 8 bytes ----------------------------------------
-
 // Memx Tcp Replay Complete Message
-entrypoint typedef struct _ReplayCompleteMessage {
+typedef struct _ReplayCompleteMessage {
   UINT64BE message_count;  // bytes 0 to 7
 } ReplayCompleteMessage;
 
-// ---- Stream Begin Message: 16 bytes ------------------------------------------
-
 // Memx Tcp Stream Begin Message
-entrypoint typedef struct _StreamBeginMessage {
+typedef struct _StreamBeginMessage {
   UINT64BE next_sequence_number;  // bytes 0 to 7
   UINT64BE max_sequence_number;   // bytes 8 to 15
 } StreamBeginMessage;
 
-// ---- Stream Rejected Message: 1 byte -----------------------------------------
-
 // Memx Tcp Stream Rejected Message
-entrypoint typedef struct _StreamRejectedMessage {
+typedef struct _StreamRejectedMessage {
   UINT8 stream_reject_code;  // byte 0
 } StreamRejectedMessage;
 
-// ---- Stream Complete Message: 8 bytes ----------------------------------------
-
 // Memx Tcp Stream Complete Message
-entrypoint typedef struct _StreamCompleteMessage {
+typedef struct _StreamCompleteMessage {
   UINT64BE total_sequence_count;  // bytes 0 to 7
 } StreamCompleteMessage;
 
-// ---- Sbe Header: 6 bytes -----------------------------------------------------
+// ExecutionReport_PendingNewMessage
+typedef struct _ExecutionReportPendingNewMessage {
+  UINT64BE sending_time;                      // bytes 0 to 7
+  UINT64BE order_id;                          // bytes 8 to 15
+  UINT8 cl_ord_id[16];                        // bytes 16 to 31
+  UINT64BE exec_id;                           // bytes 32 to 39
+  UINT8 mpid[4];                              // bytes 40 to 43
+  UINT8 ord_status;                           // byte 44
+  UINT8 symbol[6];                            // bytes 45 to 50
+  UINT8 symbol_sfx[6];                        // bytes 51 to 56
+  UINT8 side;                                 // byte 57
+  UINT8 ord_type;                             // byte 58
+  UINT32BE order_qty;                         // bytes 59 to 62
+  UINT64BE price;                             // bytes 63 to 70, signed, read here as unsigned
+  UINT8 time_in_force;                        // byte 71
+  UINT8 order_capacity;                       // byte 72
+  UINT8 cust_order_capacity;                  // byte 73
+  UINT16BE reserved_13 : 13;                  // bytes 74 to 75
+  UINT16BE external_routing_not_allowed : 1;  // bytes 74 to 75
+  UINT16BE intermarket_sweep : 1;             // bytes 74 to 75
+  UINT16BE participate_do_not_initiate : 1;   // bytes 74 to 75
+  UINT64BE peg_offset_value;                  // bytes 76 to 83, signed, read here as unsigned
+  UINT8 peg_price_type;                       // byte 84
+  UINT64BE expire_time;                       // bytes 85 to 92
+  UINT32BE min_qty;                           // bytes 93 to 96
+  UINT32BE display_qty;                       // bytes 97 to 100
+  UINT8 display_method;                       // byte 101
+  UINT8 reserve_replenish_timing;             // byte 102
+  UINT32BE display_min_incr;                  // bytes 103 to 106
+  UINT8 locate_reqd;                          // byte 107
+  UINT8 reprice_frequency;                    // byte 108
+  UINT8 reprice_behavior;                     // byte 109
+  UINT16BE cancel_group_id;                   // bytes 110 to 111
+  UINT16BE stp_group_id;                      // bytes 112 to 113
+  UINT8 self_trade_prevention;                // byte 114
+  UINT16BE risk_group_id;                     // bytes 115 to 116
+  UINT32BE leaves_qty;                        // bytes 117 to 120
+  UINT32BE cum_qty;                           // bytes 121 to 124
+} ExecutionReportPendingNewMessage;
 
-// Sbe Header
-entrypoint typedef struct _SbeHeader {
-  UINT16BE block_length;  // bytes 0 to 1
-  UINT8 template_id;      // byte 2
-  UINT8 schema_id;        // byte 3
-  UINT16BE version;       // bytes 4 to 5
-} SbeHeader;
-
-// ---- Execution Report Rejected Message: 54 bytes -----------------------------
+// ExecutionReport_NewMessage
+typedef struct _ExecutionReportNewMessage {
+  UINT64BE sending_time;                      // bytes 0 to 7
+  UINT64BE order_id;                          // bytes 8 to 15
+  UINT8 cl_ord_id[16];                        // bytes 16 to 31
+  UINT64BE exec_id;                           // bytes 32 to 39
+  UINT8 mpid[4];                              // bytes 40 to 43
+  UINT8 ord_status;                           // byte 44
+  UINT8 symbol[6];                            // bytes 45 to 50
+  UINT8 symbol_sfx[6];                        // bytes 51 to 56
+  UINT8 side;                                 // byte 57
+  UINT8 ord_type;                             // byte 58
+  UINT32BE order_qty;                         // bytes 59 to 62
+  UINT64BE price;                             // bytes 63 to 70, signed, read here as unsigned
+  UINT8 time_in_force;                        // byte 71
+  UINT8 order_capacity;                       // byte 72
+  UINT8 cust_order_capacity;                  // byte 73
+  UINT16BE reserved_13 : 13;                  // bytes 74 to 75
+  UINT16BE external_routing_not_allowed : 1;  // bytes 74 to 75
+  UINT16BE intermarket_sweep : 1;             // bytes 74 to 75
+  UINT16BE participate_do_not_initiate : 1;   // bytes 74 to 75
+  UINT64BE peg_offset_value;                  // bytes 76 to 83, signed, read here as unsigned
+  UINT8 peg_price_type;                       // byte 84
+  UINT64BE expire_time;                       // bytes 85 to 92
+  UINT32BE min_qty;                           // bytes 93 to 96
+  UINT32BE display_qty;                       // bytes 97 to 100
+  UINT8 display_method;                       // byte 101
+  UINT8 reserve_replenish_timing;             // byte 102
+  UINT32BE display_min_incr;                  // bytes 103 to 106
+  UINT8 locate_reqd;                          // byte 107
+  UINT8 reprice_frequency;                    // byte 108
+  UINT8 reprice_behavior;                     // byte 109
+  UINT16BE cancel_group_id;                   // bytes 110 to 111
+  UINT16BE stp_group_id;                      // bytes 112 to 113
+  UINT8 self_trade_prevention;                // byte 114
+  UINT16BE risk_group_id;                     // bytes 115 to 116
+  UINT32BE leaves_qty;                        // bytes 117 to 120
+  UINT32BE cum_qty;                           // bytes 121 to 124
+  UINT64BE transact_time;                     // bytes 125 to 132
+} ExecutionReportNewMessage;
 
 // ExecutionReport_RejectedMessage
-entrypoint typedef struct _ExecutionReportRejectedMessage {
+typedef struct _ExecutionReportRejectedMessage {
   UINT64BE sending_time;      // bytes 0 to 7
   UINT8 cl_ord_id[16];        // bytes 8 to 23
   UINT64BE exec_id;           // bytes 24 to 31
@@ -116,10 +525,8 @@ entrypoint typedef struct _ExecutionReportRejectedMessage {
   UINT8 order_reject_reason;  // byte 53
 } ExecutionReportRejectedMessage;
 
-// ---- Execution Report Trade Message: 79 bytes --------------------------------
-
 // ExecutionReport_TradeMessage
-entrypoint typedef struct _ExecutionReportTradeMessage {
+typedef struct _ExecutionReportTradeMessage {
   UINT64BE sending_time;     // bytes 0 to 7
   UINT64BE order_id;         // bytes 8 to 15
   UINT8 cl_ord_id[16];       // bytes 16 to 31
@@ -135,10 +542,8 @@ entrypoint typedef struct _ExecutionReportTradeMessage {
   UINT64BE trd_matching_id;  // bytes 71 to 78
 } ExecutionReportTradeMessage;
 
-// ---- Execution Report Pending Cancel Message: 77 bytes -----------------------
-
 // ExecutionReport_PendingCancelMessage
-entrypoint typedef struct _ExecutionReportPendingCancelMessage {
+typedef struct _ExecutionReportPendingCancelMessage {
   UINT64BE sending_time;     // bytes 0 to 7
   UINT64BE order_id;         // bytes 8 to 15
   UINT8 cl_ord_id[16];       // bytes 16 to 31
@@ -151,10 +556,8 @@ entrypoint typedef struct _ExecutionReportPendingCancelMessage {
   UINT32BE cum_qty;          // bytes 73 to 76
 } ExecutionReportPendingCancelMessage;
 
-// ---- Pending Mass Cancel Message: 55 bytes -----------------------------------
-
 // PendingMassCancelMessage
-entrypoint typedef struct _PendingMassCancelMessage {
+typedef struct _PendingMassCancelMessage {
   UINT64BE sending_time;       // bytes 0 to 7
   UINT8 cl_ord_id[16];         // bytes 8 to 23
   UINT8 symbol[6];             // bytes 24 to 29
@@ -165,10 +568,8 @@ entrypoint typedef struct _PendingMassCancelMessage {
   UINT16BE cancel_group_id;    // bytes 53 to 54
 } PendingMassCancelMessage;
 
-// ---- Execution Report Canceled Message: 74 bytes -----------------------------
-
 // ExecutionReport_CanceledMessage
-entrypoint typedef struct _ExecutionReportCanceledMessage {
+typedef struct _ExecutionReportCanceledMessage {
   UINT64BE sending_time;     // bytes 0 to 7
   UINT8 cl_ord_id[16];       // bytes 8 to 23
   UINT8 orig_cl_ord_id[16];  // bytes 24 to 39
@@ -181,18 +582,14 @@ entrypoint typedef struct _ExecutionReportCanceledMessage {
   UINT64BE transact_time;    // bytes 66 to 73
 } ExecutionReportCanceledMessage;
 
-// ---- Mass Cancel Done Message: 24 bytes --------------------------------------
-
 // MassCancelDoneMessage
-entrypoint typedef struct _MassCancelDoneMessage {
+typedef struct _MassCancelDoneMessage {
   UINT64BE sending_time;  // bytes 0 to 7
   UINT8 cl_ord_id[16];    // bytes 8 to 23
 } MassCancelDoneMessage;
 
-// ---- Execution Report Pending Replace Message: 96 bytes ----------------------
-
 // ExecutionReport_PendingReplaceMessage
-entrypoint typedef struct _ExecutionReportPendingReplaceMessage {
+typedef struct _ExecutionReportPendingReplaceMessage {
   UINT64BE sending_time;     // bytes 0 to 7
   UINT64BE order_id;         // bytes 8 to 15
   UINT8 cl_ord_id[16];       // bytes 16 to 31
@@ -211,10 +608,8 @@ entrypoint typedef struct _ExecutionReportPendingReplaceMessage {
   UINT32BE cum_qty;          // bytes 92 to 95
 } ExecutionReportPendingReplaceMessage;
 
-// ---- Execution Report Replaced Message: 104 bytes ----------------------------
-
 // ExecutionReport_ReplacedMessage
-entrypoint typedef struct _ExecutionReportReplacedMessage {
+typedef struct _ExecutionReportReplacedMessage {
   UINT64BE sending_time;     // bytes 0 to 7
   UINT64BE order_id;         // bytes 8 to 15
   UINT8 cl_ord_id[16];       // bytes 16 to 31
@@ -234,10 +629,8 @@ entrypoint typedef struct _ExecutionReportReplacedMessage {
   UINT64BE transact_time;    // bytes 96 to 103
 } ExecutionReportReplacedMessage;
 
-// ---- Execution Report Trade Correction Message: 77 bytes ---------------------
-
 // ExecutionReport_TradeCorrectionMessage
-entrypoint typedef struct _ExecutionReportTradeCorrectionMessage {
+typedef struct _ExecutionReportTradeCorrectionMessage {
   UINT64BE sending_time;       // bytes 0 to 7
   UINT64BE order_id;           // bytes 8 to 15
   UINT8 cl_ord_id[16];         // bytes 16 to 31
@@ -251,10 +644,8 @@ entrypoint typedef struct _ExecutionReportTradeCorrectionMessage {
   UINT32BE cum_qty;            // bytes 73 to 76
 } ExecutionReportTradeCorrectionMessage;
 
-// ---- Execution Report Trade Break Message: 65 bytes --------------------------
-
 // ExecutionReport_TradeBreakMessage
-entrypoint typedef struct _ExecutionReportTradeBreakMessage {
+typedef struct _ExecutionReportTradeBreakMessage {
   UINT64BE sending_time;  // bytes 0 to 7
   UINT64BE order_id;      // bytes 8 to 15
   UINT8 cl_ord_id[16];    // bytes 16 to 31
@@ -266,10 +657,8 @@ entrypoint typedef struct _ExecutionReportTradeBreakMessage {
   UINT32BE cum_qty;       // bytes 61 to 64
 } ExecutionReportTradeBreakMessage;
 
-// ---- Execution Report Restatement Message: 70 bytes --------------------------
-
 // ExecutionReport_RestatementMessage
-entrypoint typedef struct _ExecutionReportRestatementMessage {
+typedef struct _ExecutionReportRestatementMessage {
   UINT64BE sending_time;          // bytes 0 to 7
   UINT64BE order_id;              // bytes 8 to 15
   UINT8 cl_ord_id[16];            // bytes 16 to 31
@@ -283,20 +672,16 @@ entrypoint typedef struct _ExecutionReportRestatementMessage {
   UINT64BE transact_time;         // bytes 62 to 69
 } ExecutionReportRestatementMessage;
 
-// ---- Order Cancel Reject Message: 26 bytes -----------------------------------
-
 // OrderCancelRejectMessage
-entrypoint typedef struct _OrderCancelRejectMessage {
+typedef struct _OrderCancelRejectMessage {
   UINT64BE sending_time;      // bytes 0 to 7
   UINT8 cl_ord_id[16];        // bytes 8 to 23
   UINT8 cxl_rej_response_to;  // byte 24
   UINT8 cxl_rej_reason;       // byte 25
 } OrderCancelRejectMessage;
 
-// ---- Mass Cancel Reject Message: 56 bytes ------------------------------------
-
 // MassCancelRejectMessage
-entrypoint typedef struct _MassCancelRejectMessage {
+typedef struct _MassCancelRejectMessage {
   UINT64BE sending_time;            // bytes 0 to 7
   UINT8 cl_ord_id[16];              // bytes 8 to 23
   UINT8 symbol[6];                  // bytes 24 to 29
@@ -307,4 +692,66 @@ entrypoint typedef struct _MassCancelRejectMessage {
   UINT16BE cancel_group_id;         // bytes 53 to 54
   UINT8 mass_cancel_reject_reason;  // byte 55
 } MassCancelRejectMessage;
+
+// Memo message body sent by Memx to the firm
+casetype _ServerPayload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x05: ExecutionReportPendingNewMessage execution_report_pending_new_message;
+    case 0x06: ExecutionReportNewMessage execution_report_new_message;
+    case 0x07: ExecutionReportRejectedMessage execution_report_rejected_message;
+    case 0x08: ExecutionReportTradeMessage execution_report_trade_message;
+    case 0x09: ExecutionReportPendingCancelMessage execution_report_pending_cancel_message;
+    case 0x0A: PendingMassCancelMessage pending_mass_cancel_message;
+    case 0x0B: ExecutionReportCanceledMessage execution_report_canceled_message;
+    case 0x0C: MassCancelDoneMessage mass_cancel_done_message;
+    case 0x0D: ExecutionReportPendingReplaceMessage execution_report_pending_replace_message;
+    case 0x0E: ExecutionReportReplacedMessage execution_report_replaced_message;
+    case 0x0F: ExecutionReportTradeCorrectionMessage execution_report_trade_correction_message;
+    case 0x10: ExecutionReportTradeBreakMessage execution_report_trade_break_message;
+    case 0x11: ExecutionReportRestatementMessage execution_report_restatement_message;
+    case 0x12: OrderCancelRejectMessage order_cancel_reject_message;
+    case 0x14: MassCancelRejectMessage mass_cancel_reject_message;
+    default: UINT8 unknown[available];
+  }
+} ServerPayload;
+
+// Sbe message sent by Memx to the firm
+typedef struct _ServerSbeMessage (UINT32 available) where (available >= 6) {
+  UINT16BE block_length;                                                                                        // bytes 0 to 1
+  UINT8 template_id;                                                                                            // byte 2
+  UINT8 schema_id;                                                                                              // byte 3
+  UINT16BE version;                                                                                             // bytes 4 to 5
+  ServerPayload(template_id, (available - 6)) server_payload[:byte-size-single-element-array (available - 6)];
+} ServerSbeMessage;
+
+// Memx Tcp sequenced message
+typedef struct _SequencedMessage (UINT32 available) {
+  ServerSbeMessage(available) server_sbe_message;
+} SequencedMessage;
+
+// Session message body sent by Memx to the firm, dispatched on the message type
+casetype _ServerData (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x01: LoginAcceptedMessage login_accepted_message;
+    case 0x02: LoginRejectedMessage login_rejected_message;
+    case 0x03: StartOfSessionMessage start_of_session_message;
+    case 0x05: ReplayBeginMessage replay_begin_message;
+    case 0x06: ReplayRejectedMessage replay_rejected_message;
+    case 0x07: ReplayCompleteMessage replay_complete_message;
+    case 0x08: StreamBeginMessage stream_begin_message;
+    case 0x09: StreamRejectedMessage stream_rejected_message;
+    case 0x0A: StreamCompleteMessage stream_complete_message;
+    case 0x0B: SequencedMessage(available) sequenced_message;
+    default: UINT8 unknown[available];
+  }
+} ServerData;
+
+// ---- Packet: ServerPacket ----------------------------------------------------
+
+// Memx Tcp packet sent by Memx to the firm
+entrypoint typedef struct _ServerPacket {
+  UINT8 message_type;                                                                                                          // byte 0
+  UINT16BE message_length;                                                                                                     // bytes 1 to 2
+  ServerData(message_type, ((UINT32) message_length)) server_data[:byte-size-single-element-array ((UINT32) message_length)];
+} ServerPacket;
 

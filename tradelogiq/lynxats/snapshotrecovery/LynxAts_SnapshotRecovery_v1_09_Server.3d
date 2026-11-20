@@ -1,57 +1,138 @@
-// Tradelogiq Markets Inc. Lynx Snapshot Recovery
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Tradelogiq LynxAts SnapshotRecovery Itch v1.09
 //
+// Protocol:
+//   Organization: Tradelogiq Markets Inc.
+//   Protocol: Lynx Snapshot Recovery
+//   Encoding: Itch
+//   Version: 1.09
+//   Date: 06/05/2025
+//   Specification: Tradelogiq-SnapshotRecovery-Specifications-v1.09.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ServerPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out LynxAts_SnapshotRecovery_v1_09_Server.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a field present only on a condition
-//
-// License: MIT No Attribution
 
-// ---- Server Packet Header: 3 bytes -------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Tradelogiq SoupTcp Server Packet Header
-entrypoint typedef struct _ServerPacketHeader {
-  UINT16BE packet_length;    // bytes 0 to 1
-  UINT8 server_packet_type;  // byte 2
-} ServerPacketHeader;
+// Server Packet Type: one byte code
+#define SERVER_PACKET_TYPE_LOGIN_ACCEPTED_PACKET 0x41    // Login Accepted Packet
+#define SERVER_PACKET_TYPE_LOGIN_REJECTED_PACKET 0x4A    // Login Rejected Packet
+#define SERVER_PACKET_TYPE_SEQUENCED_DATA_PACKET 0x53    // Sequenced Data Packet
+#define SERVER_PACKET_TYPE_SERVER_HEARTBEAT_PACKET 0x48  // Server Heartbeat Packet
 
-// ---- Login Accepted Packet: 30 bytes -----------------------------------------
+// Reject Reason Code: one byte code
+#define REJECT_REASON_CODE_NOT_AUTHORIZED 0x41         // Not Authorized
+#define REJECT_REASON_CODE_SESSION_NOT_AVAILABLE 0x53  // Session Not Available
+
+// Message Type: one byte code
+#define MESSAGE_TYPE_SYSTEM_EVENT_MESSAGE 0x53              // System Event Message
+#define MESSAGE_TYPE_STOCK_DIRECTORY_MESSAGE 0x52           // Stock Directory Message
+#define MESSAGE_TYPE_EXTENDED_STOCK_DIRECTORY_MESSAGE 0x72  // Extended Stock Directory Message
+#define MESSAGE_TYPE_STOCK_TRADING_ACTION_MESSAGE 0x48      // Stock Trading Action Message
+#define MESSAGE_TYPE_ADD_ORDER_MESSAGE 0x41                 // Add Order Message
+
+// Event Code: one byte code
+#define EVENT_CODE_START_OF_MESSAGES 0x4F      // Start Of Messages
+#define EVENT_CODE_START_OF_SYSTEM_HOURS 0x53  // Start Of System Hours
+#define EVENT_CODE_START_OF_MARKET_HOURS 0x51  // Start Of Market Hours
+#define EVENT_CODE_END_OF_MARKET_HOURS 0x4D    // End Of Market Hours
+#define EVENT_CODE_END_OF_SYSTEM_HOURS 0x45    // End Of System Hours
+#define EVENT_CODE_END_OF_MESSAGES 0x43        // End Of Messages
+#define EVENT_CODE_TRADING_HALTED 0x42         // Trading Halted
+#define EVENT_CODE_TRADING_RESUMED 0x52        // Trading Resumed
+
+// Market: one byte code
+#define MARKET_TSX 0x74            // Tsx
+#define MARKET_TSX_VENTURE 0x76    // Tsx Venture
+#define MARKET_CSE 0x63            // Cse
+#define MARKET_NASDAQ_CANADA 0x71  // Nasdaq Canada
+#define MARKET_OMEGA_ATS 0x6F      // Omega Ats
+#define MARKET_CBOE_CANADA 0x7A    // Cboe Canada
+
+// Shortable: one byte code
+#define SHORTABLE_SHORT_EXEMPT 0x45   // Short Exempt
+#define SHORTABLE_SHORTABLE 0x53      // Shortable
+#define SHORTABLE_NOT_SHORTABLE 0x4E  // Not Shortable
+
+// Dividend Indicator: one byte code
+#define DIVIDEND_INDICATOR_ANNUAL 0x41       // Annual
+#define DIVIDEND_INDICATOR_SEMI_ANNUAL 0x53  // Semi Annual
+#define DIVIDEND_INDICATOR_QUARTERLY 0x51    // Quarterly
+#define DIVIDEND_INDICATOR_MONTHLY 0x4D      // Monthly
+
+// Frequency: one byte code
+#define FREQUENCY_ANNUAL 0x41       // Annual
+#define FREQUENCY_SEMI_ANNUAL 0x53  // Semi Annual
+#define FREQUENCY_QUARTERLY 0x51    // Quarterly
+#define FREQUENCY_MONTHLY 0x4D      // Monthly
+
+// Security Type: one byte code
+#define SECURITY_TYPE_BONDS 0x62       // Bonds
+#define SECURITY_TYPE_DEBENTURES 0x64  // Debentures
+#define SECURITY_TYPE_RIGHTS 0x72      // Rights
+#define SECURITY_TYPE_NOTES 0x6E       // Notes
+#define SECURITY_TYPE_WARRANTS 0x77    // Warrants
+
+// Trading State: one byte code
+#define TRADING_STATE_HALTED 0x48   // Halted
+#define TRADING_STATE_TRADING 0x54  // Trading
+
+// Buy Sell Indicator: one byte code
+#define BUY_SELL_INDICATOR_BUY_ORDER 0x42   // Buy Order
+#define BUY_SELL_INDICATOR_SELL_ORDER 0x53  // Sell Order
+
+// ---- Types -------------------------------------------------------------------
 
 // The server sends a Login Accepted Packet in response to receiving a valid Login Request from the client
-entrypoint typedef struct _LoginAcceptedPacket {
+typedef struct _LoginAcceptedPacket {
   UINT8 accepted_session[10];          // bytes 0 to 9
   UINT8 accepted_sequence_number[20];  // bytes 10 to 29
 } LoginAcceptedPacket;
 
-// ---- Login Rejected Packet: 1 byte -------------------------------------------
-
 // The server sends this packet in response to an invalid Login Request Packet from the client and closes the socket connection
-entrypoint typedef struct _LoginRejectedPacket {
+typedef struct _LoginRejectedPacket {
   UINT8 reject_reason_code;  // byte 0
 } LoginRejectedPacket;
 
-// ---- System Event Message: 11 bytes ------------------------------------------
-
 // The spin consists of a Start-Of-Messages event, Add Order messages and an End-Of-Messages event, after which the Reallocation Server disconnects.
-entrypoint typedef struct _SystemEventMessage {
+typedef struct _SystemEventMessage {
   UINT8 event_code;     // byte 0
   UINT8 reserved_2[2];  // bytes 1 to 2
   UINT64BE timestamp;   // bytes 3 to 10
 } SystemEventMessage;
 
-// ---- Stock Directory Message: 39 bytes ---------------------------------------
-
 // A Requested Sequence Number of 1 returns the symbol spin, the Instrument Directory messages distributed early in the Tradelogiq start of day.
-entrypoint typedef struct _StockDirectoryMessage {
+typedef struct _StockDirectoryMessage {
   UINT8 market;              // byte 0
   UINT8 stock[10];           // bytes 1 to 10
   UINT64BE timestamp;        // bytes 11 to 18
@@ -63,10 +144,8 @@ entrypoint typedef struct _StockDirectoryMessage {
   UINT8 currency[3];         // bytes 36 to 38
 } StockDirectoryMessage;
 
-// ---- Extended Stock Directory Message: 71 bytes ------------------------------
-
 // The symbol spin carries the Extended Stock Directory of bonds, debentures, rights, notes and warrants alongside the Stock Directory.
-entrypoint typedef struct _ExtendedStockDirectoryMessage {
+typedef struct _ExtendedStockDirectoryMessage {
   UINT8 market;             // byte 0
   UINT8 stock[10];          // bytes 1 to 10
   UINT64BE timestamp;       // bytes 11 to 18
@@ -82,20 +161,16 @@ entrypoint typedef struct _ExtendedStockDirectoryMessage {
   UINT8 reserved_3[3];      // bytes 68 to 70
 } ExtendedStockDirectoryMessage;
 
-// ---- Stock Trading Action Message: 15 bytes ----------------------------------
-
 // If sequence 1 is used for the Sequenced Number field the reallocation server will return the symbol spin with the stock trading status messages before returning all open orders seen on the book.
-entrypoint typedef struct _StockTradingActionMessage {
+typedef struct _StockTradingActionMessage {
   UINT8 trading_state;     // byte 0
   UINT16BE instrument_id;  // bytes 1 to 2
   UINT64BE timestamp;      // bytes 3 to 10
   UINT8 reason[4];         // bytes 11 to 14
 } StockTradingActionMessage;
 
-// ---- Add Order Message: 27 bytes ---------------------------------------------
-
 // Only open orders are sent in the spin; the spin will not contain any message for an order which is no longer in the book.
-entrypoint typedef struct _AddOrderMessage {
+typedef struct _AddOrderMessage {
   UINT8 buy_sell_indicator;         // byte 0
   UINT16BE instrument_id;           // bytes 1 to 2
   UINT64BE timestamp;               // bytes 3 to 10
@@ -105,4 +180,60 @@ entrypoint typedef struct _AddOrderMessage {
   UINT16BE exec_broker_id;          // bytes 23 to 24
   UINT8 reserved_2[2];              // bytes 25 to 26
 } AddOrderMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x53: SystemEventMessage system_event_message;
+    case 0x52: StockDirectoryMessage stock_directory_message;
+    case 0x72: ExtendedStockDirectoryMessage extended_stock_directory_message;
+    case 0x48: StockTradingActionMessage stock_trading_action_message;
+    case 0x41: AddOrderMessage add_order_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// The higher-level protocol message carried by a Sequenced Data Packet
+typedef struct _SequencedMessage (UINT16 packet_length) where (packet_length >= 2) {
+  UINT8 message_type;                                                                                                             // byte 0
+  Payload(message_type, (((UINT32) packet_length) - 2)) payload[:byte-size-single-element-array (((UINT32) packet_length) - 2)];
+} SequencedMessage;
+
+// The higher-level protocol message carried by a Sequenced Data Packet
+casetype _OptionalSequencedMessage (Bool present, UINT16 packet_length) {
+  switch (present) {
+    case true: SequencedMessage(packet_length) sequenced_message;
+    case false: unit absent;
+  }
+} OptionalSequencedMessage;
+
+// The Sequenced Data Packets carry a higher-level protocol message; zero message bytes indicate no more messages available
+typedef struct _SequencedDataPacket (UINT16 packet_length) {
+  OptionalSequencedMessage((packet_length > 0x0001), packet_length) sequenced_message;
+} SequencedDataPacket;
+
+// Branch
+casetype _ServerPayload (UINT8 selector, UINT16 packet_length, UINT32 available) {
+  switch (selector) {
+    case 0x41: LoginAcceptedPacket login_accepted_packet;
+    case 0x4A: LoginRejectedPacket login_rejected_packet;
+    case 0x48: unit server_heartbeat;
+    case 0x53: SequencedDataPacket(packet_length) sequenced_data_packet;
+    default: UINT8 unknown[available];
+  }
+} ServerPayload;
+
+// Soup Tcp Packet sent by the server
+typedef struct _ServerSoupTcpPacket {
+  UINT16BE packet_length { packet_length >= 1 };                                                                                                                                // bytes 0 to 1
+  UINT8 server_packet_type;                                                                                                                                                     // byte 2
+  ServerPayload(server_packet_type, packet_length, ((((UINT32) packet_length) + 2) - 3)) server_payload[:byte-size-single-element-array ((((UINT32) packet_length) + 2) - 3)];
+} ServerSoupTcpPacket;
+
+// ---- Packet: ServerPacket ----------------------------------------------------
+
+// Tradelogiq SoupTcp Packet sent by the server
+entrypoint typedef struct _ServerPacket (UINT32 available) {
+  ServerSoupTcpPacket server_soup_tcp_packet[:byte-size available];
+} ServerPacket;
 

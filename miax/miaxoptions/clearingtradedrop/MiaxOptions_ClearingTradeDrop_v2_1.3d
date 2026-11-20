@@ -1,43 +1,385 @@
-// Miami International Holdings Clearing Trade Drop
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Miax MiaxOptions ClearingTradeDrop Ctd v2.1
 //
+// Protocol:
+//   Organization: Miami International Holdings
+//   Protocol: Clearing Trade Drop
+//   Encoding: Miax Clearing Trade Drop
+//   Version: 2.1
+//   Date: 04/03/2017
+//   Specification: Clearing_Trade_Drop_CTD_v2.1.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out MiaxOptions_ClearingTradeDrop_v2_1.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a length prefix framing what follows
-//
-// License: MIT No Attribution
 
-// ---- Sesm Packet Header: 3 bytes ---------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// SesM packet header
-entrypoint typedef struct _SesmPacketHeader {
-  UINT16 sesm_packet_length;  // bytes 0 to 1
-  UINT8 sesm_packet_type;     // byte 2
-} SesmPacketHeader;
+// Sesm Packet Type: one byte code
+#define SESM_PACKET_TYPE_SEQUENCED_DATA_PACKET 0x53     // Sequenced Data Packet
+#define SESM_PACKET_TYPE_UNSEQUENCED_DATA_PACKET 0x55   // Unsequenced Data Packet
+#define SESM_PACKET_TYPE_LOGIN_REQUEST 0x4C             // Login Request
+#define SESM_PACKET_TYPE_LOGIN_RESPONSE 0x52            // Login Response
+#define SESM_PACKET_TYPE_SYNCHRONIZATION_COMPLETE 0x43  // Synchronization Complete
+#define SESM_PACKET_TYPE_RETRANSMISSION_REQUEST 0x41    // Retransmission Request
+#define SESM_PACKET_TYPE_LOGOUT_REQUEST 0x58            // Logout Request
+#define SESM_PACKET_TYPE_GOODBYE_PACKET 0x47            // Goodbye Packet
+#define SESM_PACKET_TYPE_END_OF_SESSION 0x45            // End Of Session
+#define SESM_PACKET_TYPE_SERVER_HEARTBEAT 0x30          // Server Heartbeat
+#define SESM_PACKET_TYPE_CLIENT_HEARTBEAT 0x31          // Client Heartbeat
+#define SESM_PACKET_TYPE_TEST_PACKET 0x54               // Test Packet
 
-// ---- System State: 21 bytes --------------------------------------------------
+// Sequenced Message Type: one byte code
+#define SEQUENCED_MESSAGE_TYPE_SYSTEM_STATE 0x53               // System State
+#define SEQUENCED_MESSAGE_TYPE_TRADE_MESSAGE 0x54              // Trade Message
+#define SEQUENCED_MESSAGE_TYPE_RISK_NOTIFICATION_MESSAGE 0x52  // Risk Notification Message
+
+// System Status: one byte code
+#define SYSTEM_STATUS_END_OF_APPLICATION_MESSAGES 0x43  // End Of Application Messages
+#define SYSTEM_STATUS_START_OF_TEST_SESSION 0x31        // Start Of Test Session
+#define SYSTEM_STATUS_END_OF_TEST_SESSION 0x32          // End Of Test Session
+
+// Trade Action: one byte code
+#define TRADE_ACTION_NEW_TRADE 0x4E         // New Trade
+#define TRADE_ACTION_TRADE_CORRECTION 0x43  // Trade Correction
+#define TRADE_ACTION_TRADE_CANCEL 0x58      // Trade Cancel
+
+// Trade Type: one byte code
+#define TRADE_TYPE_AUTOMATIC 0x41  // Automatic
+#define TRADE_TYPE_MANUAL 0x4D     // Manual
+
+// Correction Type: one byte code
+#define CORRECTION_TYPE_NOT_APPLICABLE 0x31               // Not Applicable
+#define CORRECTION_TYPE_PRICE_ANDOR_SIZE_CHANGE 0x32      // Price Andor Size Change
+#define CORRECTION_TYPE_THIS_SIDE_CLEARING_CHANGE 0x33    // This Side Clearing Change
+#define CORRECTION_TYPE_CONTRA_SIDE_CLEARING_CHANGE 0x34  // Contra Side Clearing Change
+#define CORRECTION_TYPE_BOTH_SIDE_CLEARING_CHANGE 0x35    // Both Side Clearing Change
+
+// Underlying Type: one byte code
+#define UNDERLYING_TYPE_ETF 0x46     // Etf
+#define UNDERLYING_TYPE_INDEX 0x49   // Index
+#define UNDERLYING_TYPE_EQUITY 0x45  // Equity
+
+// Call Or Put: one byte code
+#define CALL_OR_PUT_CALL 0x43  // Call
+#define CALL_OR_PUT_PUT 0x50   // Put
+
+// Side: one byte code
+#define SIDE_BUY 0x42   // Buy
+#define SIDE_SELL 0x53  // Sell
+
+// Trade Condition: one byte code
+#define TRADE_CONDITION_REGULAR 0x20                                                                // Regular
+#define TRADE_CONDITION_CANCEL_OF_TRADE_PREVIOUSLY_REPORTED_OTHER_THAN_AS_THE_LAST_OR_OPENING 0x41  // Cancel Of Trade Previously Reported Other Than As The Last Or Opening
+#define TRADE_CONDITION_LATE_AND_IS_OUT_OF_SEQUENCE 0x42                                            // Late And Is Out Of Sequence
+#define TRADE_CONDITION_CANCEL_OF_THE_LAST_REPORTED_TRADE 0x43                                      // Cancel Of The Last Reported Trade
+#define TRADE_CONDITION_LATE_AND_IS_IN_CORRECT_SEQUENCE 0x44                                        // Late And Is In Correct Sequence
+#define TRADE_CONDITION_CANCEL_OF_THE_FIRST_REPORTED_TRADE 0x45                                     // Cancel Of The First Reported Trade
+#define TRADE_CONDITION_LATE_REPORT_OF_THE_OPENING_TRADE_AND_IS_OUT_OF_SEQUENCE 0x46                // Late Report Of The Opening Trade And Is Out Of Sequence
+#define TRADE_CONDITION_CANCEL_OF_THE_ONLY_REPORTED_TRADE 0x47                                      // Cancel Of The Only Reported Trade
+#define TRADE_CONDITION_LATE_REPORT_OF_THE_OPENING_TRADE_AND_IS_IN_CORRECT_SEQUENCE 0x48            // Late Report Of The Opening Trade And Is In Correct Sequence
+#define TRADE_CONDITION_RESERVED_I 0x49                                                             // Reserved I
+#define TRADE_CONDITION_REOPENING_OF_AN_OPTION 0x4A                                                 // Reopening Of An Option
+#define TRADE_CONDITION_RESERVED_K 0x4B                                                             // Reserved K
+#define TRADE_CONDITION_TWO_OPTIONS_IN_THE_SAME_CLASS 0x4C                                          // Two Options In The Same Class
+#define TRADE_CONDITION_A_BUY_AND_A_SELL_IN_A_PUT_AND_A_CALL 0x4D                                   // A Buy And A Sell In A Put And A Call
+#define TRADE_CONDITION_RESERVED_N 0x4E                                                             // Reserved N
+#define TRADE_CONDITION_RESERVED_O 0x4F                                                             // Reserved O
+#define TRADE_CONDITION_RESERVED_P 0x50                                                             // Reserved P
+#define TRADE_CONDITION_BUY_OF_A_CALL_AND_SELL_OF_A_PUT 0x51                                        // Buy Of A Call And Sell Of A Put
+#define TRADE_CONDITION_EXECUTION_OF_A_STOPPED_ORDER 0x52                                           // Execution Of A Stopped Order
+#define TRADE_CONDITION_EXECUTION_OF_AN_ISO_ORDER 0x53                                              // Execution Of An Iso Order
+#define TRADE_CONDITION_RESERVED_T 0x54                                                             // Reserved T
+#define TRADE_CONDITION_TRADE_THROUGH_EXEMPT 0x58                                                   // Trade Through Exempt
+
+// Class Fee Type: one byte code
+#define CLASS_FEE_TYPE_CONVENTIONAL_FEE_BASED 0x43  // Conventional Fee Based
+#define CLASS_FEE_TYPE_MAKER_TAKER_FEE_BASED 0x4D   // Maker Taker Fee Based
+
+// Miax Bbo Posting Increment Indicator: one byte code
+#define MIAX_BBO_POSTING_INCREMENT_INDICATOR_PENNY 0x50         // Penny
+#define MIAX_BBO_POSTING_INCREMENT_INDICATOR_PENNY_NICKEL 0x4E  // Penny Nickel
+#define MIAX_BBO_POSTING_INCREMENT_INDICATOR_NICKEL_DIME 0x44   // Nickel Dime
+
+// Execution Exchange: one byte code
+#define EXECUTION_EXCHANGE_NYSE_AMEX 0x41                       // Nyse Amex
+#define EXECUTION_EXCHANGE_NYSE_ARCA 0x4E                       // Nyse Arca
+#define EXECUTION_EXCHANGE_BOX 0x42                             // Box
+#define EXECUTION_EXCHANGE_CBOE 0x43                            // Cboe
+#define EXECUTION_EXCHANGE_C_2 0x57                             // C 2
+#define EXECUTION_EXCHANGE_ISE 0x49                             // Ise
+#define EXECUTION_EXCHANGE_ISE_GEMINI 0x48                      // Ise Gemini
+#define EXECUTION_EXCHANGE_ISE_MERCURY 0x4A                     // Ise Mercury
+#define EXECUTION_EXCHANGE_NASDAQ_OMX_OPTIONS_MARKET 0x51       // Nasdaq Omx Options Market
+#define EXECUTION_EXCHANGE_NASDAQ_OMX_PHLX_OPTIONS_MARKET 0x58  // Nasdaq Omx Phlx Options Market
+#define EXECUTION_EXCHANGE_NASDAQ_BX 0x54                       // Nasdaq Bx
+#define EXECUTION_EXCHANGE_BATS 0x5A                            // Bats
+#define EXECUTION_EXCHANGE_EDGX_OPTIONS_MARKET 0x45             // Edgx Options Market
+#define EXECUTION_EXCHANGE_MIAX_PEARL 0x50                      // Miax Pearl
+#define EXECUTION_EXCHANGE_TRADED_AT_MIAX 0x20                  // Traded At Miax
+
+// Market Maker Role: one byte code
+#define MARKET_MAKER_ROLE_PLMM 0x50   // Plmm
+#define MARKET_MAKER_ROLE_LMM 0x4C    // Lmm
+#define MARKET_MAKER_ROLE_RMM 0x52    // Rmm
+#define MARKET_MAKER_ROLE_UMM 0x55    // Umm
+#define MARKET_MAKER_ROLE_OTHER 0x20  // Other
+
+// Traded With Directed Mm: one byte code
+#define TRADED_WITH_DIRECTED_MM_YES 0x59             // Yes
+#define TRADED_WITH_DIRECTED_MM_NO 0x4E              // No
+#define TRADED_WITH_DIRECTED_MM_NOT_APPLICABLE 0x20  // Not Applicable
+
+// Market State: one byte code
+#define MARKET_STATE_FREE_TRADING 0x54    // Free Trading
+#define MARKET_STATE_AUCTION 0x41         // Auction
+#define MARKET_STATE_HALTED 0x48          // Halted
+#define MARKET_STATE_NON_TRADABLE 0x4E    // Non Tradable
+#define MARKET_STATE_NOT_APPLICABLE 0x20  // Not Applicable
+
+// Auction Type: one byte code
+#define AUCTION_TYPE_NOT_APPLICABLE 0x20                    // Not Applicable
+#define AUCTION_TYPE_OPENING 0x31                           // Opening
+#define AUCTION_TYPE_REOPENING 0x32                         // Reopening
+#define AUCTION_TYPE_CLOSING 0x33                           // Closing
+#define AUCTION_TYPE_ROUTING 0x34                           // Routing
+#define AUCTION_TYPE_LIQUIDITY_REFRESH 0x35                 // Liquidity Refresh
+#define AUCTION_TYPE_PRIME_PAIRED_ORDER 0x36                // Prime Paired Order
+#define AUCTION_TYPE_PRIME_CUSTOMER_CROSS 0x37              // Prime Customer Cross
+#define AUCTION_TYPE_PRIME_QUALIFIED_CONTINGENT_CROSS 0x38  // Prime Qualified Contingent Cross
+#define AUCTION_TYPE_DOWNGRADED_FOR_OLDER_VERSION 0x2A      // Downgraded For Older Version
+
+// Directed Status: one byte code
+#define DIRECTED_STATUS_DIRECTED_TO_DLMM_ASSIGNED_TO_UNDERLYING 0x45      // Directed To Dlmm Assigned To Underlying
+#define DIRECTED_STATUS_DIRECTED_TO_DLMM_NOT_ASSIGNED_TO_UNDERLYING 0x55  // Directed To Dlmm Not Assigned To Underlying
+#define DIRECTED_STATUS_NON_DIRECTED_ORDER 0x4E                           // Non Directed Order
+#define DIRECTED_STATUS_DFC_INVALID 0x58                                  // Dfc Invalid
+#define DIRECTED_STATUS_NOT_DIRECTED_DUE_TO_ORDER_ORIGIN 0x49             // Not Directed Due To Order Origin
+
+// Strategy State: one byte code
+#define STRATEGY_STATE_NOT_APPLICABLE 0x20                // Not Applicable
+#define STRATEGY_STATE_STANDARD_AUCTION 0x41              // Standard Auction
+#define STRATEGY_STATE_FREE_TRADING 0x46                  // Free Trading
+#define STRATEGY_STATE_C_PRIME 0x50                       // C Prime
+#define STRATEGY_STATE_C_C_2_C 0x58                       // C C 2 C
+#define STRATEGY_STATE_C_QCC 0x51                         // C Qcc
+#define STRATEGY_STATE_DOWNGRADED_FOR_OLDER_VERSION 0x2A  // Downgraded For Older Version
+
+// Strategy Auction Type: one byte code
+#define STRATEGY_AUCTION_TYPE_NOT_APPLICABLE 0x20                            // Not Applicable
+#define STRATEGY_AUCTION_TYPE_INITIAL_IMPROVEMENT_OPENING 0x49               // Initial Improvement Opening
+#define STRATEGY_AUCTION_TYPE_INITIAL_IMPROVEMENT_OPENING_BOOK_CROSSED 0x59  // Initial Improvement Opening Book Crossed
+#define STRATEGY_AUCTION_TYPE_UPON_RECEIPT_IMPROVEMENT 0x55                  // Upon Receipt Improvement
+#define STRATEGY_AUCTION_TYPE_REEVALUATION_IMPROVEMENT 0x52                  // Reevaluation Improvement
+#define STRATEGY_AUCTION_TYPE_REEVALUATION_IMPROVEMENT_BOOK_CROSSED 0x50     // Reevaluation Improvement Book Crossed
+#define STRATEGY_AUCTION_TYPE_IMMEDIATE_BOOK_UNCROSSING 0x43                 // Immediate Book Uncrossing
+#define STRATEGY_AUCTION_TYPE_DOWNGRADED_FOR_OLDER_VERSION 0x2A              // Downgraded For Older Version
+
+// Open Close Indicator: one byte code
+#define OPEN_CLOSE_INDICATOR_OPENING_POSITION 0x4F  // Opening Position
+#define OPEN_CLOSE_INDICATOR_CLOSING_POSITION 0x43  // Closing Position
+
+// Liquidity Type: one byte code
+#define LIQUIDITY_TYPE_ORDER 0x4F                         // Order
+#define LIQUIDITY_TYPE_QUOTE 0x51                         // Quote
+#define LIQUIDITY_TYPE_E_QUOTE 0x45                       // E Quote
+#define LIQUIDITY_TYPE_COMPLEX_ORDER 0x43                 // Complex Order
+#define LIQUIDITY_TYPE_COMPLEX_E_QUOTE 0x44               // Complex E Quote
+#define LIQUIDITY_TYPE_NOT_APPLICABLE 0x20                // Not Applicable
+#define LIQUIDITY_TYPE_DOWNGRADED_FOR_OLDER_VERSION 0x2A  // Downgraded For Older Version
+
+// Mm Priority Indicator: one byte code
+#define MM_PRIORITY_INDICATOR_YES 0x59             // Yes
+#define MM_PRIORITY_INDICATOR_NO 0x4E              // No
+#define MM_PRIORITY_INDICATOR_NOT_APPLICABLE 0x20  // Not Applicable
+
+// Liquidity Indicator: one byte code
+#define LIQUIDITY_INDICATOR_ADD 0x41             // Add
+#define LIQUIDITY_INDICATOR_REMOVE 0x52          // Remove
+#define LIQUIDITY_INDICATOR_NOT_APPLICABLE 0x20  // Not Applicable
+
+// Liquidity Timer Role: one byte code
+#define LIQUIDITY_TIMER_ROLE_TIMER_INITIATOR 0x49                   // Timer Initiator
+#define LIQUIDITY_TIMER_ROLE_TIMER_JOINER 0x4A                      // Timer Joiner
+#define LIQUIDITY_TIMER_ROLE_RECEIVED_BEFORE_ON_SAME_SIDE 0x54      // Received Before On Same Side
+#define LIQUIDITY_TIMER_ROLE_RECEIVED_ON_OPPOSITE_SIDE_BEFORE 0x42  // Received On Opposite Side Before
+#define LIQUIDITY_TIMER_ROLE_RECEIVED_ON_OPPOSITE_SIDE_AFTER 0x41   // Received On Opposite Side After
+#define LIQUIDITY_TIMER_ROLE_RESPONSE 0x52                          // Response
+#define LIQUIDITY_TIMER_ROLE_MANAGED_INTEREST 0x45                  // Managed Interest
+#define LIQUIDITY_TIMER_ROLE_PRIME_CONTRA 0x4B                      // Prime Contra
+#define LIQUIDITY_TIMER_ROLE_PRIME_CUSTOMER_CROSS 0x50              // Prime Customer Cross
+#define LIQUIDITY_TIMER_ROLE_NOT_APPLICABLE 0x20                    // Not Applicable
+#define LIQUIDITY_TIMER_ROLE_DOWNGRADED_FOR_OLDER_VERSION 0x2A      // Downgraded For Older Version
+
+// Time In Force: one byte code
+#define TIME_IN_FORCE_DAY 0x30                           // Day
+#define TIME_IN_FORCE_GTC 0x31                           // Gtc
+#define TIME_IN_FORCE_OPG 0x32                           // Opg
+#define TIME_IN_FORCE_IOC 0x33                           // Ioc
+#define TIME_IN_FORCE_FOK 0x34                           // Fok
+#define TIME_IN_FORCE_AT_CROSSING 0x39                   // At Crossing
+#define TIME_IN_FORCE_DOWNGRADED_FOR_OLDER_VERSION 0x2A  // Downgraded For Older Version
+
+// Strategy Timer Role: one byte code
+#define STRATEGY_TIMER_ROLE_INITIATOR 0x49                      // Initiator
+#define STRATEGY_TIMER_ROLE_JOINER 0x4A                         // Joiner
+#define STRATEGY_TIMER_ROLE_PRE_EXISTING_ON_SAME_SIDE 0x54      // Pre Existing On Same Side
+#define STRATEGY_TIMER_ROLE_PRE_EXISTING_ON_OPPOSITE_SIDE 0x42  // Pre Existing On Opposite Side
+#define STRATEGY_TIMER_ROLE_UN_RELATED_ON_OPPOSITE_SIDE 0x41    // Un Related On Opposite Side
+#define STRATEGY_TIMER_ROLE_RESPONSE_ON_OPPOSITE_SIDE 0x52      // Response On Opposite Side
+#define STRATEGY_TIMER_ROLE_RESPONSE_ON_SAME_SIDE 0x47          // Response On Same Side
+#define STRATEGY_TIMER_ROLE_C_PRIME_CONTRA 0x4B                 // C Prime Contra
+#define STRATEGY_TIMER_ROLE_C_C_2_C_ORDER 0x50                  // C C 2 C Order
+#define STRATEGY_TIMER_ROLE_NOT_APPLICABLE 0x20                 // Not Applicable
+#define STRATEGY_TIMER_ROLE_DOWNGRADED_FOR_OLDER_VERSION 0x2A   // Downgraded For Older Version
+
+// Member Type: one byte code
+#define MEMBER_TYPE_ELECTRONIC_EXCHANGE_MEMBER 0x45  // Electronic Exchange Member
+#define MEMBER_TYPE_MARKET_MAKER 0x4D                // Market Maker
+#define MEMBER_TYPE_ROUTING_BROKER 0x52              // Routing Broker
+
+// Origin: one byte code
+#define ORIGIN_PRIORITY_CUSTOMER 0x43           // Priority Customer
+#define ORIGIN_NON_PRIORITY_CUSTOMER 0x4E       // Non Priority Customer
+#define ORIGIN_FIRM 0x46                        // Firm
+#define ORIGIN_BROKER_DEALER 0x42               // Broker Dealer
+#define ORIGIN_MEMBER_MARKET_MAKER 0x4D         // Member Market Maker
+#define ORIGIN_AWAY_EXCHANGE_MARKET_MAKER 0x41  // Away Exchange Market Maker
+
+// Contra Member Type: one byte code
+#define CONTRA_MEMBER_TYPE_ELECTRONIC_EXCHANGE_MEMBER 0x45  // Electronic Exchange Member
+#define CONTRA_MEMBER_TYPE_MARKET_MAKER 0x4D                // Market Maker
+#define CONTRA_MEMBER_TYPE_ROUTING_BROKER 0x52              // Routing Broker
+
+// Contra Origin: one byte code
+#define CONTRA_ORIGIN_PRIORITY_CUSTOMER 0x43           // Priority Customer
+#define CONTRA_ORIGIN_NON_PRIORITY_CUSTOMER 0x4E       // Non Priority Customer
+#define CONTRA_ORIGIN_FIRM 0x46                        // Firm
+#define CONTRA_ORIGIN_BROKER_DEALER 0x42               // Broker Dealer
+#define CONTRA_ORIGIN_MEMBER_MARKET_MAKER 0x4D         // Member Market Maker
+#define CONTRA_ORIGIN_AWAY_EXCHANGE_MARKET_MAKER 0x41  // Away Exchange Market Maker
+
+// Contra Time In Force: one byte code
+#define CONTRA_TIME_IN_FORCE_DAY 0x30                           // Day
+#define CONTRA_TIME_IN_FORCE_GTC 0x31                           // Gtc
+#define CONTRA_TIME_IN_FORCE_OPG 0x32                           // Opg
+#define CONTRA_TIME_IN_FORCE_IOC 0x33                           // Ioc
+#define CONTRA_TIME_IN_FORCE_FOK 0x34                           // Fok
+#define CONTRA_TIME_IN_FORCE_AT_CROSSING 0x39                   // At Crossing
+#define CONTRA_TIME_IN_FORCE_DOWNGRADED_FOR_OLDER_VERSION 0x2A  // Downgraded For Older Version
+
+// Contra Liquidity Timer Role: one byte code
+#define CONTRA_LIQUIDITY_TIMER_ROLE_TIMER_INITIATOR 0x49                   // Timer Initiator
+#define CONTRA_LIQUIDITY_TIMER_ROLE_TIMER_JOINER 0x4A                      // Timer Joiner
+#define CONTRA_LIQUIDITY_TIMER_ROLE_RECEIVED_BEFORE_ON_SAME_SIDE 0x54      // Received Before On Same Side
+#define CONTRA_LIQUIDITY_TIMER_ROLE_RECEIVED_ON_OPPOSITE_SIDE_BEFORE 0x42  // Received On Opposite Side Before
+#define CONTRA_LIQUIDITY_TIMER_ROLE_RECEIVED_ON_OPPOSITE_SIDE_AFTER 0x41   // Received On Opposite Side After
+#define CONTRA_LIQUIDITY_TIMER_ROLE_RESPONSE 0x52                          // Response
+#define CONTRA_LIQUIDITY_TIMER_ROLE_MANAGED_INTEREST 0x45                  // Managed Interest
+#define CONTRA_LIQUIDITY_TIMER_ROLE_PRIME_CONTRA 0x4B                      // Prime Contra
+#define CONTRA_LIQUIDITY_TIMER_ROLE_PRIME_CUSTOMER_CROSS 0x50              // Prime Customer Cross
+#define CONTRA_LIQUIDITY_TIMER_ROLE_NOT_APPLICABLE 0x20                    // Not Applicable
+#define CONTRA_LIQUIDITY_TIMER_ROLE_DOWNGRADED_FOR_OLDER_VERSION 0x2A      // Downgraded For Older Version
+
+// Contra Strategy Timer Role: one byte code
+#define CONTRA_STRATEGY_TIMER_ROLE_INITIATOR 0x49                      // Initiator
+#define CONTRA_STRATEGY_TIMER_ROLE_JOINER 0x4A                         // Joiner
+#define CONTRA_STRATEGY_TIMER_ROLE_PRE_EXISTING_ON_SAME_SIDE 0x54      // Pre Existing On Same Side
+#define CONTRA_STRATEGY_TIMER_ROLE_PRE_EXISTING_ON_OPPOSITE_SIDE 0x42  // Pre Existing On Opposite Side
+#define CONTRA_STRATEGY_TIMER_ROLE_UN_RELATED_ON_OPPOSITE_SIDE 0x41    // Un Related On Opposite Side
+#define CONTRA_STRATEGY_TIMER_ROLE_RESPONSE_ON_OPPOSITE_SIDE 0x52      // Response On Opposite Side
+#define CONTRA_STRATEGY_TIMER_ROLE_RESPONSE_ON_SAME_SIDE 0x47          // Response On Same Side
+#define CONTRA_STRATEGY_TIMER_ROLE_C_PRIME_CONTRA 0x4B                 // C Prime Contra
+#define CONTRA_STRATEGY_TIMER_ROLE_C_C_2_C_ORDER 0x50                  // C C 2 C Order
+#define CONTRA_STRATEGY_TIMER_ROLE_NOT_APPLICABLE 0x20                 // Not Applicable
+#define CONTRA_STRATEGY_TIMER_ROLE_DOWNGRADED_FOR_OLDER_VERSION 0x2A   // Downgraded For Older Version
+
+// Metric Type: one byte code
+#define METRIC_TYPE_RATE_OF_EXECUTED_ORDER_CONTRACTS 0x43     // Rate Of Executed Order Contracts
+#define METRIC_TYPE_RATE_OF_NEW_REPLACE_ORDERS_RECEIVED 0x4F  // Rate Of New Replace Orders Received
+#define METRIC_TYPE_DOWNGRADED_FOR_OLDER_VERSION 0x2A         // Downgraded For Older Version
+
+// Protection Type: one byte code
+#define PROTECTION_TYPE_BLOCK 0x42                         // Block
+#define PROTECTION_TYPE_BLOCK_AND_MASS_CANCEL 0x4D         // Block And Mass Cancel
+#define PROTECTION_TYPE_WARNING_ONLY 0x57                  // Warning Only
+#define PROTECTION_TYPE_DOWNGRADED_FOR_OLDER_VERSION 0x2A  // Downgraded For Older Version
+
+// Event Type: one byte code
+#define EVENT_TYPE_PERIOD_STATUS_PULSE_NOTIFICATION 0x53  // Period Status Pulse Notification
+#define EVENT_TYPE_SAFEGUARD_TRIGGER 0x54                 // Safeguard Trigger
+#define EVENT_TYPE_RESET_RISK_METRIC 0x52                 // Reset Risk Metric
+#define EVENT_TYPE_WARNING_ONLY 0x57                      // Warning Only
+#define EVENT_TYPE_METRIC_DELETED 0x44                    // Metric Deleted
+#define EVENT_TYPE_METRIC_ADDED 0x41                      // Metric Added
+#define EVENT_TYPE_METRIC_PAUSED 0x50                     // Metric Paused
+#define EVENT_TYPE_METRIC_UN_PAUSED 0x55                  // Metric Un Paused
+#define EVENT_TYPE_DOWNGRADED_FOR_OLDER_VERSION 0x2A      // Downgraded For Older Version
+
+// Unsequenced Message Type: one byte code
+#define UNSEQUENCED_MESSAGE_TYPE_RISK_NOTIFICATION_MESSAGE 0x52  // Risk Notification Message
+
+// Login Status: one byte code
+#define LOGIN_STATUS_LOGIN_SUCCESSFUL 0x20                                   // Login Successful
+#define LOGIN_STATUS_REJECTED 0x58                                           // Rejected
+#define LOGIN_STATUS_REQUESTED_SESSION_IS_NOT_AVAILABLE 0x53                 // Requested Session Is Not Available
+#define LOGIN_STATUS_INVALID_START_SEQUENCE_NUMBER_REQUESTED 0x4E            // Invalid Start Sequence Number Requested
+#define LOGIN_STATUS_INCOMPATIBLE_SESSION_PROTOCOL_VERSION 0x49              // Incompatible Session Protocol Version
+#define LOGIN_STATUS_INCOMPATIBLE_APPLICATION_PROTOCOL_VERSION 0x41          // Incompatible Application Protocol Version
+#define LOGIN_STATUS_REQUEST_REJECTED_BECAUSE_CLIENT_ALREADY_LOGGED_IN 0x4C  // Request Rejected Because Client Already Logged In
+
+// Logout Reason: one byte code
+#define LOGOUT_REASON_GRACEFUL_LOGOUT 0x20                     // Graceful Logout
+#define LOGOUT_REASON_BAD_SESM_PACKET 0x42                     // Bad Sesm Packet
+#define LOGOUT_REASON_TIMED_OUT_WAITING_FOR_LOGIN_PACKET 0x4C  // Timed Out Waiting For Login Packet
+#define LOGOUT_REASON_APPLICATION_TERMINATING_CONNECTION 0x41  // Application Terminating Connection
+
+// Goodbye Reason: one byte code
+#define GOODBYE_REASON_BAD_SESM_PACKET 0x42                     // Bad Sesm Packet
+#define GOODBYE_REASON_TIMED_OUT_WAITING_FOR_LOGIN_PACKET 0x4C  // Timed Out Waiting For Login Packet
+#define GOODBYE_REASON_APPLICATION_TERMINATING_CONNECTION 0x41  // Application Terminating Connection
+
+// ---- Types -------------------------------------------------------------------
 
 // This message format is used to notify firms of the state changes of the system. Firms can use notifications as triggers in their system to ensure electronic synchronization of systems.
-entrypoint typedef struct _SystemState {
+typedef struct _SystemState {
   UINT64 notification_time;   // bytes 0 to 7
   UINT8 ctd_version[8];       // bytes 8 to 15
   UINT32 trading_session_id;  // bytes 16 to 19
   UINT8 system_status;        // byte 20
 } SystemState;
 
-// ---- Trade Message: 310 bytes ------------------------------------------------
-
 // This is the message format that will be used to disseminate all MIAX trade related content for entitled parties. MIAX sends trades, trade corrections and trade cancels using this message. This is a sequenced message.
-entrypoint typedef struct _TradeMessage {
+typedef struct _TradeMessage {
   UINT64 processing_time;                      // bytes 0 to 7
   UINT64 trade_time;                           // bytes 8 to 15
   UINT32 trade_as_of_date;                     // bytes 16 to 19
@@ -116,10 +458,8 @@ entrypoint typedef struct _TradeMessage {
   UINT8 reserved_13[13];                       // bytes 297 to 309
 } TradeMessage;
 
-// ---- Risk Notification Message: 160 bytes ------------------------------------
-
 // Firms configured to use Risk Protection Monitoring will receive User Notification communicating the status of Risk checks. Field Event Type is used to determine the reason for the notification. The following message will be used to disseminate all MIAX Risk Protection Monitor (RPM) related notifications. Sequenced and UnSequenced Pkt based on Event Type: solicited event types (T, R, W, D, A, P, U) are Sequenced messages at the SesM protocol level and recoverable; unsolicited (S) are Unsequenced and not recoverable.
-entrypoint typedef struct _RiskNotificationMessage {
+typedef struct _RiskNotificationMessage {
   UINT64 processing_time;                  // bytes 0 to 7
   UINT8 mpid_group_id[32];                 // bytes 8 to 39
   UINT8 metric_id[32];                     // bytes 40 to 71
@@ -136,10 +476,39 @@ entrypoint typedef struct _RiskNotificationMessage {
   UINT8 reserved_32[32];                   // bytes 128 to 159
 } RiskNotificationMessage;
 
-// ---- Login Request: 35 bytes -------------------------------------------------
+// Branch
+casetype _SequencedMessage (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x53: SystemState system_state;
+    case 0x54: TradeMessage trade_message;
+    case 0x52: RiskNotificationMessage risk_notification_message;
+    default: UINT8 unknown[available];
+  }
+} SequencedMessage;
+
+// The Server application can choose to use Sequenced data packets to send all messages that must be recoverable by the client in case of a connection loss
+typedef struct _SequencedDataPacket (UINT32 available) where (available >= 9) {
+  UINT64 sequence_number;                                                                                                        // bytes 0 to 7
+  UINT8 sequenced_message_type;                                                                                                  // byte 8
+  SequencedMessage(sequenced_message_type, (available - 9)) sequenced_message[:byte-size-single-element-array (available - 9)];
+} SequencedDataPacket;
+
+// Branch
+casetype _UnsequencedMessage (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x52: RiskNotificationMessage risk_notification_message;
+    default: UINT8 unknown[available];
+  }
+} UnsequencedMessage;
+
+// Each unsequenced data packet carries one unsequenced message from the higher-level protocol
+typedef struct _UnsequencedDataPacket (UINT32 available) where (available >= 1) {
+  UINT8 unsequenced_message_type;                                                                                                      // byte 0
+  UnsequencedMessage(unsequenced_message_type, (available - 1)) unsequenced_message[:byte-size-single-element-array (available - 1)];
+} UnsequencedDataPacket;
 
 // The SesM client uses this packet to allow the server to authenticate the client and to convey to the server the last sequenced packet that the client received
-entrypoint typedef struct _LoginRequest {
+typedef struct _LoginRequest {
   UINT8 sesm_version[5];             // bytes 0 to 4
   UINT8 username[5];                 // bytes 5 to 9
   UINT8 computer_id[8];              // bytes 10 to 17
@@ -148,20 +517,66 @@ entrypoint typedef struct _LoginRequest {
   UINT64 requested_sequence_number;  // bytes 27 to 34
 } LoginRequest;
 
-// ---- Login Response: 10 bytes ------------------------------------------------
-
 // The SesM server sends a Login response packet in response to a Login request packet from the client
-entrypoint typedef struct _LoginResponse {
+typedef struct _LoginResponse {
   UINT8 login_status;              // byte 0
   UINT8 session_id;                // byte 1
   UINT64 highest_sequence_number;  // bytes 2 to 9
 } LoginResponse;
 
-// ---- Retransmission Request: 16 bytes ----------------------------------------
-
 // The SesM client uses this packet to request the server to retransmit a range of packets
-entrypoint typedef struct _RetransmissionRequest {
+typedef struct _RetransmissionRequest {
   UINT64 start_sequence_number;  // bytes 0 to 7
   UINT64 end_sequence_number;    // bytes 8 to 15
 } RetransmissionRequest;
+
+// The client may send a Logout request packet to request the connection be terminated
+typedef struct _LogoutRequest (UINT16 sesm_packet_length) where (sesm_packet_length >= 2) {
+  UINT8 logout_reason;                                     // byte 0
+  UINT8 logout_text[(((UINT32) sesm_packet_length) - 2)];
+} LogoutRequest;
+
+// The server may send a GoodBye packet to inform the client a reason for termination of the connection just before it terminates the connection
+typedef struct _GoodbyePacket (UINT16 sesm_packet_length) where (sesm_packet_length >= 2) {
+  UINT8 goodbye_reason;                                    // byte 0
+  UINT8 logout_text[(((UINT32) sesm_packet_length) - 2)];
+} GoodbyePacket;
+
+// A Test packet can be sent by either side of a SesM connection at anytime; Test packets are intended to provide human readable text that may aid in debugging problems
+typedef struct _TestPacket (UINT16 sesm_packet_length) where (sesm_packet_length >= 1) {
+  UINT8 test_text[(((UINT32) sesm_packet_length) - 1)];
+} TestPacket;
+
+// Branch
+casetype _SesmPayload (UINT8 selector, UINT32 length, UINT32 length_2, UINT16 sesm_packet_length, UINT32 available) {
+  switch (selector) {
+    case 0x53: SequencedDataPacket(length) sequenced_data_packet[:byte-size-single-element-array length];
+    case 0x55: UnsequencedDataPacket(length_2) unsequenced_data_packet[:byte-size-single-element-array length_2];
+    case 0x4C: LoginRequest login_request;
+    case 0x52: LoginResponse login_response;
+    case 0x43: unit synchronization_complete;
+    case 0x41: RetransmissionRequest retransmission_request;
+    case 0x58: LogoutRequest(sesm_packet_length) logout_request;
+    case 0x47: GoodbyePacket(sesm_packet_length) goodbye_packet;
+    case 0x45: unit end_of_session;
+    case 0x30: unit server_heartbeat;
+    case 0x31: unit client_heartbeat;
+    case 0x54: TestPacket(sesm_packet_length) test_packet;
+    default: UINT8 unknown[available];
+  }
+} SesmPayload;
+
+// SesM Tcp Packet
+typedef struct _SesmTcpPacket {
+  UINT16 sesm_packet_length { sesm_packet_length >= 1 };                                                                                                                                                                                                           // bytes 0 to 1
+  UINT8 sesm_packet_type;                                                                                                                                                                                                                                          // byte 2
+  SesmPayload(sesm_packet_type, (((UINT32) sesm_packet_length) - 1), (((UINT32) sesm_packet_length) - 1), sesm_packet_length, ((((UINT32) sesm_packet_length) + 2) - 3)) sesm_payload[:byte-size-single-element-array ((((UINT32) sesm_packet_length) + 2) - 3)];
+} SesmTcpPacket;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// SesM Packet
+entrypoint typedef struct _Packet (UINT32 available) {
+  SesmTcpPacket sesm_tcp_packet[:byte-size available];
+} Packet;
 

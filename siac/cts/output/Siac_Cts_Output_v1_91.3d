@@ -1,55 +1,400 @@
-// The Securities Industry Automation Corporation Output
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Siac Cts Output Cta v1.91
 //
+// Protocol:
+//   Organization: The Securities Industry Automation Corporation
+//   Protocol: Output
+//   Encoding: Consolidated Tape Association
+//   Version: 1.91
+//   Date: 1/02/2020
+//   Specification: CTS_Binary_Output_Specification_legacy.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out Siac_Cts_Output_v1_91.3d
 //
-// What this definition does not state, and the model does:
-// - a run counted by a field
-// - the dispatch that chooses a message by its type
-//
-// License: MIT No Attribution
+// What this definition reads more loosely than the model states:
+// - an integrity check is read at its width and not checked against the bytes it covers
+// - a pad ending its frame after a run of no fixed width is what is left of the frame, and is not checked to reach no further than the boundary
 
-// ---- Sip Block Timestamp: 8 bytes --------------------------------------------
+// ---- Values ------------------------------------------------------------------
+
+// Retransmission Indicator: one byte code
+#define RETRANSMISSION_INDICATOR_ORIGINAL 0x4F       // Original
+#define RETRANSMISSION_INDICATOR_RETRANSMITTED 0x56  // Retransmitted
+
+// Message Category: one byte code
+#define MESSAGE_CATEGORY_ADMINISTRATIVE 0x41  // Administrative
+#define MESSAGE_CATEGORY_CONTROL 0x43         // Control
+#define MESSAGE_CATEGORY_INDICES 0x49         // Indices
+#define MESSAGE_CATEGORY_MARKET_STATUS 0x4D   // Market Status
+#define MESSAGE_CATEGORY_PRIOR_DAY 0x50       // Prior Day
+#define MESSAGE_CATEGORY_SUMMARY 0x53         // Summary
+#define MESSAGE_CATEGORY_TRADE 0x54           // Trade
+
+// Administrative Message Type: one byte code
+#define ADMINISTRATIVE_MESSAGE_TYPE_START_OF_END_OF_DAY_SUMMARY_MESSAGE 0x41    // Start Of End Of Day Summary Message
+#define ADMINISTRATIVE_MESSAGE_TYPE_END_OF_END_OF_DAY_SUMMARY_MESSAGE 0x42      // End Of End Of Day Summary Message
+#define ADMINISTRATIVE_MESSAGE_TYPE_START_OF_START_OF_DAY_SUMMARY_MESSAGE 0x43  // Start Of Start Of Day Summary Message
+#define ADMINISTRATIVE_MESSAGE_TYPE_END_OF_START_OF_DAY_SUMMARY_MESSAGE 0x44    // End Of Start Of Day Summary Message
+#define ADMINISTRATIVE_MESSAGE_TYPE_ADMINISTRATIVE_UNFORMATTED_MESSAGE 0x48     // Administrative Unformatted Message
+
+// Participant Id: one byte code
+#define PARTICIPANT_ID_NYSE_AMERICAN 0x41  // Nyse American
+#define PARTICIPANT_ID_NASDAQ_BX 0x42      // Nasdaq Bx
+#define PARTICIPANT_ID_NYSE_NATIONAL 0x43  // Nyse National
+#define PARTICIPANT_ID_FINRA_ADF 0x44      // Finra Adf
+#define PARTICIPANT_ID_ISE 0x49            // Ise
+#define PARTICIPANT_ID_CBOE_EDGA 0x4A      // Cboe Edga
+#define PARTICIPANT_ID_CBOE_EDGX 0x4B      // Cboe Edgx
+#define PARTICIPANT_ID_LTSE 0x4C           // Ltse
+#define PARTICIPANT_ID_NYSE_CHICAGO 0x4D   // Nyse Chicago
+#define PARTICIPANT_ID_NYSE 0x4E           // Nyse
+#define PARTICIPANT_ID_NYSE_ARCA 0x50      // Nyse Arca
+#define PARTICIPANT_ID_CTS 0x53            // Cts
+#define PARTICIPANT_ID_NASDAQ 0x54         // Nasdaq
+#define PARTICIPANT_ID_IEX 0x56            // Iex
+#define PARTICIPANT_ID_CBSX 0x57           // Cbsx
+#define PARTICIPANT_ID_NASDAQ_PSX 0x58     // Nasdaq Psx
+#define PARTICIPANT_ID_CBOE_BYX 0x59       // Cboe Byx
+#define PARTICIPANT_ID_CBOE_BZX 0x5A       // Cboe Bzx
+
+// Control Message Type: one byte code
+#define CONTROL_MESSAGE_TYPE_START_OF_DAY_MESSAGE 0x41                              // Start Of Day Message
+#define CONTROL_MESSAGE_TYPE_RESET_BLOCK_SEQUENCE_NUMBER_MESSAGE 0x4C               // Reset Block Sequence Number Message
+#define CONTROL_MESSAGE_TYPE_START_OF_TEST_CYCLE_MESSAGE 0x4D                       // Start Of Test Cycle Message
+#define CONTROL_MESSAGE_TYPE_END_OF_TEST_CYCLE_MESSAGE 0x4E                         // End Of Test Cycle Message
+#define CONTROL_MESSAGE_TYPE_DISASTER_RECOVERY_DATA_CENTER_ACTIVATION_MESSAGE 0x50  // Disaster Recovery Data Center Activation Message
+#define CONTROL_MESSAGE_TYPE_LINE_INTEGRITY_MESSAGE 0x54                            // Line Integrity Message
+#define CONTROL_MESSAGE_TYPE_END_OF_DAY_MESSAGE 0x5A                                // End Of Day Message
+
+// Indices Message Type: one byte code
+#define INDICES_MESSAGE_TYPE_INDEX_MESSAGE 0x49                // Index Message
+#define INDICES_MESSAGE_TYPE_BID_AND_OFFER_INDEX_MESSAGE 0x51  // Bid And Offer Index Message
+
+// Market Status Message Type: one byte code
+#define MARKET_STATUS_MESSAGE_TYPE_MARKET_WIDE_CIRCUIT_BREAKER_DECLINE_LEVEL_STATUS_MESSAGE 0x4B  // Market Wide Circuit Breaker Decline Level Status Message
+#define MARKET_STATUS_MESSAGE_TYPE_MARKET_WIDE_CIRCUIT_BREAKER_STATUS_MESSAGE 0x4C                // Market Wide Circuit Breaker Status Message
+#define MARKET_STATUS_MESSAGE_TYPE_APPROXIMATE_ADJUSTED_VOLUME_MARKET_CENTER_MESSAGE 0x4E         // Approximate Adjusted Volume Market Center Message
+#define MARKET_STATUS_MESSAGE_TYPE_APPROXIMATE_TRADES_AND_TOTAL_DOLLAR_VALUE_MESSAGE 0x4F         // Approximate Trades And Total Dollar Value Message
+#define MARKET_STATUS_MESSAGE_TYPE_CROSSING_SESSION_SUMMARY_MESSAGE 0x50                          // Crossing Session Summary Message
+
+// Market Wide Circuit Breaker Level Indicator: one byte code
+#define MARKET_WIDE_CIRCUIT_BREAKER_LEVEL_INDICATOR_NOT_APPLICABLE 0x20    // Not Applicable
+#define MARKET_WIDE_CIRCUIT_BREAKER_LEVEL_INDICATOR_LEVEL_1_BREACHED 0x31  // Level 1 Breached
+#define MARKET_WIDE_CIRCUIT_BREAKER_LEVEL_INDICATOR_LEVEL_2_BREACHED 0x32  // Level 2 Breached
+#define MARKET_WIDE_CIRCUIT_BREAKER_LEVEL_INDICATOR_LEVEL_3_BREACHED 0x33  // Level 3 Breached
+
+// Prior Day Message Type: one byte code
+#define PRIOR_DAY_MESSAGE_TYPE_PRIOR_DAY_TRADE_CORRECTION_MESSAGE 0x43    // Prior Day Trade Correction Message
+#define PRIOR_DAY_MESSAGE_TYPE_PRIOR_DAY_TRADE_MESSAGE 0x54               // Prior Day Trade Message
+#define PRIOR_DAY_MESSAGE_TYPE_PRIOR_DAY_TRADE_CANCEL_ERROR_MESSAGE 0x58  // Prior Day Trade Cancel Error Message
+
+// Instrument Type: one byte code
+#define INSTRUMENT_TYPE_CTA_ELIGIBLE_EQUITY 0x30  // Cta Eligible Equity
+#define INSTRUMENT_TYPE_LOCAL_ISSUE 0x31          // Local Issue
+#define INSTRUMENT_TYPE_CORPORATE_BOND 0x32       // Corporate Bond
+#define INSTRUMENT_TYPE_GOVERNMENT_BOND 0x33      // Government Bond
+
+// Category 2: one byte code
+#define CATEGORY_2_NO_REASON 0x20                                                 // No Reason
+#define CATEGORY_2_INTERMARKET_SWEEP_ORDER 0x46                                   // Intermarket Sweep Order
+#define CATEGORY_2_MARKET_CENTER_OPENING_TRADE 0x4F                               // Market Center Opening Trade
+#define CATEGORY_2_DERIVATIVELY_PRICED 0x34                                       // Derivatively Priced
+#define CATEGORY_2_MARKET_CENTER_REOPENING_TRADE 0x35                             // Market Center Reopening Trade
+#define CATEGORY_2_MARKET_CENTER_CLOSING_TRADE 0x36                               // Market Center Closing Trade
+#define CATEGORY_2_QUALIFIED_CONTINGENT_TRADE 0x37                                // Qualified Contingent Trade
+#define CATEGORY_2_RESERVED 0x38                                                  // Reserved
+#define CATEGORY_2_CORRECTED_CONSOLIDATED_CLOSE_PRICE_AS_PER_LISTING_MARKET 0x39  // Corrected Consolidated Close Price As Per Listing Market
+
+// Category 3: one byte code
+#define CATEGORY_3_NOT_EXTENDED_HOURS_OR_SOLD_OUT_OF_SEQUENCE 0x20  // Not Extended Hours Or Sold Out Of Sequence
+#define CATEGORY_3_SOLD_LAST 0x4C                                   // Sold Last
+#define CATEGORY_3_EXTENDED_HOURS_TRADE 0x54                        // Extended Hours Trade
+#define CATEGORY_3_EXTENDED_HOURS_SOLD 0x55                         // Extended Hours Sold
+#define CATEGORY_3_SOLD_OUT_OF_SEQUENCE 0x5A                        // Sold Out Of Sequence
+
+// Category 4: one byte code
+#define CATEGORY_4_NO_SRO_REQUIRED_TRADE_DETAIL 0x20  // No Sro Required Trade Detail
+#define CATEGORY_4_AVERAGE_PRICE_TRADE 0x42           // Average Price Trade
+#define CATEGORY_4_AUTOMATIC_EXECUTION 0x45           // Automatic Execution
+#define CATEGORY_4_PRICE_VARIATION_TRADE 0x48         // Price Variation Trade
+#define CATEGORY_4_ODD_LOT_TRADE 0x49                 // Odd Lot Trade
+#define CATEGORY_4_RULE_127_OR_155 0x4B               // Rule 127 Or 155
+#define CATEGORY_4_MARKET_CENTER_OFFICIAL_CLOSE 0x4D  // Market Center Official Close
+#define CATEGORY_4_PRIOR_REFERENCE_PRICE 0x50         // Prior Reference Price
+#define CATEGORY_4_MARKET_CENTER_OFFICIAL_OPEN 0x51   // Market Center Official Open
+#define CATEGORY_4_CONTINGENT_TRADE 0x56              // Contingent Trade
+#define CATEGORY_4_CROSS_TRADE 0x58                   // Cross Trade
+
+// Stop Stock Indicator: one byte code
+#define STOP_STOCK_INDICATOR_NOT_APPLICABLE 0x30  // Not Applicable
+#define STOP_STOCK_INDICATOR_STOP_STOCK 0x31      // Stop Stock
+
+// Trade Through Exempt Indicator: one byte code
+#define TRADE_THROUGH_EXEMPT_INDICATOR_NOT_A_TRADE_THROUGH_EXEMPTION 0x30  // Not A Trade Through Exemption
+#define TRADE_THROUGH_EXEMPT_INDICATOR_TRADE_THROUGH_EXEMPTION 0x31        // Trade Through Exemption
+
+// Short Sale Restriction Indicator: one byte code
+#define SHORT_SALE_RESTRICTION_INDICATOR_NOT_IN_EFFECT 0x20          // Not In Effect
+#define SHORT_SALE_RESTRICTION_INDICATOR_ACTIVATED 0x41              // Activated
+#define SHORT_SALE_RESTRICTION_INDICATOR_CONTINUED 0x43              // Continued
+#define SHORT_SALE_RESTRICTION_INDICATOR_DEACTIVATED 0x44            // Deactivated
+#define SHORT_SALE_RESTRICTION_INDICATOR_RESTRICTION_IN_EFFECT 0x45  // Restriction In Effect
+
+// Trade Reporting Facility Id: one byte code
+#define TRADE_REPORTING_FACILITY_ID_NOT_APPLICABLE 0x20         // Not Applicable
+#define TRADE_REPORTING_FACILITY_ID_INACTIVE_VALUE_A 0x41       // Inactive Value A
+#define TRADE_REPORTING_FACILITY_ID_FINRA_NASDAQ_CHICAGO 0x42   // Finra Nasdaq Chicago
+#define TRADE_REPORTING_FACILITY_ID_INACTIVE_VALUE_C 0x43       // Inactive Value C
+#define TRADE_REPORTING_FACILITY_ID_INACTIVE_VALUE_D 0x44       // Inactive Value D
+#define TRADE_REPORTING_FACILITY_ID_INACTIVE_VALUE_I 0x49       // Inactive Value I
+#define TRADE_REPORTING_FACILITY_ID_INACTIVE_VALUE_J 0x4A       // Inactive Value J
+#define TRADE_REPORTING_FACILITY_ID_INACTIVE_VALUE_K 0x4B       // Inactive Value K
+#define TRADE_REPORTING_FACILITY_ID_INACTIVE_VALUE_M 0x4D       // Inactive Value M
+#define TRADE_REPORTING_FACILITY_ID_FINRA_NYSE 0x4E             // Finra Nyse
+#define TRADE_REPORTING_FACILITY_ID_INACTIVE_VALUE_P 0x50       // Inactive Value P
+#define TRADE_REPORTING_FACILITY_ID_FINRA_NASDAQ_CARTERET 0x54  // Finra Nasdaq Carteret
+#define TRADE_REPORTING_FACILITY_ID_INACTIVE_VALUE_V 0x56       // Inactive Value V
+#define TRADE_REPORTING_FACILITY_ID_INACTIVE_VALUE_W 0x57       // Inactive Value W
+#define TRADE_REPORTING_FACILITY_ID_INACTIVE_VALUE_X 0x58       // Inactive Value X
+#define TRADE_REPORTING_FACILITY_ID_INACTIVE_VALUE_Y 0x59       // Inactive Value Y
+#define TRADE_REPORTING_FACILITY_ID_INACTIVE_VALUE_Z 0x5A       // Inactive Value Z
+
+// Cancel Error Action: one byte code
+#define CANCEL_ERROR_ACTION_CANCEL 0x31  // Cancel
+#define CANCEL_ERROR_ACTION_ERROR 0x32   // Error
+
+// Summary Message Type: one byte code
+#define SUMMARY_MESSAGE_TYPE_CONSOLIDATED_START_OF_DAY_SUMMARY_MESSAGE 0x41  // Consolidated Start Of Day Summary Message
+#define SUMMARY_MESSAGE_TYPE_PARTICIPANT_START_OF_DAY_SUMMARY_MESSAGE 0x42   // Participant Start Of Day Summary Message
+#define SUMMARY_MESSAGE_TYPE_CONSOLIDATED_END_OF_DAY_SUMMARY_MESSAGE 0x43    // Consolidated End Of Day Summary Message
+#define SUMMARY_MESSAGE_TYPE_PARTICIPANT_END_OF_DAY_SUMMARY_MESSAGE 0x44     // Participant End Of Day Summary Message
+
+// Primary Listing Market Participant Id: one byte code
+#define PRIMARY_LISTING_MARKET_PARTICIPANT_ID_NYSE_AMERICAN 0x41  // Nyse American
+#define PRIMARY_LISTING_MARKET_PARTICIPANT_ID_NASDAQ_BX 0x42      // Nasdaq Bx
+#define PRIMARY_LISTING_MARKET_PARTICIPANT_ID_NYSE_NATIONAL 0x43  // Nyse National
+#define PRIMARY_LISTING_MARKET_PARTICIPANT_ID_FINRA_ADF 0x44      // Finra Adf
+#define PRIMARY_LISTING_MARKET_PARTICIPANT_ID_ISE 0x49            // Ise
+#define PRIMARY_LISTING_MARKET_PARTICIPANT_ID_CBOE_EDGA 0x4A      // Cboe Edga
+#define PRIMARY_LISTING_MARKET_PARTICIPANT_ID_CBOE_EDGX 0x4B      // Cboe Edgx
+#define PRIMARY_LISTING_MARKET_PARTICIPANT_ID_NYSE_CHICAGO 0x4D   // Nyse Chicago
+#define PRIMARY_LISTING_MARKET_PARTICIPANT_ID_NYSE 0x4E           // Nyse
+#define PRIMARY_LISTING_MARKET_PARTICIPANT_ID_NYSE_ARCA 0x50      // Nyse Arca
+#define PRIMARY_LISTING_MARKET_PARTICIPANT_ID_NASDAQ 0x54         // Nasdaq
+#define PRIMARY_LISTING_MARKET_PARTICIPANT_ID_IEX 0x56            // Iex
+#define PRIMARY_LISTING_MARKET_PARTICIPANT_ID_CBSX 0x57           // Cbsx
+#define PRIMARY_LISTING_MARKET_PARTICIPANT_ID_NASDAQ_PSX 0x58     // Nasdaq Psx
+#define PRIMARY_LISTING_MARKET_PARTICIPANT_ID_CBOE_BYX 0x59       // Cboe Byx
+#define PRIMARY_LISTING_MARKET_PARTICIPANT_ID_CBOE_BZX 0x5A       // Cboe Bzx
+
+// Financial Status Indicator: one byte code
+#define FINANCIAL_STATUS_INDICATOR_FINANCIAL_STATUS_NOT_APPLICABLE 0x30                              // Financial Status Not Applicable
+#define FINANCIAL_STATUS_INDICATOR_BANKRUPT 0x31                                                     // Bankrupt
+#define FINANCIAL_STATUS_INDICATOR_BELOW_CONTINUING_LISTING_STANDARDS 0x32                           // Below Continuing Listing Standards
+#define FINANCIAL_STATUS_INDICATOR_BANKRUPT_AND_BELOW_CONTINUING_LISTING_STANDARDS 0x33              // Bankrupt And Below Continuing Listing Standards
+#define FINANCIAL_STATUS_INDICATOR_LATE_FILING 0x34                                                  // Late Filing
+#define FINANCIAL_STATUS_INDICATOR_BANKRUPT_AND_LATE_FILING 0x35                                     // Bankrupt And Late Filing
+#define FINANCIAL_STATUS_INDICATOR_BELOW_CONTINUING_LISTING_STANDARDS_AND_LATE_FILING 0x36           // Below Continuing Listing Standards And Late Filing
+#define FINANCIAL_STATUS_INDICATOR_BANKRUPT_BELOW_CONTINUING_LISTING_STANDARDS_AND_LATE_FILING 0x37  // Bankrupt Below Continuing Listing Standards And Late Filing
+#define FINANCIAL_STATUS_INDICATOR_CREATIONS_SUSPENDED 0x38                                          // Creations Suspended
+#define FINANCIAL_STATUS_INDICATOR_REDEMPTIONS_SUSPENDED 0x39                                        // Redemptions Suspended
+#define FINANCIAL_STATUS_INDICATOR_LIQUIDATION 0x41                                                  // Liquidation
+
+// Last Participant Id: one byte code
+#define LAST_PARTICIPANT_ID_NYSE_AMERICAN 0x41  // Nyse American
+#define LAST_PARTICIPANT_ID_NASDAQ_BX 0x42      // Nasdaq Bx
+#define LAST_PARTICIPANT_ID_NYSE_NATIONAL 0x43  // Nyse National
+#define LAST_PARTICIPANT_ID_FINRA_ADF 0x44      // Finra Adf
+#define LAST_PARTICIPANT_ID_ISE 0x49            // Ise
+#define LAST_PARTICIPANT_ID_CBOE_EDGA 0x4A      // Cboe Edga
+#define LAST_PARTICIPANT_ID_CBOE_EDGX 0x4B      // Cboe Edgx
+#define LAST_PARTICIPANT_ID_LTSE 0x4C           // Ltse
+#define LAST_PARTICIPANT_ID_NYSE_CHICAGO 0x4D   // Nyse Chicago
+#define LAST_PARTICIPANT_ID_NYSE 0x4E           // Nyse
+#define LAST_PARTICIPANT_ID_NYSE_ARCA 0x50      // Nyse Arca
+#define LAST_PARTICIPANT_ID_CTS 0x53            // Cts
+#define LAST_PARTICIPANT_ID_NASDAQ 0x54         // Nasdaq
+#define LAST_PARTICIPANT_ID_IEX 0x56            // Iex
+#define LAST_PARTICIPANT_ID_CBSX 0x57           // Cbsx
+#define LAST_PARTICIPANT_ID_NASDAQ_PSX 0x58     // Nasdaq Psx
+#define LAST_PARTICIPANT_ID_CBOE_BYX 0x59       // Cboe Byx
+#define LAST_PARTICIPANT_ID_CBOE_BZX 0x5A       // Cboe Bzx
+
+// Tick: one byte code
+#define TICK_NOT_APPLICABLE 0x20      // Not Applicable
+#define TICK_UPWARD 0x31              // Upward
+#define TICK_DOWNWARD 0x32            // Downward
+#define TICK_UNCHANGED_UPWARD 0x33    // Unchanged Upward
+#define TICK_UNCHANGED_DOWNWARD 0x34  // Unchanged Downward
+
+// Trade Message Type: one byte code
+#define TRADE_MESSAGE_TYPE_AUCTION_STATUS_MESSAGE 0x41      // Auction Status Message
+#define TRADE_MESSAGE_TYPE_TRADE_CORRECTION_MESSAGE 0x43    // Trade Correction Message
+#define TRADE_MESSAGE_TYPE_LONG_TRADE_MESSAGE 0x4C          // Long Trade Message
+#define TRADE_MESSAGE_TYPE_TRADING_STATUS_MESSAGE 0x53      // Trading Status Message
+#define TRADE_MESSAGE_TYPE_SHORT_TRADE_MESSAGE 0x54         // Short Trade Message
+#define TRADE_MESSAGE_TYPE_TRADE_CANCEL_ERROR_MESSAGE 0x58  // Trade Cancel Error Message
+
+// Held Trade Indicator: one byte code
+#define HELD_TRADE_INDICATOR_NOT_APPLICABLE 0x20                                                             // Not Applicable
+#define HELD_TRADE_INDICATOR_CANNOT_BE_USED_AS_A_LAST_SALE_FOR_BOTH_PARTICIPANT_AND_CONSOLIDATED_BASIS 0x41  // Cannot Be Used As A Last Sale For Both Participant And Consolidated Basis
+#define HELD_TRADE_INDICATOR_CAN_BE_USED_AS_A_LAST_SALE_FOR_PARTICIPANT_BUT_NOT_CONSOLIDATED_BASIS 0x42      // Can Be Used As A Last Sale For Participant But Not Consolidated Basis
+#define HELD_TRADE_INDICATOR_CAN_BE_USED_AS_A_LAST_SALE_FOR_PARTICIPANT_AND_CONSOLIDATED_BASIS 0x43          // Can Be Used As A Last Sale For Participant And Consolidated Basis
+
+// Consolidated High Low Last Indicator: one byte code
+#define CONSOLIDATED_HIGH_LOW_LAST_INDICATOR_NONE 0x41           // None
+#define CONSOLIDATED_HIGH_LOW_LAST_INDICATOR_HIGH 0x42           // High
+#define CONSOLIDATED_HIGH_LOW_LAST_INDICATOR_LOW 0x43            // Low
+#define CONSOLIDATED_HIGH_LOW_LAST_INDICATOR_LAST 0x44           // Last
+#define CONSOLIDATED_HIGH_LOW_LAST_INDICATOR_HIGH_LAST 0x45      // High Last
+#define CONSOLIDATED_HIGH_LOW_LAST_INDICATOR_LOW_LAST 0x46       // Low Last
+#define CONSOLIDATED_HIGH_LOW_LAST_INDICATOR_HIGH_LOW_LAST 0x47  // High Low Last
+#define CONSOLIDATED_HIGH_LOW_LAST_INDICATOR_HIGH_LOW 0x48       // High Low
+
+// Participant Open High Low Last Indicator: one byte code
+#define PARTICIPANT_OPEN_HIGH_LOW_LAST_INDICATOR_NONE 0x41                // None
+#define PARTICIPANT_OPEN_HIGH_LOW_LAST_INDICATOR_HIGH 0x42                // High
+#define PARTICIPANT_OPEN_HIGH_LOW_LAST_INDICATOR_LOW 0x43                 // Low
+#define PARTICIPANT_OPEN_HIGH_LOW_LAST_INDICATOR_LAST 0x44                // Last
+#define PARTICIPANT_OPEN_HIGH_LOW_LAST_INDICATOR_HIGH_LAST 0x45           // High Last
+#define PARTICIPANT_OPEN_HIGH_LOW_LAST_INDICATOR_LOW_LAST 0x46            // Low Last
+#define PARTICIPANT_OPEN_HIGH_LOW_LAST_INDICATOR_UNUSED 0x47              // Unused
+#define PARTICIPANT_OPEN_HIGH_LOW_LAST_INDICATOR_OPEN 0x48                // Open
+#define PARTICIPANT_OPEN_HIGH_LOW_LAST_INDICATOR_OPEN_HIGH 0x49           // Open High
+#define PARTICIPANT_OPEN_HIGH_LOW_LAST_INDICATOR_OPEN_LOW 0x4A            // Open Low
+#define PARTICIPANT_OPEN_HIGH_LOW_LAST_INDICATOR_OPEN_HIGH_LOW_LAST 0x4B  // Open High Low Last
+#define PARTICIPANT_OPEN_HIGH_LOW_LAST_INDICATOR_OPEN_LAST 0x4C           // Open Last
+#define PARTICIPANT_OPEN_HIGH_LOW_LAST_INDICATOR_OPEN_HIGH_LOW 0x4D       // Open High Low
+#define PARTICIPANT_OPEN_HIGH_LOW_LAST_INDICATOR_OPEN_HIGH_LAST 0x4E      // Open High Last
+#define PARTICIPANT_OPEN_HIGH_LOW_LAST_INDICATOR_OPEN_LOW_LAST 0x4F       // Open Low Last
+#define PARTICIPANT_OPEN_HIGH_LOW_LAST_INDICATOR_HIGH_LOW 0x50            // High Low
+#define PARTICIPANT_OPEN_HIGH_LOW_LAST_INDICATOR_HIGH_LOW_LAST 0x51       // High Low Last
+
+// Security Status: one byte code
+#define SECURITY_STATUS_NOT_APPLICABLE 0x20                  // Not Applicable
+#define SECURITY_STATUS_OPENING_DELAY 0x31                   // Opening Delay
+#define SECURITY_STATUS_TRADING_HALT 0x32                    // Trading Halt
+#define SECURITY_STATUS_RESUME 0x33                          // Resume
+#define SECURITY_STATUS_NO_OPEN_NO_RESUME 0x34               // No Open No Resume
+#define SECURITY_STATUS_PRICE_INDICATION 0x35                // Price Indication
+#define SECURITY_STATUS_TRADING_RANGE_INDICATION 0x36        // Trading Range Indication
+#define SECURITY_STATUS_MARKET_IMBALANCE_BUY 0x37            // Market Imbalance Buy
+#define SECURITY_STATUS_MARKET_IMBALANCE_SELL 0x38           // Market Imbalance Sell
+#define SECURITY_STATUS_MARKET_ON_CLOSE_IMBALANCE_BUY 0x39   // Market On Close Imbalance Buy
+#define SECURITY_STATUS_MARKET_ON_CLOSE_IMBALANCE_SELL 0x41  // Market On Close Imbalance Sell
+#define SECURITY_STATUS_RESERVED 0x42                        // Reserved
+#define SECURITY_STATUS_NO_MARKET_IMBALANCE 0x43             // No Market Imbalance
+#define SECURITY_STATUS_NO_MARKET_ON_CLOSE_IMBALANCE 0x44    // No Market On Close Imbalance
+#define SECURITY_STATUS_SHORT_SALE_RESTRICTION 0x45          // Short Sale Restriction
+#define SECURITY_STATUS_LIMIT_UP_LIMIT_DOWN 0x46             // Limit Up Limit Down
+
+// Halt Reason: one byte code
+#define HALT_REASON_NOT_APPLICABLE 0x20                                // Not Applicable
+#define HALT_REASON_NEWS_DISSEMINATION 0x44                            // News Dissemination
+#define HALT_REASON_ORDER_IMBALANCE 0x49                               // Order Imbalance
+#define HALT_REASON_LIMIT_UP_LIMIT_DOWN_TRADING_PAUSE 0x4D             // Limit Up Limit Down Trading Pause
+#define HALT_REASON_NEWS_PENDING 0x50                                  // News Pending
+#define HALT_REASON_OPERATIONAL 0x58                                   // Operational
+#define HALT_REASON_SUBPENNY_TRADING 0x59                              // Subpenny Trading
+#define HALT_REASON_MARKET_WIDE_CIRCUIT_BREAKER_LEVEL_1_BREACHED 0x31  // Market Wide Circuit Breaker Level 1 Breached
+#define HALT_REASON_MARKET_WIDE_CIRCUIT_BREAKER_LEVEL_2_BREACHED 0x32  // Market Wide Circuit Breaker Level 2 Breached
+#define HALT_REASON_MARKET_WIDE_CIRCUIT_BREAKER_LEVEL_3_BREACHED 0x33  // Market Wide Circuit Breaker Level 3 Breached
+
+// Limit Up Limit Down Indicator: one byte code
+#define LIMIT_UP_LIMIT_DOWN_INDICATOR_LIMIT_UP_LIMIT_DOWN_NOT_APPLICABLE 0x20                                                // Limit Up Limit Down Not Applicable
+#define LIMIT_UP_LIMIT_DOWN_INDICATOR_LIMIT_UP_LIMIT_DOWN_PRICE_BAND 0x41                                                    // Limit Up Limit Down Price Band
+#define LIMIT_UP_LIMIT_DOWN_INDICATOR_REPUBLISHED_LIMIT_UP_LIMIT_DOWN_PRICE_BAND 0x42                                        // Republished Limit Up Limit Down Price Band
+#define LIMIT_UP_LIMIT_DOWN_INDICATOR_NATIONAL_BEST_BID_LIMIT_STATE_ENTERED 0x43                                             // National Best Bid Limit State Entered
+#define LIMIT_UP_LIMIT_DOWN_INDICATOR_NATIONAL_BEST_BID_LIMIT_STATE_EXITED 0x44                                              // National Best Bid Limit State Exited
+#define LIMIT_UP_LIMIT_DOWN_INDICATOR_NATIONAL_BEST_OFFER_LIMIT_STATE_ENTERED 0x45                                           // National Best Offer Limit State Entered
+#define LIMIT_UP_LIMIT_DOWN_INDICATOR_NATIONAL_BEST_OFFER_LIMIT_STATE_EXITED 0x46                                            // National Best Offer Limit State Exited
+#define LIMIT_UP_LIMIT_DOWN_INDICATOR_NATIONAL_BEST_BID_AND_NATIONAL_BEST_OFFER_LIMIT_STATE_ENTERED 0x47                     // National Best Bid And National Best Offer Limit State Entered
+#define LIMIT_UP_LIMIT_DOWN_INDICATOR_NATIONAL_BEST_BID_AND_NATIONAL_BEST_OFFER_LIMIT_STATE_EXITED 0x48                      // National Best Bid And National Best Offer Limit State Exited
+#define LIMIT_UP_LIMIT_DOWN_INDICATOR_NATIONAL_BEST_BID_LIMIT_STATE_ENTERED_AND_NATIONAL_BEST_OFFER_LIMIT_STATE_EXITED 0x49  // National Best Bid Limit State Entered And National Best Offer Limit State Exited
+#define LIMIT_UP_LIMIT_DOWN_INDICATOR_NATIONAL_BEST_BID_LIMIT_STATE_EXITED_AND_NATIONAL_BEST_OFFER_LIMIT_STATE_ENTERED 0x4A  // National Best Bid Limit State Exited And National Best Offer Limit State Entered
+
+// Sale Condition: one byte code
+#define SALE_CONDITION_REGULAR_SALE 0x20                                              // Regular Sale
+#define SALE_CONDITION_AVERAGE_PRICE_TRADE 0x42                                       // Average Price Trade
+#define SALE_CONDITION_CASH_TRADE 0x43                                                // Cash Trade
+#define SALE_CONDITION_AUTOMATIC_EXECUTION 0x45                                       // Automatic Execution
+#define SALE_CONDITION_INTERMARKET_SWEEP_ORDER 0x46                                   // Intermarket Sweep Order
+#define SALE_CONDITION_PRICE_VARIATION_TRADE 0x48                                     // Price Variation Trade
+#define SALE_CONDITION_ODD_LOT_TRADE 0x49                                             // Odd Lot Trade
+#define SALE_CONDITION_RULE_127_OR_155 0x4B                                           // Rule 127 Or 155
+#define SALE_CONDITION_SOLD_LAST 0x4C                                                 // Sold Last
+#define SALE_CONDITION_MARKET_CENTER_OFFICIAL_CLOSE 0x4D                              // Market Center Official Close
+#define SALE_CONDITION_NEXT_DAY_TRADE 0x4E                                            // Next Day Trade
+#define SALE_CONDITION_MARKET_CENTER_OPENING_TRADE 0x4F                               // Market Center Opening Trade
+#define SALE_CONDITION_PRIOR_REFERENCE_PRICE 0x50                                     // Prior Reference Price
+#define SALE_CONDITION_MARKET_CENTER_OFFICIAL_OPEN 0x51                               // Market Center Official Open
+#define SALE_CONDITION_SELLER 0x52                                                    // Seller
+#define SALE_CONDITION_EXTENDED_HOURS_TRADE 0x54                                      // Extended Hours Trade
+#define SALE_CONDITION_EXTENDED_HOURS_SOLD 0x55                                       // Extended Hours Sold
+#define SALE_CONDITION_CONTINGENT_TRADE 0x56                                          // Contingent Trade
+#define SALE_CONDITION_CROSS_TRADE 0x58                                               // Cross Trade
+#define SALE_CONDITION_SOLD 0x5A                                                      // Sold
+#define SALE_CONDITION_DERIVATIVELY_PRICED 0x34                                       // Derivatively Priced
+#define SALE_CONDITION_MARKET_CENTER_REOPENING_TRADE 0x35                             // Market Center Reopening Trade
+#define SALE_CONDITION_MARKET_CENTER_CLOSING_TRADE 0x36                               // Market Center Closing Trade
+#define SALE_CONDITION_QUALIFIED_CONTINGENT_TRADE 0x37                                // Qualified Contingent Trade
+#define SALE_CONDITION_RESERVED 0x38                                                  // Reserved
+#define SALE_CONDITION_CORRECTED_CONSOLIDATED_CLOSE_PRICE_AS_PER_LISTING_MARKET 0x39  // Corrected Consolidated Close Price As Per Listing Market
+
+// Sale Condition Category: one byte code
+#define SALE_CONDITION_CATEGORY_NOT_APPLICABLE 0x20  // Not Applicable
+#define SALE_CONDITION_CATEGORY_CATEGORY_1 0x31      // Category 1
+#define SALE_CONDITION_CATEGORY_CATEGORY_2 0x32      // Category 2
+#define SALE_CONDITION_CATEGORY_CATEGORY_3 0x33      // Category 3
+#define SALE_CONDITION_CATEGORY_CATEGORY_4 0x34      // Category 4
+
+// ---- Types -------------------------------------------------------------------
 
 // Sip Block Timestamp
-entrypoint typedef struct _SipBlockTimestamp {
+typedef struct _SipBlockTimestamp {
   UINT32BE seconds;      // bytes 0 to 3
   UINT32BE nanoseconds;  // bytes 4 to 7
 } SipBlockTimestamp;
 
-// ---- Block Header: 20 bytes --------------------------------------------------
-
-// Cta Output packet header
-entrypoint typedef struct _BlockHeader {
-  UINT8 version;                          // byte 0
-  UINT16BE block_size;                    // bytes 1 to 2
-  UINT8 data_feed_indicator;              // byte 3
-  UINT8 retransmission_indicator;         // byte 4
-  UINT32BE block_sequence_number;         // bytes 5 to 8
-  UINT8 messages_in_block;                // byte 9
-  SipBlockTimestamp sip_block_timestamp;  // bytes 10 to 17
-  UINT16BE block_checksum;                // bytes 18 to 19
-} BlockHeader;
-
-// ---- Timestamp 1: 8 bytes ----------------------------------------------------
-
 // Timestamp 1
-entrypoint typedef struct _Timestamp1 {
+typedef struct _Timestamp1 {
   UINT32BE seconds;      // bytes 0 to 3
   UINT32BE nanoseconds;  // bytes 4 to 7
 } Timestamp1;
 
-// ---- Start Of End Of Day Summary Message: 22 bytes ---------------------------
-
 // The Start of End of Day message signals the start of Consolidated End of Day Summary and Participant End of Day Summary message iterations
-entrypoint typedef struct _StartOfEndOfDaySummaryMessage {
+typedef struct _StartOfEndOfDaySummaryMessage {
   UINT8 participant_id;                   // byte 0
   Timestamp1 timestamp_1;                 // bytes 1 to 8
   UINT8 message_id;                       // byte 9
@@ -57,10 +402,8 @@ entrypoint typedef struct _StartOfEndOfDaySummaryMessage {
   UINT64BE participant_reference_number;  // bytes 14 to 21, signed, read here as unsigned
 } StartOfEndOfDaySummaryMessage;
 
-// ---- End Of End Of Day Summary Message: 22 bytes -----------------------------
-
 // The End of End of Day message signals the end of Consolidated End of Day Summary and Participant End of Day Summary message iterations
-entrypoint typedef struct _EndOfEndOfDaySummaryMessage {
+typedef struct _EndOfEndOfDaySummaryMessage {
   UINT8 participant_id;                   // byte 0
   Timestamp1 timestamp_1;                 // bytes 1 to 8
   UINT8 message_id;                       // byte 9
@@ -68,10 +411,8 @@ entrypoint typedef struct _EndOfEndOfDaySummaryMessage {
   UINT64BE participant_reference_number;  // bytes 14 to 21, signed, read here as unsigned
 } EndOfEndOfDaySummaryMessage;
 
-// ---- Start Of Start Of Day Summary Message: 22 bytes -------------------------
-
 // The Start of Start of Day message signals the end of Consolidated End of Day Summary and Participant End of Day Summary message iterations
-entrypoint typedef struct _StartOfStartOfDaySummaryMessage {
+typedef struct _StartOfStartOfDaySummaryMessage {
   UINT8 participant_id;                   // byte 0
   Timestamp1 timestamp_1;                 // bytes 1 to 8
   UINT8 message_id;                       // byte 9
@@ -79,10 +420,8 @@ entrypoint typedef struct _StartOfStartOfDaySummaryMessage {
   UINT64BE participant_reference_number;  // bytes 14 to 21, signed, read here as unsigned
 } StartOfStartOfDaySummaryMessage;
 
-// ---- End Of Start Of Day Summary Message: 22 bytes ---------------------------
-
 // The End of Start of Day message signals the start of Start of Day Summary message iterations
-entrypoint typedef struct _EndOfStartOfDaySummaryMessage {
+typedef struct _EndOfStartOfDaySummaryMessage {
   UINT8 participant_id;                   // byte 0
   Timestamp1 timestamp_1;                 // bytes 1 to 8
   UINT8 message_id;                       // byte 9
@@ -90,10 +429,8 @@ entrypoint typedef struct _EndOfStartOfDaySummaryMessage {
   UINT64BE participant_reference_number;  // bytes 14 to 21, signed, read here as unsigned
 } EndOfStartOfDaySummaryMessage;
 
-// ---- Administrative Unformatted Message: 26 bytes ----------------------------
-
 // The Administrative Unformatted (free form text) Category A message is designed to facilitate non-computerized miscellaneous information messages to CQS
-entrypoint typedef struct _AdministrativeUnformattedMessage {
+typedef struct _AdministrativeUnformattedMessage {
   UINT8 participant_id;                   // byte 0
   Timestamp1 timestamp_1;                 // bytes 1 to 8
   UINT8 message_id;                       // byte 9
@@ -102,10 +439,26 @@ entrypoint typedef struct _AdministrativeUnformattedMessage {
   UINT8 text[4];                          // bytes 22 to 25
 } AdministrativeUnformattedMessage;
 
-// ---- Start Of Day Message: 22 bytes ------------------------------------------
+// Branch
+casetype _AdministrativeMessagePayload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x41: StartOfEndOfDaySummaryMessage start_of_end_of_day_summary_message;
+    case 0x42: EndOfEndOfDaySummaryMessage end_of_end_of_day_summary_message;
+    case 0x43: StartOfStartOfDaySummaryMessage start_of_start_of_day_summary_message;
+    case 0x44: EndOfStartOfDaySummaryMessage end_of_start_of_day_summary_message;
+    case 0x48: AdministrativeUnformattedMessage administrative_unformatted_message;
+    default: UINT8 unknown[available];
+  }
+} AdministrativeMessagePayload;
+
+// Administrative Messages Header
+typedef struct _AdministrativeMessage (UINT32 available) where (available >= 1) {
+  UINT8 administrative_message_type;                                                                                                                           // byte 0
+  AdministrativeMessagePayload(administrative_message_type, (available - 1)) administrative_message_payload[:byte-size-single-element-array (available - 1)];
+} AdministrativeMessage;
 
 // The Start of Day message signals the start of normal data dissemination over the multicast lines
-entrypoint typedef struct _StartOfDayMessage {
+typedef struct _StartOfDayMessage {
   UINT8 participant_id;                   // byte 0
   Timestamp1 timestamp_1;                 // bytes 1 to 8
   UINT8 message_id;                       // byte 9
@@ -113,10 +466,8 @@ entrypoint typedef struct _StartOfDayMessage {
   UINT64BE participant_reference_number;  // bytes 14 to 21, signed, read here as unsigned
 } StartOfDayMessage;
 
-// ---- Reset Block Sequence Number Message: 22 bytes ---------------------------
-
 // The Reset Block Sequence Number message is transmitted when the block sequence number on an output multicast line requires resetting.
-entrypoint typedef struct _ResetBlockSequenceNumberMessage {
+typedef struct _ResetBlockSequenceNumberMessage {
   UINT8 participant_id;                   // byte 0
   Timestamp1 timestamp_1;                 // bytes 1 to 8
   UINT8 message_id;                       // byte 9
@@ -124,10 +475,8 @@ entrypoint typedef struct _ResetBlockSequenceNumberMessage {
   UINT64BE participant_reference_number;  // bytes 14 to 21, signed, read here as unsigned
 } ResetBlockSequenceNumberMessage;
 
-// ---- Start Of Test Cycle Message: 22 bytes -----------------------------------
-
 // The Start of Test Cycle message is transmitted to signal the beginning of the transmission of test message cycles
-entrypoint typedef struct _StartOfTestCycleMessage {
+typedef struct _StartOfTestCycleMessage {
   UINT8 participant_id;                   // byte 0
   Timestamp1 timestamp_1;                 // bytes 1 to 8
   UINT8 message_id;                       // byte 9
@@ -135,10 +484,8 @@ entrypoint typedef struct _StartOfTestCycleMessage {
   UINT64BE participant_reference_number;  // bytes 14 to 21, signed, read here as unsigned
 } StartOfTestCycleMessage;
 
-// ---- End Of Test Cycle Message: 22 bytes -------------------------------------
-
 // The End of Test Cycle message is transmitted to signal the end of the transmission of the repeated free form text test message cycles
-entrypoint typedef struct _EndOfTestCycleMessage {
+typedef struct _EndOfTestCycleMessage {
   UINT8 participant_id;                   // byte 0
   Timestamp1 timestamp_1;                 // bytes 1 to 8
   UINT8 message_id;                       // byte 9
@@ -146,10 +493,8 @@ entrypoint typedef struct _EndOfTestCycleMessage {
   UINT64BE participant_reference_number;  // bytes 14 to 21, signed, read here as unsigned
 } EndOfTestCycleMessage;
 
-// ---- Disaster Recovery Data Center Activation Message: 22 bytes --------------
-
 // The Disaster Recovery Data Center Activation message is transmitted to signify that the Consolidated Quotation System (CQS) has switched processing from the Primary Data Center to the Disaster Recovery Data Center
-entrypoint typedef struct _DisasterRecoveryDataCenterActivationMessage {
+typedef struct _DisasterRecoveryDataCenterActivationMessage {
   UINT8 participant_id;                   // byte 0
   Timestamp1 timestamp_1;                 // bytes 1 to 8
   UINT8 message_id;                       // byte 9
@@ -157,10 +502,8 @@ entrypoint typedef struct _DisasterRecoveryDataCenterActivationMessage {
   UINT64BE participant_reference_number;  // bytes 14 to 21, signed, read here as unsigned
 } DisasterRecoveryDataCenterActivationMessage;
 
-// ---- Line Integrity Message: 22 bytes ----------------------------------------
-
 // The Line Integrity message is transmitted over the multicast lines at intervals of sixty (60) seconds to verify continued integrity of multicast transmission
-entrypoint typedef struct _LineIntegrityMessage {
+typedef struct _LineIntegrityMessage {
   UINT8 participant_id;                   // byte 0
   Timestamp1 timestamp_1;                 // bytes 1 to 8
   UINT8 message_id;                       // byte 9
@@ -168,10 +511,8 @@ entrypoint typedef struct _LineIntegrityMessage {
   UINT64BE participant_reference_number;  // bytes 14 to 21, signed, read here as unsigned
 } LineIntegrityMessage;
 
-// ---- End Of Day Message: 22 bytes --------------------------------------------
-
 // The End of Day message is transmitted over the multicast lines to advise all Data Recipients that there are no further messages of any type transmitted for the day
-entrypoint typedef struct _EndOfDayMessage {
+typedef struct _EndOfDayMessage {
   UINT8 participant_id;                   // byte 0
   Timestamp1 timestamp_1;                 // bytes 1 to 8
   UINT8 message_id;                       // byte 9
@@ -179,10 +520,28 @@ entrypoint typedef struct _EndOfDayMessage {
   UINT64BE participant_reference_number;  // bytes 14 to 21, signed, read here as unsigned
 } EndOfDayMessage;
 
-// ---- Index Message: 41 bytes -------------------------------------------------
+// Branch
+casetype _ControlMessagePayload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x41: StartOfDayMessage start_of_day_message;
+    case 0x4C: ResetBlockSequenceNumberMessage reset_block_sequence_number_message;
+    case 0x4D: StartOfTestCycleMessage start_of_test_cycle_message;
+    case 0x4E: EndOfTestCycleMessage end_of_test_cycle_message;
+    case 0x50: DisasterRecoveryDataCenterActivationMessage disaster_recovery_data_center_activation_message;
+    case 0x54: LineIntegrityMessage line_integrity_message;
+    case 0x5A: EndOfDayMessage end_of_day_message;
+    default: UINT8 unknown[available];
+  }
+} ControlMessagePayload;
+
+// Control Messages Header
+typedef struct _ControlMessage (UINT32 available) where (available >= 1) {
+  UINT8 control_message_type;                                                                                                             // byte 0
+  ControlMessagePayload(control_message_type, (available - 1)) control_message_payload[:byte-size-single-element-array (available - 1)];
+} ControlMessage;
 
 // The Index message contains the index and the index value
-entrypoint typedef struct _IndexMessage {
+typedef struct _IndexMessage {
   UINT8 participant_id;                   // byte 0
   Timestamp1 timestamp_1;                 // bytes 1 to 8
   UINT8 message_id;                       // byte 9
@@ -192,10 +551,8 @@ entrypoint typedef struct _IndexMessage {
   UINT64BE index_value;                   // bytes 33 to 40, signed, read here as unsigned
 } IndexMessage;
 
-// ---- Bid And Offer Index Message: 49 bytes -----------------------------------
-
 // The Bid and Offer Index message contains the index Bid and Offer index values
-entrypoint typedef struct _BidAndOfferIndexMessage {
+typedef struct _BidAndOfferIndexMessage {
   UINT8 participant_id;                   // byte 0
   Timestamp1 timestamp_1;                 // bytes 1 to 8
   UINT8 message_id;                       // byte 9
@@ -206,10 +563,23 @@ entrypoint typedef struct _BidAndOfferIndexMessage {
   UINT64BE offer_index_value;             // bytes 41 to 48, signed, read here as unsigned
 } BidAndOfferIndexMessage;
 
-// ---- Market Wide Circuit Breaker Decline Level Status Message: 47 bytes ------
+// Branch
+casetype _IndicesMessagePayload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x49: IndexMessage index_message;
+    case 0x51: BidAndOfferIndexMessage bid_and_offer_index_message;
+    default: UINT8 unknown[available];
+  }
+} IndicesMessagePayload;
+
+// Index Messages Header
+typedef struct _IndicesMessage (UINT32 available) where (available >= 1) {
+  UINT8 indices_message_type;                                                                                                             // byte 0
+  IndicesMessagePayload(indices_message_type, (available - 1)) indices_message_payload[:byte-size-single-element-array (available - 1)];
+} IndicesMessage;
 
 // The Market-Wide Circuit Breaker Decline Level Status message is used to report the calculated Level 1, Level 2 and Level 3 threshold values for the current trading day necessary to trigger a circuit breaker
-entrypoint typedef struct _MarketWideCircuitBreakerDeclineLevelStatusMessage {
+typedef struct _MarketWideCircuitBreakerDeclineLevelStatusMessage {
   UINT8 participant_id;                   // byte 0
   Timestamp1 timestamp_1;                 // bytes 1 to 8
   UINT8 message_id;                       // byte 9
@@ -221,10 +591,8 @@ entrypoint typedef struct _MarketWideCircuitBreakerDeclineLevelStatusMessage {
   UINT8 reserved;                         // byte 46
 } MarketWideCircuitBreakerDeclineLevelStatusMessage;
 
-// ---- Market Wide Circuit Breaker Status Message: 24 bytes --------------------
-
 // The Market-Wide Circuit Breaker Status message is used to report the Market-Wide Circuit Breaker threshold Level that has been breached.
-entrypoint typedef struct _MarketWideCircuitBreakerStatusMessage {
+typedef struct _MarketWideCircuitBreakerStatusMessage {
   UINT8 participant_id;                               // byte 0
   Timestamp1 timestamp_1;                             // bytes 1 to 8
   UINT8 message_id;                                   // byte 9
@@ -234,10 +602,25 @@ entrypoint typedef struct _MarketWideCircuitBreakerStatusMessage {
   UINT8 reserved;                                     // byte 23
 } MarketWideCircuitBreakerStatusMessage;
 
-// ---- Approximate Trades And Total Dollar Value Message: 34 bytes -------------
+// Active Participants
+typedef struct _Participants {
+  UINT8 participant_id;         // byte 0
+  UINT64BE trade_total_volume;  // bytes 1 to 8
+} Participants;
+
+// Approximate Adjusted Volume Market Center message is used to report the volume of adjusted trading activity for each Participant.
+typedef struct _ApproximateAdjustedVolumeMarketCenterMessage {
+  UINT8 participant_id;                                                           // byte 0
+  Timestamp1 timestamp_1;                                                         // bytes 1 to 8
+  UINT8 message_id;                                                               // byte 9
+  UINT32BE transaction_id;                                                        // bytes 10 to 13
+  UINT64BE participant_reference_number;                                          // bytes 14 to 21, signed, read here as unsigned
+  UINT8 number_of_participants;                                                   // byte 22
+  Participants participants[:byte-size (((UINT32) number_of_participants) * 9)];
+} ApproximateAdjustedVolumeMarketCenterMessage;
 
 // The Approximate Trades and Total Dollar Value message allows a Participant to report the total trades and total dollar value of trades at their respective market centers.
-entrypoint typedef struct _ApproximateTradesAndTotalDollarValueMessage {
+typedef struct _ApproximateTradesAndTotalDollarValueMessage {
   UINT8 participant_id;                   // byte 0
   Timestamp1 timestamp_1;                 // bytes 1 to 8
   UINT8 message_id;                       // byte 9
@@ -247,10 +630,8 @@ entrypoint typedef struct _ApproximateTradesAndTotalDollarValueMessage {
   UINT64BE dollar_value;                  // bytes 26 to 33
 } ApproximateTradesAndTotalDollarValueMessage;
 
-// ---- Crossing Session Summary Message: 46 bytes ------------------------------
-
 // The Crossing Session message is used to report the total volume and dollar value of trades transacted after the close of a Participant s regular session.
-entrypoint typedef struct _CrossingSessionSummaryMessage {
+typedef struct _CrossingSessionSummaryMessage {
   UINT8 participant_id;                              // byte 0
   Timestamp1 timestamp_1;                            // bytes 1 to 8
   UINT8 message_id;                                  // byte 9
@@ -261,28 +642,40 @@ entrypoint typedef struct _CrossingSessionSummaryMessage {
   UINT64BE crossing_session_ii_total_trades_volume;  // bytes 38 to 45
 } CrossingSessionSummaryMessage;
 
-// ---- Sale Conditions: 4 bytes ------------------------------------------------
+// Branch
+casetype _MarketStatusMessagePayload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x4B: MarketWideCircuitBreakerDeclineLevelStatusMessage market_wide_circuit_breaker_decline_level_status_message;
+    case 0x4C: MarketWideCircuitBreakerStatusMessage market_wide_circuit_breaker_status_message;
+    case 0x4E: ApproximateAdjustedVolumeMarketCenterMessage approximate_adjusted_volume_market_center_message;
+    case 0x4F: ApproximateTradesAndTotalDollarValueMessage approximate_trades_and_total_dollar_value_message;
+    case 0x50: CrossingSessionSummaryMessage crossing_session_summary_message;
+    default: UINT8 unknown[available];
+  }
+} MarketStatusMessagePayload;
+
+// Market Status Messages Header
+typedef struct _MarketStatusMessage (UINT32 available) where (available >= 1) {
+  UINT8 market_status_message_type;                                                                                                                        // byte 0
+  MarketStatusMessagePayload(market_status_message_type, (available - 1)) market_status_message_payload[:byte-size-single-element-array (available - 1)];
+} MarketStatusMessage;
 
 // Sale Conditions
-entrypoint typedef struct _SaleConditions {
+typedef struct _SaleConditions {
   UINT8 category_1;  // byte 0
   UINT8 category_2;  // byte 1
   UINT8 category_3;  // byte 2
   UINT8 category_4;  // byte 3
 } SaleConditions;
 
-// ---- Prior Day Trade Date And Time: 8 bytes ----------------------------------
-
 // Prior Day Trade Date and Time
-entrypoint typedef struct _PriorDayTradeDateAndTime {
+typedef struct _PriorDayTradeDateAndTime {
   UINT32BE seconds;      // bytes 0 to 3
   UINT32BE nanoseconds;  // bytes 4 to 7
 } PriorDayTradeDateAndTime;
 
-// ---- Corrected Trade: 28 bytes -----------------------------------------------
-
 // Corrected Trade
-entrypoint typedef struct _CorrectedTrade {
+typedef struct _CorrectedTrade {
   SaleConditions sale_conditions;                          // bytes 0 to 3
   UINT64BE trade_price_long;                               // bytes 4 to 11
   UINT32BE trade_volume_long;                              // bytes 12 to 15
@@ -293,10 +686,8 @@ entrypoint typedef struct _CorrectedTrade {
   PriorDayTradeDateAndTime prior_day_trade_date_and_time;  // bytes 20 to 27
 } CorrectedTrade;
 
-// ---- Original Trade: 28 bytes ------------------------------------------------
-
 // Original Trade
-entrypoint typedef struct _OriginalTrade {
+typedef struct _OriginalTrade {
   SaleConditions sale_conditions;                          // bytes 0 to 3
   UINT64BE trade_price_long;                               // bytes 4 to 11
   UINT32BE trade_volume_long;                              // bytes 12 to 15
@@ -307,10 +698,8 @@ entrypoint typedef struct _OriginalTrade {
   PriorDayTradeDateAndTime prior_day_trade_date_and_time;  // bytes 20 to 27
 } OriginalTrade;
 
-// ---- Prior Day Trade Correction Message: 91 bytes ----------------------------
-
 // The Prior Day Correction message is used to correct a transaction originally reported on a trading day earlier than the current trading day
-entrypoint typedef struct _PriorDayTradeCorrectionMessage {
+typedef struct _PriorDayTradeCorrectionMessage {
   UINT8 participant_id;                   // byte 0
   Timestamp1 timestamp_1;                 // bytes 1 to 8
   UINT8 message_id;                       // byte 9
@@ -323,10 +712,8 @@ entrypoint typedef struct _PriorDayTradeCorrectionMessage {
   OriginalTrade original_trade;           // bytes 63 to 90
 } PriorDayTradeCorrectionMessage;
 
-// ---- Prior Day Trade Message: 63 bytes ---------------------------------------
-
 // The Prior Day Trade message is used to report a Cta Equity, Local Issue or Bond transaction which occurred earlier than the current trading day and was not reported.
-entrypoint typedef struct _PriorDayTradeMessage {
+typedef struct _PriorDayTradeMessage {
   UINT8 participant_id;                                    // byte 0
   Timestamp1 timestamp_1;                                  // bytes 1 to 8
   UINT8 message_id;                                        // byte 9
@@ -345,10 +732,8 @@ entrypoint typedef struct _PriorDayTradeMessage {
   PriorDayTradeDateAndTime prior_day_trade_date_and_time;  // bytes 55 to 62
 } PriorDayTradeMessage;
 
-// ---- Prior Day Trade Cancel Error Message: 64 bytes --------------------------
-
 // The Prior Day Trade message is used to report a Cta Equity, Local Issue or Bond transaction which occurred earlier than the current trading day and was not reported.
-entrypoint typedef struct _PriorDayTradeCancelErrorMessage {
+typedef struct _PriorDayTradeCancelErrorMessage {
   UINT8 participant_id;                                    // byte 0
   Timestamp1 timestamp_1;                                  // bytes 1 to 8
   UINT8 message_id;                                        // byte 9
@@ -368,10 +753,24 @@ entrypoint typedef struct _PriorDayTradeCancelErrorMessage {
   UINT8 cancel_error_action;                               // byte 63
 } PriorDayTradeCancelErrorMessage;
 
-// ---- Consolidated Start Of Day Summary Message: 51 bytes ---------------------
+// Branch
+casetype _PriorDayMessagePayload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x43: PriorDayTradeCorrectionMessage prior_day_trade_correction_message;
+    case 0x54: PriorDayTradeMessage prior_day_trade_message;
+    case 0x58: PriorDayTradeCancelErrorMessage prior_day_trade_cancel_error_message;
+    default: UINT8 unknown[available];
+  }
+} PriorDayMessagePayload;
+
+// Prior Day Messages
+typedef struct _PriorDayMessage (UINT32 available) where (available >= 1) {
+  UINT8 prior_day_message_type;                                                                                                                // byte 0
+  PriorDayMessagePayload(prior_day_message_type, (available - 1)) prior_day_message_payload[:byte-size-single-element-array (available - 1)];
+} PriorDayMessage;
 
 // The Consolidated Start of Day Summary messages are transmitted shortly after the Multicast Line Start of Day message
-entrypoint typedef struct _ConsolidatedStartOfDaySummaryMessage {
+typedef struct _ConsolidatedStartOfDaySummaryMessage {
   UINT8 participant_id;                         // byte 0
   Timestamp1 timestamp_1;                       // bytes 1 to 8
   UINT8 message_id;                             // byte 9
@@ -388,10 +787,8 @@ entrypoint typedef struct _ConsolidatedStartOfDaySummaryMessage {
   UINT8 number_of_participants;                 // byte 50
 } ConsolidatedStartOfDaySummaryMessage;
 
-// ---- Participant Start Of Day Summary Message: 47 bytes ----------------------
-
 // The Participant Start of Day Summary messages are transmitted shortly after the Multicast Line Start of Day message
-entrypoint typedef struct _ParticipantStartOfDaySummaryMessage {
+typedef struct _ParticipantStartOfDaySummaryMessage {
   UINT8 participant_id;                   // byte 0
   Timestamp1 timestamp_1;                 // bytes 1 to 8
   UINT8 message_id;                       // byte 9
@@ -404,10 +801,8 @@ entrypoint typedef struct _ParticipantStartOfDaySummaryMessage {
   UINT64BE previous_close_price;          // bytes 39 to 46
 } ParticipantStartOfDaySummaryMessage;
 
-// ---- Consolidated End Of Day Summary Message: 75 bytes -----------------------
-
 // The Consolidated End of Day Summary messages are transmitted shortly before the Goodnight messages
-entrypoint typedef struct _ConsolidatedEndOfDaySummaryMessage {
+typedef struct _ConsolidatedEndOfDaySummaryMessage {
   UINT8 participant_id;                         // byte 0
   Timestamp1 timestamp_1;                       // bytes 1 to 8
   UINT8 message_id;                             // byte 9
@@ -427,10 +822,8 @@ entrypoint typedef struct _ConsolidatedEndOfDaySummaryMessage {
   UINT8 number_of_participants;                 // byte 74
 } ConsolidatedEndOfDaySummaryMessage;
 
-// ---- Participant End Of Day Summary Message: 80 bytes ------------------------
-
 // The Participant End of Day Summary messages are transmitted shortly before the Goodnight messages.
-entrypoint typedef struct _ParticipantEndOfDaySummaryMessage {
+typedef struct _ParticipantEndOfDaySummaryMessage {
   UINT8 participant_id;                   // byte 0
   Timestamp1 timestamp_1;                 // bytes 1 to 8
   UINT8 message_id;                       // byte 9
@@ -448,10 +841,25 @@ entrypoint typedef struct _ParticipantEndOfDaySummaryMessage {
   UINT8 tick;                             // byte 79
 } ParticipantEndOfDaySummaryMessage;
 
-// ---- Auction Status Message: 124 bytes ---------------------------------------
+// Branch
+casetype _SummaryMessagePayload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x41: ConsolidatedStartOfDaySummaryMessage consolidated_start_of_day_summary_message;
+    case 0x42: ParticipantStartOfDaySummaryMessage participant_start_of_day_summary_message;
+    case 0x43: ConsolidatedEndOfDaySummaryMessage consolidated_end_of_day_summary_message;
+    case 0x44: ParticipantEndOfDaySummaryMessage participant_end_of_day_summary_message;
+    default: UINT8 unknown[available];
+  }
+} SummaryMessagePayload;
+
+// Summary Messages
+typedef struct _SummaryMessage (UINT32 available) where (available >= 1) {
+  UINT8 summary_message_type;                                                                                                             // byte 0
+  SummaryMessagePayload(summary_message_type, (available - 1)) summary_message_payload[:byte-size-single-element-array (available - 1)];
+} SummaryMessage;
 
 // The Auction Status message is used when a Participant in a Cta eligible security, Local Issue or a Bond requires Auction Information
-entrypoint typedef struct _AuctionStatusMessage {
+typedef struct _AuctionStatusMessage {
   UINT8 participant_id;                           // byte 0
   Timestamp1 timestamp_1;                         // bytes 1 to 8
   UINT8 message_id;                               // byte 9
@@ -469,18 +877,14 @@ entrypoint typedef struct _AuctionStatusMessage {
   UINT8 future_use[62];                           // bytes 62 to 123
 } AuctionStatusMessage;
 
-// ---- Timestamp 2: 8 bytes ----------------------------------------------------
-
 // Timestamp 2
-entrypoint typedef struct _Timestamp2 {
+typedef struct _Timestamp2 {
   UINT32BE seconds;      // bytes 0 to 3
   UINT32BE nanoseconds;  // bytes 4 to 7
 } Timestamp2;
 
-// ---- Consolidated Data: 38 bytes ---------------------------------------------
-
 // Consolidated Data
-entrypoint typedef struct _ConsolidatedData {
+typedef struct _ConsolidatedData {
   UINT32BE previous_close_price_date;  // bytes 0 to 3
   UINT8 last_participant_id;           // byte 4
   UINT64BE last_price;                 // bytes 5 to 12
@@ -490,10 +894,8 @@ entrypoint typedef struct _ConsolidatedData {
   UINT8 tick;                          // byte 37
 } ConsolidatedData;
 
-// ---- Participant Data: 38 bytes ----------------------------------------------
-
 // Participant Data
-entrypoint typedef struct _ParticipantData {
+typedef struct _ParticipantData {
   UINT32BE previous_close_price_date;  // bytes 0 to 3
   UINT8 last_participant_id;           // byte 4
   UINT64BE last_price;                 // bytes 5 to 12
@@ -503,10 +905,8 @@ entrypoint typedef struct _ParticipantData {
   UINT8 tick;                          // byte 37
 } ParticipantData;
 
-// ---- Trade Correction Message: 185 bytes -------------------------------------
-
 // The Trade Correction message is used to correct Cta eligible Equity, Local Issue or Bond information.
-entrypoint typedef struct _TradeCorrectionMessage {
+typedef struct _TradeCorrectionMessage {
   UINT8 participant_id;                            // byte 0
   Timestamp1 timestamp_1;                          // bytes 1 to 8
   UINT8 message_id;                                // byte 9
@@ -525,10 +925,8 @@ entrypoint typedef struct _TradeCorrectionMessage {
   ParticipantData participant_data;                // bytes 147 to 184
 } TradeCorrectionMessage;
 
-// ---- Long Trade Message: 68 bytes --------------------------------------------
-
 // The Long Trade message is used to report trade information for Cta eligible Equity, Local Issue or Bonds.
-entrypoint typedef struct _LongTradeMessage {
+typedef struct _LongTradeMessage {
   UINT8 participant_id;                            // byte 0
   Timestamp1 timestamp_1;                          // bytes 1 to 8
   UINT8 message_id;                                // byte 9
@@ -552,10 +950,8 @@ entrypoint typedef struct _LongTradeMessage {
   UINT8 participant_open_high_low_last_indicator;  // byte 67
 } LongTradeMessage;
 
-// ---- Trading Status Message: 72 bytes ----------------------------------------
-
 // The Trading Status message is transmitted when a Participant in a Cta eligible security, Local Issue or a Bond elects to notify CTS of an Opening Delay, a Trading Halt, a Trading Resume, a Price Indication or a Market Imbalance.
-entrypoint typedef struct _TradingStatusMessage {
+typedef struct _TradingStatusMessage {
   UINT8 participant_id;                                   // byte 0
   Timestamp1 timestamp_1;                                 // bytes 1 to 8
   UINT8 message_id;                                       // byte 9
@@ -576,10 +972,8 @@ entrypoint typedef struct _TradingStatusMessage {
   UINT8 limit_up_limit_down_indicator;                    // byte 71
 } TradingStatusMessage;
 
-// ---- Short Trade Message: 36 bytes -------------------------------------------
-
 // The Short Trade message is used to report trade information for Cta eligible Equity only (not used for Local Issues or Bonds) if the trade meets message format requirements otherwise Long Trade message is used.
-entrypoint typedef struct _ShortTradeMessage {
+typedef struct _ShortTradeMessage {
   UINT8 participant_id;                            // byte 0
   Timestamp1 timestamp_1;                          // bytes 1 to 8
   UINT8 message_id;                                // byte 9
@@ -595,10 +989,8 @@ entrypoint typedef struct _ShortTradeMessage {
   UINT8 participant_open_high_low_last_indicator;  // byte 35
 } ShortTradeMessage;
 
-// ---- Trade Cancel Error Message: 150 bytes -----------------------------------
-
 // The Trade Cancel/Error message is used cancel or error Cta eligible securities, Local Issues or Bond information.
-entrypoint typedef struct _TradeCancelErrorMessage {
+typedef struct _TradeCancelErrorMessage {
   UINT8 participant_id;                            // byte 0
   Timestamp1 timestamp_1;                          // bytes 1 to 8
   UINT8 message_id;                                // byte 9
@@ -622,4 +1014,178 @@ entrypoint typedef struct _TradeCancelErrorMessage {
   ConsolidatedData consolidated_data;              // bytes 74 to 111
   ParticipantData participant_data;                // bytes 112 to 149
 } TradeCancelErrorMessage;
+
+// Branch
+casetype _TradeMessagePayload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x41: AuctionStatusMessage auction_status_message;
+    case 0x43: TradeCorrectionMessage trade_correction_message;
+    case 0x4C: LongTradeMessage long_trade_message;
+    case 0x53: TradingStatusMessage trading_status_message;
+    case 0x54: ShortTradeMessage short_trade_message;
+    case 0x58: TradeCancelErrorMessage trade_cancel_error_message;
+    default: UINT8 unknown[available];
+  }
+} TradeMessagePayload;
+
+// Trade Messages
+typedef struct _TradeMessage (UINT32 available) where (available >= 1) {
+  UINT8 trade_message_type;                                                                                                         // byte 0
+  TradeMessagePayload(trade_message_type, (available - 1)) trade_message_payload[:byte-size-single-element-array (available - 1)];
+} TradeMessage;
+
+// Branch
+casetype _CategoryPayload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x41: AdministrativeMessage(available) administrative_message;
+    case 0x43: ControlMessage(available) control_message;
+    case 0x49: IndicesMessage(available) indices_message;
+    case 0x4D: MarketStatusMessage(available) market_status_message;
+    case 0x50: PriorDayMessage(available) prior_day_message;
+    case 0x53: SummaryMessage(available) summary_message;
+    case 0x54: TradeMessage(available) trade_message;
+    default: UINT8 unknown[available];
+  }
+} CategoryPayload;
+
+// Repeating message block
+typedef struct _Message {
+  UINT16BE message_length { message_length >= 3 };                                                                                                       // bytes 0 to 1
+  UINT8 message_category;                                                                                                                                // byte 2
+  CategoryPayload(message_category, (((UINT32) message_length) - 3)) category_payload[:byte-size-single-element-array (((UINT32) message_length) - 3)];
+} Message;
+
+// Repeating message block
+casetype _MessagePart1 (Bool present) {
+  switch (present) {
+    case true: Message block;
+    case false: unit none;
+  }
+} MessagePart1;
+
+// Repeating message block
+typedef struct _MessageBlock2 {
+  Message first;
+  Message second;
+} MessageBlock2;
+
+// Repeating message block
+casetype _MessagePart2 (Bool present) {
+  switch (present) {
+    case true: MessageBlock2 block;
+    case false: unit none;
+  }
+} MessagePart2;
+
+// Repeating message block
+typedef struct _MessageBlock4 {
+  MessageBlock2 first;
+  MessageBlock2 second;
+} MessageBlock4;
+
+// Repeating message block
+casetype _MessagePart4 (Bool present) {
+  switch (present) {
+    case true: MessageBlock4 block;
+    case false: unit none;
+  }
+} MessagePart4;
+
+// Repeating message block
+typedef struct _MessageBlock8 {
+  MessageBlock4 first;
+  MessageBlock4 second;
+} MessageBlock8;
+
+// Repeating message block
+casetype _MessagePart8 (Bool present) {
+  switch (present) {
+    case true: MessageBlock8 block;
+    case false: unit none;
+  }
+} MessagePart8;
+
+// Repeating message block
+typedef struct _MessageBlock16 {
+  MessageBlock8 first;
+  MessageBlock8 second;
+} MessageBlock16;
+
+// Repeating message block
+casetype _MessagePart16 (Bool present) {
+  switch (present) {
+    case true: MessageBlock16 block;
+    case false: unit none;
+  }
+} MessagePart16;
+
+// Repeating message block
+typedef struct _MessageBlock32 {
+  MessageBlock16 first;
+  MessageBlock16 second;
+} MessageBlock32;
+
+// Repeating message block
+casetype _MessagePart32 (Bool present) {
+  switch (present) {
+    case true: MessageBlock32 block;
+    case false: unit none;
+  }
+} MessagePart32;
+
+// Repeating message block
+typedef struct _MessageBlock64 {
+  MessageBlock32 first;
+  MessageBlock32 second;
+} MessageBlock64;
+
+// Repeating message block
+casetype _MessagePart64 (Bool present) {
+  switch (present) {
+    case true: MessageBlock64 block;
+    case false: unit none;
+  }
+} MessagePart64;
+
+// Repeating message block
+typedef struct _MessageBlock128 {
+  MessageBlock64 first;
+  MessageBlock64 second;
+} MessageBlock128;
+
+// Repeating message block
+casetype _MessagePart128 (Bool present) {
+  switch (present) {
+    case true: MessageBlock128 block;
+    case false: unit none;
+  }
+} MessagePart128;
+
+// Repeating message block
+typedef struct _MessageCounted (UINT32 count) {
+  MessagePart128(((count & 128) != 0)) part128;
+  MessagePart64(((count & 64) != 0)) part64;
+  MessagePart32(((count & 32) != 0)) part32;
+  MessagePart16(((count & 16) != 0)) part16;
+  MessagePart8(((count & 8) != 0)) part8;
+  MessagePart4(((count & 4) != 0)) part4;
+  MessagePart2(((count & 2) != 0)) part2;
+  MessagePart1(((count & 1) != 0)) part1;
+} MessageCounted;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Cta Udp Packet
+entrypoint typedef struct _Packet {
+  UINT8 version;                                         // byte 0
+  UINT16BE block_size;                                   // bytes 1 to 2
+  UINT8 data_feed_indicator;                             // byte 3
+  UINT8 retransmission_indicator;                        // byte 4
+  UINT32BE block_sequence_number;                        // bytes 5 to 8
+  UINT8 messages_in_block;                               // byte 9
+  SipBlockTimestamp sip_block_timestamp;                 // bytes 10 to 17
+  UINT16BE block_checksum;                               // bytes 18 to 19
+  MessageCounted(((UINT32) messages_in_block)) message;
+  UINT8 block_pad_byte[:consume-all];
+} Packet;
 

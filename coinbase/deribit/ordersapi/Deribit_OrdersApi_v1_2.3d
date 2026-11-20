@@ -1,5 +1,34 @@
-// Coinbase Orders Api
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Coinbase Deribit OrdersApi Sbe v1.2
 //
+// Protocol:
+//   Organization: Coinbase
+//   Protocol: Orders Api
+//   Encoding: Simple Binary Encoding
+//   Version: 1.2
+//   Date: 7/15/2026
+//   Specification: deribit-sbe-order-api-v1.2.xml
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
 // writes a C validator for each record below and proves, of that C, that it reads no byte
 // outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
@@ -7,6 +36,8 @@
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out Deribit_OrdersApi_v1_2.3d
 //
@@ -16,8 +47,30 @@
 // - a field present only on a condition
 // - a block whose stated length holds more than its fields
 // - a run counted by a field
-//
-// License: MIT No Attribution
+// - the packet as a whole, which is an element present when bytes remain, where what remains is not known, at packet.sbemessage.padding
+
+// ---- Values ------------------------------------------------------------------
+
+// Reset Seq Num: one byte code
+#define RESET_SEQ_NUM_FALSE 0x00  // False
+#define RESET_SEQ_NUM_TRUE 0x01   // True
+
+// Product Type: one byte code
+#define PRODUCT_TYPE_ALL 0x00            // All
+#define PRODUCT_TYPE_OPTIONS 0x01        // Options
+#define PRODUCT_TYPE_FUTURES 0x02        // Futures
+#define PRODUCT_TYPE_COMBO_FUTURES 0x03  // Combo Futures
+#define PRODUCT_TYPE_COMBO_OPTIONS 0x04  // Combo Options
+#define PRODUCT_TYPE_SPOT 0x05           // Spot
+
+// Side: one byte code
+#define SIDE_BUY 0x01   // Buy
+#define SIDE_BOTH 0x00  // Both
+
+// Trigger: one byte code
+#define TRIGGER_QUANTITY 0x00  // Quantity
+#define TRIGGER_DELTA 0x01     // Delta
+#define TRIGGER_VEGA 0x02      // Vega
 
 // ---- Logon Message: 65 bytes -------------------------------------------------
 
@@ -25,7 +78,7 @@
 entrypoint typedef struct _LogonMessage {
   UINT8 client_id[16];  // bytes 0 to 15
   UINT8 secret[48];     // bytes 16 to 63
-  UINT8 reset_seq_num;  // byte 64, signed, read here as unsigned
+  UINT8 reset_seq_num;  // byte 64, values RESET_SEQ_NUM_, signed, read here as unsigned
 } LogonMessage;
 
 // ---- Logon Conf Message: 4 bytes ---------------------------------------------
@@ -129,8 +182,8 @@ entrypoint typedef struct _MassCancelRequestMessage {
   UINT64 correlation_id;          // bytes 0 to 7, signed, read here as unsigned
   UINT64 currency_pair_id;        // bytes 8 to 15, signed, read here as unsigned
   UINT64 instrument_id_optional;  // bytes 16 to 23, signed, read here as unsigned
-  UINT8 product_type;             // byte 24, signed, read here as unsigned
-  UINT8 side;                     // byte 25, signed, read here as unsigned
+  UINT8 product_type;             // byte 24, values PRODUCT_TYPE_, signed, read here as unsigned
+  UINT8 side;                     // byte 25, values SIDE_, signed, read here as unsigned
 } MassCancelRequestMessage;
 
 // ---- Mass Quote Cancel Request Message: 17 bytes -----------------------------
@@ -139,7 +192,7 @@ entrypoint typedef struct _MassCancelRequestMessage {
 entrypoint typedef struct _MassQuoteCancelRequestMessage {
   UINT64 correlation_id;  // bytes 0 to 7, signed, read here as unsigned
   UINT64 mmp_group_id;    // bytes 8 to 15, signed, read here as unsigned
-  UINT8 side;             // byte 16, signed, read here as unsigned
+  UINT8 side;             // byte 16, values SIDE_, signed, read here as unsigned
 } MassQuoteCancelRequestMessage;
 
 // ---- Total Filled: 9 bytes ---------------------------------------------------
@@ -217,7 +270,7 @@ entrypoint typedef struct _MassQuoteMmpTriggeredMessage {
   UINT8 quantity_level[8];  // bytes 32 to 39
   UINT8 vega_level[8];      // bytes 40 to 47
   UINT8 delta_level[8];     // bytes 48 to 55
-  UINT8 trigger;            // byte 56, signed, read here as unsigned
+  UINT8 trigger;            // byte 56, values TRIGGER_, signed, read here as unsigned
 } MassQuoteMmpTriggeredMessage;
 
 // ---- Orders Mmp Triggered Message: 57 bytes ----------------------------------
@@ -231,7 +284,7 @@ entrypoint typedef struct _OrdersMmpTriggeredMessage {
   UINT8 quantity_level[8];  // bytes 32 to 39
   UINT8 vega_level[8];      // bytes 40 to 47
   UINT8 delta_level[8];     // bytes 48 to 55
-  UINT8 trigger;            // byte 56, signed, read here as unsigned
+  UINT8 trigger;            // byte 56, values TRIGGER_, signed, read here as unsigned
 } OrdersMmpTriggeredMessage;
 
 // ---- Mass Quote Mmp Unfrozen Message: 32 bytes -------------------------------

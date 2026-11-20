@@ -1,63 +1,173 @@
-// Shanghai Stock Exchange Market Data Gateway
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Sse SseSecurities Mdgw Is120 v0.63
 //
+// Protocol:
+//   Organization: Shanghai Stock Exchange
+//   Protocol: Market Data Gateway
+//   Encoding: IS120 Market Data Gateway Binary
+//   Version: 0.63
+//   Date: 9/18/2026
+//   Specification: 03ec823b9825422ba4c74e2f5cb3c42e.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out SseSecurities_Mdgw_v0_63.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - the dispatch that chooses a message by its type
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Standard Header: 24 bytes -----------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-entrypoint typedef struct _StandardHeader {
-  UINT8 msg_type[4];      // bytes 0 to 3
-  UINT64BE sending_time;  // bytes 4 to 11
-  UINT64BE msg_seq_num;   // bytes 12 to 19
-  UINT32BE body_length;   // bytes 20 to 23
-} StandardHeader;
+// MsgType: 4 byte code
+#define MSG_TYPE_LOGON_MESSAGE 0x53303031                     // Logon Message
+#define MSG_TYPE_LOGOUT_MESSAGE 0x53303032                    // Logout Message
+#define MSG_TYPE_HEARTBEAT_MESSAGE 0x53303033                 // Heartbeat Message
+#define MSG_TYPE_CHANNEL_HEARTBEAT 0x50303031                 // Channel Heartbeat
+#define MSG_TYPE_RETRANSMISSION_MESSAGE 0x50303032            // Retransmission Message
+#define MSG_TYPE_MARKET_STATUS_MESSAGE 0x4D313031             // Market Status Message
+#define MSG_TYPE_MARKET_DATA_SNAPSHOT_MESSAGE 0x4D313032      // Market Data Snapshot Message
+#define MSG_TYPE_TICK_BY_TICK_MARKET_DATA_MESSAGE 0x4D323031  // Tick-by-Tick Market Data Message
 
-// ---- Logon Message: 74 bytes -------------------------------------------------
+// SessionStatus: 4 byte code
+#define SESSION_STATUS_NORMAL_LOGOUT 0x00000000  // Normal logout
+
+// Channel Heartbeat SecurityType: one byte code
+#define CHANNEL_HEARTBEAT_SECURITY_TYPE_BONDS_NON_MATCHED_TRADING 0x0D  // Bonds (non-matched trading)
+
+// Channel Heartbeat ChannelNO: 2 byte code
+#define CHANNEL_HEARTBEAT_CHANNEL_N_O_NON_MATCHED_TRADING_TICK_BY_TICK_MARKET_DATA 0x0064  // Non-matched trading tick-by-tick market data
+
+// EndOfChannel: one byte code
+#define END_OF_CHANNEL_MARKET_DATA_UPDATES_HAVE_ENDED 0x59      // Market data updates have ended
+#define END_OF_CHANNEL_MARKET_DATA_UPDATES_HAVE_NOT_ENDED 0x4E  // Market data updates have not ended
+
+// Retransmission Message ChannelNO: 2 byte code
+#define RETRANSMISSION_MESSAGE_CHANNEL_N_O_NON_MATCHED_TRADING_TICK_BY_TICK_MARKET_DATA 0x0064  // Non-matched trading tick-by-tick market data
+
+// ResendType: one byte code
+#define RESEND_TYPE_TICK_BY_TICK_MARKET_DATA 0x01  // Tick-by-tick market data
+
+// ResendStatus: one byte code
+#define RESEND_STATUS_ALL_COMPLETE 0x01                                                    // All complete
+#define RESEND_STATUS_PARTIALLY_COMPLETE_PART_OF_THE_REQUESTED_DATA_WAS_NOT_RETURNED 0x02  // Partially complete (part of the requested data was not returned)
+#define RESEND_STATUS_NO_PERMISSION 0x03                                                   // No permission
+#define RESEND_STATUS_DATA_NOT_AVAILABLE 0x04                                              // Data not available
+#define RESEND_STATUS_A_RETRANSMISSION_REQUEST_IS_BEING_PROCESSED 0x05                     // A retransmission request is being processed
+#define RESEND_STATUS_OTHER 0x63                                                           // Other
+
+// Market Status Message SecurityType: one byte code
+#define MARKET_STATUS_MESSAGE_SECURITY_TYPE_STOCKS_FUNDS_INDICES_AND_BOND_DISTRIBUTION 0x01  // Stocks, funds, indices and bond distribution
+#define MARKET_STATUS_MESSAGE_SECURITY_TYPE_DERIVATIVES 0x02                                 // Derivatives
+#define MARKET_STATUS_MESSAGE_SECURITY_TYPE_COMPREHENSIVE_BUSINESS 0x03                      // Comprehensive business
+#define MARKET_STATUS_MESSAGE_SECURITY_TYPE_BONDS_MATCHED_TRADING 0x0C                       // Bonds (matched trading)
+#define MARKET_STATUS_MESSAGE_SECURITY_TYPE_BONDS_NON_MATCHED_TRADING 0x0D                   // Bonds (non-matched trading)
+#define MARKET_STATUS_MESSAGE_SECURITY_TYPE_EXTERNAL_SOURCE_MARKET_DATA 0x0E                 // External source market data
+
+// TradSesMode: one byte code
+#define TRAD_SES_MODE_SYSTEM_TEST 0x01                // System test
+#define TRAD_SES_MODE_SIMULATED_TRADING 0x02          // Simulated trading
+#define TRAD_SES_MODE_PRODUCTION_NORMAL_TRADING 0x03  // Production (normal trading)
+
+// Market Data Snapshot Message SecurityType: one byte code
+#define MARKET_DATA_SNAPSHOT_MESSAGE_SECURITY_TYPE_STOCKS_FUNDS_INDICES_AND_BOND_DISTRIBUTION 0x01  // Stocks, funds, indices and bond distribution
+#define MARKET_DATA_SNAPSHOT_MESSAGE_SECURITY_TYPE_DERIVATIVES 0x02                                 // Derivatives
+#define MARKET_DATA_SNAPSHOT_MESSAGE_SECURITY_TYPE_COMPREHENSIVE_BUSINESS 0x03                      // Comprehensive business
+#define MARKET_DATA_SNAPSHOT_MESSAGE_SECURITY_TYPE_BONDS_MATCHED_TRADING 0x0C                       // Bonds (matched trading)
+#define MARKET_DATA_SNAPSHOT_MESSAGE_SECURITY_TYPE_BONDS_NON_MATCHED_TRADING 0x0D                   // Bonds (non-matched trading)
+#define MARKET_DATA_SNAPSHOT_MESSAGE_SECURITY_TYPE_EXTERNAL_SOURCE_MARKET_DATA 0x0E                 // External source market data
+
+// Tick-by-Tick Market Data Message SecurityType: one byte code
+#define TICK_BY_TICK_MARKET_DATA_MESSAGE_SECURITY_TYPE_BONDS_NON_MATCHED_TRADING 0x0D  // Bonds (non-matched trading)
+
+// ExecType: one byte code
+#define EXEC_TYPE_NEW_ORDER 0x30     // New order
+#define EXEC_TYPE_DELETE_ORDER 0x34  // Delete order
+#define EXEC_TYPE_TRADE 0x46         // Trade
+
+// Side: one byte code
+#define SIDE_BUY 0x31   // Buy
+#define SIDE_SELL 0x32  // Sell
+
+// FullAmountTrade: one byte code
+#define FULL_AMOUNT_TRADE_YES 0x01  // Yes
+#define FULL_AMOUNT_TRADE_NO 0x02   // No
+
+// SettlType: one byte code
+#define SETTL_TYPE_NET_SETTLEMENT 0x01  // Net settlement
+#define SETTL_TYPE_R_T_G_S 0x02         // RTGS
+
+// BidTransType: one byte code
+#define BID_TRANS_TYPE_COMPETITIVE_BIDDING_RESERVATION 0x01                         // Competitive bidding reservation
+#define BID_TRANS_TYPE_COMPETITIVE_BIDDING_DECLARATION 0x02                         // Competitive bidding declaration
+#define BID_TRANS_TYPE_RESPONSE_PRICE_DECLARATION_FOR_A_SINGLE_WINNING_ENTITY 0x03  // Response price declaration for a single winning entity
+
+// BidExecInstType: one byte code
+#define BID_EXEC_INST_TYPE_SINGLE_WINNING_ENTITY 0x01                         // Single winning entity
+#define BID_EXEC_INST_TYPE_MULTIPLE_WINNING_ENTITIES_AT_A_SINGLE_PRICE 0x02   // Multiple winning entities at a single price
+#define BID_EXEC_INST_TYPE_MULTIPLE_WINNING_ENTITIES_AT_MULTIPLE_PRICES 0x03  // Multiple winning entities at multiple prices
+
+// TradeMethod: one byte code
+#define TRADE_METHOD_MATCHED_TRADE_RESERVED 0x00                                 // Matched trade (reserved)
+#define TRADE_METHOD_FIRM_QUOTE_CLICK_TRADE 0x01                                 // Firm quote click trade
+#define TRADE_METHOD_INDICATIVE_QUOTE_CLICK_TRADE 0x02                           // Indicative quote click trade
+#define TRADE_METHOD_INQUIRY_TRADE 0x03                                          // Inquiry trade
+#define TRADE_METHOD_NEGOTIATED_TRADE_INCLUDING_MERGED_DECLARATIONS 0x06         // Negotiated trade (including merged declarations)
+#define TRADE_METHOD_COMPETITIVE_BIDDING_SINGLE_ENTITY_TRADE 0x07                // Competitive bidding single-entity trade
+#define TRADE_METHOD_COMPETITIVE_BIDDING_MULTI_ENTITY_SINGLE_PRICE_TRADE 0x0A    // Competitive bidding multi-entity single-price trade
+#define TRADE_METHOD_COMPETITIVE_BIDDING_MULTI_ENTITY_MULTIPLE_PRICE_TRADE 0x0B  // Competitive bidding multi-entity multiple-price trade
+
+// ---- Types -------------------------------------------------------------------
 
 // The client must send this message first when starting a market data session.
-entrypoint typedef struct _LogonMessage {
+typedef struct _LogonMessage {
   UINT8 sender_comp_i_d[32];  // bytes 0 to 31
   UINT8 target_comp_i_d[32];  // bytes 32 to 63
   UINT16BE heart_bt_int;      // bytes 64 to 65
   UINT8 appl_ver_i_d[8];      // bytes 66 to 73
 } LogonMessage;
 
-// ---- Logout Message: 260 bytes -----------------------------------------------
-
 // The logout message starts or confirms the end of a market data session. A disconnection without an exchange of logout messages is treated as an abnormal disconnection. After sending a logout message, neither side of the connection should send any further message.
-entrypoint typedef struct _LogoutMessage {
+typedef struct _LogoutMessage {
   UINT32BE session_status;  // bytes 0 to 3
   UINT8 text[256];          // bytes 4 to 259
 } LogoutMessage;
 
-// ---- Channel Heartbeat: 12 bytes ---------------------------------------------
-
 // Tick-by-tick market data supports sending a heartbeat every 3 seconds during idle periods of data sending. If data sending stays busy, the channel heartbeat interval can exceed 3s.
-entrypoint typedef struct _ChannelHeartbeat {
+typedef struct _ChannelHeartbeat {
   UINT8 channel_heartbeat_security_type;   // byte 0
   UINT16BE channel_heartbeat_channel_n_o;  // bytes 1 to 2
   UINT64BE appl_last_seq_num;              // bytes 3 to 10
   UINT8 end_of_channel;                    // byte 11
 } ChannelHeartbeat;
 
-// ---- Retransmission Message: 52 bytes ----------------------------------------
-
 // The retransmission message is used to request market data on a channel that supports retransmission. For application messages that can be retransmitted (all types of tick-by-tick market data messages), if application messages are missing, the user can send a retransmission message upstream, which represents a retransmission request. The upstream handles retransmission requests in a request reply manner: it returns the data to be retransmitted according to the start and end sequence numbers specified in the retransmission message, and after the retransmission is complete it returns a retransmission message reporting that the retransmission is complete; if the retransmission fails, it returns a retransmission message reporting that the retransmission failed. The upstream system supports retransmission of only one message gap at a time; when the upstream receives multiple retransmission requests, it returns a retransmission failure for the other request messages. For tick-by-tick market data, the channel code and the message record number can be used to determine whether messages have been lost. When the message record number received is <= the largest message record number already received on this channel, the message has already been received and should be ignored. When the message record number received is > the largest message record number already received +1 (for example, the largest message record number received is 100 and the new message record number is 102), messages have been lost, and the lost data should be recovered by sending a retransmission request.
-entrypoint typedef struct _RetransmissionMessage {
+typedef struct _RetransmissionMessage {
   UINT16BE retransmission_message_channel_n_o;  // bytes 0 to 1
   UINT8 resend_type;                            // byte 2
   UINT64BE appl_beg_seq_num;                    // bytes 3 to 10
@@ -66,19 +176,72 @@ entrypoint typedef struct _RetransmissionMessage {
   UINT8 reject_text[32];                        // bytes 20 to 51
 } RetransmissionMessage;
 
-// ---- Market Status Message: 14 bytes -----------------------------------------
-
 // The market status message is used by the exchange to publish information such as the market status and the number of products. It is published periodically and when the market status changes.
-entrypoint typedef struct _MarketStatusMessage {
+typedef struct _MarketStatusMessage {
   UINT8 market_status_message_security_type;  // byte 0
   UINT8 trad_ses_mode;                        // byte 1
   UINT8 trading_session_i_d[8];               // bytes 2 to 9
   UINT32BE tot_no_related_sym;                // bytes 10 to 13
 } MarketStatusMessage;
 
-// ---- Tick-by-Tick Order Market Data Extension Fields: 139 bytes --------------
+typedef struct _IndexMarketDataSnapshotEntries {
+  UINT8 index_market_data_snapshot_entries_m_d_entry_type[2];  // bytes 0 to 1
+  UINT64BE index_market_data_snapshot_entries_m_d_entry_px;    // bytes 2 to 9
+} IndexMarketDataSnapshotEntries;
 
-entrypoint typedef struct _Tick_by_TickOrderMarketDataExtensionFields {
+typedef struct _IndexMarketDataSnapshotExtensionFields {
+  UINT16BE no_m_d_entries;                                                                                         // bytes 0 to 1
+  IndexMarketDataSnapshotEntries index_market_data_snapshot_entries[:byte-size (((UINT32) no_m_d_entries) * 10)];
+} IndexMarketDataSnapshotExtensionFields;
+
+typedef struct _MarketDataSnapshotEntries {
+  UINT8 market_data_snapshot_entries_m_d_entry_type[2];  // bytes 0 to 1
+  UINT64BE market_data_snapshot_entries_m_d_entry_px;    // bytes 2 to 9
+  UINT64BE m_d_entry_size;                               // bytes 10 to 17
+  UINT8 m_d_entry_position_no;                           // byte 18
+} MarketDataSnapshotEntries;
+
+typedef struct _MarketDataSnapshotExtensionFields {
+  UINT16BE no_m_d_entries;                                                                              // bytes 0 to 1
+  MarketDataSnapshotEntries market_data_snapshot_entries[:byte-size (((UINT32) no_m_d_entries) * 19)];
+} MarketDataSnapshotExtensionFields;
+
+// Branch
+casetype _MarketDataSnapshotMessageExtendFields (UINT64 selector, UINT32 available) {
+  switch (selector) {
+    case 0x4D44303031: IndexMarketDataSnapshotExtensionFields index_market_data_snapshot_extension_fields;
+    case 0x4D44303032: MarketDataSnapshotExtensionFields market_data_snapshot_extension_fields;
+    case 0x4D44303033: MarketDataSnapshotExtensionFields market_data_snapshot_extension_fields_2;
+    case 0x4D44303034: MarketDataSnapshotExtensionFields market_data_snapshot_extension_fields_3;
+    case 0x4D44313031: MarketDataSnapshotExtensionFields market_data_snapshot_extension_fields_4;
+    case 0x4D44313032: MarketDataSnapshotExtensionFields market_data_snapshot_extension_fields_5;
+    case 0x4D44333031: MarketDataSnapshotExtensionFields market_data_snapshot_extension_fields_6;
+    case 0x4D44323031: MarketDataSnapshotExtensionFields market_data_snapshot_extension_fields_7;
+    case 0x4D44453031: MarketDataSnapshotExtensionFields market_data_snapshot_extension_fields_8;
+    case 0x4D44323130: MarketDataSnapshotExtensionFields market_data_snapshot_extension_fields_9;
+    default: UINT8 unknown[available];
+  }
+} MarketDataSnapshotMessageExtendFields;
+
+// The market data snapshot message publishes market data for securities. The exchange publishes full snapshot messages periodically and sends incremental snapshot messages when market data changes. Snapshot messages have no data dependency on one another; the client does not need to tell full and incremental messages apart and can replace its current data directly.
+typedef struct _MarketDataSnapshotMessage (UINT32 available) where (available >= 71) {
+  UINT8 market_data_snapshot_message_security_type;                                                                                                                                                                          // byte 0
+  UINT8 trad_ses_mode;                                                                                                                                                                                                       // byte 1
+  UINT32BE trade_date;                                                                                                                                                                                                       // bytes 2 to 5
+  UINT32BE last_update_time;                                                                                                                                                                                                 // bytes 6 to 9
+  UINT32BE m_d_stream_i_d_0;                                                                                                                                                                                                 // bytes 10 to 13, the first 4 of 5 characters a choice is made on
+  UINT8 m_d_stream_i_d_1;                                                                                                                                                                                                    // byte 14
+  UINT8 security_i_d[8];                                                                                                                                                                                                     // bytes 15 to 22
+  UINT8 symbol[8];                                                                                                                                                                                                           // bytes 23 to 30
+  UINT64BE pre_close_px;                                                                                                                                                                                                     // bytes 31 to 38
+  UINT64BE total_volume_traded;                                                                                                                                                                                              // bytes 39 to 46
+  UINT64BE num_trades;                                                                                                                                                                                                       // bytes 47 to 54
+  UINT64BE market_data_snapshot_message_total_value_traded;                                                                                                                                                                  // bytes 55 to 62
+  UINT8 trading_phase_code[8];                                                                                                                                                                                               // bytes 63 to 70
+  MarketDataSnapshotMessageExtendFields(((((UINT64) m_d_stream_i_d_0) << 8) | ((UINT64) m_d_stream_i_d_1)), (available - 71)) market_data_snapshot_message_extend_fields[:byte-size-single-element-array (available - 71)];
+} MarketDataSnapshotMessage;
+
+typedef struct _Tick_by_TickOrderMarketDataExtensionFields {
   UINT8 side;                                                                   // byte 0
   UINT8 quote_i_d[18];                                                          // bytes 1 to 18
   UINT8 member_i_d[12];                                                         // bytes 19 to 30
@@ -97,9 +260,7 @@ entrypoint typedef struct _Tick_by_TickOrderMarketDataExtensionFields {
   UINT64BE min_qty;                                                             // bytes 131 to 138
 } Tick_by_TickOrderMarketDataExtensionFields;
 
-// ---- Tick-by-Tick Trade Market Data Extension Fields: 53 bytes ---------------
-
-entrypoint typedef struct _Tick_by_TickTradeMarketDataExtensionFields {
+typedef struct _Tick_by_TickTradeMarketDataExtensionFields {
   UINT8 bid_appl_seq_num[18];                                                   // bytes 0 to 17
   UINT8 offer_appl_seq_num[18];                                                 // bytes 18 to 35
   UINT64BE tick_by_tick_trade_market_data_extension_fields_total_value_traded;  // bytes 36 to 43
@@ -107,10 +268,69 @@ entrypoint typedef struct _Tick_by_TickTradeMarketDataExtensionFields {
   UINT64BE margin_price;                                                        // bytes 45 to 52
 } Tick_by_TickTradeMarketDataExtensionFields;
 
-// ---- Standard Trailer: 4 bytes -----------------------------------------------
+// Branch
+casetype _Tick_by_TickMarketDataMessageExtendFields (UINT64 selector, UINT32 available) {
+  switch (selector) {
+    case 0x4D44323131: Tick_by_TickOrderMarketDataExtensionFields tick_by_tick_order_market_data_extension_fields;
+    case 0x4D44323132: Tick_by_TickOrderMarketDataExtensionFields tick_by_tick_order_market_data_extension_fields_2;
+    case 0x4D44323133: Tick_by_TickOrderMarketDataExtensionFields tick_by_tick_order_market_data_extension_fields_3;
+    case 0x4D44323134: Tick_by_TickOrderMarketDataExtensionFields tick_by_tick_order_market_data_extension_fields_4;
+    case 0x4D44323135: Tick_by_TickOrderMarketDataExtensionFields tick_by_tick_order_market_data_extension_fields_5;
+    case 0x4D44323136: Tick_by_TickOrderMarketDataExtensionFields tick_by_tick_order_market_data_extension_fields_6;
+    case 0x4D44323137: Tick_by_TickTradeMarketDataExtensionFields tick_by_tick_trade_market_data_extension_fields;
+    default: UINT8 unknown[available];
+  }
+} Tick_by_TickMarketDataMessageExtendFields;
+
+// Tick-by-tick market data includes tick-by-tick orders and tick-by-tick trades, sent in one data stream in the order they occur. Tick-by-tick order and tick-by-tick trade messages in the same channel share one continuous numbering of the message record number (ApplSeqNum). The client must use the continuity of the tick-by-tick sequence numbers to detect packet loss, and request retransmission over the TCP connection.
+typedef struct _Tick_by_TickMarketDataMessage (UINT32 available) where (available >= 45) {
+  UINT8 tick_by_tick_market_data_message_security_type;                                                                                                                                                                              // byte 0
+  UINT16BE tick_by_tick_market_data_message_channel_n_o;                                                                                                                                                                             // bytes 1 to 2
+  UINT64BE appl_seq_num;                                                                                                                                                                                                             // bytes 3 to 10
+  UINT32BE m_d_stream_i_d_0;                                                                                                                                                                                                         // bytes 11 to 14, the first 4 of 5 characters a choice is made on
+  UINT8 m_d_stream_i_d_1;                                                                                                                                                                                                            // byte 15
+  UINT8 security_i_d[8];                                                                                                                                                                                                             // bytes 16 to 23
+  UINT32BE transact_time;                                                                                                                                                                                                            // bytes 24 to 27
+  UINT8 exec_type;                                                                                                                                                                                                                   // byte 28
+  UINT64BE price;                                                                                                                                                                                                                    // bytes 29 to 36
+  UINT64BE order_qty;                                                                                                                                                                                                                // bytes 37 to 44
+  Tick_by_TickMarketDataMessageExtendFields(((((UINT64) m_d_stream_i_d_0) << 8) | ((UINT64) m_d_stream_i_d_1)), (available - 45)) tick_by_tick_market_data_message_extend_fields[:byte-size-single-element-array (available - 45)];
+} Tick_by_TickMarketDataMessage;
+
+// Branch
+casetype _MessageBody (UINT32 selector, UINT32 available) {
+  switch (selector) {
+    case 0x53303031: LogonMessage logon_message;
+    case 0x53303032: LogoutMessage logout_message;
+    case 0x53303033: unit heartbeat_message;
+    case 0x50303031: ChannelHeartbeat channel_heartbeat;
+    case 0x50303032: RetransmissionMessage retransmission_message;
+    case 0x4D313031: MarketStatusMessage market_status_message;
+    case 0x4D313032: MarketDataSnapshotMessage(available) market_data_snapshot_message;
+    case 0x4D323031: Tick_by_TickMarketDataMessage(available) tick_by_tick_market_data_message;
+    default: UINT8 unknown[available];
+  }
+} MessageBody;
 
 // The checksum is calculated from the start of the message header (header included) to the end of the message body. See Appendix 1 Calculating the checksum for sample code.
-entrypoint typedef struct _StandardTrailer {
+typedef struct _StandardTrailer {
   UINT32BE check_sum;  // bytes 0 to 3
 } StandardTrailer;
+
+// BINARY message
+typedef struct _BinaryMessage {
+  UINT32BE msg_type;                                                                             // bytes 0 to 3
+  UINT64BE sending_time;                                                                         // bytes 4 to 11
+  UINT64BE msg_seq_num;                                                                          // bytes 12 to 19
+  UINT32BE body_length;                                                                          // bytes 20 to 23
+  MessageBody(msg_type, body_length) message_body[:byte-size-single-element-array body_length];
+  StandardTrailer standard_trailer;
+} BinaryMessage;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// BINARY messages
+entrypoint typedef struct _Packet (UINT32 available) {
+  BinaryMessage binary_message[:byte-size available];
+} Packet;
 

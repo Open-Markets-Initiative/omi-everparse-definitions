@@ -1,5 +1,34 @@
-// AsiaNext Aquis Trading Protocol
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: AsiaNext AsiaNextDerivatives TradingProtocol Atp v1.2
 //
+// Protocol:
+//   Organization: AsiaNext
+//   Protocol: Aquis Trading Protocol
+//   Encoding: Aquis Trading Protocol
+//   Version: 1.2
+//   Date: 11/6/2026
+//   Specification: 251015-AsiaNext-ATP-Technical-Specification-v1.2.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
 // writes a C validator for each record below and proves, of that C, that it reads no byte
 // outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
@@ -7,6 +36,8 @@
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out AsiaNextDerivatives_TradingProtocol_v1_2.3d
 //
@@ -14,15 +45,81 @@
 // - a run filling what frames it
 // - a field read in bits
 // - the dispatch that chooses a message by its type
-//
-// License: MIT No Attribution
+// - the packet as a whole, which is a union whose readings take different widths, at packet.message.payload.orderaddresponsemessage.orderaddresponsestatus
+
+// ---- Values ------------------------------------------------------------------
+
+// Msg Type: one byte code
+#define MSG_TYPE_LOGIN_MESSAGE 0x01                       // Login Message
+#define MSG_TYPE_LOGIN_RESPONSE_MESSAGE 0x02              // Login Response Message
+#define MSG_TYPE_HEARTBEAT_MESSAGE 0x00                   // Heartbeat Message
+#define MSG_TYPE_LOGOUT_REQUEST_MESSAGE 0x03              // Logout Request Message
+#define MSG_TYPE_LOGOUT_MESSAGE 0x04                      // Logout Message
+#define MSG_TYPE_ORDER_ADD_MESSAGE 0x05                   // Order Add Message
+#define MSG_TYPE_ORDER_ADD_EXTENDED_MESSAGE 0x15          // Order Add Extended Message
+#define MSG_TYPE_ORDER_CANCEL_MESSAGE 0x07                // Order Cancel Message
+#define MSG_TYPE_ORDER_MODIFY_MESSAGE 0x09                // Order Modify Message
+#define MSG_TYPE_ORDER_MODIFY_EXTENDED_MESSAGE 0x16       // Order Modify Extended Message
+#define MSG_TYPE_ORDER_ADD_RESPONSE_MESSAGE 0x06          // Order Add Response Message
+#define MSG_TYPE_ORDER_CANCEL_RESPONSE_MESSAGE 0x08       // Order Cancel Response Message
+#define MSG_TYPE_ORDER_MODIFY_RESPONSE_MESSAGE 0x0A       // Order Modify Response Message
+#define MSG_TYPE_QUOTE_REQUEST_MESSAGE 0x1E               // Quote Request Message
+#define MSG_TYPE_QUOTE_REQUEST_NOTIFICATION_MESSAGE 0x1F  // Quote Request Notification Message
+#define MSG_TYPE_QUOTE_ADD_MESSAGE 0x0D                   // Quote Add Message
+#define MSG_TYPE_QUOTE_MODIFY_MESSAGE 0x0E                // Quote Modify Message
+#define MSG_TYPE_QUOTE_CANCEL_MESSAGE 0x0F                // Quote Cancel Message
+#define MSG_TYPE_TRADE_MESSAGE 0x0B                       // Trade Message
+#define MSG_TYPE_TRADE_BUST_MESSAGE 0x0C                  // Trade Bust Message
+
+// Result Code: one byte code
+#define RESULT_CODE_SUCCESSFUL_LOGIN 0x00        // Successful Login
+#define RESULT_CODE_ALREADY_LOGGED_IN 0x01       // Already Logged In
+#define RESULT_CODE_SEQUENCE_NUMBER_ERROR 0x02   // Sequence Number Error
+#define RESULT_CODE_UNSUPPORTED_PROTOCOL 0x03    // Unsupported Protocol
+#define RESULT_CODE_FAILED_AUTHENTICATION 0x04   // Failed Authentication
+#define RESULT_CODE_UNKNOWN_SOURCE_NETWORK 0x05  // Unknown Source Network
+
+// Logout Reason Code: one byte code
+#define LOGOUT_REASON_CODE_USER_REQUESTED 0x00         // User Requested
+#define LOGOUT_REASON_CODE_ADMIN 0x01                  // Admin
+#define LOGOUT_REASON_CODE_DISCONNECT 0x02             // Disconnect
+#define LOGOUT_REASON_CODE_END_OF_DAY 0x03             // End Of Day
+#define LOGOUT_REASON_CODE_INACTIVITY_TIMEOUT 0x04     // Inactivity Timeout
+#define LOGOUT_REASON_CODE_PROTOCOL_ERROR 0x05         // Protocol Error
+#define LOGOUT_REASON_CODE_SEQUENCE_NUMBER_ERROR 0x06  // Sequence Number Error
+#define LOGOUT_REASON_CODE_MAINTENANCE 0x08            // Maintenance
+
+// Side: one byte code
+#define SIDE_NO_SIDE_SPECIFIED 0x00  // No Side Specified
+#define SIDE_BUY_ORDER 0x01          // Buy Order
+#define SIDE_SELL_ORDER 0x02         // Sell Order
+
+// Quote Request Status: one byte code
+#define QUOTE_REQUEST_STATUS_ACKNOWLEDGEMENT 0x01  // Acknowledgement
+#define QUOTE_REQUEST_STATUS_EXPIRED 0x02          // Expired
+#define QUOTE_REQUEST_STATUS_REJECTED 0x03         // Rejected
+
+// Status Details: one byte code
+#define STATUS_DETAILS_ACKNOWLEDGEMENT 0x00       // Acknowledgement
+#define STATUS_DETAILS_SECURITY_SUSPENDED 0x01    // Security Suspended
+#define STATUS_DETAILS_SECURITY_HALTED 0x02       // Security Halted
+#define STATUS_DETAILS_UNSUPPORTED_SECURITY 0x03  // Unsupported Security
+#define STATUS_DETAILS_INVALID_MARKET_MAKER 0x04  // Invalid Market Maker
+#define STATUS_DETAILS_INVALID_SIDE 0x05          // Invalid Side
+#define STATUS_DETAILS_INVALID_QUANTITY 0x06      // Invalid Quantity
+#define STATUS_DETAILS_NOT_SUPPORTED 0x08         // Not Supported
+#define STATUS_DETAILS_INVALID_ORDER_TYPE 0x09    // Invalid Order Type
+#define STATUS_DETAILS_INTERNAL_ERROR 0x0A        // Internal Error
+#define STATUS_DETAILS_NOT_AUTHORISED 0x0B        // Not Authorised
+#define STATUS_DETAILS_MARKET_CLOSED 0x0C         // Market Closed
+#define STATUS_DETAILS_SESSION_CLOSED 0x0D        // Session Closed
 
 // ---- Message Header: 11 bytes ------------------------------------------------
 
 // AsiaNext Atp message header
 entrypoint typedef struct _MessageHeader {
   UINT16 msg_length;  // bytes 0 to 1
-  UINT8 msg_type;     // byte 2
+  UINT8 msg_type;     // byte 2, values MSG_TYPE_
   UINT64 msg_seq_no;  // bytes 3 to 10
 } MessageHeader;
 
@@ -41,7 +138,7 @@ entrypoint typedef struct _LoginMessage {
 
 // The Login Response message is sent by AsiaNext to acknowledge a Login request, and either accept or reject it.
 entrypoint typedef struct _LoginResponseMessage {
-  UINT8 result_code;     // byte 0
+  UINT8 result_code;     // byte 0, values RESULT_CODE_
   UINT64 client_seq_no;  // bytes 1 to 8
 } LoginResponseMessage;
 
@@ -49,7 +146,7 @@ entrypoint typedef struct _LoginResponseMessage {
 
 // The Logout message is usually sent as a response to the Logout Request. However it may also be sent by AsiaNext in case of a low sequence number or other protocol violation, or for other reasons.
 entrypoint typedef struct _LogoutMessage {
-  UINT8 logout_reason_code;  // byte 0
+  UINT8 logout_reason_code;  // byte 0, values LOGOUT_REASON_CODE_
   UINT8 reason_text[32];     // bytes 1 to 32
 } LogoutMessage;
 
@@ -59,7 +156,7 @@ entrypoint typedef struct _LogoutMessage {
 entrypoint typedef struct _QuoteRequestMessage {
   UINT32 security_id_long;       // bytes 0 to 3
   UINT32 quantity;               // bytes 4 to 7
-  UINT8 side;                    // byte 8
+  UINT8 side;                    // byte 8, values SIDE_
   UINT64 user_tag;               // bytes 9 to 16
   UINT8 market_maker_code_1[4];  // bytes 17 to 20
   UINT8 market_maker_code_2[4];  // bytes 21 to 24
@@ -75,9 +172,9 @@ entrypoint typedef struct _QuoteRequestNotificationMessage {
   UINT64 rfq_session_id;       // bytes 0 to 7
   UINT32 security_id_long;     // bytes 8 to 11
   UINT32 quantity;             // bytes 12 to 15
-  UINT8 side;                  // byte 16
-  UINT8 quote_request_status;  // byte 17
-  UINT8 status_details;        // byte 18
+  UINT8 side;                  // byte 16, values SIDE_
+  UINT8 quote_request_status;  // byte 17, values QUOTE_REQUEST_STATUS_
+  UINT8 status_details;        // byte 18, values STATUS_DETAILS_
   UINT64 msg_ref;              // bytes 19 to 26
   UINT64 user_tag;             // bytes 27 to 34
 } QuoteRequestNotificationMessage;
@@ -88,7 +185,7 @@ entrypoint typedef struct _QuoteRequestNotificationMessage {
 entrypoint typedef struct _QuoteAddMessage {
   UINT64 aqx_order_id;       // bytes 0 to 7
   UINT16 security_id_short;  // bytes 8 to 9
-  UINT8 side;                // byte 10
+  UINT8 side;                // byte 10, values SIDE_
   UINT32 quantity;           // bytes 11 to 14
   UINT64 price;              // bytes 15 to 22
   UINT64 rfq_session_id;     // bytes 23 to 30
@@ -119,7 +216,7 @@ entrypoint typedef struct _TradeBustMessage {
   UINT64 order_ref;  // bytes 0 to 7
   UINT32 quantity;   // bytes 8 to 11
   UINT64 price;      // bytes 12 to 19
-  UINT8 side;        // byte 20
+  UINT8 side;        // byte 20, values SIDE_
   UINT64 trade_ref;  // bytes 21 to 28
   UINT64 timestamp;  // bytes 29 to 36
 } TradeBustMessage;

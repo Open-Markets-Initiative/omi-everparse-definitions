@@ -1,43 +1,159 @@
-// Box Options Market Sola Trade Reporting
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Box BoxOptions SolaTradeReporting Atr v4.5
 //
+// Protocol:
+//   Organization: Box Options Market
+//   Protocol: Sola Trade Reporting
+//   Encoding: Automated Trade Reporting
+//   Version: 4.5
+//   Date: 11/05/2024
+//   Specification: ATR-BX-001E-BOX-SOLA-ATR-Specifications-v4.5.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ServerSolaFrame, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out BoxOptions_SolaTradeReporting_v4_5_Server.3d
 //
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-//
-// License: MIT No Attribution
+// What this definition reads more loosely than the model states:
+// - the stream is a run of frames each ending at a byte 3: the caller splits it there and validates each frame, that byte included
 
-// ---- Message Header: 28 bytes ------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Atr message header, twenty eight bytes opening every message either way
-entrypoint typedef struct _MessageHeader {
-  UINT8 source[4];                           // bytes 0 to 3
-  UINT8 destination[4];                      // bytes 4 to 7
-  UINT8 message_type[2];                     // bytes 8 to 9
-  UINT8 message_flag;                        // byte 10
-  UINT8 control_byte;                        // byte 11
-  UINT8 sequence_number[8];                  // bytes 12 to 19
-  UINT8 acknowledgement_sequence_number[8];  // bytes 20 to 27
-} MessageHeader;
+// Message Type: 2 byte code
+#define MESSAGE_TYPE_START_OF_DAY 0x3030                  // Start Of Day
+#define MESSAGE_TYPE_START_OF_DAY_ACKNOWLEDGEMENT 0x3031  // Start Of Day Acknowledgement
+#define MESSAGE_TYPE_CIRCUIT_ASSURANCE 0x3032             // Circuit Assurance
+#define MESSAGE_TYPE_CIRCUIT_RESPONSE 0x3033              // Circuit Response
+#define MESSAGE_TYPE_RESTART_REQUEST 0x3034               // Restart Request
+#define MESSAGE_TYPE_RESTART_ACCEPTED 0x3035              // Restart Accepted
+#define MESSAGE_TYPE_END_OF_TRADING 0x3038                // End Of Trading
+#define MESSAGE_TYPE_CLIENT_SIGNON 0x3039                 // Client Signon
+#define MESSAGE_TYPE_CLIENT_SIGNON_ACKNOWLEDGMENT 0x3130  // Client Signon Acknowledgment
+#define MESSAGE_TYPE_TRADE 0x3330                         // Trade
+#define MESSAGE_TYPE_TRADE_CANCEL 0x3331                  // Trade Cancel
+#define MESSAGE_TYPE_ALLOCATION 0x3430                    // Allocation
+#define MESSAGE_TYPE_ALLOCATION_CANCEL 0x3431             // Allocation Cancel
+#define MESSAGE_TYPE_NEW_ALLOCATION 0x3432                // New Allocation
+#define MESSAGE_TYPE_MODIFY_ALLOCATION 0x3433             // Modify Allocation
+#define MESSAGE_TYPE_DELETE_ALLOCATION 0x3434             // Delete Allocation
+#define MESSAGE_TYPE_GIVE_UP 0x3530                       // Give Up
+#define MESSAGE_TYPE_GIVE_UP_CANCEL 0x3531                // Give Up Cancel
+#define MESSAGE_TYPE_NEW_GIVE_UP 0x3532                   // New Give Up
+#define MESSAGE_TYPE_MODIFY_GIVE_UP 0x3533                // Modify Give Up
+#define MESSAGE_TYPE_DELETE_GIVE_UP 0x3534                // Delete Give Up
+#define MESSAGE_TYPE_ACKNOWLEDGEMENT_MESSAGE 0x3938       // Acknowledgement Message
+#define MESSAGE_TYPE_ERROR_MESSAGE 0x3939                 // Error Message
 
-// ---- Client Signon Acknowledgment: 8 bytes -----------------------------------
+// Message Flag: one byte code
+#define MESSAGE_FLAG_RETRANSMITTED_MESSAGE 0x52  // Retransmitted Message
+#define MESSAGE_FLAG_DUPLICATED_MESSAGE 0x44     // Duplicated Message
 
-entrypoint typedef struct _ClientSignonAcknowledgment {
+// Transaction Type: one byte code
+#define TRANSACTION_TYPE_BUY 0x42   // Buy
+#define TRANSACTION_TYPE_SELL 0x53  // Sell
+
+// Strike Price Fraction Indicator: one byte code
+#define STRIKE_PRICE_FRACTION_INDICATOR_WHOLE 0x30                      // Whole
+#define STRIKE_PRICE_FRACTION_INDICATOR_TEN 0x31                        // Ten
+#define STRIKE_PRICE_FRACTION_INDICATOR_HUNDRED 0x32                    // Hundred
+#define STRIKE_PRICE_FRACTION_INDICATOR_THOUSAND 0x33                   // Thousand
+#define STRIKE_PRICE_FRACTION_INDICATOR_TEN_THOUSAND 0x34               // Ten Thousand
+#define STRIKE_PRICE_FRACTION_INDICATOR_HUNDRED_THOUSAND 0x35           // Hundred Thousand
+#define STRIKE_PRICE_FRACTION_INDICATOR_MILLION 0x36                    // Million
+#define STRIKE_PRICE_FRACTION_INDICATOR_TEN_MILLION 0x37                // Ten Million
+#define STRIKE_PRICE_FRACTION_INDICATOR_HUNDRED_MILLION 0x38            // Hundred Million
+#define STRIKE_PRICE_FRACTION_INDICATOR_BILLION 0x39                    // Billion
+#define STRIKE_PRICE_FRACTION_INDICATOR_NEGATIVE_WHOLE 0x41             // Negative Whole
+#define STRIKE_PRICE_FRACTION_INDICATOR_NEGATIVE_TEN 0x42               // Negative Ten
+#define STRIKE_PRICE_FRACTION_INDICATOR_NEGATIVE_HUNDRED 0x43           // Negative Hundred
+#define STRIKE_PRICE_FRACTION_INDICATOR_NEGATIVE_THOUSAND 0x44          // Negative Thousand
+#define STRIKE_PRICE_FRACTION_INDICATOR_NEGATIVE_TEN_THOUSAND 0x45      // Negative Ten Thousand
+#define STRIKE_PRICE_FRACTION_INDICATOR_NEGATIVE_HUNDRED_THOUSAND 0x46  // Negative Hundred Thousand
+#define STRIKE_PRICE_FRACTION_INDICATOR_NEGATIVE_MILLION 0x47           // Negative Million
+
+// Option Type: one byte code
+#define OPTION_TYPE_CALL 0x43                        // Call
+#define OPTION_TYPE_PUT_BLANK_IF_NOT_AN_OPTION 0x50  // Put Blank If Not An Option
+
+// Account Type: one byte code
+#define ACCOUNT_TYPE_PUBLIC_CUSTOMER 0x36                    // Public Customer
+#define ACCOUNT_TYPE_BROKER_DEALER 0x37                      // Broker Dealer
+#define ACCOUNT_TYPE_MARKET_MAKER 0x38                       // Market Maker
+#define ACCOUNT_TYPE_PROFESSIONAL_CUSTOMER 0x54              // Professional Customer
+#define ACCOUNT_TYPE_FLOOR_BROKER_CUSTOMER 0x56              // Floor Broker Customer
+#define ACCOUNT_TYPE_BROKER_DEALER_CLEARED_AS_CUSTOMER 0x57  // Broker Dealer Cleared As Customer
+#define ACCOUNT_TYPE_AWAY_MARKET_MAKER 0x58                  // Away Market Maker
+#define ACCOUNT_TYPE_FLOOR_BROKER_DEALER 0x59                // Floor Broker Dealer
+#define ACCOUNT_TYPE_FLOOR_MARKET_MAKER 0x5A                 // Floor Market Maker
+
+// Open Close: one byte code
+#define OPEN_CLOSE_OPEN 0x4F   // Open
+#define OPEN_CLOSE_CLOSE 0x43  // Close
+
+// Liquidity Status: one byte code
+#define LIQUIDITY_STATUS_MAKER 0x4D  // Maker
+#define LIQUIDITY_STATUS_TAKER 0x54  // Taker
+
+// Trade Type: one byte code
+#define TRADE_TYPE_CROSSED_ORDERS_A_TRADE_WITH_THE_SAME_FIRM_ID_ON_BOTH_SIDES 0x4F                        // Crossed Orders A Trade With The Same Firm Id On Both Sides
+#define TRADE_TYPE_TRADER_CROSSED_ORDERS_A_TRADE_WITH_THE_SAME_TRADER_ID_ON_BOTH_SIDES 0x54               // Trader Crossed Orders A Trade With The Same Trader Id On Both Sides
+#define TRADE_TYPE_TPR_TRADE_A_TRADE_DONE_BY_A_THIRD_PARTY_ROUTER 0x4D                                    // Tpr Trade A Trade Done By A Third Party Router
+#define TRADE_TYPE_PIP_A_TRADE_DONE_AT_THE_END_OF_A_PIP_AUCTION 0x50                                      // Pip A Trade Done At The End Of A Pip Auction
+#define TRADE_TYPE_FIRM_DO_A_TRADE_RESULTING_FROM_A_DIRECTED_ORDER 0x46                                   // Firm Do A Trade Resulting From A Directed Order
+#define TRADE_TYPE_AS_OF_A_TRADE_ENTERED_BY_THE_BOX_MOC_TO_CORRECT_A_TRADE_EXECUTED_ON_A_PRE_f5mue7 0x41  // As Of A Trade Entered By The Box Moc To Correct A Trade Executed On A Previous Day
+#define TRADE_TYPE_LATE_A_TRADE_ENTERED_BY_THE_BOX_MOC_TO_CORRECT_A_TRADE_EXECUTED_ON_THE_SAME_DAY 0x45   // Late A Trade Entered By The Box Moc To Correct A Trade Executed On The Same Day
+#define TRADE_TYPE_SOLICITATION_A_TRADE_DONE_AS_PART_OF_A_SOLICITATION_AUCTION 0x53                       // Solicitation A Trade Done As Part Of A Solicitation Auction
+#define TRADE_TYPE_FACILITATION_A_TRADE_DONE_AS_PART_OF_A_FACILITATION_AUCTION 0x49                       // Facilitation A Trade Done As Part Of A Facilitation Auction
+#define TRADE_TYPE_FLOOR_TRADE 0x52                                                                       // Floor Trade
+#define TRADE_TYPE_CUSTOMER_CROSS_ORDERS_OR_QUALIFIED_CONTINGENT_CROSS_ORDERS 0x43                        // Customer Cross Orders Or Qualified Contingent Cross Orders
+
+// Opposite Account Type: one byte code
+#define OPPOSITE_ACCOUNT_TYPE_PUBLIC_CUSTOMER 0x36                    // Public Customer
+#define OPPOSITE_ACCOUNT_TYPE_BROKER_DEALER 0x37                      // Broker Dealer
+#define OPPOSITE_ACCOUNT_TYPE_MARKET_MAKER 0x38                       // Market Maker
+#define OPPOSITE_ACCOUNT_TYPE_PROFESSIONAL_CUSTOMER 0x54              // Professional Customer
+#define OPPOSITE_ACCOUNT_TYPE_FLOOR_BROKER_CUSTOMER 0x56              // Floor Broker Customer
+#define OPPOSITE_ACCOUNT_TYPE_BROKER_DEALER_CLEARED_AS_CUSTOMER 0x57  // Broker Dealer Cleared As Customer
+#define OPPOSITE_ACCOUNT_TYPE_AWAY_MARKET_MAKER 0x58                  // Away Market Maker
+#define OPPOSITE_ACCOUNT_TYPE_FLOOR_BROKER_DEALER 0x59                // Floor Broker Dealer
+#define OPPOSITE_ACCOUNT_TYPE_FLOOR_MARKET_MAKER 0x5A                 // Floor Market Maker
+
+// ---- Types -------------------------------------------------------------------
+
+typedef struct _ClientSignonAcknowledgment {
   UINT8 last_user_sequence_number[8];  // bytes 0 to 7
 } ClientSignonAcknowledgment;
 
-// ---- Trade: 200 bytes --------------------------------------------------------
-
 // The guide heads this message 212 bytes, while the fields it states measure 228 including the 28 byte header.
-entrypoint typedef struct _Trade {
+typedef struct _Trade {
   UINT8 trade_number[15];                 // bytes 0 to 14
   UINT8 transaction_type;                 // byte 15
   UINT8 timestamp[6];                     // bytes 16 to 21
@@ -66,10 +182,8 @@ entrypoint typedef struct _Trade {
   UINT8 additional_client_memo[16];       // bytes 184 to 199
 } Trade;
 
-// ---- Trade Cancel: 200 bytes -------------------------------------------------
-
 // The guide states this message as having the same structure as message type 30, whose fields are written out here. The guide heads this message 212 bytes, while the fields it states measure 228 including the 28 byte header.
-entrypoint typedef struct _TradeCancel {
+typedef struct _TradeCancel {
   UINT8 trade_number[15];                 // bytes 0 to 14
   UINT8 transaction_type;                 // byte 15
   UINT8 timestamp[6];                     // bytes 16 to 21
@@ -98,74 +212,8 @@ entrypoint typedef struct _TradeCancel {
   UINT8 additional_client_memo[16];       // bytes 184 to 199
 } TradeCancel;
 
-// ---- Allocation: 200 bytes ---------------------------------------------------
-
-// The guide states this message as having the same structure as message type 30, whose fields are written out here. The guide heads this message 212 bytes, while the fields it states measure 228 including the 28 byte header.
-entrypoint typedef struct _Allocation {
-  UINT8 trade_number[15];                 // bytes 0 to 14
-  UINT8 transaction_type;                 // byte 15
-  UINT8 timestamp[6];                     // bytes 16 to 21
-  UINT8 symbol[30];                       // bytes 22 to 51
-  UINT8 expiration_date[6];               // bytes 52 to 57
-  UINT8 strike_price[8];                  // bytes 58 to 65
-  UINT8 strike_price_fraction_indicator;  // byte 66
-  UINT8 option_type;                      // byte 67
-  UINT8 volume[8];                        // bytes 68 to 75
-  UINT8 price[8];                         // bytes 76 to 83
-  UINT8 cmta_broker[4];                   // bytes 84 to 87
-  UINT8 account_type;                     // byte 88
-  UINT8 sub_trader_id[3];                 // bytes 89 to 91
-  UINT8 open_close;                       // byte 92
-  UINT8 executing_broker[4];              // bytes 93 to 96
-  UINT8 client_account_number[12];        // bytes 97 to 108
-  UINT8 client_order_id[20];              // bytes 109 to 128
-  UINT8 client_memo[16];                  // bytes 129 to 144
-  UINT8 liquidity_status;                 // byte 145
-  UINT8 trade_type;                       // byte 146
-  UINT8 opposite_account_type;            // byte 147
-  UINT8 participant_session_name[12];     // bytes 148 to 159
-  UINT8 unique_transaction_id[10];        // bytes 160 to 169
-  UINT8 parent_transaction_id[10];        // bytes 170 to 179
-  UINT8 opposite_executing_broker[4];     // bytes 180 to 183
-  UINT8 additional_client_memo[16];       // bytes 184 to 199
-} Allocation;
-
-// ---- Allocation Cancel: 200 bytes --------------------------------------------
-
-// The guide states this message as having the same structure as message type 30, whose fields are written out here. The guide heads this message 212 bytes, while the fields it states measure 228 including the 28 byte header.
-entrypoint typedef struct _AllocationCancel {
-  UINT8 trade_number[15];                 // bytes 0 to 14
-  UINT8 transaction_type;                 // byte 15
-  UINT8 timestamp[6];                     // bytes 16 to 21
-  UINT8 symbol[30];                       // bytes 22 to 51
-  UINT8 expiration_date[6];               // bytes 52 to 57
-  UINT8 strike_price[8];                  // bytes 58 to 65
-  UINT8 strike_price_fraction_indicator;  // byte 66
-  UINT8 option_type;                      // byte 67
-  UINT8 volume[8];                        // bytes 68 to 75
-  UINT8 price[8];                         // bytes 76 to 83
-  UINT8 cmta_broker[4];                   // bytes 84 to 87
-  UINT8 account_type;                     // byte 88
-  UINT8 sub_trader_id[3];                 // bytes 89 to 91
-  UINT8 open_close;                       // byte 92
-  UINT8 executing_broker[4];              // bytes 93 to 96
-  UINT8 client_account_number[12];        // bytes 97 to 108
-  UINT8 client_order_id[20];              // bytes 109 to 128
-  UINT8 client_memo[16];                  // bytes 129 to 144
-  UINT8 liquidity_status;                 // byte 145
-  UINT8 trade_type;                       // byte 146
-  UINT8 opposite_account_type;            // byte 147
-  UINT8 participant_session_name[12];     // bytes 148 to 159
-  UINT8 unique_transaction_id[10];        // bytes 160 to 169
-  UINT8 parent_transaction_id[10];        // bytes 170 to 179
-  UINT8 opposite_executing_broker[4];     // bytes 180 to 183
-  UINT8 additional_client_memo[16];       // bytes 184 to 199
-} AllocationCancel;
-
-// ---- Give Up: 208 bytes ------------------------------------------------------
-
 // The guide heads this message 220 bytes, while the fields it states measure 236 including the 28 byte header.
-entrypoint typedef struct _GiveUp {
+typedef struct _GiveUp {
   UINT8 trade_number[15];                 // bytes 0 to 14
   UINT8 transaction_type;                 // byte 15
   UINT8 timestamp[6];                     // bytes 16 to 21
@@ -196,10 +244,8 @@ entrypoint typedef struct _GiveUp {
   UINT8 additional_client_memo[16];       // bytes 192 to 207
 } GiveUp;
 
-// ---- Give Up Cancel: 208 bytes -----------------------------------------------
-
 // The guide states this message as having the same structure as message type 50, whose fields are written out here. The guide heads this message 216 bytes, while the fields it states measure 236 including the 28 byte header.
-entrypoint typedef struct _GiveUpCancel {
+typedef struct _GiveUpCancel {
   UINT8 trade_number[15];                 // bytes 0 to 14
   UINT8 transaction_type;                 // byte 15
   UINT8 timestamp[6];                     // bytes 16 to 21
@@ -230,12 +276,45 @@ entrypoint typedef struct _GiveUpCancel {
   UINT8 additional_client_memo[16];       // bytes 192 to 207
 } GiveUpCancel;
 
-// ---- Error Message: 86 bytes -------------------------------------------------
-
 // The guide heads this message up to 112 bytes, while the fields it states measure 114 including the 28 byte header.
-entrypoint typedef struct _ErrorMessage {
+typedef struct _ErrorMessage {
   UINT8 reference_message_type[2];  // bytes 0 to 1
   UINT8 error_code[4];              // bytes 2 to 5
   UINT8 error_text[80];             // bytes 6 to 85
 } ErrorMessage;
+
+// The message the header dispatches to, chosen by its message type.
+casetype _ServerMessage (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x3030: unit start_of_day;
+    case 0x3032: unit circuit_assurance;
+    case 0x3035: unit restart_accepted;
+    case 0x3038: unit end_of_trading;
+    case 0x3130: ClientSignonAcknowledgment client_signon_acknowledgment;
+    case 0x3330: Trade trade;
+    case 0x3331: TradeCancel trade_cancel;
+    case 0x3430: TradeCancel allocation;
+    case 0x3431: TradeCancel allocation_cancel;
+    case 0x3530: GiveUp give_up;
+    case 0x3531: GiveUpCancel give_up_cancel;
+    case 0x3938: unit acknowledgement_message;
+    case 0x3939: ErrorMessage error_message;
+    default: UINT8 unknown[available];
+  }
+} ServerMessage;
+
+// ---- Packet: ServerSolaFrame -------------------------------------------------
+
+// One Atr message sent by the Atr server, opened by the header and closed by an end of text
+entrypoint typedef struct _ServerSolaFrame (UINT32 available) where (available >= 29) {
+  UINT8 source[4];                                                                                                 // bytes 0 to 3
+  UINT8 destination[4];                                                                                            // bytes 4 to 7
+  UINT16BE message_type;                                                                                           // bytes 8 to 9
+  UINT8 message_flag;                                                                                              // byte 10
+  UINT8 control_byte;                                                                                              // byte 11
+  UINT8 sequence_number[8];                                                                                        // bytes 12 to 19
+  UINT8 acknowledgement_sequence_number[8];                                                                        // bytes 20 to 27
+  ServerMessage(message_type, (available - 29)) server_message[:byte-size-single-element-array (available - 29)];
+  UINT8 sola_message_end { sola_message_end == 3 };
+} ServerSolaFrame;
 

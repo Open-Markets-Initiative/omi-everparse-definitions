@@ -1,37 +1,194 @@
-// Chicago Board Options Exchange Binary Order Entry
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Cboe EdgaEquities BinaryOrderEntry Boe3 v1.0.14
 //
+// Protocol:
+//   Organization: Chicago Board Options Exchange
+//   Protocol: Binary Order Entry
+//   Encoding: Binary Order Entry 3
+//   Version: 1.0.14
+//   Date: 09/23/2026
+//   Specification: technical-specifications-cboe-titanium-u-s-equities-boev3-specification.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, FirmPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out EdgaEquities_BinaryOrderEntry_v1_0_14_Firm.3d
-//
-// What this definition does not state, and the model does:
-// - a Reassemble rule
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Firm Message Header: 12 bytes -------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Message header of a packet sent by the firm
-entrypoint typedef struct _FirmMessageHeader {
-  UINT16 start_of_message;   // bytes 0 to 1
-  UINT16 message_length;     // bytes 2 to 3
-  UINT16 firm_message_type;  // bytes 4 to 5
-  UINT8 matching_unit;       // byte 6
-  UINT8 reserved_field;      // byte 7
-  UINT32 sequence_number;    // bytes 8 to 11
-} FirmMessageHeader;
+// Firm Message Type: 2 byte code
+#define FIRM_MESSAGE_TYPE_LOGIN_REQUEST_MESSAGE 0x0001            // Login Request Message
+#define FIRM_MESSAGE_TYPE_LOGOUT_REQUEST_MESSAGE 0x0002           // Logout Request Message
+#define FIRM_MESSAGE_TYPE_CLIENT_HEARTBEAT_MESSAGE 0x0003         // Client Heartbeat Message
+#define FIRM_MESSAGE_TYPE_NEW_ORDER_US_EQUITIES_V_1 0x0FA1        // New Order Us Equities V 1
+#define FIRM_MESSAGE_TYPE_NEW_ORDER_SHORT_US_EQUITIES_V_1 0x0FA6  // New Order Short Us Equities V 1
+#define FIRM_MESSAGE_TYPE_CANCEL_ORDER_US_EQUITIES_V_1 0x0FA3     // Cancel Order Us Equities V 1
+#define FIRM_MESSAGE_TYPE_MODIFY_ORDER_US_EQUITIES_V_1 0x0FA2     // Modify Order Us Equities V 1
+#define FIRM_MESSAGE_TYPE_PURGE_ORDERS_US_EQUITIES_V_1 0x0FA5     // Purge Orders Us Equities V 1
+#define FIRM_MESSAGE_TYPE_RESET_RISK_US_EQUITIES_V_1 0x0FA4       // Reset Risk Us Equities V 1
 
-// ---- New Order Us Equities V 1: 141 bytes ------------------------------------
+// Replay Instruction: one byte code
+#define REPLAY_INSTRUCTION_FAIL_IF_UNIT_NOT_SPECIFIED 0x46             // Fail If Unit Not Specified
+#define REPLAY_INSTRUCTION_REPLAY_ANY_UNSPECIFIED_UNIT_FROM_ZERO 0x52  // Replay Any Unspecified Unit From Zero
+#define REPLAY_INSTRUCTION_SKIP_REPLAY_OF_UNSPECIFIED_UNITS 0x53       // Skip Replay Of Unspecified Units
+
+// Side: one byte code
+#define SIDE_BUY 0x31                                          // Buy
+#define SIDE_SELL 0x32                                         // Sell
+#define SIDE_SELL_SHORT_CLIENT_AFFIRMS_ABILITY_TO_BORROW 0x35  // Sell Short Client Affirms Ability To Borrow
+#define SIDE_SELL_SHORT_EXEMPT 0x36                            // Sell Short Exempt
+
+// Exec Inst: one byte code
+#define EXEC_INST_INTERMARKET_SWEEP_DIRECTED_OR_BOOK_POST_ONLY 0x66                           // Intermarket Sweep Directed Or Book Post Only
+#define EXEC_INST_MARKET_PEG_PEG_BUY_SELL_TO_NBBO_OFFER_BID 0x50                              // Market Peg Peg Buy Sell To Nbbo Offer Bid
+#define EXEC_INST_MARKET_MAKER_PEG 0x51                                                       // Market Maker Peg
+#define EXEC_INST_PRIMARY_PEG_PEG_BUY_SELL_TO_NBB_BID_OFFER 0x52                              // Primary Peg Peg Buy Sell To Nbb Bid Offer
+#define EXEC_INST_SUPPLEMENTAL_PEG_ORDER 0x55                                                 // Supplemental Peg Order
+#define EXEC_INST_MIDPOINT_PEG_TO_NBBO_MIDPOINT 0x4D                                          // Midpoint Peg To Nbbo Midpoint
+#define EXEC_INST_MIDPOINT_PEG_TO_NBBO_MIDPOINT_BUT_DO_NOT_MATCH_WHEN_NBBO_IS_LOCKED 0x6D     // Midpoint Peg To Nbbo Midpoint But Do Not Match When Nbbo Is Locked
+#define EXEC_INST_ALTERNATE_MIDPOINT_LESS_AGGRESSIVE_OF_MIDPOINT_AND_1_TICK_INSIDE_NBBO 0x4C  // Alternate Midpoint Less Aggressive Of Midpoint And 1 Tick Inside Nbbo
+#define EXEC_INST_MIDPOINT_DISCRETIONARY_ORDER 0x64                                           // Midpoint Discretionary Order
+#define EXEC_INST_MIDPOINT_DISCRETIONARY_ORDER_WITH_QUOTE_DEPLETION_PROTECTION 0x65           // Midpoint Discretionary Order With Quote Depletion Protection
+#define EXEC_INST_LATE_FOR_USE_WITH_AUCTION_ONLY_ORDERS 0x72                                  // Late For Use With Auction Only Orders
+#define EXEC_INST_LISTING_MARKET_OPENING_FOR_ROOC_ROUT_STRATEGY_ONLY 0x6F                     // Listing Market Opening For Rooc Rout Strategy Only
+#define EXEC_INST_LISTING_MARKET_CLOSE_FOR_ROOC_ROUT_STRATEGY_ONLY 0x63                       // Listing Market Close For Rooc Rout Strategy Only
+#define EXEC_INST_BOTH_LISTING_MARKET_OPEN_AND_CLOSE 0x61                                     // Both Listing Market Open And Close
+
+// Ord Type: one byte code
+#define ORD_TYPE_MARKET 0x31         // Market
+#define ORD_TYPE_LIMIT_DEFAULT 0x32  // Limit Default
+#define ORD_TYPE_STOP 0x33           // Stop
+#define ORD_TYPE_STOP_LIMIT 0x34     // Stop Limit
+#define ORD_TYPE_PEGGED 0x50         // Pegged
+
+// Time In Force: one byte code
+#define TIME_IN_FORCE_DAY_DEFAULT 0x30                                                      // Day Default
+#define TIME_IN_FORCE_GTC_ALLOWED_BUT_TREATED_AS_DAY 0x31                                   // Gtc Allowed But Treated As Day
+#define TIME_IN_FORCE_AT_THE_OPEN_BZX_ONLY_AND_CBOE_LISTED_SECURITIES_ONLY 0x32             // At The Open Bzx Only And Cboe Listed Securities Only
+#define TIME_IN_FORCE_IOC_PORTION_NOT_FILLED_IMMEDIATELY_IS_CANCELLED 0x33                  // Ioc Portion Not Filled Immediately Is Cancelled
+#define TIME_IN_FORCE_FOK 0x34                                                              // Fok
+#define TIME_IN_FORCE_GTX 0x35                                                              // Gtx
+#define TIME_IN_FORCE_GTD 0x36                                                              // Gtd
+#define TIME_IN_FORCE_AT_THE_CLOSE 0x37                                                     // At The Close
+#define TIME_IN_FORCE_PRE_PRE_MARKET_TRADING_SESSION_UNTIL_END_OF_REGULAR_SESSION 0x45      // Pre Pre Market Trading Session Until End Of Regular Session
+#define TIME_IN_FORCE_RTP_REGULAR_HOURS_AND_POST_MARKET_SESSION 0x50                        // Rtp Regular Hours And Post Market Session
+#define TIME_IN_FORCE_RHO_REGULAR_HOURS_SESSION_ONLY 0x52                                   // Rho Regular Hours Session Only
+#define TIME_IN_FORCE_PTD 0x54                                                              // Ptd
+#define TIME_IN_FORCE_PTX_PRE_MARKET_TRADING_SESSION_UNTIL_END_OF_POST_MARKET_SESSION 0x58  // Ptx Pre Market Trading Session Until End Of Post Market Session
+
+// Capacity: one byte code
+#define CAPACITY_AGENCY 0x41              // Agency
+#define CAPACITY_PRINCIPAL 0x50           // Principal
+#define CAPACITY_RISKLESS_PRINCIPAL 0x52  // Riskless Principal
+
+// Display Indicator: one byte code
+#define DISPLAY_INDICATOR_DEFAULT 0x56                                                                        // Default
+#define DISPLAY_INDICATOR_PRICE_ADJUST 0x50                                                                   // Price Adjust
+#define DISPLAY_INDICATOR_MULTIPLE_PRICE_ADJUST 0x6D                                                          // Multiple Price Adjust
+#define DISPLAY_INDICATOR_CANCEL_BACK_THE_ORDER_IF_IT_CANNOT_BE_BOOKED_AND_DISPLAYED_WITHOUT_ADJUSTMENT 0x52  // Cancel Back The Order If It Cannot Be Booked And Displayed Without Adjustment
+#define DISPLAY_INDICATOR_HIDDEN_CANCEL_BACK_THE_ORDER_IF_IT_CANNOT_BE_BOOKED_WITHOUT_ADJUSTMENT 0x72         // Hidden Cancel Back The Order If It Cannot Be Booked Without Adjustment
+#define DISPLAY_INDICATOR_DISPLAY_PRICE_SLIDING 0x53                                                          // Display Price Sliding
+#define DISPLAY_INDICATOR_DISPLAY_PRICE_SLIDING_BUT_CANCEL_BACK_IF_ORDER_CROSSES_THE_NBBO_ON_ENTRY 0x4C       // Display Price Sliding But Cancel Back If Order Crosses The Nbbo On Entry
+#define DISPLAY_INDICATOR_MULTIPLE_DISPLAY_PRICE_SLIDING 0x4D                                                 // Multiple Display Price Sliding
+#define DISPLAY_INDICATOR_HIDDEN_MULTIPLE_PRICE_SLIDE 0x68                                                    // Hidden Multiple Price Slide
+#define DISPLAY_INDICATOR_VISIBLE 0x76                                                                        // Visible
+#define DISPLAY_INDICATOR_INVISIBLE 0x49                                                                      // Invisible
+#define DISPLAY_INDICATOR_NO_RESCRAPE_AT_LIMIT 0x4E                                                           // No Rescrape At Limit
+
+// Locate Reqd: one byte code
+#define LOCATE_REQD_CLIENT_AFFIRMS_ABILITY_TO_BORROW_DEFAULT 0x4E                    // Client Affirms Ability To Borrow Default
+#define LOCATE_REQD_CLIENT_DOES_NOT_AFFIRM_ABILITY_TO_BORROW_RESULTS_IN_REJECT 0x59  // Client Does Not Affirm Ability To Borrow Results In Reject
+
+// Attributed Quote: one byte code
+#define ATTRIBUTED_QUOTE_DO_NOT_ATTRIBUTE_FIRM_MPID_TO_THIS_ORDER 0x4E  // Do Not Attribute Firm Mpid To This Order
+#define ATTRIBUTED_QUOTE_ATTRIBUTE_FIRM_MPID_TO_THIS_ORDER 0x59         // Attribute Firm Mpid To This Order
+#define ATTRIBUTED_QUOTE_ATTRIBUTE_RTAL_TO_THIS_ORDER 0x52              // Attribute Rtal To This Order
+
+// Ext Exec Inst: one byte code
+#define EXT_EXEC_INST_NONE 0x4E                                                                       // None
+#define EXT_EXEC_INST_RETAIL_ORDER_ELIGIBLE_FOR_RETAIL_REBATE 0x52                                    // Retail Order Eligible For Retail Rebate
+#define EXT_EXEC_INST_RETAIL_ORDER_PRICE_IMPROVEMENT_ONLY 0x50                                        // Retail Order Price Improvement Only
+#define EXT_EXEC_INST_RETAIL_PRICE_IMPROVING_ORDER 0x54                                               // Retail Price Improving Order
+#define EXT_EXEC_INST_RETAIL_PRIORITY_ORDER_ELIGIBLE_FOR_RETAIL_PRIORITY_AND_RETAIL_REBATE_RATE 0x58  // Retail Priority Order Eligible For Retail Priority And Retail Rebate Rate
+
+// Ex Destination: one byte code
+#define EX_DESTINATION_NYSE_AMERICAN 0x41                       // Nyse American
+#define EX_DESTINATION_NASDAQ_TEXAS 0x42                        // Nasdaq Texas
+#define EX_DESTINATION_NYSE_NATIONAL 0x43                       // Nyse National
+#define EX_DESTINATION_TEXAS_STOCK_EXCHANGE 0x46                // Texas Stock Exchange
+#define EX_DESTINATION_N24_X 0x47                               // N24X
+#define EX_DESTINATION_MIAX_PEARL 0x48                          // Miax Pearl
+#define EX_DESTINATION_INVESTORS_EXCHANGE 0x49                  // Investors Exchange
+#define EX_DESTINATION_EDGA 0x4A                                // Edga
+#define EX_DESTINATION_EDGX 0x4B                                // Edgx
+#define EX_DESTINATION_LONG_TERM_STOCK_EXCHANGE 0x4C            // Long Term Stock Exchange
+#define EX_DESTINATION_NYSE_TEXAS 0x4D                          // Nyse Texas
+#define EX_DESTINATION_NYSE 0x4E                                // Nyse
+#define EX_DESTINATION_NYSE_ARCA 0x50                           // Nyse Arca
+#define EX_DESTINATION_NASDAQ 0x51                              // Nasdaq
+#define EX_DESTINATION_INTELLIGENT_CROSS_PENDING_APPROVAL 0x54  // Intelligent Cross Pending Approval
+#define EX_DESTINATION_MEMX 0x55                                // Memx
+#define EX_DESTINATION_NASDAQ_PSX 0x58                          // Nasdaq Psx
+#define EX_DESTINATION_BYX 0x59                                 // Byx
+#define EX_DESTINATION_BZX 0x5A                                 // Bzx
+
+// Cross Trade Flag: one byte code
+#define CROSS_TRADE_FLAG_NONE_TO_OVERRIDE_PORT_SETTING_AS_NECESSARY 0x30  // None To Override Port Setting As Necessary
+#define CROSS_TRADE_FLAG_PERIODIC_AUCTION_ONLY 0x31                       // Periodic Auction Only
+#define CROSS_TRADE_FLAG_PERIODIC_AUCTION_ELIGIBLE 0x32                   // Periodic Auction Eligible
+
+// Cancel Orig On Reject: one byte code
+#define CANCEL_ORIG_ON_REJECT_LEAVE_ORIGINAL_ORDER_ALONE 0x4E                   // Leave Original Order Alone
+#define CANCEL_ORIG_ON_REJECT_CANCEL_ORIGINAL_ORDER_IF_MODIFICATION_FAILS 0x59  // Cancel Original Order If Modification Fails
+
+// ---- Types -------------------------------------------------------------------
+
+// Unit Sequence
+typedef struct _UnitSequence {
+  UINT8 unit_number;       // byte 0
+  UINT32 sequence_number;  // bytes 1 to 4
+} UnitSequence;
+
+// A Login Request message must be sent as the first message upon connection
+typedef struct _LoginRequestMessage {
+  UINT8 session_id[4];                                                      // bytes 0 to 3
+  UINT8 session_sub_id[4];                                                  // bytes 4 to 7
+  UINT8 password[10];                                                       // bytes 8 to 17
+  UINT8 replay_instruction;                                                 // byte 18
+  UINT8 number_of_units;                                                    // byte 19
+  UnitSequence unit_sequence[:byte-size (((UINT32) number_of_units) * 5)];
+} LoginRequestMessage;
 
 // Submission of a new order to Cboe
-entrypoint typedef struct _NewOrderUsEquitiesV1 {
+typedef struct _NewOrderUsEquitiesV1 {
   UINT8 cl_ord_id[20];             // bytes 0 to 19
   UINT8 side;                      // byte 20
   UINT32 order_qty;                // bytes 21 to 24
@@ -67,10 +224,8 @@ entrypoint typedef struct _NewOrderUsEquitiesV1 {
   UINT8 cmc_sessions[2];           // bytes 139 to 140
 } NewOrderUsEquitiesV1;
 
-// ---- New Order Short Us Equities V 1: 71 bytes -------------------------------
-
 // Submission of a new order to Cboe
-entrypoint typedef struct _NewOrderShortUsEquitiesV1 {
+typedef struct _NewOrderShortUsEquitiesV1 {
   UINT8 cl_ord_id[20];        // bytes 0 to 19
   UINT8 side;                 // byte 20
   UINT32 order_qty;           // bytes 21 to 24
@@ -89,18 +244,14 @@ entrypoint typedef struct _NewOrderShortUsEquitiesV1 {
   UINT8 locate_broker[4];     // bytes 67 to 70
 } NewOrderShortUsEquitiesV1;
 
-// ---- Cancel Order Us Equities V 1: 24 bytes ----------------------------------
-
 // Request to cancel a single order
-entrypoint typedef struct _CancelOrderUsEquitiesV1 {
+typedef struct _CancelOrderUsEquitiesV1 {
   UINT8 orig_cl_ord_id[20];  // bytes 0 to 19
   UINT8 clearing_firm[4];    // bytes 20 to 23
 } CancelOrderUsEquitiesV1;
 
-// ---- Modify Order Us Equities V 1: 83 bytes ----------------------------------
-
 // Request to modify an order
-entrypoint typedef struct _ModifyOrderUsEquitiesV1 {
+typedef struct _ModifyOrderUsEquitiesV1 {
   UINT8 cl_ord_id[20];          // bytes 0 to 19
   UINT8 orig_cl_ord_id[20];     // bytes 20 to 39
   UINT8 clearing_firm[4];       // bytes 40 to 43
@@ -115,10 +266,19 @@ entrypoint typedef struct _ModifyOrderUsEquitiesV1 {
   UINT8 locate_broker[4];       // bytes 79 to 82
 } ModifyOrderUsEquitiesV1;
 
-// ---- Reset Risk Us Equities V 1: 39 bytes ------------------------------------
+// Request to cancel a group of orders across all of the firm's sessions
+typedef struct _PurgeOrdersUsEquitiesV1 {
+  UINT8 mass_cancel_id[20];                                             // bytes 0 to 19
+  UINT8 clearing_firm[4];                                               // bytes 20 to 23
+  UINT8 mass_cancel_inst[8];                                            // bytes 24 to 31
+  UINT8 symbol[8];                                                      // bytes 32 to 39
+  UINT8 target_matching_unit;                                           // byte 40
+  UINT8 risk_group_id_cnt;                                              // byte 41
+  UINT16 risk_group_id[:byte-size (((UINT32) risk_group_id_cnt) * 2)];
+} PurgeOrdersUsEquitiesV1;
 
 // Reset or release Firm, Symbol, or Risk Group ID level lockout conditions resulting from risk profile trips or self-imposed lockouts issued via Purge Orders messages
-entrypoint typedef struct _ResetRiskUsEquitiesV1 {
+typedef struct _ResetRiskUsEquitiesV1 {
   UINT8 risk_status_id[16];    // bytes 0 to 15
   UINT8 risk_reset[8];         // bytes 16 to 23
   UINT8 clearing_firm[4];      // bytes 24 to 27
@@ -126,4 +286,33 @@ entrypoint typedef struct _ResetRiskUsEquitiesV1 {
   UINT8 target_matching_unit;  // byte 36
   UINT16 risk_group_id;        // bytes 37 to 38
 } ResetRiskUsEquitiesV1;
+
+// Branch
+casetype _FirmMessage (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x0001: LoginRequestMessage login_request_message;
+    case 0x0002: unit logout_request;
+    case 0x0003: unit client_heartbeat;
+    case 0x0FA1: NewOrderUsEquitiesV1 new_order_us_equities_v_1;
+    case 0x0FA6: NewOrderShortUsEquitiesV1 new_order_short_us_equities_v_1;
+    case 0x0FA3: CancelOrderUsEquitiesV1 cancel_order_us_equities_v_1;
+    case 0x0FA2: ModifyOrderUsEquitiesV1 modify_order_us_equities_v_1;
+    case 0x0FA5: PurgeOrdersUsEquitiesV1 purge_orders_us_equities_v_1;
+    case 0x0FA4: ResetRiskUsEquitiesV1 reset_risk_us_equities_v_1;
+    default: UINT8 unknown[available];
+  }
+} FirmMessage;
+
+// ---- Packet: FirmPacket ------------------------------------------------------
+
+// Binary Order Entry Tcp Packet sent by the firm
+entrypoint typedef struct _FirmPacket (UINT32 available) where (available >= 12) {
+  UINT16 start_of_message;                                                                                          // bytes 0 to 1
+  UINT16 message_length;                                                                                            // bytes 2 to 3
+  UINT16 firm_message_type;                                                                                         // bytes 4 to 5
+  UINT8 matching_unit;                                                                                              // byte 6
+  UINT8 reserved_field;                                                                                             // byte 7
+  UINT32 sequence_number;                                                                                           // bytes 8 to 11
+  FirmMessage(firm_message_type, (available - 12)) firm_message[:byte-size-single-element-array (available - 12)];
+} FirmPacket;
 

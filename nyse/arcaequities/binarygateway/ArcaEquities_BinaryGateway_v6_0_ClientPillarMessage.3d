@@ -1,68 +1,522 @@
-// New York Stock Exchange Binary Gateway
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nyse ArcaEquities BinaryGateway PillarStream v6.0
 //
+// Protocol:
+//   Organization: New York Stock Exchange
+//   Protocol: Binary Gateway
+//   Encoding: Pillar Stream Protocol
+//   Version: 6.0
+//   Date: 08/14/2026
+//   Specification: NYSE_Pillar_Gateway_Binary_Protocol_Specification.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ClientPillarMessage, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out ArcaEquities_BinaryGateway_v6_0_ClientPillarMessage.3d
-//
-// What this definition does not state, and the model does:
-// - a Reassemble rule
-// - a length prefix framing what follows
-// - a field read in bits
-// - a field present only on a condition
-//
-// License: MIT No Attribution
 
-// ---- Msg Header: 4 bytes -----------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Pillar Stream Message Header
-entrypoint typedef struct _MsgHeader {
-  UINT16 msg_type;    // bytes 0 to 1
-  UINT16 msg_length;  // bytes 2 to 3
-} MsgHeader;
+// Msg Type: 2 byte code
+#define MSG_TYPE_LOGIN 0x0201           // Login
+#define MSG_TYPE_LOGIN_RESPONSE 0x0202  // Login Response
+#define MSG_TYPE_STREAM_AVAIL 0x0203    // Stream Avail
+#define MSG_TYPE_HEARTBEAT 0x0204       // Heartbeat
+#define MSG_TYPE_OPEN 0x0205            // Open
+#define MSG_TYPE_OPEN_RESPONSE 0x0206   // Open Response
+#define MSG_TYPE_CLOSE 0x0207           // Close
+#define MSG_TYPE_CLOSE_RESPONSE 0x0208  // Close Response
+#define MSG_TYPE_SEQ_MSG 0x0905         // Seq Msg
 
-// ---- Stream Id: 8 bytes ------------------------------------------------------
+// Seq Msg Type: 2 byte code
+#define SEQ_MSG_TYPE_SESSION_CONFIGURATION_REQUEST_MESSAGE 0x0220                         // Session Configuration Request Message
+#define SEQ_MSG_TYPE_SEQUENCED_FILLER_MESSAGE 0x0282                                      // Sequenced Filler Message
+#define SEQ_MSG_TYPE_NEW_ORDER_SINGLE_AND_CANCEL_REPLACE_REQUEST_MESSAGE 0x0240           // New Order Single And Cancel Replace Request Message
+#define SEQ_MSG_TYPE_ORDER_CANCEL_REQUEST_MESSAGE 0x0280                                  // Order Cancel Request Message
+#define SEQ_MSG_TYPE_ORDER_MODIFY_REQUEST_MESSAGE 0x0270                                  // Order Modify Request Message
+#define SEQ_MSG_TYPE_BULK_CANCEL_REQUEST_MESSAGE 0x0281                                   // Bulk Cancel Request Message
+#define SEQ_MSG_TYPE_SYMBOL_SUBSCRIPTION_REQUEST_MESSAGE 0x0346                           // Symbol Subscription Request Message
+#define SEQ_MSG_TYPE_TG_BEGIN_MESSAGE 0x0343                                              // Tg Begin Message
+#define SEQ_MSG_TYPE_TG_END_MESSAGE 0x0344                                                // Tg End Message
+#define SEQ_MSG_TYPE_MANUAL_ACTION_RESPONSE_MESSAGE 0x0354                                // Manual Action Response Message
+#define SEQ_MSG_TYPE_RISK_LIMIT_UPDATE_REQUEST_MESSAGE 0x0330                             // Risk Limit Update Request Message
+#define SEQ_MSG_TYPE_RISK_ACTION_REQUEST_MESSAGE 0x0331                                   // Risk Action Request Message
+#define SEQ_MSG_TYPE_EQUITIES_SYMBOL_REFERENCE_DATA_MESSAGE 0x0232                        // Equities Symbol Reference Data Message
+#define SEQ_MSG_TYPE_DMM_SYMBOL_REFERENCE_DATA_MESSAGE 0x0832                             // Dmm Symbol Reference Data Message
+#define SEQ_MSG_TYPE_MINIMUM_PRICE_VARIANT_CLASS_REFERENCE_DATA_MESSAGE 0x0230            // Minimum Price Variant Class Reference Data Message
+#define SEQ_MSG_TYPE_MINIMUM_PRICE_VARIANT_LEVEL_REFERENCE_DATA_MESSAGE 0x0231            // Minimum Price Variant Level Reference Data Message
+#define SEQ_MSG_TYPE_MPID_CONFIGURATION_MESSAGE 0x0272                                    // Mpid Configuration Message
+#define SEQ_MSG_TYPE_MMID_CONFIGURATION_MESSAGE 0x0273                                    // Mmid Configuration Message
+#define SEQ_MSG_TYPE_SESSION_CONFIGURATION_ACKNOWLEDGEMENT_MESSAGE 0x0221                 // Session Configuration Acknowledgement Message
+#define SEQ_MSG_TYPE_ORDER_AND_CANCEL_REPLACE_ACKNOWLEDGEMENT_MESSAGE 0x0260              // Order And Cancel Replace Acknowledgement Message
+#define SEQ_MSG_TYPE_ORDER_MODIFY_CANCEL_REQUEST_ACKNOWLEDGMENT_AND_UROUT_MESSAGE 0x0271  // Order Modify Cancel Request Acknowledgment And Urout Message
+#define SEQ_MSG_TYPE_ORDER_PRIORITY_UPDATE_ACKNOWLEDGMENT_MESSAGE 0x0262                  // Order Priority Update Acknowledgment Message
+#define SEQ_MSG_TYPE_EXECUTION_REPORT_MESSAGE 0x0290                                      // Execution Report Message
+#define SEQ_MSG_TYPE_TRADE_BUST_CORRECT_MESSAGE 0x0292                                    // Trade Bust Correct Message
+#define SEQ_MSG_TYPE_APPLICATION_LAYER_REJECT_MESSAGE 0x0263                              // Application Layer Reject Message
+#define SEQ_MSG_TYPE_SYMBOL_SUBSCRIPTION_ACKNOWLEDGEMENT_MESSAGE 0x0347                   // Symbol Subscription Acknowledgement Message
+#define SEQ_MSG_TYPE_GT_BEGIN_MESSAGE 0x0349                                              // Gt Begin Message
+#define SEQ_MSG_TYPE_GT_END_MESSAGE 0x0350                                                // Gt End Message
+#define SEQ_MSG_TYPE_AUCTION_PRICE_DATA_MESSAGE 0x0352                                    // Auction Price Data Message
+#define SEQ_MSG_TYPE_AUCTION_REQUEST_MESSAGE 0x0348                                       // Auction Request Message
+#define SEQ_MSG_TYPE_MANUAL_ACTION_REQUEST_MESSAGE 0x0353                                 // Manual Action Request Message
+#define SEQ_MSG_TYPE_RISK_CONTROL_ACKNOWLEDGEMENT_MESSAGE 0x0332                          // Risk Control Acknowledgement Message
+#define SEQ_MSG_TYPE_RISK_CONTROL_ALERT_MESSAGE 0x0333                                    // Risk Control Alert Message
+
+// Cancel On Disconnect: one byte code
+#define CANCEL_ON_DISCONNECT_DISABLED 0x00    // Disabled
+#define CANCEL_ON_DISCONNECT_ENABLE_DAY 0x01  // Enable Day
+#define CANCEL_ON_DISCONNECT_ENABLE_ALL 0x02  // Enable All
+
+// Throttle Preference: one byte code
+#define THROTTLE_PREFERENCE_QUEUE_ORDERS 0x00   // Queue Orders
+#define THROTTLE_PREFERENCE_REJECT_ORDERS 0x01  // Reject Orders
+
+// Self Trade Prevention: one byte code
+#define SELF_TRADE_PREVENTION_NO_SELF_TRADE_PREVENTION 0x01  // No Self Trade Prevention
+#define SELF_TRADE_PREVENTION_CANCEL_NEWEST 0x02             // Cancel Newest
+#define SELF_TRADE_PREVENTION_CANCEL_OLDEST 0x03             // Cancel Oldest
+#define SELF_TRADE_PREVENTION_CANCEL_BOTH 0x04               // Cancel Both
+#define SELF_TRADE_PREVENTION_CANCEL_DECREMENT 0x05          // Cancel Decrement
+
+// Order Priority Update Ack Subscription: one byte code
+#define ORDER_PRIORITY_UPDATE_ACK_SUBSCRIPTION_NOT_SUBSCRIBED 0x00           // Not Subscribed
+#define ORDER_PRIORITY_UPDATE_ACK_SUBSCRIPTION_RECEIVE_UNSOLICITED_ACK 0x01  // Receive Unsolicited Ack
+
+// Routing Strategy: one byte code
+#define ROUTING_STRATEGY_MIDPOINT_PING 0x01                     // Midpoint Ping
+#define ROUTING_STRATEGY_RETAIL_PRICE_IMPROVEMENT_SEEKING 0x02  // Retail Price Improvement Seeking
+#define ROUTING_STRATEGY_RETAIL_MIDPOINT_PING 0x03              // Retail Midpoint Ping
+
+// Settlement Type: one byte code
+#define SETTLEMENT_TYPE_REGULAR_WAY 0x30  // Regular Way
+#define SETTLEMENT_TYPE_CASH 0x31         // Cash
+
+// Side: one byte code
+#define SIDE_NO_CHANGE_IN_SIDE 0x00   // No Change In Side
+#define SIDE_BUY 0x01                 // Buy
+#define SIDE_SELL 0x02                // Sell
+#define SIDE_SELL_SHORT 0x03          // Sell Short
+#define SIDE_SELL_SHORT_EXEMPT 0x04   // Sell Short Exempt
+#define SIDE_CROSS 0x05               // Cross
+#define SIDE_CROSS_SHORT 0x06         // Cross Short
+#define SIDE_CROSS_SHORT_EXEMPT 0x07  // Cross Short Exempt
+
+// Locate Reqd U 81: one byte code
+#define LOCATE_REQD_U_81_NO_LOCATE_REQD 0x00              // No Locate Reqd
+#define LOCATE_REQD_U_81_LOCATE_REQD_FOR_SSH_ORDERS 0x01  // Locate Reqd For Ssh Orders
+
+// Bulk Cancel Type: one byte code
+#define BULK_CANCEL_TYPE_SESSION_DAY_DIRECTED 0x01          // Session Day Directed
+#define BULK_CANCEL_TYPE_SESSION_ALL_ORDERS 0x02            // Session All Orders
+#define BULK_CANCEL_TYPE_SESSION_OPENING_DAY_DIRECTED 0x03  // Session Opening Day Directed
+#define BULK_CANCEL_TYPE_MPID_OPENING_DAY_DIRECTED 0x04     // Mpid Opening Day Directed
+#define BULK_CANCEL_TYPE_MPID_DAY_DIRECTED 0x05             // Mpid Day Directed
+#define BULK_CANCEL_TYPE_MPID_GTC 0x06                      // Mpid Gtc
+#define BULK_CANCEL_TYPE_MPID_OPENING_CLOSE 0x07            // Mpid Opening Close
+#define BULK_CANCEL_TYPE_MPID_DAY_ORDERS 0x08               // Mpid Day Orders
+#define BULK_CANCEL_TYPE_MPID_CANCEL_BLOCK_NEW 0x09         // Mpid Cancel Block New
+#define BULK_CANCEL_TYPE_MPID_BLOCK_NEW 0x0A                // Mpid Block New
+#define BULK_CANCEL_TYPE_MPID_UNBLOCK_NEW 0x0B              // Mpid Unblock New
+#define BULK_CANCEL_TYPE_MPID_DIRECTED_ORDERS 0x0C          // Mpid Directed Orders
+#define BULK_CANCEL_TYPE_MPID_CAPITAL_COMMITMENT 0x0D       // Mpid Capital Commitment
+
+// Self Trade Type Bits: one byte code
+#define SELF_TRADE_TYPE_BITS_DEFAULT_CANCEL_NEWEST 0x00     // Default Cancel Newest
+#define SELF_TRADE_TYPE_BITS_NO_SELF_TRADE_PREVENTION 0x01  // No Self Trade Prevention
+#define SELF_TRADE_TYPE_BITS_CANCEL_NEWEST 0x02             // Cancel Newest
+#define SELF_TRADE_TYPE_BITS_CANCEL_OLDEST 0x03             // Cancel Oldest
+#define SELF_TRADE_TYPE_BITS_CANCEL_BOTH 0x04               // Cancel Both
+#define SELF_TRADE_TYPE_BITS_CANCEL_DECREMENT 0x05          // Cancel Decrement
+
+// Manual Response Type: one byte code
+#define MANUAL_RESPONSE_TYPE_APPROVE_MANUAL_ACTION_REQUEST 0x01  // Approve Manual Action Request
+#define MANUAL_RESPONSE_TYPE_REJECT_MANUAL_ACTION_REQUEST 0x02   // Reject Manual Action Request
+
+// Risk User Type: one byte code
+#define RISK_USER_TYPE_ENTERING_FIRM 0x45              // Entering Firm
+#define RISK_USER_TYPE_CLEARING_FIRM 0x43              // Clearing Firm
+#define RISK_USER_TYPE_OPTIONS_MARKET_MAKER_FIRM 0x4F  // Options Market Maker Firm
+
+// Risk Control Type: one byte code
+#define RISK_CONTROL_TYPE_NOT_APPLICABLE 0x00                         // Not Applicable
+#define RISK_CONTROL_TYPE_SINGLE_ORDER_MAX_QTY 0x01                   // Single Order Max Qty
+#define RISK_CONTROL_TYPE_SINGLE_ORDER_MAX_NOTIONAL_VALUE 0x02        // Single Order Max Notional Value
+#define RISK_CONTROL_TYPE_GROSS_CREDIT_EXECUTED 0x03                  // Gross Credit Executed
+#define RISK_CONTROL_TYPE_GROSS_CREDIT_OPEN 0x04                      // Gross Credit Open
+#define RISK_CONTROL_TYPE_GROSS_CREDIT_OPEN_PLUS_EXECUTED 0x05        // Gross Credit Open Plus Executed
+#define RISK_CONTROL_TYPE_MAXIMUM_DUPLICATIVE_ORDERS 0x06             // Maximum Duplicative Orders
+#define RISK_CONTROL_TYPE_RESERVED_FOR_FUTURE_USE_7 0x07              // Reserved For Future Use 7
+#define RISK_CONTROL_TYPE_ACTIVITY_ROLLING_TRANSACTION 0x08           // Activity Rolling Transaction
+#define RISK_CONTROL_TYPE_ACTIVITY_ROLLING_VOLUME 0x09                // Activity Rolling Volume
+#define RISK_CONTROL_TYPE_ACTIVITY_ROLLING_PERCENTAGE 0x0A            // Activity Rolling Percentage
+#define RISK_CONTROL_TYPE_ACTIVITY_GLOBAL_RISK_MITIGATION 0x0B        // Activity Global Risk Mitigation
+#define RISK_CONTROL_TYPE_RESERVED_FOR_FUTURE_USE_12 0x0C             // Reserved For Future Use 12
+#define RISK_CONTROL_TYPE_REJECT_MARKET_ORDERS 0x0D                   // Reject Market Orders
+#define RISK_CONTROL_TYPE_REJECT_MOO_AND_MOC 0x0E                     // Reject Moo And Moc
+#define RISK_CONTROL_TYPE_NOT_AVAILABLE_15 0x0F                       // Not Available 15
+#define RISK_CONTROL_TYPE_NOT_AVAILABLE_16 0x10                       // Not Available 16
+#define RISK_CONTROL_TYPE_REJECT_EARLY_TRADING_SESSION 0x11           // Reject Early Trading Session
+#define RISK_CONTROL_TYPE_REJECT_LATE_TRADING_SESSION 0x12            // Reject Late Trading Session
+#define RISK_CONTROL_TYPE_REJECT_RESTRICTED_SYMBOL 0x13               // Reject Restricted Symbol
+#define RISK_CONTROL_TYPE_REJECT_SELL_SHORT_FOR_SYMBOL 0x14           // Reject Sell Short For Symbol
+#define RISK_CONTROL_TYPE_REJECT_SELL_SHORT_EXEMPT_FOR_SYMBOL 0x15    // Reject Sell Short Exempt For Symbol
+#define RISK_CONTROL_TYPE_SINGLE_ORDER_MAX_QTY_PCT_ADV 0x16           // Single Order Max Qty Pct Adv
+#define RISK_CONTROL_TYPE_LOPP_EQUITIES_CUSTOM_LIMITS 0x17            // Lopp Equities Custom Limits
+#define RISK_CONTROL_TYPE_LOPP_EQUITIES_EARLY_LATE_MULTIPLIER 0x18    // Lopp Equities Early Late Multiplier
+#define RISK_CONTROL_TYPE_LOPP_EQUITIES_CLOSING_ONLY_MULTIPLIER 0x19  // Lopp Equities Closing Only Multiplier
+#define RISK_CONTROL_TYPE_LOPP_OPTIONS_SINGLE_LEG_CUSTOM_LIMITS 0x1A  // Lopp Options Single Leg Custom Limits
+#define RISK_CONTROL_TYPE_LOPP_OPTIONS_COMPLEX_CUSTOM_LIMITS 0x1B     // Lopp Options Complex Custom Limits
+#define RISK_CONTROL_TYPE_REQUIRE_LOCATE_BROKER 0x1C                  // Require Locate Broker
+#define RISK_CONTROL_TYPE_ORDER_RATE_THRESHOLD 0x1D                   // Order Rate Threshold
+#define RISK_CONTROL_TYPE_REJECT_ISO_IOC 0x1E                         // Reject Iso Ioc
+#define RISK_CONTROL_TYPE_REJECT_ISO_DAY 0x1F                         // Reject Iso Day
+
+// Risk Control Activation: one byte code
+#define RISK_CONTROL_ACTIVATION_RISK_CONTROL_TURNED_OFF 0x00  // Risk Control Turned Off
+#define RISK_CONTROL_ACTIVATION_RISK_CONTROL_TURNED_ON 0x01   // Risk Control Turned On
+
+// Breach Action Request: one byte code
+#define BREACH_ACTION_REQUEST_NOT_APPLICABLE 0x00                       // Not Applicable
+#define BREACH_ACTION_REQUEST_NOTIFICATIONS_ONLY 0x01                   // Notifications Only
+#define BREACH_ACTION_REQUEST_CANCEL_NON_AUCTION_ORDERS_AND_BLOCK 0x02  // Cancel Non Auction Orders And Block
+#define BREACH_ACTION_REQUEST_BLOCK_ONLY 0x03                           // Block Only
+
+// Ioc Attribution: one byte code
+#define IOC_ATTRIBUTION_NOT_APPLICABLE 0x00      // Not Applicable
+#define IOC_ATTRIBUTION_INCLUDE_IOC_ORDERS 0x01  // Include Ioc Orders
+#define IOC_ATTRIBUTION_EXCLUDE_IOC_ORDERS 0x02  // Exclude Ioc Orders
+
+// Price Scale: one byte code
+#define PRICE_SCALE_NO_DECIMALS 0x00   // No Decimals
+#define PRICE_SCALE_TWO_DECIMALS 0x02  // Two Decimals
+
+// Risk Action Type: one byte code
+#define RISK_ACTION_TYPE_NOT_APPLICABLE 0x00                         // Not Applicable
+#define RISK_ACTION_TYPE_QUERY_RISK_ENTITY 0x01                      // Query Risk Entity
+#define RISK_ACTION_TYPE_KILL_SWITCH_BLOCK 0x02                      // Kill Switch Block
+#define RISK_ACTION_TYPE_KILL_SWITCH_UNBLOCK 0x03                    // Kill Switch Unblock
+#define RISK_ACTION_TYPE_KILL_SWITCH_CANCEL_AUCTION_ORDERS 0x04      // Kill Switch Cancel Auction Orders
+#define RISK_ACTION_TYPE_KILL_SWITCH_CANCEL_NON_AUCTION_ORDERS 0x05  // Kill Switch Cancel Non Auction Orders
+#define RISK_ACTION_TYPE_KILL_SWITCH_CANCEL_GTC_ORDERS 0x06          // Kill Switch Cancel Gtc Orders
+#define RISK_ACTION_TYPE_APPROVE_REINSTATEMENT 0x07                  // Approve Reinstatement
+#define RISK_ACTION_TYPE_RISK_ENTITY_REINSTATED 0x08                 // Risk Entity Reinstated
+#define RISK_ACTION_TYPE_ADD_SYMBOL_LEVEL_RISK_ENTITY 0x09           // Add Symbol Level Risk Entity
+#define RISK_ACTION_TYPE_REMOVE_SYMBOL_LEVEL_RISK_ENTITY 0x0A        // Remove Symbol Level Risk Entity
+
+// ---- Types -------------------------------------------------------------------
+
+// Client must send Login before any other message
+typedef struct _LoginMessage {
+  UINT8 username[16];  // bytes 0 to 15
+  UINT8 password[32];  // bytes 16 to 47
+  UINT8 mic[4];        // bytes 48 to 51
+  UINT8 version[20];   // bytes 52 to 71
+} LoginMessage;
+
+// Heartbeat must be sent once a second
+typedef struct _Heartbeat {
+  unit empty;
+} Heartbeat;
 
 // Pillar Stream Protocol Stream Identifier
-entrypoint typedef struct _StreamId {
+typedef struct _StreamId {
   UINT32 sess;   // bytes 0 to 3
   UINT32 value;  // bytes 4 to 7
 } StreamId;
 
-// ---- Seq Msg Id: 16 bytes ----------------------------------------------------
+// Request open a stream for reading or writing
+typedef struct _Open {
+  StreamId stream_id;  // bytes 0 to 7
+  UINT64 start_seq;    // bytes 8 to 15
+  UINT64 end_seq;      // bytes 16 to 23
+  UINT8 access;        // byte 24
+  UINT8 mode;          // byte 25
+} Open;
+
+// Request close stream
+typedef struct _Close {
+  StreamId stream_id;  // bytes 0 to 7
+} Close;
 
 // Pillar Stream Sequenced Message Identifier
-entrypoint typedef struct _SeqMsgId {
+typedef struct _SeqMsgId {
   StreamId stream_id;  // bytes 0 to 7
   UINT64 seq;          // bytes 8 to 15
 } SeqMsgId;
 
-// ---- Seq Msg Header: 4 bytes -------------------------------------------------
-
-// Pillar Stream Sequenced Message Header
-entrypoint typedef struct _SeqMsgHeader {
-  UINT16 seq_msg_type;    // bytes 0 to 1
-  UINT16 seq_msg_length;  // bytes 2 to 3
-} SeqMsgHeader;
-
-// ---- Sub Msg Header: 4 bytes -------------------------------------------------
+// This message may be sent by the firm to change their configuration settings for a given gateway session, as defined by its Username). If accepted by the gateway, the updated settings will be applied on a go forward basis only.
+typedef struct _SessionConfigurationRequestMessage {
+  UINT8 username[16];                            // bytes 0 to 15
+  UINT8 cancel_on_disconnect;                    // byte 16
+  UINT8 throttle_preference;                     // byte 17
+  UINT8 self_trade_prevention;                   // byte 18
+  UINT8 order_priority_update_ack_subscription;  // byte 19
+  UINT8 bold_designation;                        // byte 20
+  UINT8 reserved_49[49];                         // bytes 21 to 69
+} SessionConfigurationRequestMessage;
 
 // Pillar Stream Sub Message Item Header
-entrypoint typedef struct _SubMsgHeader {
+typedef struct _SubMsgHeader {
   UINT16 sub_msg_type;    // bytes 0 to 1
   UINT16 sub_msg_length;  // bytes 2 to 3
 } SubMsgHeader;
 
-// ---- Manual Action Id: 16 bytes ----------------------------------------------
+// OptionalOrderAddOn
+typedef struct _OptionalOrderAddOn {
+  SubMsgHeader sub_msg_header;  // bytes 0 to 3
+  UINT8 deliver_to_comp_id[5];  // bytes 4 to 8
+  UINT32 max_floor;             // bytes 9 to 12
+  UINT8 locate_broker[4];       // bytes 13 to 16
+  UINT8 reserved_8[8];          // bytes 17 to 24
+  UINT64 offset_price;          // bytes 25 to 32, signed, read here as unsigned
+  UINT64 effective_time;        // bytes 33 to 40
+} OptionalOrderAddOn;
+
+// OptionalOrderAddOn
+casetype _OptionalOptionalOrderAddOn (Bool present) {
+  switch (present) {
+    case true: OptionalOrderAddOn optional_order_add_on;
+    case false: unit absent;
+  }
+} OptionalOptionalOrderAddOn;
+
+// OptionalRoutingStrategyAddOn
+typedef struct _OptionalRoutingStrategyAddOn {
+  SubMsgHeader sub_msg_header;  // bytes 0 to 3
+  UINT8 routing_strategy;       // byte 4
+  UINT8 reserved_27[27];        // bytes 5 to 31
+} OptionalRoutingStrategyAddOn;
+
+// OptionalRoutingStrategyAddOn
+casetype _OptionalOptionalRoutingStrategyAddOn (Bool present) {
+  switch (present) {
+    case true: OptionalRoutingStrategyAddOn optional_routing_strategy_add_on;
+    case false: unit absent;
+  }
+} OptionalOptionalRoutingStrategyAddOn;
+
+// OptionalSettlementTypeAddOn
+typedef struct _OptionalSettlementTypeAddOn {
+  SubMsgHeader sub_msg_header;  // bytes 0 to 3
+  UINT8 settlement_type;        // byte 4
+} OptionalSettlementTypeAddOn;
+
+// OptionalSettlementTypeAddOn
+casetype _OptionalOptionalSettlementTypeAddOn (Bool present) {
+  switch (present) {
+    case true: OptionalSettlementTypeAddOn optional_settlement_type_add_on;
+    case false: unit absent;
+  }
+} OptionalOptionalSettlementTypeAddOn;
+
+// This message type is used as both a New Order message or a Cancel/Replacement message
+typedef struct _NewOrderSingleAndCancelReplaceRequestMessage (UINT16 seq_msg_length) {
+  UINT32 symbol_id;                                                                                   // bytes 0 to 3
+  UINT8 mpid[4];                                                                                      // bytes 4 to 7
+  UINT32 mmid;                                                                                        // bytes 8 to 11
+  UINT8 m_p_sub_i_d_1;                                                                                // byte 12
+  UINT64 cl_ord_id;                                                                                   // bytes 13 to 20
+  UINT64 orig_cl_ord_id;                                                                              // bytes 21 to 28
+  UINT64 unused_12 : 12;                                                                              // bytes 29 to 36
+  UINT64 sub_id_indicator : 1;                                                                        // bytes 29 to 36
+  UINT64 special_ord_type : 4;                                                                        // bytes 29 to 36
+  UINT64 locate_reqd_1 : 1;                                                                           // bytes 29 to 36
+  UINT64 retail_indicator : 1;                                                                        // bytes 29 to 36
+  UINT64 attributed_quote : 3;                                                                        // bytes 29 to 36
+  UINT64 order_capacity : 3;                                                                          // bytes 29 to 36
+  UINT64 interest_type : 3;                                                                           // bytes 29 to 36
+  UINT64 trading_session_id : 3;                                                                      // bytes 29 to 36
+  UINT64 time_in_force : 3;                                                                           // bytes 29 to 36
+  UINT64 proactive_if_locked : 3;                                                                     // bytes 29 to 36
+  UINT64 self_trade_type_3 : 3;                                                                       // bytes 29 to 36
+  UINT64 cancel_instead_of_reprice : 4;                                                               // bytes 29 to 36
+  UINT64 routing_inst : 4;                                                                            // bytes 29 to 36
+  UINT64 extended_exec_inst : 4;                                                                      // bytes 29 to 36
+  UINT64 exec_inst : 4;                                                                               // bytes 29 to 36
+  UINT64 ord_type : 4;                                                                                // bytes 29 to 36
+  UINT64 side_bits : 4;                                                                               // bytes 29 to 36
+  UINT64 price;                                                                                       // bytes 37 to 44, signed, read here as unsigned
+  UINT32 order_qty;                                                                                   // bytes 45 to 48
+  UINT32 min_qty;                                                                                     // bytes 49 to 52
+  UINT8 user_data[8];                                                                                 // bytes 53 to 60
+  OptionalOptionalOrderAddOn((seq_msg_length == 0x006A)) optional_order_add_on;
+  OptionalOptionalRoutingStrategyAddOn((seq_msg_length == 0x0061)) optional_routing_strategy_add_on;
+  OptionalOptionalSettlementTypeAddOn((seq_msg_length == 0x0046)) optional_settlement_type_add_on;
+} NewOrderSingleAndCancelReplaceRequestMessage;
+
+// This message is used to cancel a single targeted order. Populate the field OrigClOrdID with the ClOrdID of the order intended for cancellation.
+typedef struct _OrderCancelRequestMessage {
+  UINT32 symbol_id;       // bytes 0 to 3
+  UINT8 mpid[4];          // bytes 4 to 7
+  UINT64 cl_ord_id;       // bytes 8 to 15
+  UINT64 orig_cl_ord_id;  // bytes 16 to 23
+} OrderCancelRequestMessage;
+
+// This message is used to reduce the total order quantity or change the side of an existing order between Sell, Sell Short, and Sell Short Exempt while preserving the order s ranking and original OrderID. The modified order receives a new ClOrdID equal to the ClOrdID of the Modify Request. Reducing the total quantity to 0 will cancel the order.
+typedef struct _OrderModifyRequestMessage {
+  UINT32 symbol_id;        // bytes 0 to 3
+  UINT8 mpid[4];           // bytes 4 to 7
+  UINT64 cl_ord_id;        // bytes 8 to 15
+  UINT64 orig_cl_ord_id;   // bytes 16 to 23
+  UINT32 order_qty;        // bytes 24 to 27
+  UINT8 side;              // byte 28
+  UINT8 locate_reqd_u_81;  // byte 29
+} OrderModifyRequestMessage;
+
+// This message is used to bulk cancel multiple orders based on the specified combination of criteria. MPID must be valid for the session. Depending on BulkCancelType, cancellation may apply at the session or MPID level. Certain order types are always excluded from bulk cancellation.
+typedef struct _BulkCancelRequestMessage {
+  UINT32 symbol_id;             // bytes 0 to 3
+  UINT8 mpid[4];                // bytes 4 to 7
+  UINT32 mmid;                  // bytes 8 to 11
+  UINT64 cl_ord_id;             // bytes 12 to 19
+  UINT8 deliver_to_comp_id[5];  // bytes 20 to 24
+  UINT8 bulk_cancel_type;       // byte 25
+  UINT8 side;                   // byte 26
+} BulkCancelRequestMessage;
+
+// This message is sent by a NYSE Designated Market Maker to designate a gateway session to receive auction price data, auction requests, manual action requests, and echo messages of DMM manual order activity for a specified symbol.
+typedef struct _SymbolSubscriptionRequestMessage {
+  UINT32 symbol_id;    // bytes 0 to 3
+  UINT8 username[16];  // bytes 4 to 19
+} SymbolSubscriptionRequestMessage;
 
 // ManualActionID
-entrypoint typedef struct _ManualActionId {
+typedef struct _ManualActionId {
   StreamId stream_id;  // bytes 0 to 7
   UINT64 seq;          // bytes 8 to 15
 } ManualActionId;
+
+// Response message used by a DMM to approve or reject a Manual Action Request. Depending on the ManualResponseType, this message may result in order creation or rejection with an optional reject reason.
+typedef struct _ManualActionResponseMessage {
+  UINT32 symbol_id;                 // bytes 0 to 3
+  UINT64 cl_ord_id;                 // bytes 4 to 11
+  ManualActionId manual_action_id;  // bytes 12 to 27
+  UINT8 sell_indicator;             // byte 28
+  UINT32 intraday_sell_short_qty;   // bytes 29 to 32
+  UINT8 m_p_sub_i_d_1;              // byte 33
+  UINT8 locate_reqd_u_81;           // byte 34
+  UINT8 self_trade_type_bits;       // byte 35
+  UINT8 user_data[8];               // bytes 36 to 43
+  UINT8 manual_response_type;       // byte 44
+  UINT8 dmm_reject_reason[20];      // bytes 45 to 64
+} ManualActionResponseMessage;
+
+// Risk limit update request used by Risk Admin to configure or update risk controls for a specified risk entity. Field applicability depends on RiskControlType; non-applicable fields should be set to 0 or ignored as documented.
+typedef struct _RiskLimitUpdateRequestMessage {
+  UINT32 symbol_id;               // bytes 0 to 3
+  UINT8 mpid[4];                  // bytes 4 to 7
+  UINT8 market_maker_n_u_l[10];   // bytes 8 to 17
+  UINT8 m_p_sub_i_d_4[4];         // bytes 18 to 21
+  UINT8 reserved_4[4];            // bytes 22 to 25
+  UINT8 clearing_number[5];       // bytes 26 to 30
+  UINT64 cl_ord_id;               // bytes 31 to 38
+  UINT32 risk_user_crd;           // bytes 39 to 42
+  UINT8 risk_user_type;           // byte 43
+  UINT8 risk_control_type;        // byte 44
+  UINT8 risk_control_activation;  // byte 45
+  UINT64 usd_limit;               // bytes 46 to 53, signed, read here as unsigned
+  UINT32 time_limit;              // bytes 54 to 57, signed, read here as unsigned
+  UINT32 percentage_limit;        // bytes 58 to 61, signed, read here as unsigned
+  UINT32 count_limit;             // bytes 62 to 65, signed, read here as unsigned
+  UINT8 breach_action_request;    // byte 66
+  UINT8 ioc_attribution;          // byte 67
+  UINT8 risk_range_id;            // byte 68
+  UINT64 risk_minimum_value;      // bytes 69 to 76, signed, read here as unsigned
+  UINT8 price_scale;              // byte 77
+  UINT8 reserved_190[190];        // bytes 78 to 267
+} RiskLimitUpdateRequestMessage;
+
+// Risk Action Request Message
+typedef struct _RiskActionRequestMessage {
+  UINT32 symbol_id;              // bytes 0 to 3
+  UINT8 mpid[4];                 // bytes 4 to 7
+  UINT8 market_maker_n_u_l[10];  // bytes 8 to 17
+  UINT8 m_p_sub_i_d_4[4];        // bytes 18 to 21
+  UINT8 reserved_4[4];           // bytes 22 to 25
+  UINT8 clearing_number[5];      // bytes 26 to 30
+  UINT64 cl_ord_id;              // bytes 31 to 38
+  UINT32 risk_user_crd;          // bytes 39 to 42
+  UINT8 risk_user_type;          // byte 43
+  UINT8 risk_control_type;       // byte 44
+  UINT8 risk_action_type;        // byte 45
+  UINT8 risk_range_id;           // byte 46
+  UINT8 reserved_199[199];       // bytes 47 to 245
+} RiskActionRequestMessage;
+
+// Branch
+casetype _ClientSequencedMessage (UINT16 selector, UINT32 length, UINT32 length_2, UINT32 length_3, UINT32 length_4, UINT32 length_5, UINT32 length_6, UINT32 length_7, UINT32 length_8, UINT32 length_9, UINT16 seq_msg_length) {
+  switch (selector) {
+    case 0x0220: SessionConfigurationRequestMessage session_configuration_request_message[:byte-size-single-element-array length];
+    case 0x0282: unit sequenced_filler_message;
+    case 0x0240: NewOrderSingleAndCancelReplaceRequestMessage(seq_msg_length) new_order_single_and_cancel_replace_request_message[:byte-size-single-element-array length_2];
+    case 0x0280: OrderCancelRequestMessage order_cancel_request_message[:byte-size-single-element-array length_3];
+    case 0x0270: OrderModifyRequestMessage order_modify_request_message[:byte-size-single-element-array length_4];
+    case 0x0281: BulkCancelRequestMessage bulk_cancel_request_message[:byte-size-single-element-array length_5];
+    case 0x0346: SymbolSubscriptionRequestMessage symbol_subscription_request_message[:byte-size-single-element-array length_6];
+    case 0x0343: unit tg_begin_message;
+    case 0x0344: unit tg_end_message;
+    case 0x0354: ManualActionResponseMessage manual_action_response_message[:byte-size-single-element-array length_7];
+    case 0x0330: RiskLimitUpdateRequestMessage risk_limit_update_request_message[:byte-size-single-element-array length_8];
+    case 0x0331: RiskActionRequestMessage risk_action_request_message[:byte-size-single-element-array length_9];
+  }
+} ClientSequencedMessage;
+
+// Used to transmit a stream message
+typedef struct _ClientSeqMsg {
+  SeqMsgId seq_msg_id;                                                                                                                                                                                                                                                                                                                                                                     // bytes 0 to 15
+  UINT8 reserved_4[4];                                                                                                                                                                                                                                                                                                                                                                     // bytes 16 to 19
+  UINT64 timestamp;                                                                                                                                                                                                                                                                                                                                                                        // bytes 20 to 27
+  UINT16 seq_msg_type;                                                                                                                                                                                                                                                                                                                                                                     // bytes 28 to 29
+  UINT16 seq_msg_length { seq_msg_length >= 4 };                                                                                                                                                                                                                                                                                                                                           // bytes 30 to 31
+  ClientSequencedMessage(seq_msg_type, (((UINT32) seq_msg_length) - 4), (((UINT32) seq_msg_length) - 4), (((UINT32) seq_msg_length) - 4), (((UINT32) seq_msg_length) - 4), (((UINT32) seq_msg_length) - 4), (((UINT32) seq_msg_length) - 4), (((UINT32) seq_msg_length) - 4), (((UINT32) seq_msg_length) - 4), (((UINT32) seq_msg_length) - 4), seq_msg_length) client_sequenced_message;
+} ClientSeqMsg;
+
+// Branch
+casetype _ClientMessage (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x0201: LoginMessage login_message;
+    case 0x0204: Heartbeat heartbeat;
+    case 0x0205: Open open_;
+    case 0x0207: Close close;
+    case 0x0905: ClientSeqMsg client_seq_msg;
+    default: UINT8 unknown[available];
+  }
+} ClientMessage;
+
+// ---- Packet: ClientPillarMessage ---------------------------------------------
+
+// Pillar Stream message sent by the member firm
+entrypoint typedef struct _ClientPillarMessage (UINT32 available) where (available >= 4) {
+  UINT16 msg_type;                                                                                           // bytes 0 to 1
+  UINT16 msg_length;                                                                                         // bytes 2 to 3
+  ClientMessage(msg_type, (available - 4)) client_message[:byte-size-single-element-array (available - 4)];
+} ClientPillarMessage;
 

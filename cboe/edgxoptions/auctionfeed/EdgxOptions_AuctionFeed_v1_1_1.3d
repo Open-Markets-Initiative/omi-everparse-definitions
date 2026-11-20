@@ -1,55 +1,84 @@
-// Chicago Board Options Exchange Auction Feed
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Cboe EdgxOptions AuctionFeed Pitch v1.1.1
 //
+// Protocol:
+//   Organization: Chicago Board Options Exchange
+//   Protocol: Auction Feed
+//   Encoding: Pitch
+//   Version: 1.1.1
+//   Date: 12/6/2018
+//   Specification: US Options Auction Feed Specification v1.1.1.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out EdgxOptions_AuctionFeed_v1_1_1.3d
-//
-// What this definition does not state, and the model does:
-// - the dispatch that chooses a message by its type
-// - a run filling what frames it
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 8 bytes --------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-entrypoint typedef struct _PacketHeader {
-  UINT16 length;        // bytes 0 to 1
-  UINT8 message_count;  // byte 2
-  UINT8 unit_;          // byte 3
-  UINT32 sequence;      // bytes 4 to 7
-} PacketHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_TIME_MESSAGE 0x20                  // Time Message
+#define MESSAGE_TYPE_UNIT_CLEAR_MESSAGE 0x97            // Unit Clear Message
+#define MESSAGE_TYPE_AUCTION_NOTIFICATION_MESSAGE 0xAD  // Auction Notification Message
+#define MESSAGE_TYPE_AUCTION_CANCEL_MESSAGE 0xAE        // Auction Cancel Message
+#define MESSAGE_TYPE_AUCTION_TRADE_MESSAGE 0xAF         // Auction Trade Message
+#define MESSAGE_TYPE_SYMBOL_MAPPING_MESSAGE 0x2E        // Symbol Mapping Message
+#define MESSAGE_TYPE_END_OF_SESSION_MESSAGE 0x2D        // End Of Session Message
 
-// ---- Message Header: 2 bytes -------------------------------------------------
+// Auction Type: one byte code
+#define AUCTION_TYPE_BATS_AUCTION_MECHANISM 0x42  // Bats Auction Mechanism
+#define AUCTION_TYPE_STEP_UP_MECHANISM 0x54       // Step Up Mechanism
 
-entrypoint typedef struct _MessageHeader {
-  UINT8 message_length;  // byte 0
-  UINT8 message_type;    // byte 1
-} MessageHeader;
+// Side: one byte code
+#define SIDE_BUY 0x42   // Buy
+#define SIDE_SELL 0x53  // Sell
 
-// ---- Time Message: 4 bytes ---------------------------------------------------
+// Customer Indicator: one byte code
+#define CUSTOMER_INDICATOR_NON_CUSTOMER 0x4E  // Non Customer
+#define CUSTOMER_INDICATOR_CUSTOMER 0x43      // Customer
+
+// ---- Types -------------------------------------------------------------------
 
 // A Time message is sent whenever the source time for a unit passes over a second boundary.
-entrypoint typedef struct _TimeMessage {
+typedef struct _TimeMessage {
   UINT32 time;  // bytes 0 to 3
 } TimeMessage;
 
-// ---- Unit Clear Message: 4 bytes ---------------------------------------------
-
 // The Unit Clear message instructs feed recipients to clear all orders for the Cboe book in the unit specified in the Sequenced Unit Header. This message will be sent at startup each day.
-entrypoint typedef struct _UnitClearMessage {
+typedef struct _UnitClearMessage {
   UINT32 time_offset;  // bytes 0 to 3
 } UnitClearMessage;
 
-// ---- Auction Notification Message: 41 bytes ----------------------------------
-
 // Auction Notification messages are used to disseminate order details of an auction. Auctions will be available for a defined period of time known as the exposure period.
-entrypoint typedef struct _AuctionNotificationMessage {
+typedef struct _AuctionNotificationMessage {
   UINT32 time_offset;         // bytes 0 to 3
   UINT8 symbol[6];            // bytes 4 to 9
   UINT64 auction_id;          // bytes 10 to 17
@@ -62,18 +91,14 @@ entrypoint typedef struct _AuctionNotificationMessage {
   UINT32 auction_end_offset;  // bytes 37 to 40
 } AuctionNotificationMessage;
 
-// ---- Auction Cancel Message: 12 bytes ----------------------------------------
-
 // Auction Cancel messages are used to disseminate the cancellation of an earlier Auction Notification message as a result of a user cancelation of the original order, a user modification request to change the price or increase the original order quantity, or a fading of the NBBO.
-entrypoint typedef struct _AuctionCancelMessage {
+typedef struct _AuctionCancelMessage {
   UINT32 time_offset;  // bytes 0 to 3
   UINT64 auction_id;   // bytes 4 to 11
 } AuctionCancelMessage;
 
-// ---- Auction Trade Message: 32 bytes -----------------------------------------
-
 // Auction Cancel messages are used to disseminate the cancellation of an earlier Auction Notification message as a result of a user cancelation of the original order, a user modification request to change the price or increase the original order quantity, or a fading of the NBBO.
-entrypoint typedef struct _AuctionTradeMessage {
+typedef struct _AuctionTradeMessage {
   UINT32 time_offset;   // bytes 0 to 3
   UINT64 auction_id;    // bytes 4 to 11
   UINT64 execution_id;  // bytes 12 to 19
@@ -81,19 +106,61 @@ entrypoint typedef struct _AuctionTradeMessage {
   UINT32 contracts;     // bytes 28 to 31
 } AuctionTradeMessage;
 
-// ---- Symbol Mapping Message: 28 bytes ----------------------------------------
-
 // A symbol mapping message is used to map the 6 character multicast feed symbol field to an OSI symbol.
-entrypoint typedef struct _SymbolMappingMessage {
+typedef struct _SymbolMappingMessage {
   UINT8 feed_symbol[6];    // bytes 0 to 5
   UINT8 osi_symbol[21];    // bytes 6 to 26
   UINT8 symbol_condition;  // byte 27
 } SymbolMappingMessage;
 
-// ---- End Of Session Message: 4 bytes -----------------------------------------
-
 // The Width Update message is used to communicate opening quote width multiplier. This message will be sent at the beginning of the day for all underlyings and in the event that the exchange decides to change the quote width multiplier on a per underlying basis.
-entrypoint typedef struct _EndOfSessionMessage {
+typedef struct _EndOfSessionMessage {
   UINT32 time_offset;  // bytes 0 to 3
 } EndOfSessionMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x20: TimeMessage time_message;
+    case 0x97: UnitClearMessage unit_clear_message;
+    case 0xAD: AuctionNotificationMessage auction_notification_message;
+    case 0xAE: AuctionCancelMessage auction_cancel_message;
+    case 0xAF: AuctionTradeMessage auction_trade_message;
+    case 0x2E: SymbolMappingMessage symbol_mapping_message;
+    case 0x2D: EndOfSessionMessage end_of_session_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT8 message_length { message_length >= 2 };                                                                                                                    // byte 0
+  UINT8 message_type;                                                                                                                                              // byte 1
+  Payload(message_type, (((UINT32) message_length) - 2)) payload[:byte-size-single-element-array (((UINT32) message_length) - 2)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+typedef struct _MessageRun (UINT8 message_count, UINT32 available, mutable UINT32 * tally) {
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size available];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} MessageRun;
+
+// Branch
+casetype _Messages (UINT8 selector, UINT8 message_count, UINT32 available, mutable UINT32 * tally) {
+  switch (selector) {
+    case 0x00: unit heartbeat;
+    default: MessageRun(message_count, available, tally) message;
+  }
+} Messages;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Pitch Udp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 8) {
+  UINT16 length;                                                                                                             // bytes 0 to 1
+  UINT8 message_count;                                                                                                       // byte 2
+  UINT8 unit_;                                                                                                               // byte 3
+  UINT32 sequence;                                                                                                           // bytes 4 to 7
+  Messages(message_count, message_count, (available - 8), tally) messages[:byte-size-single-element-array (available - 8)];
+} Packet;
 

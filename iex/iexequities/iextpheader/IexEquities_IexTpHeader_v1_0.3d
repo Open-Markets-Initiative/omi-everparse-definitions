@@ -1,42 +1,86 @@
-// Investors Exchange IexTp Header
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Iex IexEquities IexTpHeader Udp v1.0
 //
+// Protocol:
+//   Organization: Investors Exchange
+//   Protocol: IexTp Header
+//   Encoding: User Datagram Protocol
+//   Version: 1.0
+//   Date: 9/20/2015
+//   Specification: IEX Transport Specification v1.26.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out IexEquities_IexTpHeader_v1_0.3d
-//
-// What this definition does not state, and the model does:
-// - the dispatch that chooses a message by its type
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Iextp Header: 40 bytes --------------------------------------------------
+// ---- Types -------------------------------------------------------------------
 
-// IexTp packet header
-entrypoint typedef struct _IextpHeader {
-  UINT8 version;                         // byte 0
-  UINT8 reserved;                        // byte 1
-  UINT16 message_protocol_id;            // bytes 2 to 3
-  UINT32 channel_id;                     // bytes 4 to 7
-  UINT32 session_id;                     // bytes 8 to 11
-  UINT16 payload_length;                 // bytes 12 to 13
-  UINT16 message_count;                  // bytes 14 to 15
-  UINT64 stream_offset;                  // bytes 16 to 23
-  UINT64 first_message_sequence_number;  // bytes 24 to 31
-  UINT64 send_time;                      // bytes 32 to 39
-} IextpHeader;
+// IexTp message
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16 message_length { message_length >= 1 };                                                                                                                   // bytes 0 to 1
+  UINT8 message_type;                                                                                                                                              // byte 2
+  UINT8 message_data[(((UINT32) message_length) - 1)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
 
-// ---- Message Header: 3 bytes -------------------------------------------------
+// IexTp message
+typedef struct _MessageRun (UINT16 message_count, UINT32 available, mutable UINT32 * tally) {
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size available];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} MessageRun;
 
-// IexTp message header
-entrypoint typedef struct _MessageHeader {
-  UINT16 message_length;  // bytes 0 to 1
-  UINT8 message_type;     // byte 2
-} MessageHeader;
+// Branch
+casetype _Messages (UINT16 selector, UINT16 message_count, UINT32 available, mutable UINT32 * tally) {
+  switch (selector) {
+    case 0x0000: unit heartbeat;
+    default: MessageRun(message_count, available, tally) message;
+  }
+} Messages;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// IexTp Udp Packet
+entrypoint typedef struct _Packet (mutable UINT32 * tally) {
+  UINT8 version;                                                                                                                                 // byte 0
+  UINT8 reserved;                                                                                                                                // byte 1
+  UINT16 message_protocol_id;                                                                                                                    // bytes 2 to 3
+  UINT32 channel_id;                                                                                                                             // bytes 4 to 7
+  UINT32 session_id;                                                                                                                             // bytes 8 to 11
+  UINT16 payload_length;                                                                                                                         // bytes 12 to 13
+  UINT16 message_count;                                                                                                                          // bytes 14 to 15
+  UINT64 stream_offset;                                                                                                                          // bytes 16 to 23
+  UINT64 first_message_sequence_number;                                                                                                          // bytes 24 to 31
+  UINT64 send_time;                                                                                                                              // bytes 32 to 39
+  Messages(message_count, message_count, ((UINT32) payload_length), tally) messages[:byte-size-single-element-array ((UINT32) payload_length)];
+} Packet;
 

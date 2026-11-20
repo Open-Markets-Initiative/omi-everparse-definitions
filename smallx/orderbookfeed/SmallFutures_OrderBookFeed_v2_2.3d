@@ -1,38 +1,658 @@
-// The Small Exchange Order Book Feed
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: SmallX OrderBookFeed Sbe v2.2
 //
+// Protocol:
+//   Organization: The Small Exchange
+//   Protocol: Order Book Feed
+//   Encoding: Simple Binary Encoding
+//   Version: 2.2
+//   Date: 10/12/2021
+//   Specification: Small Exchange Market Data Feed 2.2.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out SmallFutures_OrderBookFeed_v2_2.3d
-//
-// What this definition does not state, and the model does:
-// - a field read in bits
-// - a length prefix framing what follows
-// - a block whose stated length holds more than its fields
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Message Header: 8 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// SmallX Sbe message header
-entrypoint typedef struct _MessageHeader {
-  UINT16 block_length;  // bytes 0 to 1
-  UINT16 template_id;   // bytes 2 to 3
-  UINT16 schema_id;     // bytes 4 to 5
-  UINT16 version;       // bytes 6 to 7
-} MessageHeader;
+// Template Id: 2 byte code
+#define TEMPLATE_ID_INSTRUMENT_TRADING_STATUS_INCREMENTAL_MESSAGE 0x0003         // Instrument Trading Status Incremental Message
+#define TEMPLATE_ID_TRADES_INCREMENTAL_MESSAGE 0x0004                            // Trades Incremental Message
+#define TEMPLATE_ID_TRADE_CORRECT_MESSAGE 0x0005                                 // Trade Correct Message
+#define TEMPLATE_ID_TRADE_BUST_MESSAGE 0x0006                                    // Trade Bust Message
+#define TEMPLATE_ID_ORDER_BOOK_INCREMENTAL_MESSAGE 0x0007                        // Order Book Incremental Message
+#define TEMPLATE_ID_MARKET_SUMMARY_INCREMENTAL_MESSAGE 0x0008                    // Market Summary Incremental Message
+#define TEMPLATE_ID_ORDER_BOOK_SNAPSHOT_MESSAGE 0x000B                           // Order Book Snapshot Message
+#define TEMPLATE_ID_MARKET_SUMMARY_SNAPSHOT_MESSAGE 0x000C                       // Market Summary Snapshot Message
+#define TEMPLATE_ID_INDEX_VALUE_SNAPSHOT_MESSAGE 0x000D                          // Index Value Snapshot Message
+#define TEMPLATE_ID_SINGLE_INSTRUMENT_DEFINITION_INCREMENTAL_V_2_MESSAGE 0x000E  // Single Instrument Definition Incremental V 2 Message
+#define TEMPLATE_ID_MULTILEG_DEFINITION_INCREMENTAL_V_2_MESSAGE 0x000F           // Multileg Definition Incremental V 2 Message
+#define TEMPLATE_ID_SINGLE_INSTRUMENT_DEFINITION_SNAPSHOT_V_2_MESSAGE 0x0010     // Single Instrument Definition Snapshot V 2 Message
+#define TEMPLATE_ID_MULTILEG_DEFINITION_SNAPSHOT_V_2_MESSAGE 0x0011              // Multileg Definition Snapshot V 2 Message
 
-// ---- Group Dimension: 3 bytes ------------------------------------------------
+// Instrument Trading Status: one byte code
+#define INSTRUMENT_TRADING_STATUS_CLOSED 0x43       // Closed
+#define INSTRUMENT_TRADING_STATUS_PRE_OPEN 0x50     // Pre Open
+#define INSTRUMENT_TRADING_STATUS_PRE_OPEN_NC 0x4E  // Pre Open Nc
+#define INSTRUMENT_TRADING_STATUS_OPEN 0x4F         // Open
+#define INSTRUMENT_TRADING_STATUS_PAUSED 0x55       // Paused
+#define INSTRUMENT_TRADING_STATUS_HALTED 0x48       // Halted
 
-// GroupDimension
-entrypoint typedef struct _GroupDimension {
-  UINT16 block_length;  // bytes 0 to 1
-  UINT8 num_in_group;   // byte 2
-} GroupDimension;
+// Aggressor Side: one byte code
+#define AGGRESSOR_SIDE_NO_AGGRESSOR 0x4E  // No Aggressor
+#define AGGRESSOR_SIDE_BUY 0x42           // Buy
+#define AGGRESSOR_SIDE_SELL 0x53          // Sell
+
+// Trade Update Action: one byte code
+#define TRADE_UPDATE_ACTION_NEW 0x4E     // New
+#define TRADE_UPDATE_ACTION_DELETE 0x44  // Delete
+
+// Order Update Action: one byte code
+#define ORDER_UPDATE_ACTION_NEW 0x4E     // New
+#define ORDER_UPDATE_ACTION_UPDATE 0x55  // Update
+#define ORDER_UPDATE_ACTION_DELETE 0x44  // Delete
+
+// Side: one byte code
+#define SIDE_BUY 0x42   // Buy
+#define SIDE_SELL 0x53  // Sell
+
+// Open Price Type: one byte code
+#define OPEN_PRICE_TYPE_INDICATIVE 0x49  // Indicative
+#define OPEN_PRICE_TYPE_TRADED 0x54      // Traded
+#define OPEN_PRICE_TYPE_NO_PRICE 0x4E    // No Price
+
+// Settlement Price Type: one byte code
+#define SETTLEMENT_PRICE_TYPE_FINAL 0x46        // Final
+#define SETTLEMENT_PRICE_TYPE_PRELIMINARY 0x50  // Preliminary
+#define SETTLEMENT_PRICE_TYPE_NO_PRICE 0x4E     // No Price
+
+// Instrument Update Action: one byte code
+#define INSTRUMENT_UPDATE_ACTION_ADD 0x41     // Add
+#define INSTRUMENT_UPDATE_ACTION_DELETE 0x44  // Delete
+#define INSTRUMENT_UPDATE_ACTION_MODIFY 0x4D  // Modify
+
+// Instrument Type: one byte code
+#define INSTRUMENT_TYPE_FUTURES 0x46  // Futures
+#define INSTRUMENT_TYPE_OPTION 0x4F   // Option
+#define INSTRUMENT_TYPE_MLEG 0x4D     // Mleg
+
+// Put Or Call: one byte code
+#define PUT_OR_CALL_PUT 0x50         // Put
+#define PUT_OR_CALL_CALL 0x43        // Call
+#define PUT_OR_CALL_NOT_OPTION 0x4E  // Not Option
+
+// Expiration Style: one byte code
+#define EXPIRATION_STYLE_STANDARD 0x53  // Standard
+#define EXPIRATION_STYLE_DAILY 0x44     // Daily
+#define EXPIRATION_STYLE_WEEKLY 0x57    // Weekly
+#define EXPIRATION_STYLE_QUATERLY 0x51  // Quaterly
+
+// Exercise Style: one byte code
+#define EXERCISE_STYLE_EUROPEAN 0x45    // European
+#define EXERCISE_STYLE_AMERICAN 0x41    // American
+#define EXERCISE_STYLE_NOT_OPTION 0x4E  // Not Option
+
+// Delivery: one byte code
+#define DELIVERY_CASH 0x43      // Cash
+#define DELIVERY_PHYSICAL 0x50  // Physical
+
+// Strategy Type: one byte code
+#define STRATEGY_TYPE_CUSTOM 0x00                   // Custom
+#define STRATEGY_TYPE_FUTURES_CALENDAR 0x01         // Futures Calendar
+#define STRATEGY_TYPE_FUTURES_INTER_COMMODITY 0x02  // Futures Inter Commodity
+#define STRATEGY_TYPE_COVERED 0x03                  // Covered
+#define STRATEGY_TYPE_OPTION_BUTTERFLY 0x04         // Option Butterfly
+#define STRATEGY_TYPE_OPTION_VERTICAL 0x05          // Option Vertical
+#define STRATEGY_TYPE_OPTION_STRANGLE 0x06          // Option Strangle
+#define STRATEGY_TYPE_OPTION_STRADDLE 0x07          // Option Straddle
+#define STRATEGY_TYPE_OPTION_DIAGONAL 0x08          // Option Diagonal
+#define STRATEGY_TYPE_OPTION_CALENDAR 0x09          // Option Calendar
+#define STRATEGY_TYPE_OPTION_IRON_CONDOR 0x0A       // Option Iron Condor
+#define STRATEGY_TYPE_PROTECTIVE_PUT 0x0B           // Protective Put
+
+// Leg Side: one byte code
+#define LEG_SIDE_BUY 0x42   // Buy
+#define LEG_SIDE_SELL 0x53  // Sell
+
+// ---- Types -------------------------------------------------------------------
+
+// Sent on updated instrument trading session status individually for every instrument
+typedef struct _InstrumentTradingStatusIncrementalMessage {
+  UINT32 instrument_id;             // bytes 0 to 3, signed, read here as unsigned
+  UINT64 instrument_message_no;     // bytes 4 to 11, signed, read here as unsigned
+  UINT64 transact_time;             // bytes 12 to 19, signed, read here as unsigned
+  UINT16 trading_session_date;      // bytes 20 to 21
+  UINT8 instrument_trading_status;  // byte 22
+  UINT16 transaction_begin : 1;     // bytes 23 to 24
+  UINT16 transaction_end : 1;       // bytes 23 to 24
+  UINT16 instrument_begin : 1;      // bytes 23 to 24
+  UINT16 instrument_end : 1;        // bytes 23 to 24
+  UINT16 book_begin : 1;            // bytes 23 to 24
+  UINT16 book_end : 1;              // bytes 23 to 24
+  UINT16 book_reset : 1;            // bytes 23 to 24
+  UINT16 reserved_9 : 9;            // bytes 23 to 24
+} InstrumentTradingStatusIncrementalMessage;
+
+// NoTrades
+typedef struct _IncrementalTradeGroup {
+  UINT64 trade_id;          // bytes 0 to 7, signed, read here as unsigned
+  UINT64 price;             // bytes 8 to 15, signed, read here as unsigned
+  UINT64 size;              // bytes 16 to 23, signed, read here as unsigned
+  UINT8 aggressor_side;     // byte 24
+  UINT64 buy_order_id;      // bytes 25 to 32, signed, read here as unsigned
+  UINT64 sell_order_id;     // bytes 33 to 40, signed, read here as unsigned
+  UINT16 synthetic : 1;     // bytes 41 to 42
+  UINT16 auction : 1;       // bytes 41 to 42
+  UINT16 reserved_14 : 14;  // bytes 41 to 42
+} IncrementalTradeGroup;
+
+// Trades repeating group
+typedef struct _IncrementalTradeGroups {
+  UINT16 block_length;                                                                       // bytes 0 to 1
+  UINT8 num_in_group;                                                                        // byte 2
+  IncrementalTradeGroup incremental_trade_group[:byte-size (((UINT32) num_in_group) * 43)];
+} IncrementalTradeGroups;
+
+// Represents a set of trades for a single instrument resulting from a business event processing
+typedef struct _TradesIncrementalMessage {
+  UINT32 instrument_id;                             // bytes 0 to 3, signed, read here as unsigned
+  UINT64 instrument_message_no;                     // bytes 4 to 11, signed, read here as unsigned
+  UINT64 transact_time;                             // bytes 12 to 19, signed, read here as unsigned
+  UINT16 trading_session_date;                      // bytes 20 to 21
+  UINT8 instrument_trading_status;                  // byte 22
+  UINT16 transaction_begin : 1;                     // bytes 23 to 24
+  UINT16 transaction_end : 1;                       // bytes 23 to 24
+  UINT16 instrument_begin : 1;                      // bytes 23 to 24
+  UINT16 instrument_end : 1;                        // bytes 23 to 24
+  UINT16 book_begin : 1;                            // bytes 23 to 24
+  UINT16 book_end : 1;                              // bytes 23 to 24
+  UINT16 book_reset : 1;                            // bytes 23 to 24
+  UINT16 reserved_9 : 9;                            // bytes 23 to 24
+  UINT64 last_trade_price;                          // bytes 25 to 32, signed, read here as unsigned
+  UINT64 last_trade_size;                           // bytes 33 to 40, signed, read here as unsigned
+  UINT64 last_trade_time_optional;                  // bytes 41 to 48, signed, read here as unsigned
+  UINT64 total_volume;                              // bytes 49 to 56, signed, read here as unsigned
+  IncrementalTradeGroups incremental_trade_groups;
+} TradesIncrementalMessage;
+
+// NoTrades
+typedef struct _TradeCorrectGroup {
+  UINT8 trade_update_action;  // byte 0
+  UINT64 trade_id;            // bytes 1 to 8, signed, read here as unsigned
+  UINT64 time;                // bytes 9 to 16, signed, read here as unsigned
+  UINT64 price;               // bytes 17 to 24, signed, read here as unsigned
+  UINT64 size;                // bytes 25 to 32, signed, read here as unsigned
+  UINT8 aggressor_side;       // byte 33
+  UINT64 buy_order_id;        // bytes 34 to 41, signed, read here as unsigned
+  UINT64 sell_order_id;       // bytes 42 to 49, signed, read here as unsigned
+  UINT16 synthetic : 1;       // bytes 50 to 51
+  UINT16 auction : 1;         // bytes 50 to 51
+  UINT16 reserved_14 : 14;    // bytes 50 to 51
+} TradeCorrectGroup;
+
+// Trades update repeating group
+typedef struct _TradeCorrectGroups {
+  UINT16 block_length;                                                               // bytes 0 to 1
+  UINT8 num_in_group;                                                                // byte 2
+  TradeCorrectGroup trade_correct_group[:byte-size (((UINT32) num_in_group) * 52)];
+} TradeCorrectGroups;
+
+// Represents trade correct message for an instrument. In the repeating group there are always 2 trade update records: data for a busted/deleted trade and data for a new correcting trade
+typedef struct _TradeCorrectMessage {
+  UINT32 instrument_id;                     // bytes 0 to 3, signed, read here as unsigned
+  UINT64 instrument_message_no;             // bytes 4 to 11, signed, read here as unsigned
+  UINT64 transact_time;                     // bytes 12 to 19, signed, read here as unsigned
+  UINT16 trading_session_date;              // bytes 20 to 21
+  UINT8 instrument_trading_status;          // byte 22
+  UINT16 transaction_begin : 1;             // bytes 23 to 24
+  UINT16 transaction_end : 1;               // bytes 23 to 24
+  UINT16 instrument_begin : 1;              // bytes 23 to 24
+  UINT16 instrument_end : 1;                // bytes 23 to 24
+  UINT16 book_begin : 1;                    // bytes 23 to 24
+  UINT16 book_end : 1;                      // bytes 23 to 24
+  UINT16 book_reset : 1;                    // bytes 23 to 24
+  UINT16 reserved_9 : 9;                    // bytes 23 to 24
+  UINT64 last_trade_price;                  // bytes 25 to 32, signed, read here as unsigned
+  UINT64 last_trade_size;                   // bytes 33 to 40, signed, read here as unsigned
+  UINT64 last_trade_time_optional;          // bytes 41 to 48, signed, read here as unsigned
+  UINT64 total_volume;                      // bytes 49 to 56, signed, read here as unsigned
+  TradeCorrectGroups trade_correct_groups;
+} TradeCorrectMessage;
+
+// NoTrades
+typedef struct _TradeBustGroup {
+  UINT64 trade_id;          // bytes 0 to 7, signed, read here as unsigned
+  UINT64 time;              // bytes 8 to 15, signed, read here as unsigned
+  UINT64 price;             // bytes 16 to 23, signed, read here as unsigned
+  UINT64 size;              // bytes 24 to 31, signed, read here as unsigned
+  UINT8 aggressor_side;     // byte 32
+  UINT64 buy_order_id;      // bytes 33 to 40, signed, read here as unsigned
+  UINT64 sell_order_id;     // bytes 41 to 48, signed, read here as unsigned
+  UINT16 synthetic : 1;     // bytes 49 to 50
+  UINT16 auction : 1;       // bytes 49 to 50
+  UINT16 reserved_14 : 14;  // bytes 49 to 50
+} TradeBustGroup;
+
+// Busted trades repeating group
+typedef struct _TradeBustGroups {
+  UINT16 block_length;                                                         // bytes 0 to 1
+  UINT8 num_in_group;                                                          // byte 2
+  TradeBustGroup trade_bust_group[:byte-size (((UINT32) num_in_group) * 51)];
+} TradeBustGroups;
+
+// Represents information about one or more busted trades for an instrument
+typedef struct _TradeBustMessage {
+  UINT32 instrument_id;               // bytes 0 to 3, signed, read here as unsigned
+  UINT64 instrument_message_no;       // bytes 4 to 11, signed, read here as unsigned
+  UINT64 transact_time;               // bytes 12 to 19, signed, read here as unsigned
+  UINT16 trading_session_date;        // bytes 20 to 21
+  UINT8 instrument_trading_status;    // byte 22
+  UINT16 transaction_begin : 1;       // bytes 23 to 24
+  UINT16 transaction_end : 1;         // bytes 23 to 24
+  UINT16 instrument_begin : 1;        // bytes 23 to 24
+  UINT16 instrument_end : 1;          // bytes 23 to 24
+  UINT16 book_begin : 1;              // bytes 23 to 24
+  UINT16 book_end : 1;                // bytes 23 to 24
+  UINT16 book_reset : 1;              // bytes 23 to 24
+  UINT16 reserved_9 : 9;              // bytes 23 to 24
+  UINT64 last_trade_price;            // bytes 25 to 32, signed, read here as unsigned
+  UINT64 last_trade_size;             // bytes 33 to 40, signed, read here as unsigned
+  UINT64 last_trade_time_optional;    // bytes 41 to 48, signed, read here as unsigned
+  UINT64 total_volume;                // bytes 49 to 56, signed, read here as unsigned
+  TradeBustGroups trade_bust_groups;
+} TradeBustMessage;
+
+// NoOrders
+typedef struct _IncrementalOrdersGroup {
+  UINT8 order_update_action;       // byte 0
+  UINT64 order_id;                 // bytes 1 to 8, signed, read here as unsigned
+  UINT64 trade_id_optional;        // bytes 9 to 16, signed, read here as unsigned
+  UINT8 side;                      // byte 17
+  UINT64 price_optional;           // bytes 18 to 25, signed, read here as unsigned
+  UINT64 size;                     // bytes 26 to 33, signed, read here as unsigned
+  UINT64 order_priority_optional;  // bytes 34 to 41, signed, read here as unsigned
+  UINT16 implied : 1;              // bytes 42 to 43
+  UINT16 reserved_15 : 15;         // bytes 42 to 43
+} IncrementalOrdersGroup;
+
+// Orders repeating group
+typedef struct _IncrementalOrdersGroups {
+  UINT16 block_length;                                                                         // bytes 0 to 1
+  UINT8 num_in_group;                                                                          // byte 2
+  IncrementalOrdersGroup incremental_orders_group[:byte-size (((UINT32) num_in_group) * 44)];
+} IncrementalOrdersGroups;
+
+// Reflects updated orders in an instrument central limit order book
+typedef struct _OrderBookIncrementalMessage {
+  UINT32 instrument_id;                               // bytes 0 to 3, signed, read here as unsigned
+  UINT64 instrument_message_no;                       // bytes 4 to 11, signed, read here as unsigned
+  UINT64 transact_time;                               // bytes 12 to 19, signed, read here as unsigned
+  UINT16 trading_session_date;                        // bytes 20 to 21
+  UINT8 instrument_trading_status;                    // byte 22
+  UINT16 transaction_begin : 1;                       // bytes 23 to 24
+  UINT16 transaction_end : 1;                         // bytes 23 to 24
+  UINT16 instrument_begin : 1;                        // bytes 23 to 24
+  UINT16 instrument_end : 1;                          // bytes 23 to 24
+  UINT16 book_begin : 1;                              // bytes 23 to 24
+  UINT16 book_end : 1;                                // bytes 23 to 24
+  UINT16 book_reset : 1;                              // bytes 23 to 24
+  UINT16 reserved_9 : 9;                              // bytes 23 to 24
+  IncrementalOrdersGroups incremental_orders_groups;
+} OrderBookIncrementalMessage;
+
+// Reflects trading session updated summary information of an instrument
+typedef struct _MarketSummaryIncrementalMessage {
+  UINT32 instrument_id;             // bytes 0 to 3, signed, read here as unsigned
+  UINT64 instrument_message_no;     // bytes 4 to 11, signed, read here as unsigned
+  UINT64 transact_time;             // bytes 12 to 19, signed, read here as unsigned
+  UINT16 trading_session_date;      // bytes 20 to 21
+  UINT8 instrument_trading_status;  // byte 22
+  UINT16 transaction_begin : 1;     // bytes 23 to 24
+  UINT16 transaction_end : 1;       // bytes 23 to 24
+  UINT16 instrument_begin : 1;      // bytes 23 to 24
+  UINT16 instrument_end : 1;        // bytes 23 to 24
+  UINT16 book_begin : 1;            // bytes 23 to 24
+  UINT16 book_end : 1;              // bytes 23 to 24
+  UINT16 book_reset : 1;            // bytes 23 to 24
+  UINT16 reserved_9 : 9;            // bytes 23 to 24
+  UINT64 open_price;                // bytes 25 to 32, signed, read here as unsigned
+  UINT8 open_price_type;            // byte 33
+  UINT64 high_price;                // bytes 34 to 41, signed, read here as unsigned
+  UINT64 low_price;                 // bytes 42 to 49, signed, read here as unsigned
+  UINT64 close_price;               // bytes 50 to 57, signed, read here as unsigned
+  UINT64 open_interest;             // bytes 58 to 65, signed, read here as unsigned
+  UINT64 settlement_price;          // bytes 66 to 73, signed, read here as unsigned
+  UINT8 settlement_price_type;      // byte 74
+} MarketSummaryIncrementalMessage;
+
+// NoOrders
+typedef struct _SnapshotOrdersGroup {
+  UINT64 order_id;          // bytes 0 to 7, signed, read here as unsigned
+  UINT8 side;               // byte 8
+  UINT64 price;             // bytes 9 to 16, signed, read here as unsigned
+  UINT64 size;              // bytes 17 to 24, signed, read here as unsigned
+  UINT64 order_priority;    // bytes 25 to 32, signed, read here as unsigned
+  UINT16 implied : 1;       // bytes 33 to 34
+  UINT16 reserved_15 : 15;  // bytes 33 to 34
+  UINT64 time;              // bytes 35 to 42, signed, read here as unsigned
+} SnapshotOrdersGroup;
+
+// Orders repeating group
+typedef struct _SnapshotOrdersGroups {
+  UINT16 block_length;                                                                   // bytes 0 to 1
+  UINT8 num_in_group;                                                                    // byte 2
+  SnapshotOrdersGroup snapshot_orders_group[:byte-size (((UINT32) num_in_group) * 43)];
+} SnapshotOrdersGroups;
+
+// Reflects a snapshot of instrument order book
+typedef struct _OrderBookSnapshotMessage {
+  UINT32 instrument_id;                         // bytes 0 to 3, signed, read here as unsigned
+  UINT64 instrument_message_no;                 // bytes 4 to 11, signed, read here as unsigned
+  UINT64 transact_time;                         // bytes 12 to 19, signed, read here as unsigned
+  UINT16 trading_session_date;                  // bytes 20 to 21
+  UINT8 instrument_trading_status;              // byte 22
+  UINT16 unused_bits_0_to_1 : 2;                // bytes 23 to 24
+  UINT16 instrument_begin : 1;                  // bytes 23 to 24
+  UINT16 instrument_end : 1;                    // bytes 23 to 24
+  UINT16 book_begin : 1;                        // bytes 23 to 24
+  UINT16 book_end : 1;                          // bytes 23 to 24
+  UINT16 unused_bit_6 : 1;                      // bytes 23 to 24
+  UINT16 snapshot_begin : 1;                    // bytes 23 to 24
+  UINT16 snapshot_end : 1;                      // bytes 23 to 24
+  UINT16 reserved_7 : 7;                        // bytes 23 to 24
+  UINT32 snapshot_instruments_count;            // bytes 25 to 28, signed, read here as unsigned
+  UINT64 last_incremental_message_seq;          // bytes 29 to 36, signed, read here as unsigned
+  SnapshotOrdersGroups snapshot_orders_groups;
+} OrderBookSnapshotMessage;
+
+// MarketSummarySnapshotMessage
+typedef struct _MarketSummarySnapshotMessage {
+  UINT32 instrument_id;                 // bytes 0 to 3, signed, read here as unsigned
+  UINT64 instrument_message_no;         // bytes 4 to 11, signed, read here as unsigned
+  UINT64 transact_time;                 // bytes 12 to 19, signed, read here as unsigned
+  UINT16 trading_session_date;          // bytes 20 to 21
+  UINT8 instrument_trading_status;      // byte 22
+  UINT16 unused_bits_0_to_1 : 2;        // bytes 23 to 24
+  UINT16 instrument_begin : 1;          // bytes 23 to 24
+  UINT16 instrument_end : 1;            // bytes 23 to 24
+  UINT16 book_begin : 1;                // bytes 23 to 24
+  UINT16 book_end : 1;                  // bytes 23 to 24
+  UINT16 unused_bit_6 : 1;              // bytes 23 to 24
+  UINT16 snapshot_begin : 1;            // bytes 23 to 24
+  UINT16 snapshot_end : 1;              // bytes 23 to 24
+  UINT16 reserved_7 : 7;                // bytes 23 to 24
+  UINT32 snapshot_instruments_count;    // bytes 25 to 28, signed, read here as unsigned
+  UINT64 last_incremental_message_seq;  // bytes 29 to 36, signed, read here as unsigned
+  UINT64 last_trade_price;              // bytes 37 to 44, signed, read here as unsigned
+  UINT64 last_trade_size;               // bytes 45 to 52, signed, read here as unsigned
+  UINT64 last_trade_time;               // bytes 53 to 60, signed, read here as unsigned
+  UINT64 total_volume_optional;         // bytes 61 to 68, signed, read here as unsigned
+  UINT64 open_price;                    // bytes 69 to 76, signed, read here as unsigned
+  UINT8 open_price_type;                // byte 77
+  UINT64 high_price;                    // bytes 78 to 85, signed, read here as unsigned
+  UINT64 low_price;                     // bytes 86 to 93, signed, read here as unsigned
+  UINT64 close_price;                   // bytes 94 to 101, signed, read here as unsigned
+  UINT64 open_interest;                 // bytes 102 to 109, signed, read here as unsigned
+  UINT64 settlement_price;              // bytes 110 to 117, signed, read here as unsigned
+  UINT8 settlement_price_type;          // byte 118
+} MarketSummarySnapshotMessage;
+
+// Contains the last calculated index value and the most recent Open-High-Low-Close values
+typedef struct _IndexValueSnapshotMessage {
+  UINT32 instrument_id;           // bytes 0 to 3, signed, read here as unsigned
+  UINT64 transact_time;           // bytes 4 to 11, signed, read here as unsigned
+  UINT16 unused_bits_0_to_1 : 2;  // bytes 12 to 13
+  UINT16 instrument_begin : 1;    // bytes 12 to 13
+  UINT16 instrument_end : 1;      // bytes 12 to 13
+  UINT16 book_begin : 1;          // bytes 12 to 13
+  UINT16 book_end : 1;            // bytes 12 to 13
+  UINT16 unused_bit_6 : 1;        // bytes 12 to 13
+  UINT16 snapshot_begin : 1;      // bytes 12 to 13
+  UINT16 snapshot_end : 1;        // bytes 12 to 13
+  UINT16 reserved_7 : 7;          // bytes 12 to 13
+  UINT32 index_count;             // bytes 14 to 17, signed, read here as unsigned
+  UINT8 index_symbol[20];         // bytes 18 to 37
+  UINT64 value;                   // bytes 38 to 45, signed, read here as unsigned
+  UINT16 session_date;            // bytes 46 to 47
+  UINT64 open_price;              // bytes 48 to 55, signed, read here as unsigned
+  UINT64 high_price;              // bytes 56 to 63, signed, read here as unsigned
+  UINT64 low_price;               // bytes 64 to 71, signed, read here as unsigned
+  UINT64 close_price;             // bytes 72 to 79, signed, read here as unsigned
+} IndexValueSnapshotMessage;
+
+// Sent on added/updated/deleted futures or option instrument on the market
+typedef struct _SingleInstrumentDefinitionIncrementalV2Message {
+  UINT32 instrument_id;               // bytes 0 to 3, signed, read here as unsigned
+  UINT64 instrument_message_no;       // bytes 4 to 11, signed, read here as unsigned
+  UINT64 transact_time;               // bytes 12 to 19, signed, read here as unsigned
+  UINT16 trading_session_date;        // bytes 20 to 21
+  UINT8 instrument_trading_status;    // byte 22
+  UINT16 transaction_begin : 1;       // bytes 23 to 24
+  UINT16 transaction_end : 1;         // bytes 23 to 24
+  UINT16 instrument_begin : 1;        // bytes 23 to 24
+  UINT16 instrument_end : 1;          // bytes 23 to 24
+  UINT16 book_begin : 1;              // bytes 23 to 24
+  UINT16 book_end : 1;                // bytes 23 to 24
+  UINT16 book_reset : 1;              // bytes 23 to 24
+  UINT16 reserved_9 : 9;              // bytes 23 to 24
+  UINT8 instrument_update_action;     // byte 25
+  UINT8 symbol[25];                   // bytes 26 to 50
+  UINT8 product[8];                   // bytes 51 to 58
+  UINT8 description[120];             // bytes 59 to 178
+  UINT8 instrument_type;              // byte 179
+  UINT16 maturity_date;               // bytes 180 to 181
+  UINT16 first_trading_session_date;  // bytes 182 to 183
+  UINT16 last_trading_session_date;   // bytes 184 to 185
+  UINT16 expiration_date;             // bytes 186 to 187
+  UINT8 cfi_code[6];                  // bytes 188 to 193
+  UINT8 currency[3];                  // bytes 194 to 196
+  UINT64 price_increment;             // bytes 197 to 204, signed, read here as unsigned
+  UINT64 price_multiplier;            // bytes 205 to 212, signed, read here as unsigned
+  UINT8 underlying_symbol[25];        // bytes 213 to 237
+  UINT32 underlying_instrument_id;    // bytes 238 to 241, signed, read here as unsigned
+  UINT8 put_or_call;                  // byte 242
+  UINT64 strike_price;                // bytes 243 to 250, signed, read here as unsigned
+  UINT64 shares_per_contract;         // bytes 251 to 258, signed, read here as unsigned
+  UINT8 expiration_style;             // byte 259
+  UINT8 exercise_style;               // byte 260
+  UINT8 delivery;                     // byte 261
+} SingleInstrumentDefinitionIncrementalV2Message;
+
+// NoLegs
+typedef struct _LegsGroup {
+  UINT32 leg_instrument_id;   // bytes 0 to 3, signed, read here as unsigned
+  UINT8 leg_symbol[25];       // bytes 4 to 28
+  UINT8 leg_product[8];       // bytes 29 to 36
+  UINT64 leg_ratio_quantity;  // bytes 37 to 44, signed, read here as unsigned
+  UINT8 leg_side;             // byte 45
+} LegsGroup;
+
+// Legs repeating group
+typedef struct _LegsGroups {
+  UINT16 block_length;                                              // bytes 0 to 1
+  UINT8 num_in_group;                                               // byte 2
+  LegsGroup legs_group[:byte-size (((UINT32) num_in_group) * 46)];
+} LegsGroups;
+
+// Sent on added/updated/deleted multi-leg instrument on the market. Multi-leg instruments with up to 4 legs and ratio from 1 to 5 are supported
+typedef struct _MultilegDefinitionIncrementalV2Message {
+  UINT32 instrument_id;               // bytes 0 to 3, signed, read here as unsigned
+  UINT64 instrument_message_no;       // bytes 4 to 11, signed, read here as unsigned
+  UINT64 transact_time;               // bytes 12 to 19, signed, read here as unsigned
+  UINT16 trading_session_date;        // bytes 20 to 21
+  UINT8 instrument_trading_status;    // byte 22
+  UINT16 transaction_begin : 1;       // bytes 23 to 24
+  UINT16 transaction_end : 1;         // bytes 23 to 24
+  UINT16 instrument_begin : 1;        // bytes 23 to 24
+  UINT16 instrument_end : 1;          // bytes 23 to 24
+  UINT16 book_begin : 1;              // bytes 23 to 24
+  UINT16 book_end : 1;                // bytes 23 to 24
+  UINT16 book_reset : 1;              // bytes 23 to 24
+  UINT16 reserved_9 : 9;              // bytes 23 to 24
+  UINT8 instrument_update_action;     // byte 25
+  UINT8 spread_symbol[120];           // bytes 26 to 145
+  UINT8 description[120];             // bytes 146 to 265
+  UINT8 instrument_type;              // byte 266
+  UINT16 maturity_date;               // bytes 267 to 268
+  UINT16 first_trading_session_date;  // bytes 269 to 270
+  UINT16 last_trading_session_date;   // bytes 271 to 272
+  UINT16 expiration_date;             // bytes 273 to 274
+  UINT8 cfi_code[6];                  // bytes 275 to 280
+  UINT8 currency[3];                  // bytes 281 to 283
+  UINT64 price_increment;             // bytes 284 to 291, signed, read here as unsigned
+  UINT64 price_multiplier;            // bytes 292 to 299, signed, read here as unsigned
+  UINT8 strategy_type;                // byte 300
+  LegsGroups legs_groups;
+} MultilegDefinitionIncrementalV2Message;
+
+// Single futures or option instrument definition
+typedef struct _SingleInstrumentDefinitionSnapshotV2Message {
+  UINT32 instrument_id;                 // bytes 0 to 3, signed, read here as unsigned
+  UINT64 instrument_message_no;         // bytes 4 to 11, signed, read here as unsigned
+  UINT64 transact_time;                 // bytes 12 to 19, signed, read here as unsigned
+  UINT16 trading_session_date;          // bytes 20 to 21
+  UINT8 instrument_trading_status;      // byte 22
+  UINT16 unused_bits_0_to_1 : 2;        // bytes 23 to 24
+  UINT16 instrument_begin : 1;          // bytes 23 to 24
+  UINT16 instrument_end : 1;            // bytes 23 to 24
+  UINT16 book_begin : 1;                // bytes 23 to 24
+  UINT16 book_end : 1;                  // bytes 23 to 24
+  UINT16 unused_bit_6 : 1;              // bytes 23 to 24
+  UINT16 snapshot_begin : 1;            // bytes 23 to 24
+  UINT16 snapshot_end : 1;              // bytes 23 to 24
+  UINT16 reserved_7 : 7;                // bytes 23 to 24
+  UINT32 snapshot_instruments_count;    // bytes 25 to 28, signed, read here as unsigned
+  UINT64 last_incremental_message_seq;  // bytes 29 to 36, signed, read here as unsigned
+  UINT8 symbol[25];                     // bytes 37 to 61
+  UINT8 product[8];                     // bytes 62 to 69
+  UINT8 description[120];               // bytes 70 to 189
+  UINT8 instrument_type;                // byte 190
+  UINT16 maturity_date;                 // bytes 191 to 192
+  UINT16 first_trading_session_date;    // bytes 193 to 194
+  UINT16 last_trading_session_date;     // bytes 195 to 196
+  UINT16 expiration_date;               // bytes 197 to 198
+  UINT8 cfi_code[6];                    // bytes 199 to 204
+  UINT8 currency[3];                    // bytes 205 to 207
+  UINT64 price_increment;               // bytes 208 to 215, signed, read here as unsigned
+  UINT64 price_multiplier;              // bytes 216 to 223, signed, read here as unsigned
+  UINT8 underlying_symbol[25];          // bytes 224 to 248
+  UINT32 underlying_instrument_id;      // bytes 249 to 252, signed, read here as unsigned
+  UINT8 put_or_call;                    // byte 253
+  UINT64 strike_price;                  // bytes 254 to 261, signed, read here as unsigned
+  UINT64 shares_per_contract;           // bytes 262 to 269, signed, read here as unsigned
+  UINT8 expiration_style;               // byte 270
+  UINT8 exercise_style;                 // byte 271
+  UINT8 delivery;                       // byte 272
+} SingleInstrumentDefinitionSnapshotV2Message;
+
+// Multi-leg instrument definition for futures or option strategies
+typedef struct _MultilegDefinitionSnapshotV2Message {
+  UINT32 instrument_id;                 // bytes 0 to 3, signed, read here as unsigned
+  UINT64 instrument_message_no;         // bytes 4 to 11, signed, read here as unsigned
+  UINT64 transact_time;                 // bytes 12 to 19, signed, read here as unsigned
+  UINT16 trading_session_date;          // bytes 20 to 21
+  UINT8 instrument_trading_status;      // byte 22
+  UINT16 unused_bits_0_to_1 : 2;        // bytes 23 to 24
+  UINT16 instrument_begin : 1;          // bytes 23 to 24
+  UINT16 instrument_end : 1;            // bytes 23 to 24
+  UINT16 book_begin : 1;                // bytes 23 to 24
+  UINT16 book_end : 1;                  // bytes 23 to 24
+  UINT16 unused_bit_6 : 1;              // bytes 23 to 24
+  UINT16 snapshot_begin : 1;            // bytes 23 to 24
+  UINT16 snapshot_end : 1;              // bytes 23 to 24
+  UINT16 reserved_7 : 7;                // bytes 23 to 24
+  UINT32 snapshot_instruments_count;    // bytes 25 to 28, signed, read here as unsigned
+  UINT64 last_incremental_message_seq;  // bytes 29 to 36, signed, read here as unsigned
+  UINT8 spread_symbol[120];             // bytes 37 to 156
+  UINT8 description[120];               // bytes 157 to 276
+  UINT8 instrument_type;                // byte 277
+  UINT16 maturity_date;                 // bytes 278 to 279
+  UINT16 first_trading_session_date;    // bytes 280 to 281
+  UINT16 last_trading_session_date;     // bytes 282 to 283
+  UINT16 expiration_date;               // bytes 284 to 285
+  UINT8 cfi_code[6];                    // bytes 286 to 291
+  UINT8 currency[3];                    // bytes 292 to 294
+  UINT64 price_increment;               // bytes 295 to 302, signed, read here as unsigned
+  UINT64 price_multiplier;              // bytes 303 to 310, signed, read here as unsigned
+  UINT8 strategy_type;                  // byte 311
+  LegsGroups legs_groups;
+} MultilegDefinitionSnapshotV2Message;
+
+// Branch
+casetype _Payload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x0003: InstrumentTradingStatusIncrementalMessage instrument_trading_status_incremental_message;
+    case 0x0004: TradesIncrementalMessage trades_incremental_message;
+    case 0x0005: TradeCorrectMessage trade_correct_message;
+    case 0x0006: TradeBustMessage trade_bust_message;
+    case 0x0007: OrderBookIncrementalMessage order_book_incremental_message;
+    case 0x0008: MarketSummaryIncrementalMessage market_summary_incremental_message;
+    case 0x000B: OrderBookSnapshotMessage order_book_snapshot_message;
+    case 0x000C: MarketSummarySnapshotMessage market_summary_snapshot_message;
+    case 0x000D: IndexValueSnapshotMessage index_value_snapshot_message;
+    case 0x000E: SingleInstrumentDefinitionIncrementalV2Message single_instrument_definition_incremental_v_2_message;
+    case 0x000F: MultilegDefinitionIncrementalV2Message multileg_definition_incremental_v_2_message;
+    case 0x0010: SingleInstrumentDefinitionSnapshotV2Message single_instrument_definition_snapshot_v_2_message;
+    case 0x0011: MultilegDefinitionSnapshotV2Message multileg_definition_snapshot_v_2_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// Sbe Frame
+typedef struct _SbeFrame (mutable UINT32 * tally) {
+  UINT16 frame_length { frame_length >= 10 };                                                                                                                      // bytes 0 to 1
+  UINT16 block_length;                                                                                                                                             // bytes 2 to 3
+  UINT16 template_id;                                                                                                                                              // bytes 4 to 5
+  UINT16 schema_id;                                                                                                                                                // bytes 6 to 7
+  UINT16 version;                                                                                                                                                  // bytes 8 to 9
+  Payload(template_id, (((UINT32) frame_length) - 10)) payload[:byte-size-single-element-array (((UINT32) frame_length) - 10)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} SbeFrame;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Order Book Feed Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 10) {
+  UINT8 channel_id;                                                                                                           // byte 0
+  UINT16 incarnation;                                                                                                         // bytes 1 to 2
+  UINT8 source;                                                                                                               // byte 3
+  UINT8 incarnation_end : 1;                                                                                                  // byte 4
+  UINT8 retransmission : 1;                                                                                                   // byte 4
+  UINT8 administrative : 1;                                                                                                   // byte 4
+  UINT8 reserved_5 : 5;                                                                                                       // byte 4
+  UINT32 message_sequence;                                                                                                    // bytes 5 to 8
+  UINT8 message_count;                                                                                                        // byte 9
+  unit sbe_frame_tally_start {:on-success *tally = 0; return true; };
+  SbeFrame(tally) sbe_frame[:byte-size (available - 10)];
+  unit sbe_frame_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} Packet;
 

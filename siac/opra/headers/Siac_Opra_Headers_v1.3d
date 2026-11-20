@@ -1,51 +1,261 @@
-// The Securities Industry Automation Corporation Headers
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Siac Opra Headers Udp v1
 //
+// Protocol:
+//   Organization: The Securities Industry Automation Corporation
+//   Protocol: Headers
+//   Encoding: User Datagram Protocol
+//   Version: 1
+//   Date: 8/3/2022
+//   Specification: https://www.opraplan.com/document-library
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out Siac_Opra_Headers_v1.3d
 //
-// What this definition does not state, and the model does:
-// - a run counted by a field
-// - a length prefix framing what follows
-//
-// License: MIT No Attribution
+// What this definition reads more loosely than the model states:
+// - an integrity check is read at its width and not checked against the bytes it covers
+// - a pad ending its frame after a run of no fixed width is what is left of the frame, and is not checked to reach no further than the boundary
 
-// ---- Block Timestamp: 8 bytes ------------------------------------------------
+// ---- Values ------------------------------------------------------------------
+
+// Retransmission Indicator: one byte code
+#define RETRANSMISSION_INDICATOR_NOT_RETRANSMITTED 0x20  // Not Retransmitted
+#define RETRANSMISSION_INDICATOR_RETRANSMITTED 0x56      // Retransmitted
+
+// Participant Id: one byte code
+#define PARTICIPANT_ID_AMEX 0x41     // Amex
+#define PARTICIPANT_ID_BOX 0x42      // Box
+#define PARTICIPANT_ID_CBOE 0x43     // Cboe
+#define PARTICIPANT_ID_EMERALD 0x44  // Emerald
+#define PARTICIPANT_ID_EDGX 0x45     // Edgx
+#define PARTICIPANT_ID_GEMX 0x48     // Gemx
+#define PARTICIPANT_ID_ISE 0x49      // Ise
+#define PARTICIPANT_ID_MRX 0x4A      // Mrx
+#define PARTICIPANT_ID_MIAX 0x4D     // Miax
+#define PARTICIPANT_ID_NYSE 0x4E     // Nyse
+#define PARTICIPANT_ID_OPRA 0x4F     // Opra
+#define PARTICIPANT_ID_PEARL 0x50    // Pearl
+#define PARTICIPANT_ID_NASD 0x51     // Nasd
+#define PARTICIPANT_ID_BX 0x54       // Bx
+#define PARTICIPANT_ID_MEMX 0x55     // Memx
+#define PARTICIPANT_ID_C2 0x57       // C2
+#define PARTICIPANT_ID_PHLX 0x58     // Phlx
+#define PARTICIPANT_ID_BATS 0x5A     // Bats
+
+// Control Message Type: one byte code
+#define CONTROL_MESSAGE_TYPE_START_OF_DAY 0x43                              // Start Of Day
+#define CONTROL_MESSAGE_TYPE_START_OF_SUMMARY 0x45                          // Start Of Summary
+#define CONTROL_MESSAGE_TYPE_END_OF_SUMMARY 0x46                            // End Of Summary
+#define CONTROL_MESSAGE_TYPE_END_OF_DAY 0x4A                                // End Of Day
+#define CONTROL_MESSAGE_TYPE_RESET_BLOCK_SEQUENCE_NUMBER 0x4B               // Reset Block Sequence Number
+#define CONTROL_MESSAGE_TYPE_START_OF_OPEN_INTEREST 0x4C                    // Start Of Open Interest
+#define CONTROL_MESSAGE_TYPE_END_OF_OPEN_INTEREST 0x4D                      // End Of Open Interest
+#define CONTROL_MESSAGE_TYPE_LINE_INTEGRITY 0x4E                            // Line Integrity
+#define CONTROL_MESSAGE_TYPE_DISASTER_RECOVERY_DATA_CENTER_ACTIVATION 0x50  // Disaster Recovery Data Center Activation
+
+// ---- Types -------------------------------------------------------------------
 
 // Opra packet timestamp
-entrypoint typedef struct _BlockTimestamp {
+typedef struct _BlockTimestamp {
   UINT32BE seconds;      // bytes 0 to 3
   UINT32BE nanoseconds;  // bytes 4 to 7
 } BlockTimestamp;
 
-// ---- Block Header: 21 bytes --------------------------------------------------
-
-// Opra packet header
-entrypoint typedef struct _BlockHeader {
-  UINT8 version;                   // byte 0
-  UINT16BE block_size;             // bytes 1 to 2
-  UINT8 data_feed_indicator;       // byte 3
-  UINT8 retransmission_indicator;  // byte 4
-  UINT8 session_indicator;         // byte 5
-  UINT32BE block_sequence_number;  // bytes 6 to 9
-  UINT8 messages_in_block;         // byte 10
-  BlockTimestamp block_timestamp;  // bytes 11 to 18
-  UINT16BE block_checksum;         // bytes 19 to 20
-} BlockHeader;
-
-// ---- Control Message: 10 bytes -----------------------------------------------
+// Administrative message
+typedef struct _AdministrativeMessage {
+  UINT8 message_type;                                  // byte 0
+  UINT8 message_indicator;                             // byte 1
+  UINT32BE transaction_id;                             // bytes 2 to 5
+  UINT32BE participant_reference_number;               // bytes 6 to 9
+  UINT16BE message_data_length;                        // bytes 10 to 11
+  UINT8 message_data[((UINT32) message_data_length)];
+} AdministrativeMessage;
 
 // Control message
-entrypoint typedef struct _ControlMessage {
+typedef struct _ControlMessage {
   UINT8 control_message_type;             // byte 0
   UINT8 message_indicator;                // byte 1
   UINT32BE transaction_id;                // bytes 2 to 5
   UINT32BE participant_reference_number;  // bytes 6 to 9
 } ControlMessage;
+
+// Branch
+casetype _Payload (UINT8 selector) {
+  switch (selector) {
+    case 0x43: AdministrativeMessage administrative_message;
+    case 0x48: ControlMessage control_message;
+  }
+} Payload;
+
+// Opra Obi Block Data containing messages
+typedef struct _Message {
+  UINT8 participant_id;               // byte 0
+  UINT8 message_category;             // byte 1
+  Payload(message_category) payload;
+} Message;
+
+// Opra Obi Block Data containing messages
+casetype _MessagePart1 (Bool present) {
+  switch (present) {
+    case true: Message block;
+    case false: unit none;
+  }
+} MessagePart1;
+
+// Opra Obi Block Data containing messages
+typedef struct _MessageBlock2 {
+  Message first;
+  Message second;
+} MessageBlock2;
+
+// Opra Obi Block Data containing messages
+casetype _MessagePart2 (Bool present) {
+  switch (present) {
+    case true: MessageBlock2 block;
+    case false: unit none;
+  }
+} MessagePart2;
+
+// Opra Obi Block Data containing messages
+typedef struct _MessageBlock4 {
+  MessageBlock2 first;
+  MessageBlock2 second;
+} MessageBlock4;
+
+// Opra Obi Block Data containing messages
+casetype _MessagePart4 (Bool present) {
+  switch (present) {
+    case true: MessageBlock4 block;
+    case false: unit none;
+  }
+} MessagePart4;
+
+// Opra Obi Block Data containing messages
+typedef struct _MessageBlock8 {
+  MessageBlock4 first;
+  MessageBlock4 second;
+} MessageBlock8;
+
+// Opra Obi Block Data containing messages
+casetype _MessagePart8 (Bool present) {
+  switch (present) {
+    case true: MessageBlock8 block;
+    case false: unit none;
+  }
+} MessagePart8;
+
+// Opra Obi Block Data containing messages
+typedef struct _MessageBlock16 {
+  MessageBlock8 first;
+  MessageBlock8 second;
+} MessageBlock16;
+
+// Opra Obi Block Data containing messages
+casetype _MessagePart16 (Bool present) {
+  switch (present) {
+    case true: MessageBlock16 block;
+    case false: unit none;
+  }
+} MessagePart16;
+
+// Opra Obi Block Data containing messages
+typedef struct _MessageBlock32 {
+  MessageBlock16 first;
+  MessageBlock16 second;
+} MessageBlock32;
+
+// Opra Obi Block Data containing messages
+casetype _MessagePart32 (Bool present) {
+  switch (present) {
+    case true: MessageBlock32 block;
+    case false: unit none;
+  }
+} MessagePart32;
+
+// Opra Obi Block Data containing messages
+typedef struct _MessageBlock64 {
+  MessageBlock32 first;
+  MessageBlock32 second;
+} MessageBlock64;
+
+// Opra Obi Block Data containing messages
+casetype _MessagePart64 (Bool present) {
+  switch (present) {
+    case true: MessageBlock64 block;
+    case false: unit none;
+  }
+} MessagePart64;
+
+// Opra Obi Block Data containing messages
+typedef struct _MessageBlock128 {
+  MessageBlock64 first;
+  MessageBlock64 second;
+} MessageBlock128;
+
+// Opra Obi Block Data containing messages
+casetype _MessagePart128 (Bool present) {
+  switch (present) {
+    case true: MessageBlock128 block;
+    case false: unit none;
+  }
+} MessagePart128;
+
+// Opra Obi Block Data containing messages
+typedef struct _MessageCounted (UINT32 count) {
+  MessagePart128(((count & 128) != 0)) part128;
+  MessagePart64(((count & 64) != 0)) part64;
+  MessagePart32(((count & 32) != 0)) part32;
+  MessagePart16(((count & 16) != 0)) part16;
+  MessagePart8(((count & 8) != 0)) part8;
+  MessagePart4(((count & 4) != 0)) part4;
+  MessagePart2(((count & 2) != 0)) part2;
+  MessagePart1(((count & 1) != 0)) part1;
+} MessageCounted;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Opra Udp Packet
+entrypoint typedef struct _Packet {
+  UINT8 version;                                         // byte 0
+  UINT16BE block_size;                                   // bytes 1 to 2
+  UINT8 data_feed_indicator;                             // byte 3
+  UINT8 retransmission_indicator;                        // byte 4
+  UINT8 session_indicator;                               // byte 5
+  UINT32BE block_sequence_number;                        // bytes 6 to 9
+  UINT8 messages_in_block;                               // byte 10
+  BlockTimestamp block_timestamp;                        // bytes 11 to 18
+  UINT16BE block_checksum;                               // bytes 19 to 20
+  MessageCounted(((UINT32) messages_in_block)) message;
+  UINT8 block_pad_byte[:consume-all];
+} Packet;
 

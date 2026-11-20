@@ -1,107 +1,248 @@
-// JSE Limited Basic Native Trading Recovery
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Jse Itac BasicNativeTradingRecovery Ntgi v4.05
 //
+// Protocol:
+//   Organization: JSE Limited
+//   Protocol: Basic Native Trading Recovery
+//   Encoding: Native Trading Gateway Interface
+//   Version: 4.05
+//   Date: 5/28/2024
+//   Specification: JSE Volume 01E - Basic Native Trading Gateway.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out Jse_Itac_BasicNativeTradingRecovery_v4_05.3d
-//
-// What this definition does not state, and the model does:
-// - a length prefix framing what follows
-// - a field read in bits
-//
-// License: MIT No Attribution
 
-// ---- Message Header: 4 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Jse Native Trading Gateway Message Header
-entrypoint typedef struct _MessageHeader {
-  UINT8 start_of_message;  // byte 0
-  UINT16 message_length;   // bytes 1 to 2
-  UINT8 message_type;      // byte 3
-} MessageHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_LOGON_MESSAGE 0x41                       // Logon Message
+#define MESSAGE_TYPE_LOGON_RESPONSE_MESSAGE 0x42              // Logon Response Message
+#define MESSAGE_TYPE_LOGOUT_MESSAGE 0x35                      // Logout Message
+#define MESSAGE_TYPE_HEARTBEAT_MESSAGE 0x30                   // Heartbeat Message
+#define MESSAGE_TYPE_REJECT_MESSAGE 0x33                      // Reject Message
+#define MESSAGE_TYPE_MISSED_MESSAGE_REQUEST_MESSAGE 0x4D      // Missed Message Request Message
+#define MESSAGE_TYPE_MISSED_MESSAGE_REQUEST_ACK_MESSAGE 0x4E  // Missed Message Request Ack Message
+#define MESSAGE_TYPE_TRANSMISSION_COMPLETE_MESSAGE 0x50       // Transmission Complete Message
+#define MESSAGE_TYPE_SYSTEM_STATUS_MESSAGE 0x6E               // System Status Message
+#define MESSAGE_TYPE_EXECUTION_REPORT_MESSAGE 0x38            // Execution Report Message
+#define MESSAGE_TYPE_ORDER_CANCEL_REJECT_MESSAGE 0x39         // Order Cancel Reject Message
+#define MESSAGE_TYPE_ORDER_MASS_CANCEL_REPORT_MESSAGE 0x72    // Order Mass Cancel Report Message
+#define MESSAGE_TYPE_NEWS_MESSAGE 0x5A                        // News Message
+#define MESSAGE_TYPE_BUSINESS_REJECT_MESSAGE 0x6A             // Business Reject Message
 
-// ---- Logon Message: 60 bytes -------------------------------------------------
+// Missed Message Status: one byte code
+#define MISSED_MESSAGE_STATUS_REQUEST_ACCEPTED_SUCCESSFUL 0x00  // Request Accepted Successful
+#define MISSED_MESSAGE_STATUS_REQUEST_LIMIT_REACHED 0x01        // Request Limit Reached
+#define MISSED_MESSAGE_STATUS_INVALID_PARTITION_ID 0x02         // Invalid Partition Id
+#define MISSED_MESSAGE_STATUS_SERVICE_UNAVAILABLE 0x03          // Service Unavailable
+
+// Transmission Status: one byte code
+#define TRANSMISSION_STATUS_ALL_MESSAGES_TRANSMITTED 0x00  // All Messages Transmitted
+#define TRANSMISSION_STATUS_MESSAGE_LIMIT_REACHED 0x01     // Message Limit Reached
+#define TRANSMISSION_STATUS_SERVICE_UNAVAILABLE 0x03       // Service Unavailable
+
+// System Status: one byte code
+#define SYSTEM_STATUS_RECOVERY_SERVICE_RESUMED 0x01      // Recovery Service Resumed
+#define SYSTEM_STATUS_RECOVERY_SERVICE_UNAVAILABLE 0x02  // Recovery Service Unavailable
+#define SYSTEM_STATUS_PARTITION_SUSPENDED 0x03           // Partition Suspended
+
+// Execution Type: one byte code
+#define EXECUTION_TYPE_NEW 0x30               // New
+#define EXECUTION_TYPE_CANCELLED 0x34         // Cancelled
+#define EXECUTION_TYPE_AMENDED_MODIFIED 0x35  // Amended Modified
+#define EXECUTION_TYPE_REJECTED 0x38          // Rejected
+#define EXECUTION_TYPE_SUSPENDED 0x39         // Suspended
+#define EXECUTION_TYPE_EXPIRED 0x43           // Expired
+#define EXECUTION_TYPE_TRADE 0x46             // Trade
+#define EXECUTION_TYPE_TRADE_CORRECT 0x47     // Trade Correct
+#define EXECUTION_TYPE_TRADE_CANCEL 0x48      // Trade Cancel
+#define EXECUTION_TYPE_RESTATED 0x44          // Restated
+#define EXECUTION_TYPE_TRIGGERED 0x4C         // Triggered
+
+// Order Status: one byte code
+#define ORDER_STATUS_NEW 0x00               // New
+#define ORDER_STATUS_PARTIALLY_FILLED 0x01  // Partially Filled
+#define ORDER_STATUS_FILLED 0x02            // Filled
+#define ORDER_STATUS_CANCELLED 0x04         // Cancelled
+#define ORDER_STATUS_EXPIRED 0x06           // Expired
+#define ORDER_STATUS_REJECTED 0x08          // Rejected
+#define ORDER_STATUS_SUSPENDED 0x09         // Suspended
+
+// Working Indicator: one byte code
+#define WORKING_INDICATOR_UNSET 0x00                                      // Unset
+#define WORKING_INDICATOR_ORDER_IS_BEING_WORKED 0x01                      // Order Is Being Worked
+#define WORKING_INDICATOR_ORDER_IS_NOT_CURRENTLY_IN_A_WORKING_STATE 0x02  // Order Is Not Currently In A Working State
+
+// Side: one byte code
+#define SIDE_BUY 0x01   // Buy
+#define SIDE_SELL 0x02  // Sell
+
+// Is Market Ops Request: one byte code
+#define IS_MARKET_OPS_REQUEST_NO 0x00   // No
+#define IS_MARKET_OPS_REQUEST_YES 0x01  // Yes
+
+// Order Book: one byte code
+#define ORDER_BOOK_REGULAR 0x01  // Regular
+
+// Execution Instruction: one byte code
+#define EXECUTION_INSTRUCTION_NONE 0x00                                   // None
+#define EXECUTION_INSTRUCTION_INCLUDE_IN_EOD_VOLUME_AUCTION_UNCROSS 0x02  // Include In Eod Volume Auction Uncross
+
+// Cross Type: one byte code
+#define CROSS_TYPE_INTERNAL_CROSS 0x05                   // Internal Cross
+#define CROSS_TYPE_INTERNAL_CROSS_PRICE_ADJUSTABLE 0x32  // Internal Cross Price Adjustable
+
+// Liquidity Indicator: one byte code
+#define LIQUIDITY_INDICATOR_UNSET 0x00              // Unset
+#define LIQUIDITY_INDICATOR_ADDED_LIQUIDITY 0x01    // Added Liquidity
+#define LIQUIDITY_INDICATOR_REMOVED_LIQUIDITY 0x02  // Removed Liquidity
+#define LIQUIDITY_INDICATOR_AUCTION 0x04            // Auction
+
+// Type Of Trade: one byte code
+#define TYPE_OF_TRADE_VISIBLE 0x00        // Visible
+#define TYPE_OF_TRADE_HIDDEN 0x01         // Hidden
+#define TYPE_OF_TRADE_NOT_SPECIFIED 0x02  // Not Specified
+#define TYPE_OF_TRADE_PEGGED 0x03         // Pegged
+
+// Mass Cancel Status: one byte code
+#define MASS_CANCEL_STATUS_REJECTED 0x00  // Rejected
+#define MASS_CANCEL_STATUS_ACCEPTED 0x07  // Accepted
+
+// Urgency: one byte code
+#define URGENCY_REGULAR 0x30        // Regular
+#define URGENCY_HIGH_PRIORITY 0x31  // High Priority
+#define URGENCY_LOW_PRIORITY 0x32   // Low Priority
+
+// ---- Types -------------------------------------------------------------------
 
 // Allows the client to login to the server.
-entrypoint typedef struct _LogonMessage {
+typedef struct _LogonMessage {
   UINT8 comp_id[6];         // bytes 0 to 5
   UINT8 password[25];       // bytes 6 to 30
   UINT8 new_password[25];   // bytes 31 to 55
   UINT32 protocol_version;  // bytes 56 to 59, signed, read here as unsigned
 } LogonMessage;
 
-// ---- Logon Response Message: 8 bytes -----------------------------------------
-
 // Used by the server to accept or reject a login request.
-entrypoint typedef struct _LogonResponseMessage {
+typedef struct _LogonResponseMessage {
   UINT32 reject_code;      // bytes 0 to 3, signed, read here as unsigned
   UINT32 password_expiry;  // bytes 4 to 7, signed, read here as unsigned
 } LogonResponseMessage;
 
-// ---- Logout Message: 20 bytes ------------------------------------------------
-
 // Used by the client or server to terminate a session.
-entrypoint typedef struct _LogoutMessage {
+typedef struct _LogoutMessage {
   UINT8 reason[20];  // bytes 0 to 19
 } LogoutMessage;
 
-// ---- Reject Message: 55 bytes ------------------------------------------------
-
 // Used by the server to reject a message that does not comply with the specifications.
-entrypoint typedef struct _RejectMessage {
+typedef struct _RejectMessage {
   UINT32 reject_code;         // bytes 0 to 3, signed, read here as unsigned
   UINT8 reject_reason[30];    // bytes 4 to 33
   UINT8 message_type;         // byte 34
   UINT8 client_order_id[20];  // bytes 35 to 54
 } RejectMessage;
 
-// ---- Missed Message Request Message: 5 bytes ---------------------------------
-
 // Used by the client to recover missed messages through the Recovery Channel.
-entrypoint typedef struct _MissedMessageRequestMessage {
+typedef struct _MissedMessageRequestMessage {
   UINT8 partition_id;      // byte 0
   UINT32 sequence_number;  // bytes 1 to 4, signed, read here as unsigned
 } MissedMessageRequestMessage;
 
-// ---- Missed Message Request Ack Message: 1 byte ------------------------------
-
 // Used by the server to accept or reject a request for missed messages.
-entrypoint typedef struct _MissedMessageRequestAckMessage {
+typedef struct _MissedMessageRequestAckMessage {
   UINT8 missed_message_status;  // byte 0
 } MissedMessageRequestAckMessage;
 
-// ---- Transmission Complete Message: 1 byte -----------------------------------
-
 // Used by the server to indicate that the transmission of missed messages is complete.
-entrypoint typedef struct _TransmissionCompleteMessage {
+typedef struct _TransmissionCompleteMessage {
   UINT8 transmission_status;  // byte 0
 } TransmissionCompleteMessage;
 
-// ---- System Status Message: 2 bytes ------------------------------------------
-
 // Disseminated in the recovery channel to indicate the status of a partition.
-entrypoint typedef struct _SystemStatusMessage {
+typedef struct _SystemStatusMessage {
   UINT8 partition_id;   // byte 0
   UINT8 system_status;  // byte 1
 } SystemStatusMessage;
 
-// ---- Transact Time: 8 bytes --------------------------------------------------
-
 // Time the Execution Report was generated
-entrypoint typedef struct _TransactTime {
+typedef struct _TransactTime {
   UINT32 transact_time_seconds;      // bytes 0 to 3
   UINT32 transact_time_nanoseconds;  // bytes 4 to 7
 } TransactTime;
 
-// ---- Order Cancel Reject Message: 50 bytes -----------------------------------
+// Client specified identifier of order relevant to self-match
+casetype _OptionalSelfTradePreventionKey (Bool present) {
+  switch (present) {
+    case true: UINT8 self_trade_prevention_key[12];
+    case false: unit absent;
+  }
+} OptionalSelfTradePreventionKey;
+
+// Indicates the status of an order.
+typedef struct _ExecutionReportMessage (UINT16 message_length) {
+  UINT8 partition_id;                                                                   // byte 0
+  UINT32 sequence_number;                                                               // bytes 1 to 4, signed, read here as unsigned
+  UINT8 execution_id[21];                                                               // bytes 5 to 25
+  UINT8 client_order_id[20];                                                            // bytes 26 to 45
+  UINT8 order_id[12];                                                                   // bytes 46 to 57
+  UINT8 execution_type;                                                                 // byte 58
+  UINT8 order_status;                                                                   // byte 59
+  UINT32 reject_code;                                                                   // bytes 60 to 63, signed, read here as unsigned
+  UINT64 executed_price;                                                                // bytes 64 to 71, signed, read here as unsigned
+  UINT32 executed_quantity;                                                             // bytes 72 to 75, signed, read here as unsigned
+  UINT32 leaves_quantity;                                                               // bytes 76 to 79, signed, read here as unsigned
+  UINT8 working_indicator;                                                              // byte 80
+  UINT32 security_id;                                                                   // bytes 81 to 84, signed, read here as unsigned
+  UINT8 side;                                                                           // byte 85
+  UINT8 trader_mnemonic[17];                                                            // bytes 86 to 102
+  UINT8 account[10];                                                                    // bytes 103 to 112
+  UINT8 is_market_ops_request;                                                          // byte 113
+  TransactTime transact_time;                                                           // bytes 114 to 121
+  UINT8 order_book;                                                                     // byte 122
+  UINT8 execution_instruction;                                                          // byte 123, signed, read here as unsigned
+  UINT8 cross_id[20];                                                                   // bytes 124 to 143
+  UINT8 cross_type;                                                                     // byte 144
+  UINT32 display_quantity;                                                              // bytes 145 to 148, signed, read here as unsigned
+  UINT8 public_order_id[12];                                                            // bytes 149 to 160
+  UINT8 aggressor_indicator : 1;                                                        // byte 161
+  UINT8 reserved_28 : 7;                                                                // byte 161
+  UINT8 liquidity_indicator;                                                            // byte 162
+  UINT8 type_of_trade;                                                                  // byte 163
+  OptionalSelfTradePreventionKey((message_length > 0x00A5)) self_trade_prevention_key;
+} ExecutionReportMessage;
 
 // Indicates that an order cancel or cancel replace request has been rejected.
-entrypoint typedef struct _OrderCancelRejectMessage {
+typedef struct _OrderCancelRejectMessage {
   UINT8 partition_id;          // byte 0
   UINT32 sequence_number;      // bytes 1 to 4, signed, read here as unsigned
   UINT8 client_order_id[20];   // bytes 5 to 24
@@ -111,10 +252,8 @@ entrypoint typedef struct _OrderCancelRejectMessage {
   UINT8 order_book;            // byte 49
 } OrderCancelRejectMessage;
 
-// ---- Order Mass Cancel Report Message: 39 bytes ------------------------------
-
 // Indicates the outcome of an order mass cancel request.
-entrypoint typedef struct _OrderMassCancelReportMessage {
+typedef struct _OrderMassCancelReportMessage {
   UINT8 partition_id;          // byte 0
   UINT32 sequence_number;      // bytes 1 to 4, signed, read here as unsigned
   UINT8 client_order_id[20];   // bytes 5 to 24
@@ -124,10 +263,8 @@ entrypoint typedef struct _OrderMassCancelReportMessage {
   UINT8 order_book;            // byte 38
 } OrderMassCancelReportMessage;
 
-// ---- News Message: 1188 bytes ------------------------------------------------
-
 // Carries a market operations announcement.
-entrypoint typedef struct _NewsMessage {
+typedef struct _NewsMessage {
   UINT8 partition_id;      // byte 0
   UINT32 sequence_number;  // bytes 1 to 4, signed, read here as unsigned
   UINT8 orig_time[24];     // bytes 5 to 28
@@ -140,10 +277,8 @@ entrypoint typedef struct _NewsMessage {
   UINT8 user_list[54];     // bytes 1134 to 1187
 } NewsMessage;
 
-// ---- Business Reject Message: 49 bytes ---------------------------------------
-
 // Indicates that an application message could not be processed.
-entrypoint typedef struct _BusinessRejectMessage {
+typedef struct _BusinessRejectMessage {
   UINT8 partition_id;          // byte 0
   UINT32 sequence_number;      // bytes 1 to 4, signed, read here as unsigned
   UINT32 reject_code;          // bytes 5 to 8, signed, read here as unsigned
@@ -151,4 +286,40 @@ entrypoint typedef struct _BusinessRejectMessage {
   UINT8 order_id[12];          // bytes 29 to 40
   TransactTime transact_time;  // bytes 41 to 48
 } BusinessRejectMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT16 message_length, UINT32 available) {
+  switch (selector) {
+    case 0x41: LogonMessage logon_message;
+    case 0x42: LogonResponseMessage logon_response_message;
+    case 0x35: LogoutMessage logout_message;
+    case 0x30: unit heartbeat_message;
+    case 0x33: RejectMessage reject_message;
+    case 0x4D: MissedMessageRequestMessage missed_message_request_message;
+    case 0x4E: MissedMessageRequestAckMessage missed_message_request_ack_message;
+    case 0x50: TransmissionCompleteMessage transmission_complete_message;
+    case 0x6E: SystemStatusMessage system_status_message;
+    case 0x38: ExecutionReportMessage(message_length) execution_report_message;
+    case 0x39: OrderCancelRejectMessage order_cancel_reject_message;
+    case 0x72: OrderMassCancelReportMessage order_mass_cancel_report_message;
+    case 0x5A: NewsMessage news_message;
+    case 0x6A: BusinessRejectMessage business_reject_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// Native Trading Gateway Message
+typedef struct _Message {
+  UINT8 start_of_message;                                                                                                                                       // byte 0
+  UINT16 message_length { message_length >= 1 };                                                                                                                // bytes 1 to 2
+  UINT8 message_type;                                                                                                                                           // byte 3
+  Payload(message_type, message_length, ((((UINT32) message_length) + 3) - 4)) payload[:byte-size-single-element-array ((((UINT32) message_length) + 3) - 4)];
+} Message;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Jse Native Trading Gateway Tcp Message Block
+entrypoint typedef struct _Packet (UINT32 available) {
+  Message message[:byte-size available];
+} Packet;
 

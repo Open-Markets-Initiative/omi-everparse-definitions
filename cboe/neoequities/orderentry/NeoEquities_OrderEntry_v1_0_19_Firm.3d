@@ -1,37 +1,266 @@
-// Chicago Board Options Exchange Order Entry
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Cboe NeoEquities OrderEntry Boe3 v1.0.19
 //
+// Protocol:
+//   Organization: Chicago Board Options Exchange
+//   Protocol: Order Entry
+//   Encoding: Binary Order Entry 3
+//   Version: 1.0.19
+//   Date: 12/03/2025
+//   Specification: Cboe Canada Equities BOE Specification.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, FirmPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out NeoEquities_OrderEntry_v1_0_19_Firm.3d
-//
-// What this definition does not state, and the model does:
-// - a Reassemble rule
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Firm Message Header: 12 bytes -------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Message header of a packet sent by the firm
-entrypoint typedef struct _FirmMessageHeader {
-  UINT16 start_of_message;   // bytes 0 to 1
-  UINT16 message_length;     // bytes 2 to 3
-  UINT16 firm_message_type;  // bytes 4 to 5
-  UINT8 matching_unit;       // byte 6
-  UINT8 reserved_field;      // byte 7
-  UINT32 sequence_number;    // bytes 8 to 11
-} FirmMessageHeader;
+// Firm Message Type: 2 byte code
+#define FIRM_MESSAGE_TYPE_LOGIN_REQUEST_MESSAGE 0x0001            // Login Request Message
+#define FIRM_MESSAGE_TYPE_LOGOUT_REQUEST_MESSAGE 0x0002           // Logout Request Message
+#define FIRM_MESSAGE_TYPE_CLIENT_HEARTBEAT_MESSAGE 0x0003         // Client Heartbeat Message
+#define FIRM_MESSAGE_TYPE_NEW_ORDER_CA_EQUITIES_V_1 0x1771        // New Order Ca Equities V 1
+#define FIRM_MESSAGE_TYPE_NEW_ORDER_CA_EQUITIES_V_2 0x1776        // New Order Ca Equities V 2
+#define FIRM_MESSAGE_TYPE_MODIFY_ORDER_CA_EQUITIES_V_1 0x1772     // Modify Order Ca Equities V 1
+#define FIRM_MESSAGE_TYPE_CANCEL_ORDER_CA_EQUITIES_V_1 0x1773     // Cancel Order Ca Equities V 1
+#define FIRM_MESSAGE_TYPE_NEW_ORDER_CROSS_CA_EQUITIES_V_1 0x1774  // New Order Cross Ca Equities V 1
+#define FIRM_MESSAGE_TYPE_NEW_ORDER_CROSS_CA_EQUITIES_V_2 0x1775  // New Order Cross Ca Equities V 2
 
-// ---- New Order Ca Equities V 1: 253 bytes ------------------------------------
+// Replay Unspecified Unit: one byte code
+#define REPLAY_UNSPECIFIED_UNIT_FAIL_IF_UNIT_NOT_SPECIFIED 0x46             // Fail If Unit Not Specified
+#define REPLAY_UNSPECIFIED_UNIT_REPLAY_ANY_UNSPECIFIED_UNIT_FROM_ZERO 0x52  // Replay Any Unspecified Unit From Zero
+#define REPLAY_UNSPECIFIED_UNIT_SKIP_REPLAY_OF_UNSPECIFIED_UNITS 0x53       // Skip Replay Of Unspecified Units
+
+// Exec Inst: one byte code
+#define EXEC_INST_TRADE_AT_THE_PNBBO_MIDPOINT_ONLY 0x4D                                                  // Trade At The Pnbbo Midpoint Only
+#define EXEC_INST_TRADE_AT_THE_NEAR_SIDE_PNBBO 0x52                                                      // Trade At The Near Side Pnbbo
+#define EXEC_INST_TRADE_AT_THE_LESS_AGGRESSIVE_OF_PNBBO_MIDPOINT_OR_MINIMUM_IMPROVEMENT_FRO_ti5qve 0x70  // Trade At The Less Aggressive Of Pnbbo Midpoint Or Minimum Improvement From The Pnbbo
+#define EXEC_INST_LATE_USED_WITH_TIME_IN_FORCE_7_TO_ENTER_A_LATE_LIMIT_ON_CLOSE_LLOC 0x72                // Late Used With Time In Force 7 To Enter A Late Limit On Close Lloc
+
+// Handling Inst: one byte code
+#define HANDLING_INST_DIRECT_ACTION_ORDER_DAO 0x31  // Direct Action Order Dao
+#define HANDLING_INST_PROTECT_AND_CANCEL 0x35       // Protect And Cancel
+#define HANDLING_INST_PROTECT_AND_REPRICE 0x36      // Protect And Reprice
+
+// Ord Type: one byte code
+#define ORD_TYPE_MARKET 0x31      // Market
+#define ORD_TYPE_LIMIT 0x32       // Limit
+#define ORD_TYPE_STOP 0x33        // Stop
+#define ORD_TYPE_STOP_LIMIT 0x34  // Stop Limit
+#define ORD_TYPE_PEGGED 0x50      // Pegged
+
+// Side: one byte code
+#define SIDE_BUY 0x31         // Buy
+#define SIDE_SELL 0x32        // Sell
+#define SIDE_SELL_SHORT 0x35  // Sell Short
+
+// Time In Force: one byte code
+#define TIME_IN_FORCE_DAY 0x30                                  // Day
+#define TIME_IN_FORCE_GOOD_TIL_CANCEL_GTC 0x31                  // Good Til Cancel Gtc
+#define TIME_IN_FORCE_AT_THE_OPEN_OPG 0x32                      // At The Open Opg
+#define TIME_IN_FORCE_IMMEDIATE_OR_CANCEL_IOC 0x33              // Immediate Or Cancel Ioc
+#define TIME_IN_FORCE_FILL_OR_KILL_FOK 0x34                     // Fill Or Kill Fok
+#define TIME_IN_FORCE_GOOD_TIL_DATE_GTD_GOOD_TIL_TIME_GTT 0x36  // Good Til Date Gtd Good Til Time Gtt
+#define TIME_IN_FORCE_AT_THE_CLOSE_ATC 0x37                     // At The Close Atc
+#define TIME_IN_FORCE_REGULAR_HOURS_ONLY_RHO 0x52               // Regular Hours Only Rho
+
+// Settlement Type: one byte code
+#define SETTLEMENT_TYPE_CASH 0x01     // Cash
+#define SETTLEMENT_TYPE_FUTURE 0x06   // Future
+#define SETTLEMENT_TYPE_NON_NET 0x0B  // Non Net
+
+// Ex Destination: one byte code
+#define EX_DESTINATION_CROSSING_FACILITY 0x43  // Crossing Facility
+#define EX_DESTINATION_NEO_D 0x44              // Neo D
+#define EX_DESTINATION_NEO_L 0x4C              // Neo L
+#define EX_DESTINATION_NEO_N 0x4E              // Neo N
+#define EX_DESTINATION_SST 0x53                // Sst
+
+// Lei Order Origin: one byte code
+#define LEI_ORDER_ORIGIN_DIRECT_ACCESS_CLIENT 0x05          // Direct Access Client
+#define LEI_ORDER_ORIGIN_FOREIGN_DEALER_EQUIVALENT 0x06     // Foreign Dealer Equivalent
+#define LEI_ORDER_ORIGIN_ORDER_EXECUTION_ONLY_SERVICE 0x07  // Order Execution Only Service
+
+// Lei Routing Arrangement Indicator: one byte code
+#define LEI_ROUTING_ARRANGEMENT_INDICATOR_NO 0x4E   // No
+#define LEI_ROUTING_ARRANGEMENT_INDICATOR_YES 0x59  // Yes
+
+// Umir Account Type: one byte code
+#define UMIR_ACCOUNT_TYPE_INVENTORY 0x49             // Inventory
+#define UMIR_ACCOUNT_TYPE_NON_CLIENT 0x4E            // Non Client
+#define UMIR_ACCOUNT_TYPE_CLIENT 0x43                // Client
+#define UMIR_ACCOUNT_TYPE_SPECIALIST 0x53            // Specialist
+#define UMIR_ACCOUNT_TYPE_OPTIONS_FIRM_ACCOUNT 0x46  // Options Firm Account
+#define UMIR_ACCOUNT_TYPE_OPTIONS_MARKET_MAKER 0x4D  // Options Market Maker
+#define UMIR_ACCOUNT_TYPE_BUNDLED 0x42               // Bundled
+#define UMIR_ACCOUNT_TYPE_MULTI_CLIENT 0x58          // Multi Client
+
+// Program Trade: one byte code
+#define PROGRAM_TRADE_YES 0x59  // Yes
+#define PROGRAM_TRADE_NO 0x4E   // No
+
+// Anonymous: one byte code
+#define ANONYMOUS_YES 0x59  // Yes
+#define ANONYMOUS_NO 0x4E   // No
+
+// Umir Regulation Id: one byte code
+#define UMIR_REGULATION_ID_SIGNIFICANT_SHAREHOLDER 0x53  // Significant Shareholder
+#define UMIR_REGULATION_ID_INSIDER 0x49                  // Insider
+
+// Non Resident: one byte code
+#define NON_RESIDENT_YES 0x59  // Yes
+#define NON_RESIDENT_NO 0x4E   // No
+
+// Bypass: one byte code
+#define BYPASS_YES 0x59  // Yes
+#define BYPASS_NO 0x4E   // No
+
+// Ncib: one byte code
+#define NCIB_YES 0x59  // Yes
+#define NCIB_NO 0x4E   // No
+
+// No Trade Feat: one byte code
+#define NO_TRADE_FEAT_SUPPRESS_FROM_TAPE 0x54               // Suppress From Tape
+#define NO_TRADE_FEAT_CANCEL_NEWEST 0x4E                    // Cancel Newest
+#define NO_TRADE_FEAT_CANCEL_OLDEST 0x4F                    // Cancel Oldest
+#define NO_TRADE_FEAT_DECREMENT_LARGER_CANCEL_SMALLER 0x44  // Decrement Larger Cancel Smaller
+#define NO_TRADE_FEAT_NO_SELF_TRADE_PROTECTION 0x55         // No Self Trade Protection
+
+// Short Marking Exempt: one byte code
+#define SHORT_MARKING_EXEMPT_SHORT_MARKET_EXEMPT 0x30                                      // Short Market Exempt
+#define SHORT_MARKING_EXEMPT_BUY_OF_A_NEW_ORDER_CROSS_IS_SHORT_MARKING_EXEMPT 0x31         // Buy Of A New Order Cross Is Short Marking Exempt
+#define SHORT_MARKING_EXEMPT_SELL_OF_A_NEW_ORDER_CROSS_IS_SHORT_MARKING_EXEMPT 0x32        // Sell Of A New Order Cross Is Short Marking Exempt
+#define SHORT_MARKING_EXEMPT_BOTH_SIDES_OF_A_NEW_ORDER_CROSS_IS_SHORT_MARKING_EXEMPT 0x33  // Both Sides Of A New Order Cross Is Short Marking Exempt
+
+// Routing Inst: one byte code
+#define ROUTING_INST_POST_ONLY_CANCEL 0x50   // Post Only Cancel
+#define ROUTING_INST_POST_ONLY_REPRICE 0x70  // Post Only Reprice
+
+// Display Indicator: one byte code
+#define DISPLAY_INDICATOR_VISIBLE 0x56    // Visible
+#define DISPLAY_INDICATOR_INVISIBLE 0x49  // Invisible
+
+// Matching State Participation: one byte code
+#define MATCHING_STATE_PARTICIPATION_ACTIVE_ORDERS_ONLY 0x31              // Active Orders Only
+#define MATCHING_STATE_PARTICIPATION_PASSIVE_ORDERS_ONLY 0x32             // Passive Orders Only
+#define MATCHING_STATE_PARTICIPATION_BOTH_ACTIVE_AND_PASSIVE_ORDERS 0x33  // Both Active And Passive Orders
+
+// Cancel Orig On Reject: one byte code
+#define CANCEL_ORIG_ON_REJECT_LEAVE_ORIGINAL_ORDER_ALONE 0x4E                  // Leave Original Order Alone
+#define CANCEL_ORIG_ON_REJECT_CANCEL_ORIGINAL_ORDER_IF_REPLACEMENT_FAILS 0x59  // Cancel Original Order If Replacement Fails
+
+// Cross Type: one byte code
+#define CROSS_TYPE_BASIS 0x42                // Basis
+#define CROSS_TYPE_CONTINGENT 0x43           // Contingent
+#define CROSS_TYPE_DERIVATIVE 0x44           // Derivative
+#define CROSS_TYPE_INTERNAL 0x49             // Internal
+#define CROSS_TYPE_NET_ASSET_VALUE_NAV 0x4E  // Net Asset Value Nav
+#define CROSS_TYPE_REGULAR 0x52              // Regular
+#define CROSS_TYPE_VWAP 0x56                 // Vwap
+
+// Cross Side: one byte code
+#define CROSS_SIDE_CROSS 0x38        // Cross
+#define CROSS_SIDE_CROSS_SHORT 0x39  // Cross Short
+
+// Buy Umir Account Type: one byte code
+#define BUY_UMIR_ACCOUNT_TYPE_INVENTORY 0x49             // Inventory
+#define BUY_UMIR_ACCOUNT_TYPE_NON_CLIENT 0x4E            // Non Client
+#define BUY_UMIR_ACCOUNT_TYPE_CLIENT 0x43                // Client
+#define BUY_UMIR_ACCOUNT_TYPE_SPECIALIST 0x53            // Specialist
+#define BUY_UMIR_ACCOUNT_TYPE_OPTIONS_FIRM_ACCOUNT 0x46  // Options Firm Account
+#define BUY_UMIR_ACCOUNT_TYPE_OPTIONS_MARKET_MAKER 0x4D  // Options Market Maker
+#define BUY_UMIR_ACCOUNT_TYPE_BUNDLED 0x42               // Bundled
+#define BUY_UMIR_ACCOUNT_TYPE_MULTI_CLIENT 0x58          // Multi Client
+
+// Buy Umir Regulation Id: one byte code
+#define BUY_UMIR_REGULATION_ID_SIGNIFICANT_SHAREHOLDER 0x53  // Significant Shareholder
+#define BUY_UMIR_REGULATION_ID_INSIDER 0x49                  // Insider
+
+// Buy Lei Order Origin: one byte code
+#define BUY_LEI_ORDER_ORIGIN_DIRECT_ACCESS_CLIENT 0x05          // Direct Access Client
+#define BUY_LEI_ORDER_ORIGIN_FOREIGN_DEALER_EQUIVALENT 0x06     // Foreign Dealer Equivalent
+#define BUY_LEI_ORDER_ORIGIN_ORDER_EXECUTION_ONLY_SERVICE 0x07  // Order Execution Only Service
+
+// Buy Lei Routing Arrangemeant Indicator: one byte code
+#define BUY_LEI_ROUTING_ARRANGEMEANT_INDICATOR_NO 0x4E   // No
+#define BUY_LEI_ROUTING_ARRANGEMEANT_INDICATOR_YES 0x59  // Yes
+
+// Sell Umir Account Type: one byte code
+#define SELL_UMIR_ACCOUNT_TYPE_INVENTORY 0x49             // Inventory
+#define SELL_UMIR_ACCOUNT_TYPE_NON_CLIENT 0x4E            // Non Client
+#define SELL_UMIR_ACCOUNT_TYPE_CLIENT 0x43                // Client
+#define SELL_UMIR_ACCOUNT_TYPE_SPECIALIST 0x53            // Specialist
+#define SELL_UMIR_ACCOUNT_TYPE_OPTIONS_FIRM_ACCOUNT 0x46  // Options Firm Account
+#define SELL_UMIR_ACCOUNT_TYPE_OPTIONS_MARKET_MAKER 0x4D  // Options Market Maker
+#define SELL_UMIR_ACCOUNT_TYPE_BUNDLED 0x42               // Bundled
+#define SELL_UMIR_ACCOUNT_TYPE_MULTI_CLIENT 0x58          // Multi Client
+
+// Sell Umir Regulation Id: one byte code
+#define SELL_UMIR_REGULATION_ID_SIGNIFICANT_SHAREHOLDER 0x53  // Significant Shareholder
+#define SELL_UMIR_REGULATION_ID_INSIDER 0x49                  // Insider
+
+// Sell Lei Order Origin: one byte code
+#define SELL_LEI_ORDER_ORIGIN_DIRECT_ACCESS_CLIENT 0x05          // Direct Access Client
+#define SELL_LEI_ORDER_ORIGIN_FOREIGN_DEALER_EQUIVALENT 0x06     // Foreign Dealer Equivalent
+#define SELL_LEI_ORDER_ORIGIN_ORDER_EXECUTION_ONLY_SERVICE 0x07  // Order Execution Only Service
+
+// Sell Lei Routing Arrangement Indicator: one byte code
+#define SELL_LEI_ROUTING_ARRANGEMENT_INDICATOR_NO 0x4E   // No
+#define SELL_LEI_ROUTING_ARRANGEMENT_INDICATOR_YES 0x59  // Yes
+
+// Buy Lei Routing Arrangement Indicator: one byte code
+#define BUY_LEI_ROUTING_ARRANGEMENT_INDICATOR_NO 0x4E   // No
+#define BUY_LEI_ROUTING_ARRANGEMENT_INDICATOR_YES 0x59  // Yes
+
+// ---- Types -------------------------------------------------------------------
+
+// Unit Sequence
+typedef struct _UnitSequence {
+  UINT8 unit_number;       // byte 0
+  UINT32 sequence_number;  // bytes 1 to 4
+} UnitSequence;
+
+// A Login Request message must be sent as the first message upon connection
+typedef struct _LoginRequestMessage {
+  UINT8 session_id[4];                                                      // bytes 0 to 3
+  UINT8 session_sub_id[4];                                                  // bytes 4 to 7
+  UINT8 password[10];                                                       // bytes 8 to 17
+  UINT8 replay_unspecified_unit;                                            // byte 18
+  UINT8 number_of_units;                                                    // byte 19
+  UnitSequence unit_sequence[:byte-size (((UINT32) number_of_units) * 5)];
+} LoginRequestMessage;
 
 // New order message for Cboe Canada Equities
-entrypoint typedef struct _NewOrderCaEquitiesV1 {
+typedef struct _NewOrderCaEquitiesV1 {
   UINT8 account[16];                        // bytes 0 to 15
   UINT8 cl_ord_id[20];                      // bytes 16 to 35
   UINT16 broker_id;                         // bytes 36 to 37
@@ -75,10 +304,8 @@ entrypoint typedef struct _NewOrderCaEquitiesV1 {
   UINT32 true_min_qty;                      // bytes 249 to 252
 } NewOrderCaEquitiesV1;
 
-// ---- New Order Ca Equities V 2: 261 bytes ------------------------------------
-
 // New order V2 message for Cboe Canada Equities, adds PegDifference
-entrypoint typedef struct _NewOrderCaEquitiesV2 {
+typedef struct _NewOrderCaEquitiesV2 {
   UINT8 account[16];                        // bytes 0 to 15
   UINT8 cl_ord_id[20];                      // bytes 16 to 35
   UINT16 broker_id;                         // bytes 36 to 37
@@ -123,10 +350,8 @@ entrypoint typedef struct _NewOrderCaEquitiesV2 {
   UINT64 peg_difference;                    // bytes 253 to 260, signed, read here as unsigned
 } NewOrderCaEquitiesV2;
 
-// ---- Modify Order Ca Equities V 1: 215 bytes ---------------------------------
-
 // Request to modify an existing order
-entrypoint typedef struct _ModifyOrderCaEquitiesV1 {
+typedef struct _ModifyOrderCaEquitiesV1 {
   UINT8 cl_ord_id[20];                      // bytes 0 to 19
   UINT8 orig_cl_ord_id[20];                 // bytes 20 to 39
   UINT16 broker_id;                         // bytes 40 to 41
@@ -149,18 +374,14 @@ entrypoint typedef struct _ModifyOrderCaEquitiesV1 {
   UINT64 expire_time;                       // bytes 207 to 214
 } ModifyOrderCaEquitiesV1;
 
-// ---- Cancel Order Ca Equities V 1: 22 bytes ----------------------------------
-
 // Request to cancel a single order
-entrypoint typedef struct _CancelOrderCaEquitiesV1 {
+typedef struct _CancelOrderCaEquitiesV1 {
   UINT16 broker_id;          // bytes 0 to 1
   UINT8 orig_cl_ord_id[20];  // bytes 2 to 21
 } CancelOrderCaEquitiesV1;
 
-// ---- New Order Cross Ca Equities V 1: 342 bytes ------------------------------
-
 // New Order Cross message for pre-arranged two-sided trades
-entrypoint typedef struct _NewOrderCrossCaEquitiesV1 {
+typedef struct _NewOrderCrossCaEquitiesV1 {
   UINT16 broker_id;                              // bytes 0 to 1
   UINT8 cross_cl_ord_id[18];                     // bytes 2 to 19
   UINT8 cross_type;                              // byte 20
@@ -199,10 +420,8 @@ entrypoint typedef struct _NewOrderCrossCaEquitiesV1 {
   UINT8 sell_lei_routing_arrangement_indicator;  // byte 341
 } NewOrderCrossCaEquitiesV1;
 
-// ---- New Order Cross Ca Equities V 2: 347 bytes ------------------------------
-
 // New Order Cross V2 message with Anonymous flag
-entrypoint typedef struct _NewOrderCrossCaEquitiesV2 {
+typedef struct _NewOrderCrossCaEquitiesV2 {
   UINT16 broker_id;                              // bytes 0 to 1
   UINT8 cross_cl_ord_id[18];                     // bytes 2 to 19
   UINT8 cross_type;                              // byte 20
@@ -242,4 +461,33 @@ entrypoint typedef struct _NewOrderCrossCaEquitiesV2 {
   UINT8 anonymous;                               // byte 342
   UINT8 reserved[4];                             // bytes 343 to 346
 } NewOrderCrossCaEquitiesV2;
+
+// Branch
+casetype _FirmMessage (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x0001: LoginRequestMessage login_request_message;
+    case 0x0002: unit logout_request;
+    case 0x0003: unit client_heartbeat;
+    case 0x1771: NewOrderCaEquitiesV1 new_order_ca_equities_v_1;
+    case 0x1776: NewOrderCaEquitiesV2 new_order_ca_equities_v_2;
+    case 0x1772: ModifyOrderCaEquitiesV1 modify_order_ca_equities_v_1;
+    case 0x1773: CancelOrderCaEquitiesV1 cancel_order_ca_equities_v_1;
+    case 0x1774: NewOrderCrossCaEquitiesV1 new_order_cross_ca_equities_v_1;
+    case 0x1775: NewOrderCrossCaEquitiesV2 new_order_cross_ca_equities_v_2;
+    default: UINT8 unknown[available];
+  }
+} FirmMessage;
+
+// ---- Packet: FirmPacket ------------------------------------------------------
+
+// Binary Order Entry Tcp Packet sent by the firm
+entrypoint typedef struct _FirmPacket (UINT32 available) where (available >= 12) {
+  UINT16 start_of_message;                                                                                          // bytes 0 to 1
+  UINT16 message_length;                                                                                            // bytes 2 to 3
+  UINT16 firm_message_type;                                                                                         // bytes 4 to 5
+  UINT8 matching_unit;                                                                                              // byte 6
+  UINT8 reserved_field;                                                                                             // byte 7
+  UINT32 sequence_number;                                                                                           // bytes 8 to 11
+  FirmMessage(firm_message_type, (available - 12)) firm_message[:byte-size-single-element-array (available - 12)];
+} FirmPacket;
 

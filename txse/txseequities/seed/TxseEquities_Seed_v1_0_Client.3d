@@ -1,45 +1,587 @@
-// Texas Stock Exchange Session Enabled Entry Daemon
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Txse TxseEquities Seed Rake v1.0
 //
+// Protocol:
+//   Organization: Texas Stock Exchange
+//   Protocol: Session Enabled Entry Daemon
+//   Encoding: RAKE Session and Framing Layer
+//   Version: 1.0
+//   Date: 6/12/2026
+//   Specification: TXSE SEED Order Entry.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ClientPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out TxseEquities_Seed_v1_0_Client.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a length prefix framing what follows
-// - a field read in bits
-// - a field present only on a condition
-//
-// License: MIT No Attribution
 
-// ---- Rake Message Header: 3 bytes --------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Rake Tcp per-message header carrying the frame length and packet-level dispatch byte
-entrypoint typedef struct _RakeMessageHeader {
-  UINT16 message_length;  // bytes 0 to 1
-  UINT8 packet_type;      // byte 2
-} RakeMessageHeader;
+// Packet Type: one byte code
+#define PACKET_TYPE_LOGON_REQUEST_PACKET 0x35      // Logon Request Packet
+#define PACKET_TYPE_MEMBER_HEARTBEAT_PACKET 0x37   // Member Heartbeat Packet
+#define PACKET_TYPE_TCP_UNSEQUENCED_MESSAGE 0x36   // Tcp Unsequenced Message
+#define PACKET_TYPE_DEBUG_MESSAGE 0x30             // Debug Message
+#define PACKET_TYPE_END_OF_SESSION_MESSAGE 0x34    // End Of Session Message
+#define PACKET_TYPE_LOGON_RESPONSE_MESSAGE 0x31    // Logon Response Message
+#define PACKET_TYPE_SERVER_HEARTBEAT_MESSAGE 0x33  // Server Heartbeat Message
+#define PACKET_TYPE_TCP_SEQUENCED_MESSAGE 0x32     // Tcp Sequenced Message
 
-// ---- Logon Request Packet: 32 bytes ------------------------------------------
+// Message Type: one byte code
+#define MESSAGE_TYPE_LIMIT_ORDER_MESSAGE 0x4C             // Limit Order Message
+#define MESSAGE_TYPE_MARKET_ORDER_MESSAGE 0x41            // Market Order Message
+#define MESSAGE_TYPE_CANCEL_ORDER_MESSAGE 0x43            // Cancel Order Message
+#define MESSAGE_TYPE_MODIFY_ORDER_MESSAGE 0x4D            // Modify Order Message
+#define MESSAGE_TYPE_REPLACE_ORDER_MESSAGE 0x52           // Replace Order Message
+#define MESSAGE_TYPE_MASS_CANCEL_MESSAGE 0x56             // Mass Cancel Message
+#define MESSAGE_TYPE_TRADING_SESSION_STATUS_MESSAGE 0x69  // Trading Session Status Message
+#define MESSAGE_TYPE_DEFINE_SYMBOL_MESSAGE 0x73           // Define Symbol Message
+#define MESSAGE_TYPE_SYMBOL_STATUS_MESSAGE 0x79           // Symbol Status Message
+#define MESSAGE_TYPE_LIMIT_ORDER_ACCEPTED_MESSAGE 0x49    // Limit Order Accepted Message
+#define MESSAGE_TYPE_LIMIT_ORDER_REJECTED_MESSAGE 0x55    // Limit Order Rejected Message
+#define MESSAGE_TYPE_MARKET_ORDER_ACCEPTED_MESSAGE 0x44   // Market Order Accepted Message
+#define MESSAGE_TYPE_MARKET_ORDER_REJECTED_MESSAGE 0x54   // Market Order Rejected Message
+#define MESSAGE_TYPE_ORDER_CANCELED_MESSAGE 0x58          // Order Canceled Message
+#define MESSAGE_TYPE_CANCEL_REJECTED_MESSAGE 0x57         // Cancel Rejected Message
+#define MESSAGE_TYPE_ORDER_MODIFIED_MESSAGE 0x59          // Order Modified Message
+#define MESSAGE_TYPE_MODIFY_REJECTED_MESSAGE 0x4E         // Modify Rejected Message
+#define MESSAGE_TYPE_ORDER_REPLACED_MESSAGE 0x4A          // Order Replaced Message
+#define MESSAGE_TYPE_REPLACE_REJECTED_MESSAGE 0x4B        // Replace Rejected Message
+#define MESSAGE_TYPE_ORDER_EXECUTED_MESSAGE 0x45          // Order Executed Message
+#define MESSAGE_TYPE_ORDER_RESTATED_MESSAGE 0x46          // Order Restated Message
+#define MESSAGE_TYPE_SELF_MATCH_PREVENTED_MESSAGE 0x5A    // Self Match Prevented Message
+#define MESSAGE_TYPE_MASS_CANCEL_ACCEPTED_MESSAGE 0x4F    // Mass Cancel Accepted Message
+#define MESSAGE_TYPE_MASS_CANCEL_REJECTED_MESSAGE 0x50    // Mass Cancel Rejected Message
+#define MESSAGE_TYPE_MASS_CANCEL_RESULT_MESSAGE 0x51      // Mass Cancel Result Message
+
+// Limit Order Self Match Instruction: one byte code
+#define LIMIT_ORDER_SELF_MATCH_INSTRUCTION_NO_SELF_MATCH_PREVENTION 0x00  // No Self Match Prevention
+#define LIMIT_ORDER_SELF_MATCH_INSTRUCTION_CANCEL_NEWEST 0x01             // Cancel Newest
+#define LIMIT_ORDER_SELF_MATCH_INSTRUCTION_CANCEL_OLDEST 0x02             // Cancel Oldest
+#define LIMIT_ORDER_SELF_MATCH_INSTRUCTION_CANCEL_BOTH 0x03               // Cancel Both
+#define LIMIT_ORDER_SELF_MATCH_INSTRUCTION_CANCEL_SMALLEST 0x04           // Cancel Smallest
+#define LIMIT_ORDER_SELF_MATCH_INSTRUCTION_DECREMENT_AND_CANCEL 0x05      // Decrement And Cancel
+
+// Limit Order Price Slide Instruction: one byte code
+#define LIMIT_ORDER_PRICE_SLIDE_INSTRUCTION_NO_PRICE_SLIDE 0x00                           // No Price Slide
+#define LIMIT_ORDER_PRICE_SLIDE_INSTRUCTION_SINGLE_PRICE_SLIDE_ON_LOCK_AND_CROSS 0x01     // Single Price Slide On Lock And Cross
+#define LIMIT_ORDER_PRICE_SLIDE_INSTRUCTION_MULTIPLE_PRICE_SLIDES_ON_LOCK_AND_CROSS 0x02  // Multiple Price Slides On Lock And Cross
+#define LIMIT_ORDER_PRICE_SLIDE_INSTRUCTION_SINGLE_PRICE_SLIDE_LOCK_ONLY 0x03             // Single Price Slide Lock Only
+
+// Market Order Self Match Instruction: one byte code
+#define MARKET_ORDER_SELF_MATCH_INSTRUCTION_NO_SELF_MATCH_PREVENTION 0x00  // No Self Match Prevention
+#define MARKET_ORDER_SELF_MATCH_INSTRUCTION_CANCEL_NEWEST 0x01             // Cancel Newest
+#define MARKET_ORDER_SELF_MATCH_INSTRUCTION_CANCEL_OLDEST 0x02             // Cancel Oldest
+#define MARKET_ORDER_SELF_MATCH_INSTRUCTION_CANCEL_BOTH 0x03               // Cancel Both
+#define MARKET_ORDER_SELF_MATCH_INSTRUCTION_CANCEL_SMALLEST 0x04           // Cancel Smallest
+#define MARKET_ORDER_SELF_MATCH_INSTRUCTION_DECREMENT_AND_CANCEL 0x05      // Decrement And Cancel
+
+// Replace Order Self Match Instruction: one byte code
+#define REPLACE_ORDER_SELF_MATCH_INSTRUCTION_NO_SELF_MATCH_PREVENTION 0x00  // No Self Match Prevention
+#define REPLACE_ORDER_SELF_MATCH_INSTRUCTION_CANCEL_NEWEST 0x01             // Cancel Newest
+#define REPLACE_ORDER_SELF_MATCH_INSTRUCTION_CANCEL_OLDEST 0x02             // Cancel Oldest
+#define REPLACE_ORDER_SELF_MATCH_INSTRUCTION_CANCEL_BOTH 0x03               // Cancel Both
+#define REPLACE_ORDER_SELF_MATCH_INSTRUCTION_CANCEL_SMALLEST 0x04           // Cancel Smallest
+#define REPLACE_ORDER_SELF_MATCH_INSTRUCTION_DECREMENT_AND_CANCEL 0x05      // Decrement And Cancel
+
+// Replace Order Price Slide Instruction: one byte code
+#define REPLACE_ORDER_PRICE_SLIDE_INSTRUCTION_NO_PRICE_SLIDE 0x00                           // No Price Slide
+#define REPLACE_ORDER_PRICE_SLIDE_INSTRUCTION_SINGLE_PRICE_SLIDE_ON_LOCK_AND_CROSS 0x01     // Single Price Slide On Lock And Cross
+#define REPLACE_ORDER_PRICE_SLIDE_INSTRUCTION_MULTIPLE_PRICE_SLIDES_ON_LOCK_AND_CROSS 0x02  // Multiple Price Slides On Lock And Cross
+#define REPLACE_ORDER_PRICE_SLIDE_INSTRUCTION_SINGLE_PRICE_SLIDE_LOCK_ONLY 0x03             // Single Price Slide Lock Only
+
+// Mass Cancel Scope: one byte code
+#define MASS_CANCEL_SCOPE_BY_MEMBER_OWNED_SENDER_COMPS 0x00  // By Member Owned Sender Comps
+#define MASS_CANCEL_SCOPE_BY_MEMBER_OWNED_MPIDS 0x01         // By Member Owned Mpids
+
+// ---- Types -------------------------------------------------------------------
 
 // Must be the first message a Member sends to the Exchange after establishing a TCP/IP connection
-entrypoint typedef struct _LogonRequestPacket {
+typedef struct _LogonRequestPacket {
   UINT64 session;               // bytes 0 to 7
   UINT8 sender_comp[8];         // bytes 8 to 15
   UINT8 token[8];               // bytes 16 to 23
   UINT64 next_sequence_number;  // bytes 24 to 31
 } LogonRequestPacket;
 
-// ---- Cancel Order Message: 8 bytes -------------------------------------------
+// Enum SelfMatchScope. Determines the scope for self-match prevention.
+casetype _OptionalLimitOrderSelfMatchScope (Bool present) {
+  switch (present) {
+    case true: UINT8 limit_order_self_match_scope;
+    case false: unit absent;
+  }
+} OptionalLimitOrderSelfMatchScope;
+
+// Enum LimitOrderSelfMatchInstruction. Determines the behavior when orders from the same entity would match.
+casetype _OptionalLimitOrderSelfMatchInstruction (Bool present) {
+  switch (present) {
+    case true: UINT8 limit_order_self_match_instruction;
+    case false: unit absent;
+  }
+} OptionalLimitOrderSelfMatchInstruction;
+
+// Enum LimitOrderPriceSlideInstruction.
+casetype _OptionalLimitOrderPriceSlideInstruction (Bool present) {
+  switch (present) {
+    case true: UINT8 limit_order_price_slide_instruction;
+    case false: unit absent;
+  }
+} OptionalLimitOrderPriceSlideInstruction;
+
+// Number of shares that must be executed to execute any shares.
+casetype _OptionalLimitOrderMinQty (Bool present) {
+  switch (present) {
+    case true: UINT32 limit_order_min_qty;
+    case false: unit absent;
+  }
+} OptionalLimitOrderMinQty;
+
+// Quantity to be displayed at one time with remaining quantity not displayed on the book.
+casetype _OptionalLimitOrderMaxFloorQty (Bool present) {
+  switch (present) {
+    case true: UINT32 limit_order_max_floor_qty;
+    case false: unit absent;
+  }
+} OptionalLimitOrderMaxFloorQty;
+
+// Defines the maximum range to be used when calculating a random refresh quantity.
+casetype _OptionalLimitOrderMaxReplenishQtyRange (Bool present) {
+  switch (present) {
+    case true: UINT32 limit_order_max_replenish_qty_range;
+    case false: unit absent;
+  }
+} OptionalLimitOrderMaxReplenishQtyRange;
+
+// Defines the maximum range to be used when calculating a random refresh time, in nanoseconds.
+casetype _OptionalLimitOrderMaxReplenishTimeRange (Bool present) {
+  switch (present) {
+    case true: UINT64 limit_order_max_replenish_time_range;
+    case false: unit absent;
+  }
+} OptionalLimitOrderMaxReplenishTimeRange;
+
+// The target relative to the reference base price in basis points of the NBBO spread.
+casetype _OptionalLimitOrderReferencePriceTarget (Bool present) {
+  switch (present) {
+    case true: UINT16 limit_order_reference_price_target;
+    case false: unit absent;
+  }
+} OptionalLimitOrderReferencePriceTarget;
+
+// Timestamp at which the order's open quantity will be canceled, valid only with GTT time in force.
+casetype _OptionalLimitOrderExpireTime (Bool present) {
+  switch (present) {
+    case true: UINT64 limit_order_expire_time;
+    case false: unit absent;
+  }
+} OptionalLimitOrderExpireTime;
+
+// Pass-through field for use by clients, not used by the Exchange.
+casetype _OptionalLimitOrderUserData (Bool present) {
+  switch (present) {
+    case true: UINT64 limit_order_user_data;
+    case false: unit absent;
+  }
+} OptionalLimitOrderUserData;
+
+// Market Participant Identifier. Upper-case alpha only.
+casetype _OptionalLimitOrderMpid (Bool present) {
+  switch (present) {
+    case true: UINT8 limit_order_mpid[4];
+    case false: unit absent;
+  }
+} OptionalLimitOrderMpid;
+
+// Member supplied grouping.
+casetype _OptionalLimitOrderMemberGroup (Bool present) {
+  switch (present) {
+    case true: UINT8 limit_order_member_group[2];
+    case false: unit absent;
+  }
+} OptionalLimitOrderMemberGroup;
+
+// Identifies the broker that has loaned the stock to settle the short sale.
+casetype _OptionalLimitOrderLocateBroker (Bool present) {
+  switch (present) {
+    case true: UINT8 limit_order_locate_broker[4];
+    case false: unit absent;
+  }
+} OptionalLimitOrderLocateBroker;
+
+// Client-specified limit order.
+typedef struct _LimitOrderMessage {
+  UINT32 has_limit_order_self_match_scope : 1;                                                                                    // bytes 0 to 3
+  UINT32 has_limit_order_self_match_instruction : 1;                                                                              // bytes 0 to 3
+  UINT32 has_limit_order_price_slide_instruction : 1;                                                                             // bytes 0 to 3
+  UINT32 has_limit_order_min_qty : 1;                                                                                             // bytes 0 to 3
+  UINT32 has_limit_order_max_floor_qty : 1;                                                                                       // bytes 0 to 3
+  UINT32 has_limit_order_max_replenish_qty_range : 1;                                                                             // bytes 0 to 3
+  UINT32 has_limit_order_max_replenish_time_range : 1;                                                                            // bytes 0 to 3
+  UINT32 has_limit_order_reference_price_target : 1;                                                                              // bytes 0 to 3
+  UINT32 has_limit_order_expire_time : 1;                                                                                         // bytes 0 to 3
+  UINT32 has_limit_order_user_data : 1;                                                                                           // bytes 0 to 3
+  UINT32 has_limit_order_mpid : 1;                                                                                                // bytes 0 to 3
+  UINT32 has_limit_order_member_group : 1;                                                                                        // bytes 0 to 3
+  UINT32 has_limit_order_locate_broker : 1;                                                                                       // bytes 0 to 3
+  UINT32 reserved_19 : 19;                                                                                                        // bytes 0 to 3
+  UINT64 cl_ord_id;                                                                                                               // bytes 4 to 11, signed, read here as unsigned
+  UINT32 order_qty;                                                                                                               // bytes 12 to 15, signed, read here as unsigned
+  UINT32 side : 3;                                                                                                                // bytes 16 to 19
+  UINT32 is_locate_required : 1;                                                                                                  // bytes 16 to 19
+  UINT32 time_in_force : 4;                                                                                                       // bytes 16 to 19
+  UINT32 order_capacity : 3;                                                                                                      // bytes 16 to 19
+  UINT32 is_iso : 1;                                                                                                              // bytes 16 to 19
+  UINT32 is_hidden : 1;                                                                                                           // bytes 16 to 19
+  UINT32 is_post_only : 1;                                                                                                        // bytes 16 to 19
+  UINT32 cancel_at_entry_if_crossed : 1;                                                                                          // bytes 16 to 19
+  UINT32 reserved_17 : 17;                                                                                                        // bytes 16 to 19
+  UINT16 symbol_id;                                                                                                               // bytes 20 to 21, signed, read here as unsigned
+  UINT64 price;                                                                                                                   // bytes 22 to 29, signed, read here as unsigned
+  OptionalLimitOrderSelfMatchScope((has_limit_order_self_match_scope == 1)) limit_order_self_match_scope;
+  OptionalLimitOrderSelfMatchInstruction((has_limit_order_self_match_instruction == 1)) limit_order_self_match_instruction;
+  OptionalLimitOrderPriceSlideInstruction((has_limit_order_price_slide_instruction == 1)) limit_order_price_slide_instruction;
+  OptionalLimitOrderMinQty((has_limit_order_min_qty == 1)) limit_order_min_qty;
+  OptionalLimitOrderMaxFloorQty((has_limit_order_max_floor_qty == 1)) limit_order_max_floor_qty;
+  OptionalLimitOrderMaxReplenishQtyRange((has_limit_order_max_replenish_qty_range == 1)) limit_order_max_replenish_qty_range;
+  OptionalLimitOrderMaxReplenishTimeRange((has_limit_order_max_replenish_time_range == 1)) limit_order_max_replenish_time_range;
+  OptionalLimitOrderReferencePriceTarget((has_limit_order_reference_price_target == 1)) limit_order_reference_price_target;
+  OptionalLimitOrderExpireTime((has_limit_order_expire_time == 1)) limit_order_expire_time;
+  OptionalLimitOrderUserData((has_limit_order_user_data == 1)) limit_order_user_data;
+  OptionalLimitOrderMpid((has_limit_order_mpid == 1)) limit_order_mpid;
+  OptionalLimitOrderMemberGroup((has_limit_order_member_group == 1)) limit_order_member_group;
+  OptionalLimitOrderLocateBroker((has_limit_order_locate_broker == 1)) limit_order_locate_broker;
+} LimitOrderMessage;
+
+// Enum SelfMatchScope.
+casetype _OptionalMarketOrderSelfMatchScope (Bool present) {
+  switch (present) {
+    case true: UINT8 market_order_self_match_scope;
+    case false: unit absent;
+  }
+} OptionalMarketOrderSelfMatchScope;
+
+// Enum MarketOrderSelfMatchInstruction.
+casetype _OptionalMarketOrderSelfMatchInstruction (Bool present) {
+  switch (present) {
+    case true: UINT8 market_order_self_match_instruction;
+    case false: unit absent;
+  }
+} OptionalMarketOrderSelfMatchInstruction;
+
+// Pass-through field for use by clients, not used by the Exchange.
+casetype _OptionalMarketOrderUserData (Bool present) {
+  switch (present) {
+    case true: UINT64 market_order_user_data;
+    case false: unit absent;
+  }
+} OptionalMarketOrderUserData;
+
+// Market Participant Identifier.
+casetype _OptionalMarketOrderMpid (Bool present) {
+  switch (present) {
+    case true: UINT8 market_order_mpid[4];
+    case false: unit absent;
+  }
+} OptionalMarketOrderMpid;
+
+// Member supplied grouping.
+casetype _OptionalMarketOrderMemberGroup (Bool present) {
+  switch (present) {
+    case true: UINT8 market_order_member_group[2];
+    case false: unit absent;
+  }
+} OptionalMarketOrderMemberGroup;
+
+// Identifies the broker that has loaned the stock to settle the short sale.
+casetype _OptionalMarketOrderLocateBroker (Bool present) {
+  switch (present) {
+    case true: UINT8 market_order_locate_broker[4];
+    case false: unit absent;
+  }
+} OptionalMarketOrderLocateBroker;
+
+// Client-specified market order.
+typedef struct _MarketOrderMessage {
+  UINT16 has_market_order_self_match_scope : 1;                                                                                 // bytes 0 to 1
+  UINT16 has_market_order_self_match_instruction : 1;                                                                           // bytes 0 to 1
+  UINT16 has_market_order_user_data : 1;                                                                                        // bytes 0 to 1
+  UINT16 has_market_order_mpid : 1;                                                                                             // bytes 0 to 1
+  UINT16 has_market_order_member_group : 1;                                                                                     // bytes 0 to 1
+  UINT16 has_market_order_locate_broker : 1;                                                                                    // bytes 0 to 1
+  UINT16 reserved_10 : 10;                                                                                                      // bytes 0 to 1
+  UINT64 cl_ord_id;                                                                                                             // bytes 2 to 9, signed, read here as unsigned
+  UINT32 order_qty;                                                                                                             // bytes 10 to 13, signed, read here as unsigned
+  UINT16 side : 3;                                                                                                              // bytes 14 to 15
+  UINT16 is_locate_required : 1;                                                                                                // bytes 14 to 15
+  UINT16 time_in_force : 4;                                                                                                     // bytes 14 to 15
+  UINT16 order_capacity : 3;                                                                                                    // bytes 14 to 15
+  UINT16 reserved_5 : 5;                                                                                                        // bytes 14 to 15
+  UINT16 symbol_id;                                                                                                             // bytes 16 to 17, signed, read here as unsigned
+  OptionalMarketOrderSelfMatchScope((has_market_order_self_match_scope == 1)) market_order_self_match_scope;
+  OptionalMarketOrderSelfMatchInstruction((has_market_order_self_match_instruction == 1)) market_order_self_match_instruction;
+  OptionalMarketOrderUserData((has_market_order_user_data == 1)) market_order_user_data;
+  OptionalMarketOrderMpid((has_market_order_mpid == 1)) market_order_mpid;
+  OptionalMarketOrderMemberGroup((has_market_order_member_group == 1)) market_order_member_group;
+  OptionalMarketOrderLocateBroker((has_market_order_locate_broker == 1)) market_order_locate_broker;
+} MarketOrderMessage;
 
 // Cancel all outstanding shares of an order.
-entrypoint typedef struct _CancelOrderMessage {
+typedef struct _CancelOrderMessage {
   UINT64 orig_cl_ord_id;  // bytes 0 to 7, signed, read here as unsigned
 } CancelOrderMessage;
+
+// Quantity can remain the same or decrease. Quantity cannot increase.
+casetype _OptionalModifyOrderOrderQty (Bool present) {
+  switch (present) {
+    case true: UINT32 modify_order_order_qty;
+    case false: unit absent;
+  }
+} OptionalModifyOrderOrderQty;
+
+// Bitfield used in ModifyOrder, OrderModified, and ModifyRejected messages.
+typedef struct _ModifyOrderBitFields {
+  UINT8 side : 3;                // byte 0
+  UINT8 is_locate_required : 1;  // byte 0
+  UINT8 reserved_4 : 4;          // byte 0
+} ModifyOrderBitFields;
+
+// Bitfield used in ModifyOrder, OrderModified, and ModifyRejected messages.
+casetype _OptionalModifyOrderBitFields (Bool present) {
+  switch (present) {
+    case true: ModifyOrderBitFields modify_order_bit_fields;
+    case false: unit absent;
+  }
+} OptionalModifyOrderBitFields;
+
+// Identifies the broker that has loaned the stock to settle the short sale.
+casetype _OptionalModifyOrderLocateBroker (Bool present) {
+  switch (present) {
+    case true: UINT8 modify_order_locate_broker[4];
+    case false: unit absent;
+  }
+} OptionalModifyOrderLocateBroker;
+
+// Request to modify an existing order without losing book priority.
+typedef struct _ModifyOrderMessage {
+  UINT8 has_modify_order_order_qty : 1;                                                               // byte 0
+  UINT8 has_modify_order_bit_fields : 1;                                                              // byte 0
+  UINT8 has_modify_order_locate_broker : 1;                                                           // byte 0
+  UINT8 reserved_5 : 5;                                                                               // byte 0
+  UINT64 cl_ord_id;                                                                                   // bytes 1 to 8, signed, read here as unsigned
+  UINT64 orig_cl_ord_id;                                                                              // bytes 9 to 16, signed, read here as unsigned
+  OptionalModifyOrderOrderQty((has_modify_order_order_qty == 1)) modify_order_order_qty;
+  OptionalModifyOrderBitFields((has_modify_order_bit_fields == 1)) modify_order_bit_fields;
+  OptionalModifyOrderLocateBroker((has_modify_order_locate_broker == 1)) modify_order_locate_broker;
+} ModifyOrderMessage;
+
+// New limit price.
+casetype _OptionalReplaceOrderPrice (Bool present) {
+  switch (present) {
+    case true: UINT64 replace_order_price;
+    case false: unit absent;
+  }
+} OptionalReplaceOrderPrice;
+
+// Quantity can remain the same, decrease or increase.
+casetype _OptionalReplaceOrderOrderQty (Bool present) {
+  switch (present) {
+    case true: UINT32 replace_order_order_qty;
+    case false: unit absent;
+  }
+} OptionalReplaceOrderOrderQty;
+
+// Quantity to be displayed at one time with remaining quantity not displayed on the book.
+casetype _OptionalReplaceOrderMaxFloorQty (Bool present) {
+  switch (present) {
+    case true: UINT32 replace_order_max_floor_qty;
+    case false: unit absent;
+  }
+} OptionalReplaceOrderMaxFloorQty;
+
+// Enum SelfMatchScope.
+casetype _OptionalReplaceOrderSelfMatchScope (Bool present) {
+  switch (present) {
+    case true: UINT8 replace_order_self_match_scope;
+    case false: unit absent;
+  }
+} OptionalReplaceOrderSelfMatchScope;
+
+// Enum ReplaceOrderSelfMatchInstruction.
+casetype _OptionalReplaceOrderSelfMatchInstruction (Bool present) {
+  switch (present) {
+    case true: UINT8 replace_order_self_match_instruction;
+    case false: unit absent;
+  }
+} OptionalReplaceOrderSelfMatchInstruction;
+
+// Enum ReplaceOrderPriceSlideInstruction.
+casetype _OptionalReplaceOrderPriceSlideInstruction (Bool present) {
+  switch (present) {
+    case true: UINT8 replace_order_price_slide_instruction;
+    case false: unit absent;
+  }
+} OptionalReplaceOrderPriceSlideInstruction;
+
+// The target relative to the reference base price in basis points of the NBBO spread.
+casetype _OptionalReplaceOrderReferencePriceTarget (Bool present) {
+  switch (present) {
+    case true: UINT16 replace_order_reference_price_target;
+    case false: unit absent;
+  }
+} OptionalReplaceOrderReferencePriceTarget;
+
+// Identifies the broker that has loaned the stock to settle the short sale.
+casetype _OptionalReplaceOrderLocateBroker (Bool present) {
+  switch (present) {
+    case true: UINT8 replace_order_locate_broker[4];
+    case false: unit absent;
+  }
+} OptionalReplaceOrderLocateBroker;
+
+// Replace an existing order with a new order, always losing priority.
+typedef struct _ReplaceOrderMessage {
+  UINT16 has_replace_order_price : 1;                                                                                                 // bytes 0 to 1
+  UINT16 has_replace_order_order_qty : 1;                                                                                             // bytes 0 to 1
+  UINT16 has_replace_order_max_floor_qty : 1;                                                                                         // bytes 0 to 1
+  UINT16 has_replace_order_self_match_scope : 1;                                                                                      // bytes 0 to 1
+  UINT16 has_replace_order_self_match_instruction : 1;                                                                                // bytes 0 to 1
+  UINT16 has_replace_order_price_slide_instruction : 1;                                                                               // bytes 0 to 1
+  UINT16 has_replace_order_reference_price_target : 1;                                                                                // bytes 0 to 1
+  UINT16 has_replace_order_locate_broker : 1;                                                                                         // bytes 0 to 1
+  UINT16 reserved_8 : 8;                                                                                                              // bytes 0 to 1
+  UINT64 cl_ord_id;                                                                                                                   // bytes 2 to 9, signed, read here as unsigned
+  UINT64 orig_cl_ord_id;                                                                                                              // bytes 10 to 17, signed, read here as unsigned
+  UINT16 side : 3;                                                                                                                    // bytes 18 to 19
+  UINT16 is_locate_required : 1;                                                                                                      // bytes 18 to 19
+  UINT16 is_iso : 1;                                                                                                                  // bytes 18 to 19
+  UINT16 is_post_only : 1;                                                                                                            // bytes 18 to 19
+  UINT16 cancel_at_entry_if_crossed : 1;                                                                                              // bytes 18 to 19
+  UINT16 reserved_9 : 9;                                                                                                              // bytes 18 to 19
+  OptionalReplaceOrderPrice((has_replace_order_price == 1)) replace_order_price;
+  OptionalReplaceOrderOrderQty((has_replace_order_order_qty == 1)) replace_order_order_qty;
+  OptionalReplaceOrderMaxFloorQty((has_replace_order_max_floor_qty == 1)) replace_order_max_floor_qty;
+  OptionalReplaceOrderSelfMatchScope((has_replace_order_self_match_scope == 1)) replace_order_self_match_scope;
+  OptionalReplaceOrderSelfMatchInstruction((has_replace_order_self_match_instruction == 1)) replace_order_self_match_instruction;
+  OptionalReplaceOrderPriceSlideInstruction((has_replace_order_price_slide_instruction == 1)) replace_order_price_slide_instruction;
+  OptionalReplaceOrderReferencePriceTarget((has_replace_order_reference_price_target == 1)) replace_order_reference_price_target;
+  OptionalReplaceOrderLocateBroker((has_replace_order_locate_broker == 1)) replace_order_locate_broker;
+} ReplaceOrderMessage;
+
+// Market Participant Identifier.
+casetype _OptionalMassCancelMpid (Bool present) {
+  switch (present) {
+    case true: UINT8 mass_cancel_mpid[4];
+    case false: unit absent;
+  }
+} OptionalMassCancelMpid;
+
+// Narrows the cancel to orders entered on the specified order entry port (SenderComp).
+casetype _OptionalMassCancelSenderComp (Bool present) {
+  switch (present) {
+    case true: UINT8 mass_cancel_sender_comp[8];
+    case false: unit absent;
+  }
+} OptionalMassCancelSenderComp;
+
+// Member supplied grouping.
+casetype _OptionalMassCancelMemberGroup (Bool present) {
+  switch (present) {
+    case true: UINT8 mass_cancel_member_group[2];
+    case false: unit absent;
+  }
+} OptionalMassCancelMemberGroup;
+
+// Scopes the mass cancel to this specific order. SenderComp is required when ClOrdId is supplied.
+casetype _OptionalMassCancelClOrdId (Bool present) {
+  switch (present) {
+    case true: UINT64 mass_cancel_cl_ord_id;
+    case false: unit absent;
+  }
+} OptionalMassCancelClOrdId;
+
+// Cancels all resting orders matching the specified scope and optional filters.
+typedef struct _MassCancelMessage {
+  UINT8 has_mass_cancel_mpid : 1;                                                               // byte 0
+  UINT8 has_mass_cancel_sender_comp : 1;                                                        // byte 0
+  UINT8 has_mass_cancel_member_group : 1;                                                       // byte 0
+  UINT8 has_mass_cancel_cl_ord_id : 1;                                                          // byte 0
+  UINT8 reserved_4 : 4;                                                                         // byte 0
+  UINT64 mass_cancel_request_id;                                                                // bytes 1 to 8, signed, read here as unsigned
+  UINT8 mass_cancel_scope;                                                                      // byte 9, signed, read here as unsigned
+  UINT8 exclude_auction_orders : 1;                                                             // byte 10
+  UINT8 reserved_7 : 7;                                                                         // byte 10
+  OptionalMassCancelMpid((has_mass_cancel_mpid == 1)) mass_cancel_mpid;
+  OptionalMassCancelSenderComp((has_mass_cancel_sender_comp == 1)) mass_cancel_sender_comp;
+  OptionalMassCancelMemberGroup((has_mass_cancel_member_group == 1)) mass_cancel_member_group;
+  OptionalMassCancelClOrdId((has_mass_cancel_cl_ord_id == 1)) mass_cancel_cl_ord_id;
+} MassCancelMessage;
+
+// Branch
+casetype _UnsequencedMessage (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x4C: LimitOrderMessage limit_order_message;
+    case 0x41: MarketOrderMessage market_order_message;
+    case 0x43: CancelOrderMessage cancel_order_message;
+    case 0x4D: ModifyOrderMessage modify_order_message;
+    case 0x52: ReplaceOrderMessage replace_order_message;
+    case 0x56: MassCancelMessage mass_cancel_message;
+    default: UINT8 unknown[available];
+  }
+} UnsequencedMessage;
+
+// Send message from member to higher level protocol at exchange
+typedef struct _TcpUnsequencedMessage (UINT16 message_length) where (message_length >= 2) {
+  UINT8 message_type;                                                                                                                                      // byte 0
+  UnsequencedMessage(message_type, (((UINT32) message_length) - 2)) unsequenced_message[:byte-size-single-element-array (((UINT32) message_length) - 2)];
+} TcpUnsequencedMessage;
+
+// Branch
+casetype _ClientPayload (UINT8 selector, UINT32 length, UINT16 message_length, UINT32 available) {
+  switch (selector) {
+    case 0x35: LogonRequestPacket logon_request_packet;
+    case 0x36: TcpUnsequencedMessage(message_length) tcp_unsequenced_message[:byte-size-single-element-array length];
+    default: UINT8 unknown[available];
+  }
+} ClientPayload;
+
+// Rake Tcp Message sent by the Member to the Exchange
+typedef struct _ClientRakeTcpMessage {
+  UINT16 message_length { message_length >= 1 };                                                                                                                                                             // bytes 0 to 1
+  UINT8 packet_type;                                                                                                                                                                                         // byte 2
+  ClientPayload(packet_type, (((UINT32) message_length) - 1), message_length, ((((UINT32) message_length) + 2) - 3)) client_payload[:byte-size-single-element-array ((((UINT32) message_length) + 2) - 3)];
+} ClientRakeTcpMessage;
+
+// ---- Packet: ClientPacket ----------------------------------------------------
+
+// Rake Packet sent by the Member
+entrypoint typedef struct _ClientPacket (UINT32 available) {
+  ClientRakeTcpMessage client_rake_tcp_message[:byte-size available];
+} ClientPacket;
 

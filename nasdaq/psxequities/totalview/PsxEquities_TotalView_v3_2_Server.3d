@@ -1,76 +1,155 @@
-// National Association of Securities Dealers Automated Quotations (Nasdaq) TotalView Itch
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nasdaq PsxEquities TotalView Glimpse v3.2
 //
+// Protocol:
+//   Organization: National Association of Securities Dealers Automated Quotations (Nasdaq)
+//   Protocol: TotalView Itch
+//   Encoding: Glimpse
+//   Version: 3.2
+//   Date: 01/08/2013
+//   Specification: PSXGLIMPSE-V3_2.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ServerFrame, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out PsxEquities_TotalView_v3_2_Server.3d
 //
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a field filling what is left of what holds it
-// - the dispatch that chooses a message by its type
-//
-// License: MIT No Attribution
+// What this definition reads more loosely than the model states:
+// - the stream is a run of frames each ending at a byte 10: the caller splits it there and validates each frame, that byte included
 
-// ---- Server Packet Header: 1 byte --------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// SoupTcp Packet Header sent by the server
-entrypoint typedef struct _ServerPacketHeader {
-  UINT8 server_packet_type;  // byte 0
-} ServerPacketHeader;
+// Server Packet Type: one byte code
+#define SERVER_PACKET_TYPE_DEBUG_PACKET 0x2B             // Debug Packet
+#define SERVER_PACKET_TYPE_LOGIN_ACCEPTED_PACKET 0x41    // Login Accepted Packet
+#define SERVER_PACKET_TYPE_LOGIN_REJECTED_PACKET 0x4A    // Login Rejected Packet
+#define SERVER_PACKET_TYPE_SEQUENCED_DATA_PACKET 0x53    // Sequenced Data Packet
+#define SERVER_PACKET_TYPE_SERVER_HEARTBEAT_PACKET 0x48  // Server Heartbeat Packet
 
-// ---- Login Accepted Packet: 30 bytes -----------------------------------------
+// Message Type: one byte code
+#define MESSAGE_TYPE_SECONDS_MESSAGE 0x54                     // Seconds Message
+#define MESSAGE_TYPE_MILLISECONDS_MESSAGE 0x4D                // Milliseconds Message
+#define MESSAGE_TYPE_SYSTEM_EVENT_MESSAGE 0x53                // System Event Message
+#define MESSAGE_TYPE_ADD_ORDER_MESSAGE 0x41                   // Add Order Message
+#define MESSAGE_TYPE_ADD_ORDER_MPID_ATTRIBUTION_MESSAGE 0x46  // Add Order Mpid Attribution Message
+#define MESSAGE_TYPE_STOCK_DIRECTORY_MESSAGE 0x52             // Stock Directory Message
+#define MESSAGE_TYPE_STOCK_TRADING_ACTION_MESSAGE 0x48        // Stock Trading Action Message
+#define MESSAGE_TYPE_REG_SHO_RESTRICTION_MESSAGE 0x59         // Reg Sho Restriction Message
+#define MESSAGE_TYPE_END_OF_SNAPSHOT_MESSAGE 0x47             // End Of Snapshot Message
+
+// Event Code: one byte code
+#define EVENT_CODE_START_OF_MESSAGES 0x4F                             // Start Of Messages
+#define EVENT_CODE_START_OF_SYSTEM_HOURS 0x53                         // Start Of System Hours
+#define EVENT_CODE_START_OF_MARKET_HOURS 0x51                         // Start Of Market Hours
+#define EVENT_CODE_END_OF_MARKET_HOURS 0x4D                           // End Of Market Hours
+#define EVENT_CODE_END_OF_SYSTEM_HOURS 0x45                           // End Of System Hours
+#define EVENT_CODE_END_OF_MESSAGES 0x43                               // End Of Messages
+#define EVENT_CODE_EMERGENCY_MARKET_CONDITION_HALT 0x41               // Emergency Market Condition Halt
+#define EVENT_CODE_EMERGENCY_MARKET_CONDITION_QUOTE_ONLY_PERIOD 0x52  // Emergency Market Condition Quote Only Period
+#define EVENT_CODE_EMERGENCY_MARKET_CONDITION_RESUMPTION 0x42         // Emergency Market Condition Resumption
+
+// Buy Sell Indicator: one byte code
+#define BUY_SELL_INDICATOR_BUY_ORDER 0x42   // Buy Order
+#define BUY_SELL_INDICATOR_SELL_ORDER 0x53  // Sell Order
+
+// Market Category: one byte code
+#define MARKET_CATEGORY_NEW_YORK_STOCK_EXCHANGE 0x4E      // New York Stock Exchange
+#define MARKET_CATEGORY_NYSE_AMEX 0x41                    // Nyse Amex
+#define MARKET_CATEGORY_NYSE_ARCA 0x50                    // Nyse Arca
+#define MARKET_CATEGORY_NASDAQ_GLOBAL_SELECT_MARKET 0x51  // Nasdaq Global Select Market
+#define MARKET_CATEGORY_NASDAQ_GLOBAL_MARKET 0x47         // Nasdaq Global Market
+#define MARKET_CATEGORY_NASDAQ_CAPITAL_MARKET 0x53        // Nasdaq Capital Market
+#define MARKET_CATEGORY_BATS_BZX_EXCHANGE 0x5A            // Bats Bzx Exchange
+#define MARKET_CATEGORY_NOT_AVAILABLE 0x20                // Not Available
+
+// Financial Status Indicator: one byte code
+#define FINANCIAL_STATUS_INDICATOR_DEFICIENT 0x44                          // Deficient
+#define FINANCIAL_STATUS_INDICATOR_DELINQUENT 0x45                         // Delinquent
+#define FINANCIAL_STATUS_INDICATOR_BANKRUPT 0x51                           // Bankrupt
+#define FINANCIAL_STATUS_INDICATOR_SUSPENDED 0x53                          // Suspended
+#define FINANCIAL_STATUS_INDICATOR_DEFICIENT_AND_BANKRUPT 0x47             // Deficient And Bankrupt
+#define FINANCIAL_STATUS_INDICATOR_DEFICIENT_AND_DELINQUENT 0x48           // Deficient And Delinquent
+#define FINANCIAL_STATUS_INDICATOR_DELINQUENT_AND_BANKRUPT 0x4A            // Delinquent And Bankrupt
+#define FINANCIAL_STATUS_INDICATOR_DEFICIENT_DELINQUENT_AND_BANKRUPT 0x4B  // Deficient Delinquent And Bankrupt
+#define FINANCIAL_STATUS_INDICATOR_IN_COMPLIANCE 0x20                      // In Compliance
+
+// Round Lots Only: one byte code
+#define ROUND_LOTS_ONLY_ONLY_ROUND_LOTS_ARE_ACCEPTED 0x59    // Only Round Lots Are Accepted
+#define ROUND_LOTS_ONLY_ODD_AND_MIXED_LOTS_ARE_ALLOWED 0x4E  // Odd And Mixed Lots Are Allowed
+
+// Trading State: one byte code
+#define TRADING_STATE_HALTED_OR_PAUSED_ACROSS_ALL_US_EQUITY_MARKETS 0x48  // Halted Or Paused Across All Us Equity Markets
+#define TRADING_STATE_QUOTATION_ONLY_PERIOD 0x51                          // Quotation Only Period
+#define TRADING_STATE_TRADING_ON_PSX 0x54                                 // Trading On Psx
+
+// Reg Sho Action: one byte code
+#define REG_SHO_ACTION_NO_PRICE_TEST_IN_PLACE 0x30         // No Price Test In Place
+#define REG_SHO_ACTION_RESTRICTION_IN_EFFECT 0x31          // Restriction In Effect
+#define REG_SHO_ACTION_RESTRICTION_REMAINS_IN_EFFECT 0x32  // Restriction Remains In Effect
+
+// ---- Types -------------------------------------------------------------------
+
+// Debug packets are intended to provide human readable text that may aid in debugging problems.
+typedef struct _DebugPacket (UINT32 available) where (available >= 1) {
+  UINT8 text[(available - 1)];
+} DebugPacket;
 
 // The SoupTcp server sends a Login Accepted Packet in response to receiving a valid Login Request from the client.
-entrypoint typedef struct _LoginAcceptedPacket {
+typedef struct _LoginAcceptedPacket {
   UINT8 accepted_session[10];          // bytes 0 to 9
   UINT8 accepted_sequence_number[20];  // bytes 10 to 29
 } LoginAcceptedPacket;
 
-// ---- Login Rejected Packet: 1 byte -------------------------------------------
-
 // The SoupTcp server sends this packet in response to an invalid Login Request Packet from the client.
-entrypoint typedef struct _LoginRejectedPacket {
+typedef struct _LoginRejectedPacket {
   UINT8 reject_reason_code;  // byte 0
 } LoginRejectedPacket;
 
-// ---- Sequenced Message Header: 1 byte ----------------------------------------
-
-// Time and type carried ahead of every sequenced Itch message
-entrypoint typedef struct _SequencedMessageHeader {
-  UINT8 message_type;  // byte 0
-} SequencedMessageHeader;
-
-// ---- Seconds Message: 5 bytes ------------------------------------------------
-
 // This message is sent every second for which at least one PSX GLIMPSE 3.2 / PSX TotalView-ITCH 3.2 message is being generated.
-entrypoint typedef struct _SecondsMessage {
+typedef struct _SecondsMessage {
   UINT8 second[5];  // bytes 0 to 4
 } SecondsMessage;
 
-// ---- Milliseconds Message: 3 bytes -------------------------------------------
-
 // This message is sent every millisecond for which at least one PSX GLIMPSE 3.2 / PSX TotalView-ITCH 3.2 message is being generated.
-entrypoint typedef struct _MillisecondsMessage {
+typedef struct _MillisecondsMessage {
   UINT8 millisecond[3];  // bytes 0 to 2
 } MillisecondsMessage;
 
-// ---- System Event Message: 1 byte --------------------------------------------
-
 // PSX GLIMPSE product is designed to support the same system event messages as the PSX TotalView-ITCH feed. On PSX GLIMPSE, PSX will send out system event messages for those events that occurred up to the time of the PSX GLIMPSE snapshot request.
-entrypoint typedef struct _SystemEventMessage {
+typedef struct _SystemEventMessage {
   UINT8 event_code;  // byte 0
 } SystemEventMessage;
 
-// ---- Add Order Message: 37 bytes ---------------------------------------------
-
 // An Add Order Message indicates that a new order has been accepted by the PSX system and was added to the displayable book. This message will be generated for unattributed orders in the PSX system.
-entrypoint typedef struct _AddOrderMessage {
+typedef struct _AddOrderMessage {
   UINT8 order_reference_number[12];  // bytes 0 to 11
   UINT8 buy_sell_indicator;          // byte 12
   UINT8 shares[6];                   // bytes 13 to 18
@@ -78,10 +157,8 @@ entrypoint typedef struct _AddOrderMessage {
   UINT8 price[10];                   // bytes 27 to 36
 } AddOrderMessage;
 
-// ---- Add Order Mpid Attribution Message: 41 bytes ----------------------------
-
 // This message will be generated for attributed orders and quotations entered into the PSX system. Note: This message will not be supported for NASDAQ OMX PSX for initial market launch.
-entrypoint typedef struct _AddOrderMpidAttributionMessage {
+typedef struct _AddOrderMpidAttributionMessage {
   UINT8 order_reference_number[12];  // bytes 0 to 11
   UINT8 buy_sell_indicator;          // byte 12
   UINT8 shares[6];                   // bytes 13 to 18
@@ -90,10 +167,8 @@ entrypoint typedef struct _AddOrderMpidAttributionMessage {
   UINT8 attribution[4];              // bytes 37 to 40
 } AddOrderMpidAttributionMessage;
 
-// ---- Stock Directory Message: 17 bytes ---------------------------------------
-
 // At the start of each trading day, NASDAQ OMX PSX disseminates stock directory messages for all active symbols in the system for the current trading day. Please note that the Symbol Directory spin may include halted issues.
-entrypoint typedef struct _StockDirectoryMessage {
+typedef struct _StockDirectoryMessage {
   UINT8 stock[8];                    // bytes 0 to 7
   UINT8 market_category;             // byte 8
   UINT8 financial_status_indicator;  // byte 9
@@ -101,28 +176,64 @@ entrypoint typedef struct _StockDirectoryMessage {
   UINT8 round_lots_only;             // byte 16
 } StockDirectoryMessage;
 
-// ---- Stock Trading Action Message: 14 bytes ----------------------------------
-
 // In the GLIMPSE transmission, PSX will send out a Stock Trading Action message for only those NASDAQ, NYSE, NYSE Amex, NYSE Arca and BATS issues that were eligible for trading during the current trading session.
-entrypoint typedef struct _StockTradingActionMessage {
+typedef struct _StockTradingActionMessage {
   UINT8 stock[8];       // bytes 0 to 7
   UINT8 trading_state;  // byte 8
   UINT8 reserved_1;     // byte 9
   UINT8 reason[4];      // bytes 10 to 13
 } StockTradingActionMessage;
 
-// ---- Reg Sho Restriction Message: 9 bytes ------------------------------------
-
 // Reg SHO Short Sale Price Test Restricted Indicator
-entrypoint typedef struct _RegShoRestrictionMessage {
+typedef struct _RegShoRestrictionMessage {
   UINT8 stock[8];        // bytes 0 to 7
   UINT8 reg_sho_action;  // byte 8
 } RegShoRestrictionMessage;
 
-// ---- End Of Snapshot Message: 20 bytes ---------------------------------------
-
 // The Snapshot message reflects the PSX TotalView-ITCH 3.2 sequence number at the time that the PSX GLIMPSE 3.2 spin was requested.
-entrypoint typedef struct _EndOfSnapshotMessage {
+typedef struct _EndOfSnapshotMessage {
   UINT8 itch_sequence_number[20];  // bytes 0 to 19
 } EndOfSnapshotMessage;
+
+// Branch
+casetype _SequencedMessage (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x54: SecondsMessage seconds_message;
+    case 0x4D: MillisecondsMessage milliseconds_message;
+    case 0x53: SystemEventMessage system_event_message;
+    case 0x41: AddOrderMessage add_order_message;
+    case 0x46: AddOrderMpidAttributionMessage add_order_mpid_attribution_message;
+    case 0x52: StockDirectoryMessage stock_directory_message;
+    case 0x48: StockTradingActionMessage stock_trading_action_message;
+    case 0x59: RegShoRestrictionMessage reg_sho_restriction_message;
+    case 0x47: EndOfSnapshotMessage end_of_snapshot_message;
+    default: UINT8 unknown[available];
+  }
+} SequencedMessage;
+
+// The Sequenced Data Packets act as an envelope to carry the actual sequenced data messages that are transferred from the server to the client. Each Sequenced Data Packet carries one message from the higher-lever protocol.
+typedef struct _SequencedDataPacket (UINT32 available) where (available >= 1) {
+  UINT8 message_type;                                                                                                  // byte 0
+  SequencedMessage(message_type, (available - 1)) sequenced_message[:byte-size-single-element-array (available - 1)];
+} SequencedDataPacket;
+
+// Branch
+casetype _ServerPayload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x2B: DebugPacket(available) debug_packet;
+    case 0x41: LoginAcceptedPacket login_accepted_packet;
+    case 0x4A: LoginRejectedPacket login_rejected_packet;
+    case 0x53: SequencedDataPacket(available) sequenced_data_packet;
+    default: UINT8 unknown[available];
+  }
+} ServerPayload;
+
+// ---- Packet: ServerFrame -----------------------------------------------------
+
+// One SoupTcp packet sent by the server, closed by a line feed
+entrypoint typedef struct _ServerFrame (UINT32 available) where (available >= 2) {
+  UINT8 server_packet_type;                                                                                            // byte 0
+  ServerPayload(server_packet_type, (available - 2)) server_payload[:byte-size-single-element-array (available - 2)];
+  UINT8 soup_lf { soup_lf == 10 };
+} ServerFrame;
 

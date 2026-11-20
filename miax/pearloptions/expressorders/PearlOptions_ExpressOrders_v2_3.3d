@@ -1,35 +1,410 @@
-// Miami International Holdings Express Orders
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Miax PearlOptions ExpressOrders Meo v2.3
 //
+// Protocol:
+//   Organization: Miami International Holdings
+//   Protocol: Express Orders
+//   Encoding: Miax Express Orders
+//   Version: 2.3
+//   Date: 10/15/2026
+//   Specification: MIAX_Express_Orders_MEO_v2.3.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out PearlOptions_ExpressOrders_v2_3.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a length prefix framing what follows
-// - a run counted by a field
-// - a field read in bits
-//
-// License: MIT No Attribution
 
-// ---- Sesm Packet Header: 3 bytes ---------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// SesM packet header
-entrypoint typedef struct _SesmPacketHeader {
-  UINT16 sesm_packet_length;  // bytes 0 to 1
-  UINT8 sesm_packet_type;     // byte 2
-} SesmPacketHeader;
+// Sesm Packet Type: one byte code
+#define SESM_PACKET_TYPE_SEQUENCED_DATA_PACKET 0x53     // Sequenced Data Packet
+#define SESM_PACKET_TYPE_UNSEQUENCED_DATA_PACKET 0x55   // Unsequenced Data Packet
+#define SESM_PACKET_TYPE_LOGIN_REQUEST 0x4C             // Login Request
+#define SESM_PACKET_TYPE_LOGIN_RESPONSE 0x52            // Login Response
+#define SESM_PACKET_TYPE_SYNCHRONIZATION_COMPLETE 0x43  // Synchronization Complete
+#define SESM_PACKET_TYPE_RETRANSMISSION_REQUEST 0x41    // Retransmission Request
+#define SESM_PACKET_TYPE_LOGOUT_REQUEST 0x58            // Logout Request
+#define SESM_PACKET_TYPE_GOODBYE_PACKET 0x47            // Goodbye Packet
+#define SESM_PACKET_TYPE_END_OF_SESSION 0x45            // End Of Session
+#define SESM_PACKET_TYPE_SERVER_HEARTBEAT 0x30          // Server Heartbeat
+#define SESM_PACKET_TYPE_CLIENT_HEARTBEAT 0x31          // Client Heartbeat
+#define SESM_PACKET_TYPE_TEST_PACKET 0x54               // Test Packet
 
-// ---- Series Update: 76 bytes -------------------------------------------------
+// Sequenced Message Type: 2 byte code
+#define SEQUENCED_MESSAGE_TYPE_SERIES_UPDATE 0x5355                                            // Series Update
+#define SEQUENCED_MESSAGE_TYPE_SYSTEM_STATE_NOTIFICATION 0x534E                                // System State Notification
+#define SEQUENCED_MESSAGE_TYPE_UNDERLYING_TRADING_STATUS_NOTIFICATION 0x554E                   // Underlying Trading Status Notification
+#define SEQUENCED_MESSAGE_TYPE_OPENING_WIDTH_RELIEF_NOTIFICATION 0x514E                        // Opening Width Relief Notification
+#define SEQUENCED_MESSAGE_TYPE_ARM_PROTECTION_SETTINGS_NOTIFICATION 0x524E                     // Arm Protection Settings Notification
+#define SEQUENCED_MESSAGE_TYPE_ARM_2_UNDERLYING_LEVEL_PROTECTION_SETTINGS_NOTIFICATION 0x4132  // Arm 2 Underlying Level Protection Settings Notification
+#define SEQUENCED_MESSAGE_TYPE_SINGLE_SIDE_LIQUIDITY_PROTECTION_TRIGGER_NOTIFICATION 0x5158    // Single Side Liquidity Protection Trigger Notification
+#define SEQUENCED_MESSAGE_TYPE_ARM_2_UNDERLYING_LEVEL_PROTECTION_NOTIFICATION 0x5550           // Arm 2 Underlying Level Protection Notification
+#define SEQUENCED_MESSAGE_TYPE_ARM_2_FIRM_LEVEL_PROTECTION_NOTIFICATION 0x4650                 // Arm 2 Firm Level Protection Notification
+#define SEQUENCED_MESSAGE_TYPE_CANCEL_NOTIFICATION 0x584E                                      // Cancel Notification
+#define SEQUENCED_MESSAGE_TYPE_EXECUTION_NOTIFICATION 0x454E                                   // Execution Notification
+
+// Call Or Put: one byte code
+#define CALL_OR_PUT_CALL 0x43  // Call
+#define CALL_OR_PUT_PUT 0x50   // Put
+
+// Restricted Option: one byte code
+#define RESTRICTED_OPTION_PEARL_WILL_ACCEPT_POSITION_CLOSING_ORDERS_ONLY 0x59  // Pearl Will Accept Position Closing Orders Only
+#define RESTRICTED_OPTION_PEARL_WILL_ACCEPT_OPEN_AND_CLOSE_POSITIONS 0x4E      // Pearl Will Accept Open And Close Positions
+
+// Long Term Option: one byte code
+#define LONG_TERM_OPTION_FAR_MONTH_EXPIRATION_AS_DEFINED_BY_PEARL_RULES 0x59   // Far Month Expiration As Defined By Pearl Rules
+#define LONG_TERM_OPTION_NEAR_MONTH_EXPIRATION_AS_DEFINED_BY_PEARL_RULES 0x4E  // Near Month Expiration As Defined By Pearl Rules
+
+// Active On Pearl: one byte code
+#define ACTIVE_ON_PEARL_ACTIVE_TRADABLE_ON_PEARL 0x41        // Active Tradable On Pearl
+#define ACTIVE_ON_PEARL_INACTIVE_NOT_TRADABLE_ON_PEARL 0x49  // Inactive Not Tradable On Pearl
+
+// Pearl Bbo Posting Increment Indicator: one byte code
+#define PEARL_BBO_POSTING_INCREMENT_INDICATOR_PENNY_PENNY 0x50   // Penny Penny
+#define PEARL_BBO_POSTING_INCREMENT_INDICATOR_PENNY_NICKEL 0x4E  // Penny Nickel
+#define PEARL_BBO_POSTING_INCREMENT_INDICATOR_NICKEL_DIME 0x44   // Nickel Dime
+
+// Order Acceptance Increment Indicator: one byte code
+#define ORDER_ACCEPTANCE_INCREMENT_INDICATOR_PENNY_PENNY 0x50   // Penny Penny
+#define ORDER_ACCEPTANCE_INCREMENT_INDICATOR_PENNY_NICKEL 0x4E  // Penny Nickel
+#define ORDER_ACCEPTANCE_INCREMENT_INDICATOR_NICKEL_DIME 0x44   // Nickel Dime
+
+// Opening Underlying Market Code: one byte code
+#define OPENING_UNDERLYING_MARKET_CODE_NYSE_AMEX 0x41                          // Nyse Amex
+#define OPENING_UNDERLYING_MARKET_CODE_NASDAQ_TEXAS 0x42                       // Nasdaq Texas
+#define OPENING_UNDERLYING_MARKET_CODE_NATIONAL_STOCK_EXCHANGE 0x43            // National Stock Exchange
+#define OPENING_UNDERLYING_MARKET_CODE_FINRA_ADF 0x44                          // Finra Adf
+#define OPENING_UNDERLYING_MARKET_CODE_MARKET_INDEPENDENT 0x45                 // Market Independent
+#define OPENING_UNDERLYING_MARKET_CODE_TXSE 0x46                               // Txse
+#define OPENING_UNDERLYING_MARKET_CODE_MIAX_PEARL_EQUITIES 0x48                // Miax Pearl Equities
+#define OPENING_UNDERLYING_MARKET_CODE_INTERNATIONAL_SECURITIES_EXCHANGE 0x49  // International Securities Exchange
+#define OPENING_UNDERLYING_MARKET_CODE_EDGA_EXCHANGE_INC 0x4A                  // Edga Exchange Inc
+#define OPENING_UNDERLYING_MARKET_CODE_EDGX_EXCHANGE_INC 0x4B                  // Edgx Exchange Inc
+#define OPENING_UNDERLYING_MARKET_CODE_LTSE 0x4C                               // Ltse
+#define OPENING_UNDERLYING_MARKET_CODE_CHICAGO_STOCK_EXCHANGE 0x4D             // Chicago Stock Exchange
+#define OPENING_UNDERLYING_MARKET_CODE_NYSE_EURONEXT 0x4E                      // Nyse Euronext
+#define OPENING_UNDERLYING_MARKET_CODE_NYSE_ARCA_EXCHANGE 0x50                 // Nyse Arca Exchange
+#define OPENING_UNDERLYING_MARKET_CODE_NASDAQ_OMX_VIA_UTP_FEED 0x51            // Nasdaq Omx Via Utp Feed
+#define OPENING_UNDERLYING_MARKET_CODE_NASDAQ_OMX_VIA_CTA_FEED 0x54            // Nasdaq Omx Via Cta Feed
+#define OPENING_UNDERLYING_MARKET_CODE_MEMX 0x55                               // Memx
+#define OPENING_UNDERLYING_MARKET_CODE_IEX 0x56                                // Iex
+#define OPENING_UNDERLYING_MARKET_CODE_CBOE_STOCK_EXCHANGE_CBSX 0x57           // Cboe Stock Exchange Cbsx
+#define OPENING_UNDERLYING_MARKET_CODE_NASDAQ_OMX_PHLX 0x58                    // Nasdaq Omx Phlx
+#define OPENING_UNDERLYING_MARKET_CODE_BATS_Y_EXCHANGE_INC 0x59                // Bats Y Exchange Inc
+#define OPENING_UNDERLYING_MARKET_CODE_BATS_EXCHANGE_INC 0x5A                  // Bats Exchange Inc
+
+// System Status: one byte code
+#define SYSTEM_STATUS_START_OF_SYSTEM_HOURS 0x53                  // Start Of System Hours
+#define SYSTEM_STATUS_END_OF_SYSTEM_HOURS 0x43                    // End Of System Hours
+#define SYSTEM_STATUS_LOW 0x50                                    // Low
+#define SYSTEM_STATUS_NOT_IN_LOW 0x4C                             // Not In Low
+#define SYSTEM_STATUS_MPID_PRODUCT_ASSIGNMENT_WINDOW_OPEN 0x4D    // Mpid Product Assignment Window Open
+#define SYSTEM_STATUS_MPID_PRODUCT_ASSIGNMENT_WINDOW_CLOSED 0x45  // Mpid Product Assignment Window Closed
+#define SYSTEM_STATUS_START_OF_TEST_SESSION 0x31                  // Start Of Test Session
+#define SYSTEM_STATUS_END_OF_TEST_SESSION 0x32                    // End Of Test Session
+
+// Trading Status: one byte code
+#define TRADING_STATUS_PEARL_HAS_HALTED_TRADING_FOR_THIS_UNDERLYING_SYMBOL 0x48          // Pearl Has Halted Trading For This Underlying Symbol
+#define TRADING_STATUS_PEARL_WILL_RESUME_TRADING_REOPEN_FOR_THIS_UNDERLYING_SYMBOL 0x52  // Pearl Will Resume Trading Reopen For This Underlying Symbol
+#define TRADING_STATUS_PEARL_WILL_OPEN_TRADING_FOR_THIS_UNDERLYING_SYMBOL 0x4F           // Pearl Will Open Trading For This Underlying Symbol
+#define TRADING_STATUS_PEARL_HAS_CLOSED_TRADING_FOR_THIS_UNDERLYING_SYMBOL 0x43          // Pearl Has Closed Trading For This Underlying Symbol
+
+// Event Reason: one byte code
+#define EVENT_REASON_THIS_EVENT_RESULTED_FROM_AUTOMATICMARKET_DRIVEN_EVENT 0x41  // This Event Resulted From Automaticmarket Driven Event
+#define EVENT_REASON_PEARL_MANUALLY_INITIATED_THIS_EVENT 0x4D                    // Pearl Manually Initiated This Event
+
+// Action: one byte code
+#define ACTION_SET 0x53       // Set
+#define ACTION_DELETE 0x44    // Delete
+#define ACTION_ASSIGN 0x41    // Assign
+#define ACTION_UNASSIGN 0x55  // Unassign
+
+// Source: one byte code
+#define SOURCE_CHANGES_CARRIED_OUT_BY_THE_FIRM_VIA_MEO 0x54  // Changes Carried Out By The Firm Via Meo
+#define SOURCE_CHANGES_CARRIED_OUT_BY_THE_EXCHANGE 0x45      // Changes Carried Out By The Exchange
+
+// Side: one byte code
+#define SIDE_BUY 0x42             // Buy
+#define SIDE_SELL 0x53            // Sell
+#define SIDE_NOT_APPLICABLE 0x4E  // Not Applicable
+
+// Notification Type: one byte code
+#define NOTIFICATION_TYPE_TRIGGERED 0x54                      // Triggered
+#define NOTIFICATION_TYPE_RESET 0x52                          // Reset
+#define NOTIFICATION_TYPE_DOWNGRADED_FROM_OLDER_VERSION 0x2A  // Downgraded From Older Version
+
+// Liquidity Type: one byte code
+#define LIQUIDITY_TYPE_BINARY_ORDER 0x4F             // Binary Order
+#define LIQUIDITY_TYPE_RESERVED_FOR_FUTURE_USE 0x58  // Reserved For Future Use
+
+// Cancel Reason: one byte code
+#define CANCEL_REASON_LINE_DISCONNECT_TRIGGERED_PROTECTION_STANDARD_HYBRID_MASS_CANCEL 0x4C                  // Line Disconnect Triggered Protection Standard Hybrid Mass Cancel
+#define CANCEL_REASON_PEARL_HELP_DESK_INITIATED_CANCEL 0x42                                                  // Pearl Help Desk Initiated Cancel
+#define CANCEL_REASON_FIRM_INITIATED_STANDARD_HYBRID_MASS_CANCEL 0x55                                        // Firm Initiated Standard Hybrid Mass Cancel
+#define CANCEL_REASON_PEARL_INITIATED_HYBRID_MASS_CANCEL_DUE_TO_ARM_PROTECTION 0x52                          // Pearl Initiated Hybrid Mass Cancel Due To Arm Protection
+#define CANCEL_REASON_RPM_BINARY_ORDER_RATE_PROTECTION_TRIGGER_STANDARD_MASS_CANCEL 0x4F                     // Rpm Binary Order Rate Protection Trigger Standard Mass Cancel
+#define CANCEL_REASON_RPM_BINARY_ORDER_EXECUTED_CONTRACTS_RATE_PROTECTION_TRIGGER_STANDARD_MASS_CANCEL 0x54  // Rpm Binary Order Executed Contracts Rate Protection Trigger Standard Mass Cancel
+#define CANCEL_REASON_ARM_2_FIRM_LEVEL_PROTECTION_INITIATED_HYBRID_MASS_CANCEL 0x46                          // Arm 2 Firm Level Protection Initiated Hybrid Mass Cancel
+#define CANCEL_REASON_PRICE_PROTECTION_CANCELED 0x41                                                         // Price Protection Canceled
+#define CANCEL_REASON_CANCEL_OF_RESTING_ORDER_CROSSED_BY_OPPOSITE_SIDE_ORDER_OF_SAME_MPID_OR_FIRM 0x43       // Cancel Of Resting Order Crossed By Opposite Side Order Of Same Mpid Or Firm
+#define CANCEL_REASON_LULD_CANCELED 0x44                                                                     // Luld Canceled
+#define CANCEL_REASON_CANCELED_BY_USER_WITH_CANCEL_OR_REPLACE_REQUEST 0x4A                                   // Canceled By User With Cancel Or Replace Request
+#define CANCEL_REASON_CANCELED_DUE_TO_REPLACE_REQUEST_WHILE_BLOCKED_BY_RPM_PROTECTION 0x4D                   // Canceled Due To Replace Request While Blocked By Rpm Protection
+#define CANCEL_REASON_POST_ONLY_CANCELED_DUE_TO_LOCKING_OR_CROSSING_MANAGED_INTEREST_ON_THE_OPP_orb9bh 0x50  // Post Only Canceled Due To Locking Or Crossing Managed Interest On The Opposite Side
+#define CANCEL_REASON_CANCEL_FOR_UNEXECUTED_PART_OF_ORDER 0x53                                               // Cancel For Unexecuted Part Of Order
+#define CANCEL_REASON_CANCELED_DUE_TO_SINGLE_SIDE_LIQUIDITY_PROTECTION_TRIGGER 0x51                          // Canceled Due To Single Side Liquidity Protection Trigger
+#define CANCEL_REASON_A_R_ORDER_CANCELLED_DUE_TO_REJECTION_OF_AN_A_R_REPLACE_REQUEST 0x47                    // A R Order Cancelled Due To Rejection Of An A R Replace Request
+#define CANCEL_REASON_FIRM_INITIATED_SLAP_PROTECTION 0x48                                                    // Firm Initiated Slap Protection
+#define CANCEL_REASON_STANDARD_ORDER_CANCELED_DUE_TO_REPLACE_REQUEST_WHILE_BLOCKED_BY_SLAP_PROTECTION 0x49   // Standard Order Canceled Due To Replace Request While Blocked By Slap Protection
+#define CANCEL_REASON_UNDEFINED_REASON 0x5A                                                                  // Undefined Reason
+#define CANCEL_REASON_DOWNGRADED_FROM_OLDER_VERSION 0x2A                                                     // Downgraded From Older Version
+
+// Trade Status: one byte code
+#define TRADE_STATUS_NEW_EXECUTION 0x45  // New Execution
+
+// Liquidity Indicator: one byte code
+#define LIQUIDITY_INDICATOR_MAKER 0x4D                         // Maker
+#define LIQUIDITY_INDICATOR_TAKER 0x54                         // Taker
+#define LIQUIDITY_INDICATOR_NA 0x20                            // Na
+#define LIQUIDITY_INDICATOR_DOWNGRADED_FOR_OLDER_VERSION 0x2A  // Downgraded For Older Version
+
+// Unsequenced Message Type: 2 byte code
+#define UNSEQUENCED_MESSAGE_TYPE_ARM_SETTINGS_UPDATE_REQUEST 0x5253                                 // Arm Settings Update Request
+#define UNSEQUENCED_MESSAGE_TYPE_ARM_SETTINGS_UPDATE_RESPONSE 0x4141                                // Arm Settings Update Response
+#define UNSEQUENCED_MESSAGE_TYPE_ARM_2_UNDERLYING_LEVEL_PROTECTION_SETTINGS_UPDATE_REQUEST 0x3253   // Arm 2 Underlying Level Protection Settings Update Request
+#define UNSEQUENCED_MESSAGE_TYPE_ARM_2_UNDERLYING_LEVEL_PROTECTION_SETTINGS_UPDATE_RESPONSE 0x3252  // Arm 2 Underlying Level Protection Settings Update Response
+#define UNSEQUENCED_MESSAGE_TYPE_SERIES_ASSIGNMENT_REQUEST 0x5341                                   // Series Assignment Request
+#define UNSEQUENCED_MESSAGE_TYPE_SERIES_ASSIGNMENT_RESPONSE 0x4152                                  // Series Assignment Response
+#define UNSEQUENCED_MESSAGE_TYPE_SELF_TRADE_PROTECTION_DESIGNATION_REQUEST 0x5350                   // Self Trade Protection Designation Request
+#define UNSEQUENCED_MESSAGE_TYPE_SELF_TRADE_PROTECTION_DESIGNATION_RESPONSE 0x5352                  // Self Trade Protection Designation Response
+#define UNSEQUENCED_MESSAGE_TYPE_BULK_LIQUIDITY_MESSAGE 0x6C6D                                      // Bulk Liquidity Message
+#define UNSEQUENCED_MESSAGE_TYPE_BULK_LIQUIDITY_MESSAGE_RESPONSE 0x4C52                             // Bulk Liquidity Message Response
+#define UNSEQUENCED_MESSAGE_TYPE_LIQUIDITY_MASS_CANCEL_REQUEST 0x7871                               // Liquidity Mass Cancel Request
+#define UNSEQUENCED_MESSAGE_TYPE_LIQUIDITY_MASS_CANCEL_RESPONSE 0x5852                              // Liquidity Mass Cancel Response
+#define UNSEQUENCED_MESSAGE_TYPE_LIQUIDITY_PROTECTION_RESET_REQUEST 0x5031                          // Liquidity Protection Reset Request
+#define UNSEQUENCED_MESSAGE_TYPE_LIQUIDITY_PROTECTION_RESET_RESPONSE 0x5052                         // Liquidity Protection Reset Response
+#define UNSEQUENCED_MESSAGE_TYPE_SINGLE_SIDE_LIQUIDITY_PROTECTION_RESET_REQUEST 0x5353              // Single Side Liquidity Protection Reset Request
+#define UNSEQUENCED_MESSAGE_TYPE_SINGLE_SIDE_LIQUIDITY_PROTECTION_RESET_RESPONSE 0x5354             // Single Side Liquidity Protection Reset Response
+#define UNSEQUENCED_MESSAGE_TYPE_LIQUIDITY_PROTECTION_TRIGGER_NOTIFICATION 0x5150                   // Liquidity Protection Trigger Notification
+#define UNSEQUENCED_MESSAGE_TYPE_SLAP_PROTECTION_TRIGGER_NOTIFICATION 0x534C                        // Slap Protection Trigger Notification
+#define UNSEQUENCED_MESSAGE_TYPE_ORDER_NOTIFICATION 0x4F4E                                          // Order Notification
+#define UNSEQUENCED_MESSAGE_TYPE_DONE_FOR_THE_DAY_NOTIFICATION 0x4444                               // Done For The Day Notification
+#define UNSEQUENCED_MESSAGE_TYPE_CANCEL_NOTIFICATION 0x584E                                         // Cancel Notification
+
+// Arm Settings Update Status: one byte code
+#define ARM_SETTINGS_UPDATE_STATUS_SETTINGS_APPLIED_SUCCESSFULLY 0x20            // Settings Applied Successfully
+#define ARM_SETTINGS_UPDATE_STATUS_INVALID_ACTION 0x41                           // Invalid Action
+#define ARM_SETTINGS_UPDATE_STATUS_INVALID_ORIGIN_MULTIPLIER_VALUE 0x42          // Invalid Origin Multiplier Value
+#define ARM_SETTINGS_UPDATE_STATUS_ENHANCED_ARM_FEATURE_IS_DISABLED 0x43         // Enhanced Arm Feature Is Disabled
+#define ARM_SETTINGS_UPDATE_STATUS_INVALID_ALLOWABLE_ENGAGEMENT_PERCENTAGE 0x50  // Invalid Allowable Engagement Percentage
+#define ARM_SETTINGS_UPDATE_STATUS_INVALID_COUNTING_PERIOD 0x44                  // Invalid Counting Period
+#define ARM_SETTINGS_UPDATE_STATUS_UNKNOWN_MPID 0x4D                             // Unknown Mpid
+#define ARM_SETTINGS_UPDATE_STATUS_INVALID_UNDERLYING 0x55                       // Invalid Underlying
+#define ARM_SETTINGS_UPDATE_STATUS_NO_SUCH_ARM_SETTINGS 0x4E                     // No Such Arm Settings
+#define ARM_SETTINGS_UPDATE_STATUS_UNDEFINED_ERROR 0x5A                          // Undefined Error
+#define ARM_SETTINGS_UPDATE_STATUS_DOWNGRADED_FROM_OLDER_VERSION 0x2A            // Downgraded From Older Version
+
+// Arm 2 Settings Update Status: one byte code
+#define ARM_2_SETTINGS_UPDATE_STATUS_SETTINGS_APPLIED_SUCCESSFULLY 0x20  // Settings Applied Successfully
+#define ARM_2_SETTINGS_UPDATE_STATUS_INVALID_ACTION 0x41                 // Invalid Action
+#define ARM_2_SETTINGS_UPDATE_STATUS_INVALID_ARM_THRESHOLD 0x50          // Invalid Arm Threshold
+#define ARM_2_SETTINGS_UPDATE_STATUS_INVALID_COUNTING_PERIOD 0x44        // Invalid Counting Period
+#define ARM_2_SETTINGS_UPDATE_STATUS_INVALID_FOR_EEM_MPID 0x49           // Invalid For Eem Mpid
+#define ARM_2_SETTINGS_UPDATE_STATUS_UNKNOWN_MPID 0x4D                   // Unknown Mpid
+#define ARM_2_SETTINGS_UPDATE_STATUS_INVALID_UNDERLYING 0x55             // Invalid Underlying
+#define ARM_2_SETTINGS_UPDATE_STATUS_NO_SUCH_ARM_2_SETTING 0x4E          // No Such Arm 2 Setting
+#define ARM_2_SETTINGS_UPDATE_STATUS_UNDEFINED_ERROR 0x5A                // Undefined Error
+#define ARM_2_SETTINGS_UPDATE_STATUS_DOWNGRADED_FROM_OLDER_VERSION 0x2A  // Downgraded From Older Version
+
+// Assignment Settings Status: one byte code
+#define ASSIGNMENT_SETTINGS_STATUS_SETTINGS_APPLIED_SUCCESSFULLY 0x20         // Settings Applied Successfully
+#define ASSIGNMENT_SETTINGS_STATUS_INVALID_ACTION 0x41                        // Invalid Action
+#define ASSIGNMENT_SETTINGS_STATUS_UNKNOWN_MPID 0x4D                          // Unknown Mpid
+#define ASSIGNMENT_SETTINGS_STATUS_INVALID_REQUEST_FOR_EEM_MPID 0x45          // Invalid Request For Eem Mpid
+#define ASSIGNMENT_SETTINGS_STATUS_SETTINGS_NOT_PERMITTED 0x54                // Settings Not Permitted
+#define ASSIGNMENT_SETTINGS_STATUS_INVALID_PRODUCT_CODE 0x49                  // Invalid Product Code
+#define ASSIGNMENT_SETTINGS_STATUS_ASSIGNMENT_CANNOT_BE_FOR_PUT_OPTIONS 0x50  // Assignment Cannot Be For Put Options
+#define ASSIGNMENT_SETTINGS_STATUS_UNDEFINED_ERROR 0x5A                       // Undefined Error
+#define ASSIGNMENT_SETTINGS_STATUS_DOWNGRADED_FROM_OLDER_VERSION 0x2A         // Downgraded From Older Version
+
+// Self Trade Protection Status: one byte code
+#define SELF_TRADE_PROTECTION_STATUS_SETTINGS_APPLIED_SUCCESSFULLY 0x20  // Settings Applied Successfully
+#define SELF_TRADE_PROTECTION_STATUS_UNKNOWN_MPID 0x4D                   // Unknown Mpid
+#define SELF_TRADE_PROTECTION_STATUS_INVALID_FOR_MM_MPID 0x45            // Invalid For Mm Mpid
+#define SELF_TRADE_PROTECTION_STATUS_INVALID_ACTION 0x41                 // Invalid Action
+#define SELF_TRADE_PROTECTION_STATUS_UNDEFINED_ERROR 0x5A                // Undefined Error
+#define SELF_TRADE_PROTECTION_STATUS_DOWNGRADED_FROM_OLDER_VERSION 0x2A  // Downgraded From Older Version
+
+// Bulk Order Status: one byte code
+#define BULK_ORDER_STATUS_BULK_LIQUIDITY_BLOCK_IS_VALID 0x20  // Bulk Liquidity Block Is Valid
+#define BULK_ORDER_STATUS_INVALID_BULK_LIQUIDITY_BLOCK 0x52   // Invalid Bulk Liquidity Block
+#define BULK_ORDER_STATUS_UNDEFINED_ERROR 0x5A                // Undefined Error
+
+// Order Status: one byte code
+#define ORDER_STATUS_SUCCESSFULLY_ACCEPTED 0x20                                       // Successfully Accepted
+#define ORDER_STATUS_MARKET_ORDER_NOT_ACCEPTED_DURING_LULD 0x41                       // Market Order Not Accepted During Luld
+#define ORDER_STATUS_TOO_WIDE_FOR_SELL_MARKET_ZERO_BID 0x42                           // Too Wide For Sell Market Zero Bid
+#define ORDER_STATUS_PEARL_CLOSED_FOR_TRADING_OF_THIS_PRODUCT 0x43                    // Pearl Closed For Trading Of This Product
+#define ORDER_STATUS_MARKET_TOO_WIDE_TO_ACCEPT_MARKET_ORDER 0x45                      // Market Too Wide To Accept Market Order
+#define ORDER_STATUS_BUY_SELL_LIMIT_TOO_AGGRESSIVE 0x46                               // Buy Sell Limit Too Aggressive
+#define ORDER_STATUS_MAX_OPEN_ORDERS_EXCEEDED 0x47                                    // Max Open Orders Exceeded
+#define ORDER_STATUS_MAX_OPEN_CONTRACTS_EXCEEDED 0x48                                 // Max Open Contracts Exceeded
+#define ORDER_STATUS_INVALID_TIF_WHEN_OPTION_NOT_TRADING 0x49                         // Invalid Tif When Option Not Trading
+#define ORDER_STATUS_INVALID_ORDER_INSTRUCTION_WHEN_OPTION_NOT_TRADING 0x4A           // Invalid Order Instruction When Option Not Trading
+#define ORDER_STATUS_NO_A_R_ORDER_TO_CANCEL 0x4B                                      // No A R Order To Cancel
+#define ORDER_STATUS_ORDER_RECEIVED_WHILE_NOT_IN_LOW 0x4C                             // Order Received While Not In Low
+#define ORDER_STATUS_INVALID_CLIENT_ORDER_ID 0x4E                                     // Invalid Client Order Id
+#define ORDER_STATUS_INVALID_PRODUCT_ID 0x4F                                          // Invalid Product Id
+#define ORDER_STATUS_INVALID_OR_PROTECTED_PRICE 0x50                                  // Invalid Or Protected Price
+#define ORDER_STATUS_INVALID_SIZE 0x51                                                // Invalid Size
+#define ORDER_STATUS_REJECTED_DUE_TO_ORDER_PROTECTION 0x52                            // Rejected Due To Order Protection
+#define ORDER_STATUS_INVALID_SIDE 0x53                                                // Invalid Side
+#define ORDER_STATUS_INVALID_TARGET_CLIENT_ORDER_ID 0x54                              // Invalid Target Client Order Id
+#define ORDER_STATUS_UNKNOWN_MPID 0x55                                                // Unknown Mpid
+#define ORDER_STATUS_INVALID_TO_CHANGE 0x56                                           // Invalid To Change
+#define ORDER_STATUS_INVALID_CANCEL_REQUEST 0x57                                      // Invalid Cancel Request
+#define ORDER_STATUS_NOT_PERMITTED 0x58                                               // Not Permitted
+#define ORDER_STATUS_INVALID_FOR_MPID 0x59                                            // Invalid For Mpid
+#define ORDER_STATUS_INVALID_ORIGIN 0x31                                              // Invalid Origin
+#define ORDER_STATUS_INVALID_TIF 0x32                                                 // Invalid Tif
+#define ORDER_STATUS_RESTRICTED_OPTION 0x33                                           // Restricted Option
+#define ORDER_STATUS_NON_TRADABLE_OPTION 0x34                                         // Non Tradable Option
+#define ORDER_STATUS_INCOMPATIBLE_ORDER_TYPE 0x35                                     // Incompatible Order Type
+#define ORDER_STATUS_INCOMPATIBLE_TIF 0x36                                            // Incompatible Tif
+#define ORDER_STATUS_INVALID_ORDER_INSTRUCTION 0x37                                   // Invalid Order Instruction
+#define ORDER_STATUS_INVALID_OPEN_CLOSE 0x38                                          // Invalid Open Close
+#define ORDER_STATUS_INVALID_COVERED_UN_COVERED 0x39                                  // Invalid Covered Un Covered
+#define ORDER_STATUS_INVALID_MVP_TICKS 0x30                                           // Invalid Mvp Ticks
+#define ORDER_STATUS_INVALID_CLEARING_ACCOUNT 0x61                                    // Invalid Clearing Account
+#define ORDER_STATUS_BLOCKED_BY_OCC_KILL_SWITCH 0x62                                  // Blocked By Occ Kill Switch
+#define ORDER_STATUS_BLOCKED_BY_RPM 0x63                                              // Blocked By Rpm
+#define ORDER_STATUS_DUPLICATE_CLIENT_ORDER_ID 0x65                                   // Duplicate Client Order Id
+#define ORDER_STATUS_INVALID_ACCOUNT 0x66                                             // Invalid Account
+#define ORDER_STATUS_INVALID_LIQUIDITY_UNIT_TYPE 0x67                                 // Invalid Liquidity Unit Type
+#define ORDER_STATUS_INVALID_CMTA_SPECIFIED 0x68                                      // Invalid Cmta Specified
+#define ORDER_STATUS_REJECTED_DUE_TO_SINGLE_SIDE_LIQUIDITY_PROTECTION_IN_EFFECT 0x73  // Rejected Due To Single Side Liquidity Protection In Effect
+#define ORDER_STATUS_INVALID_ADDITIONAL_TEXT 0x74                                     // Invalid Additional Text
+#define ORDER_STATUS_REJECTED_DUE_TO_SLAP_PROTECTION_IN_EFFECT 0x75                   // Rejected Due To Slap Protection In Effect
+#define ORDER_STATUS_SLAP_CODE_SPECIFIED_FOR_AN_IMMEDIATE_ORDER 0x76                  // Slap Code Specified For An Immediate Order
+#define ORDER_STATUS_UNDEFINED_ERROR 0x5A                                             // Undefined Error
+#define ORDER_STATUS_DOWNGRADED_FROM_OLDER_VERSION 0x2A                               // Downgraded From Older Version
+
+// Mass Cancel Scope: one byte code
+#define MASS_CANCEL_SCOPE_STANDARD_MASS_CANCEL 0x41                 // Standard Mass Cancel
+#define MASS_CANCEL_SCOPE_HYBRID_MASS_CANCEL 0x44                   // Hybrid Mass Cancel
+#define MASS_CANCEL_SCOPE_SELECTIVE_LIQUIDITY_AUTO_PURGE_SLAP 0x53  // Selective Liquidity Auto Purge Slap
+
+// Status: one byte code
+#define STATUS_SUCCESSFUL 0x20                                              // Successful
+#define STATUS_ALL_SPECIFIED_SLAP_CODES_ARE_ALREADY_PURGED 0x41             // All Specified Slap Codes Are Already Purged
+#define STATUS_SLAP_CODES_ARE_NOT_PROVIDED_IN_THE_REQUEST 0x42              // Slap Codes Are Not Provided In The Request
+#define STATUS_CANNOT_CANCEL_WHILE_NOT_IN_LOW 0x43                          // Cannot Cancel While Not In Low
+#define STATUS_SLAP_PURGE_WHILE_STANDARD_HYBRID_MASS_CANCEL_IS_ACTIVE 0x44  // Slap Purge While Standard Hybrid Mass Cancel Is Active
+#define STATUS_FEATURE_NOT_ENABLED 0x45                                     // Feature Not Enabled
+#define STATUS_ARM_2_FIRM_LEVEL_PROTECTION_IS_IN_EFFECT 0x46                // Arm 2 Firm Level Protection Is In Effect
+#define STATUS_MASS_CANCEL_SCOPE_CONTAINS_INVALID_VALUE 0x4A                // Mass Cancel Scope Contains Invalid Value
+#define STATUS_UNKNOWN_MPID 0x4D                                            // Unknown Mpid
+#define STATUS_ALL_ORDERS_HAVE_ALREADY_BEEN_CANCELED 0x4E                   // All Orders Have Already Been Canceled
+#define STATUS_INVALID_SCOPE 0x53                                           // Invalid Scope
+#define STATUS_INVALID_UNDERLYING 0x55                                      // Invalid Underlying
+#define STATUS_SLAP_FEATURE_DISABLED 0x58                                   // Slap Feature Disabled
+#define STATUS_UNDEFINED_ERROR 0x5A                                         // Undefined Error
+#define STATUS_DOWNGRADED_FROM_OLDER_VERSION 0x2A                           // Downgraded From Older Version
+
+// Scope: one byte code
+#define SCOPE_RESET_STANDARD_HYBRID_MASS_CANCEL 0x41  // Reset Standard Hybrid Mass Cancel
+#define SCOPE_RESET_SLAP 0x53                         // Reset Slap
+
+// Trigger Reason: one byte code
+#define TRIGGER_REASON_LINE_DISCONNECT_TRIGGERED_PROTECTION 0x4C                         // Line Disconnect Triggered Protection
+#define TRIGGER_REASON_PEARL_HELP_DESK_TRIGGERED_PROTECTION 0x42                         // Pearl Help Desk Triggered Protection
+#define TRIGGER_REASON_FIRM_INITIATED_STANDARD_HYBRID_MASS_CANCEL 0x55                   // Firm Initiated Standard Hybrid Mass Cancel
+#define TRIGGER_REASON_ARM_TRIGGERED_PROTECTION 0x52                                     // Arm Triggered Protection
+#define TRIGGER_REASON_RPM_BINARY_ORDER_RATE_PROTECTION_TRIGGER 0x4F                     // Rpm Binary Order Rate Protection Trigger
+#define TRIGGER_REASON_RPM_BINARY_ORDER_EXECUTED_CONTRACTS_RATE_PROTECTION_TRIGGER 0x54  // Rpm Binary Order Executed Contracts Rate Protection Trigger
+#define TRIGGER_REASON_ARM_2_FIRM_LEVEL_PROTECTION_INITIATED_HYBRID_MASS_CANCEL 0x46     // Arm 2 Firm Level Protection Initiated Hybrid Mass Cancel
+#define TRIGGER_REASON_RESERVED_FOR_FUTURE_USE 0x4A                                      // Reserved For Future Use
+#define TRIGGER_REASON_DOWNGRADED_FROM_OLDER_VERSION 0x2A                                // Downgraded From Older Version
+
+// Time In Force Tif: one byte code
+#define TIME_IN_FORCE_TIF_DAY 0x44  // Day
+#define TIME_IN_FORCE_TIF_IOC 0x49  // Ioc
+
+// Order Instruction: one byte code
+#define ORDER_INSTRUCTION_REGULAR 0x52    // Regular
+#define ORDER_INSTRUCTION_ISO 0x53        // Iso
+#define ORDER_INSTRUCTION_POST_ONLY 0x50  // Post Only
+
+// Origin: one byte code
+#define ORIGIN_PRIORITY_CUSTOMER 0x30        // Priority Customer
+#define ORIGIN_FIRM 0x31                     // Firm
+#define ORIGIN_BROKER_DEALER 0x32            // Broker Dealer
+#define ORIGIN_MARKET_MAKER 0x34             // Market Maker
+#define ORIGIN_NON_MEMBER_MARKET_MAKER 0x35  // Non Member Market Maker
+#define ORIGIN_NON_PRIORITY_CUSTOMER 0x38    // Non Priority Customer
+
+// Open Close: one byte code
+#define OPEN_CLOSE_OPEN 0x4F   // Open
+#define OPEN_CLOSE_CLOSE 0x43  // Close
+#define OPEN_CLOSE_NA 0x4E     // Na
+
+// Covered Uncovered: one byte code
+#define COVERED_UNCOVERED_COVERED 0x43    // Covered
+#define COVERED_UNCOVERED_UNCOVERED 0x55  // Uncovered
+#define COVERED_UNCOVERED_NA 0x4E         // Na
+
+// Login Status: one byte code
+#define LOGIN_STATUS_LOGIN_SUCCESSFUL 0x20                                   // Login Successful
+#define LOGIN_STATUS_REJECTED 0x58                                           // Rejected
+#define LOGIN_STATUS_REQUESTED_SESSION_IS_NOT_AVAILABLE 0x53                 // Requested Session Is Not Available
+#define LOGIN_STATUS_INVALID_START_SEQUENCE_NUMBER_REQUESTED 0x4E            // Invalid Start Sequence Number Requested
+#define LOGIN_STATUS_INCOMPATIBLE_SESSION_PROTOCOL_VERSION 0x49              // Incompatible Session Protocol Version
+#define LOGIN_STATUS_INCOMPATIBLE_APPLICATION_PROTOCOL_VERSION 0x41          // Incompatible Application Protocol Version
+#define LOGIN_STATUS_REQUEST_REJECTED_BECAUSE_CLIENT_ALREADY_LOGGED_IN 0x4C  // Request Rejected Because Client Already Logged In
+
+// Logout Reason: one byte code
+#define LOGOUT_REASON_GRACEFUL_LOGOUT 0x20                     // Graceful Logout
+#define LOGOUT_REASON_BAD_SESM_PACKET 0x42                     // Bad Sesm Packet
+#define LOGOUT_REASON_TIMED_OUT_WAITING_FOR_LOGIN_PACKET 0x4C  // Timed Out Waiting For Login Packet
+#define LOGOUT_REASON_APPLICATION_TERMINATING_CONNECTION 0x41  // Application Terminating Connection
+
+// Goodbye Reason: one byte code
+#define GOODBYE_REASON_BAD_SESM_PACKET 0x42                     // Bad Sesm Packet
+#define GOODBYE_REASON_TIMED_OUT_WAITING_FOR_LOGIN_PACKET 0x4C  // Timed Out Waiting For Login Packet
+#define GOODBYE_REASON_APPLICATION_TERMINATING_CONNECTION 0x41  // Application Terminating Connection
+
+// ---- Types -------------------------------------------------------------------
 
 // This is the message format that will be used to disseminate all Option series traded on Pearl for the current session on the cloud associated for this connection
-entrypoint typedef struct _SeriesUpdate {
+typedef struct _SeriesUpdate {
   UINT64 product_add_update_time;               // bytes 0 to 7
   UINT32 product_id;                            // bytes 8 to 11
   UINT8 underlying_symbol[11];                  // bytes 12 to 22
@@ -48,20 +423,16 @@ entrypoint typedef struct _SeriesUpdate {
   UINT8 reserved_12[12];                        // bytes 64 to 75
 } SeriesUpdate;
 
-// ---- System State Notification: 18 bytes -------------------------------------
-
 // This message format is used to notify the firms of the state changes of the system. This is an exchange-wide notification and not a symbol or member-based notification
-entrypoint typedef struct _SystemStateNotification {
+typedef struct _SystemStateNotification {
   UINT64 notification_time;  // bytes 0 to 7
   UINT8 meo_version[8];      // bytes 8 to 15
   UINT8 session_id;          // byte 16
   UINT8 system_status;       // byte 17
 } SystemStateNotification;
 
-// ---- Underlying Trading Status Notification: 29 bytes ------------------------
-
 // This message format will be used to notify the firms of changes to the trading status of all the options of an underlying
-entrypoint typedef struct _UnderlyingTradingStatusNotification {
+typedef struct _UnderlyingTradingStatusNotification {
   UINT64 notification_time;     // bytes 0 to 7
   UINT8 underlying_symbol[11];  // bytes 8 to 18
   UINT8 trading_status;         // byte 19
@@ -69,19 +440,15 @@ entrypoint typedef struct _UnderlyingTradingStatusNotification {
   UINT64 expected_event_time;   // bytes 21 to 28
 } UnderlyingTradingStatusNotification;
 
-// ---- Opening Width Relief Notification: 23 bytes -----------------------------
-
 // This message format will be used to notify the firms if and when Pearl grants relief from valid opening width parameters for Opening as specified by regulatory circulars of Pearl
-entrypoint typedef struct _OpeningWidthReliefNotification {
+typedef struct _OpeningWidthReliefNotification {
   UINT64 notification_time;     // bytes 0 to 7
   UINT8 underlying_symbol[11];  // bytes 8 to 18
   UINT32 relief_multiplier;     // bytes 19 to 22
 } OpeningWidthReliefNotification;
 
-// ---- Arm Protection Settings Notification: 59 bytes --------------------------
-
 // This message format will be used to notify firms of their ARM settings
-entrypoint typedef struct _ArmProtectionSettingsNotification {
+typedef struct _ArmProtectionSettingsNotification {
   UINT64 notification_time;                        // bytes 0 to 7
   UINT8 mpid[4];                                   // bytes 8 to 11
   UINT8 underlying_symbol[11];                     // bytes 12 to 22
@@ -98,10 +465,8 @@ entrypoint typedef struct _ArmProtectionSettingsNotification {
   UINT8 reserved_16[16];                           // bytes 43 to 58
 } ArmProtectionSettingsNotification;
 
-// ---- Arm 2 Underlying Level Protection Settings Notification: 48 bytes -------
-
 // This message format will be used to notify firms of their ARM2 Underlying Level protection settings
-entrypoint typedef struct _Arm2UnderlyingLevelProtectionSettingsNotification {
+typedef struct _Arm2UnderlyingLevelProtectionSettingsNotification {
   UINT64 notification_time;      // bytes 0 to 7
   UINT8 mpid[4];                 // bytes 8 to 11
   UINT8 action;                  // byte 12
@@ -111,10 +476,8 @@ entrypoint typedef struct _Arm2UnderlyingLevelProtectionSettingsNotification {
   UINT8 reserved_16[16];         // bytes 32 to 47
 } Arm2UnderlyingLevelProtectionSettingsNotification;
 
-// ---- Single Side Liquidity Protection Trigger Notification: 26 bytes ---------
-
 // This message format will be used to notify firms when a Single Side Liquidity Protection is triggered for an Option
-entrypoint typedef struct _SingleSideLiquidityProtectionTriggerNotification {
+typedef struct _SingleSideLiquidityProtectionTriggerNotification {
   UINT64 notification_time;             // bytes 0 to 7
   UINT8 mpid[4];                        // bytes 8 to 11
   UINT32 product_id;                    // bytes 12 to 15
@@ -124,10 +487,8 @@ entrypoint typedef struct _SingleSideLiquidityProtectionTriggerNotification {
   UINT8 reserved_4[4];                  // bytes 22 to 25
 } SingleSideLiquidityProtectionTriggerNotification;
 
-// ---- Arm 2 Underlying Level Protection Notification: 48 bytes ----------------
-
 // This message format will be used to notify firms about ARM2 Underlying Level protection events
-entrypoint typedef struct _Arm2UnderlyingLevelProtectionNotification {
+typedef struct _Arm2UnderlyingLevelProtectionNotification {
   UINT64 notification_time;      // bytes 0 to 7
   UINT8 mpid[4];                 // bytes 8 to 11
   UINT8 underlying_symbol[11];   // bytes 12 to 22
@@ -137,10 +498,8 @@ entrypoint typedef struct _Arm2UnderlyingLevelProtectionNotification {
   UINT8 reserved_16[16];         // bytes 32 to 47
 } Arm2UnderlyingLevelProtectionNotification;
 
-// ---- Arm 2 Firm Level Protection Notification: 33 bytes ----------------------
-
 // This message format will be used to notify firms about ARM2 Firm Level protection events
-entrypoint typedef struct _Arm2FirmLevelProtectionNotification {
+typedef struct _Arm2FirmLevelProtectionNotification {
   UINT64 notification_time;      // bytes 0 to 7
   UINT32 arm_threshold_count;    // bytes 8 to 11
   UINT32 arm_2_counting_period;  // bytes 12 to 15
@@ -148,10 +507,8 @@ entrypoint typedef struct _Arm2FirmLevelProtectionNotification {
   UINT8 reserved_16[16];         // bytes 17 to 32
 } Arm2FirmLevelProtectionNotification;
 
-// ---- Cancel Notification: 40 bytes -------------------------------------------
-
 // This is the message format that will be used to notify firms about order cancels. By default this is not a sequenced message; firms can request it to be configured as a sequenced message
-entrypoint typedef struct _CancelNotification {
+typedef struct _CancelNotification {
   UINT64 notification_time;       // bytes 0 to 7
   UINT8 mpid[4];                  // bytes 8 to 11
   UINT32 product_id;              // bytes 12 to 15
@@ -165,10 +522,8 @@ entrypoint typedef struct _CancelNotification {
   UINT8 cancel_reason;            // byte 39
 } CancelNotification;
 
-// ---- Execution Notification: 64 bytes ----------------------------------------
-
 // This message format will be used to notify the firms of executions of their orders
-entrypoint typedef struct _ExecutionNotification {
+typedef struct _ExecutionNotification {
   UINT64 notification_time;   // bytes 0 to 7
   UINT8 mpid[4];              // bytes 8 to 11
   UINT32 product_id;          // bytes 12 to 15
@@ -186,10 +541,33 @@ entrypoint typedef struct _ExecutionNotification {
   UINT8 reserved_15[15];      // bytes 49 to 63
 } ExecutionNotification;
 
-// ---- Arm Settings Update Request: 54 bytes -----------------------------------
+// Branch
+casetype _SequencedMessage (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x5355: SeriesUpdate series_update;
+    case 0x534E: SystemStateNotification system_state_notification;
+    case 0x554E: UnderlyingTradingStatusNotification underlying_trading_status_notification;
+    case 0x514E: OpeningWidthReliefNotification opening_width_relief_notification;
+    case 0x524E: ArmProtectionSettingsNotification arm_protection_settings_notification;
+    case 0x4132: Arm2UnderlyingLevelProtectionSettingsNotification arm_2_underlying_level_protection_settings_notification;
+    case 0x5158: SingleSideLiquidityProtectionTriggerNotification single_side_liquidity_protection_trigger_notification;
+    case 0x5550: Arm2UnderlyingLevelProtectionNotification arm_2_underlying_level_protection_notification;
+    case 0x4650: Arm2FirmLevelProtectionNotification arm_2_firm_level_protection_notification;
+    case 0x584E: CancelNotification cancel_notification;
+    case 0x454E: ExecutionNotification execution_notification;
+    default: UINT8 unknown[available];
+  }
+} SequencedMessage;
+
+// The Server application can choose to use Sequenced data packets to send all messages that must be recoverable by the client in case of a connection loss
+typedef struct _SequencedDataPacket (UINT32 available) where (available >= 10) {
+  UINT64 sequence_number;                                                                                                          // bytes 0 to 7
+  UINT16BE sequenced_message_type;                                                                                                 // bytes 8 to 9
+  SequencedMessage(sequenced_message_type, (available - 10)) sequenced_message[:byte-size-single-element-array (available - 10)];
+} SequencedDataPacket;
 
 // Firms can use this message format to set up their ARM protection settings for each session. Changes to these settings can be made throughout the day
-entrypoint typedef struct _ArmSettingsUpdateRequest {
+typedef struct _ArmSettingsUpdateRequest {
   UINT32 client_message_id;                        // bytes 0 to 3
   UINT8 mpid[4];                                   // bytes 4 to 7
   UINT8 action;                                    // byte 8
@@ -205,20 +583,16 @@ entrypoint typedef struct _ArmSettingsUpdateRequest {
   UINT8 reserved_16[16];                           // bytes 38 to 53
 } ArmSettingsUpdateRequest;
 
-// ---- Arm Settings Update Response: 20 bytes ----------------------------------
-
 // Pearl uses this format to respond to the firm with a status of their ARM protection settings request
-entrypoint typedef struct _ArmSettingsUpdateResponse {
+typedef struct _ArmSettingsUpdateResponse {
   UINT32 client_message_id;          // bytes 0 to 3
   UINT8 mpid[4];                     // bytes 4 to 7
   UINT8 underlying_symbol[11];       // bytes 8 to 18
   UINT8 arm_settings_update_status;  // byte 19
 } ArmSettingsUpdateResponse;
 
-// ---- Arm 2 Underlying Level Protection Settings Update Request: 28 bytes -----
-
 // Firms can use this message format to set up their ARM2 Underlying Level protection settings for each session. Changes to these settings can be made throughout the day
-entrypoint typedef struct _Arm2UnderlyingLevelProtectionSettingsUpdateRequest {
+typedef struct _Arm2UnderlyingLevelProtectionSettingsUpdateRequest {
   UINT32 client_message_id;      // bytes 0 to 3
   UINT8 mpid[4];                 // bytes 4 to 7
   UINT8 action;                  // byte 8
@@ -227,75 +601,125 @@ entrypoint typedef struct _Arm2UnderlyingLevelProtectionSettingsUpdateRequest {
   UINT32 arm_2_counting_period;  // bytes 24 to 27
 } Arm2UnderlyingLevelProtectionSettingsUpdateRequest;
 
-// ---- Arm 2 Underlying Level Protection Settings Update Response: 20 bytes ----
-
 // Pearl uses this format to respond to the firm with a status of their ARM2 Underlying level protection Settings Update Request
-entrypoint typedef struct _Arm2UnderlyingLevelProtectionSettingsUpdateResponse {
+typedef struct _Arm2UnderlyingLevelProtectionSettingsUpdateResponse {
   UINT32 client_message_id;            // bytes 0 to 3
   UINT8 mpid[4];                       // bytes 4 to 7
   UINT8 underlying_symbol[11];         // bytes 8 to 18
   UINT8 arm_2_settings_update_status;  // byte 19
 } Arm2UnderlyingLevelProtectionSettingsUpdateResponse;
 
-// ---- Series Assignment Request: 13 bytes -------------------------------------
-
 // Market Making firms can use this message format to communicate to Pearl which of their MM MPIDs is assigned or unassigned in a product
-entrypoint typedef struct _SeriesAssignmentRequest {
+typedef struct _SeriesAssignmentRequest {
   UINT32 client_message_id;  // bytes 0 to 3
   UINT8 mpid[4];             // bytes 4 to 7
   UINT32 product_id;         // bytes 8 to 11
   UINT8 action;              // byte 12
 } SeriesAssignmentRequest;
 
-// ---- Series Assignment Response: 9 bytes -------------------------------------
-
 // Pearl uses this format to respond to the firm assignment request
-entrypoint typedef struct _SeriesAssignmentResponse {
+typedef struct _SeriesAssignmentResponse {
   UINT32 client_message_id;          // bytes 0 to 3
   UINT8 mpid[4];                     // bytes 4 to 7
   UINT8 assignment_settings_status;  // byte 8
 } SeriesAssignmentResponse;
 
-// ---- Self Trade Protection Designation Request: 9 bytes ----------------------
-
 // Firms can use this message format to communicate to Pearl which of their EEM MPIDs are designated for self-trade protection
-entrypoint typedef struct _SelfTradeProtectionDesignationRequest {
+typedef struct _SelfTradeProtectionDesignationRequest {
   UINT32 client_message_id;  // bytes 0 to 3
   UINT8 mpid[4];             // bytes 4 to 7
   UINT8 action;              // byte 8
 } SelfTradeProtectionDesignationRequest;
 
-// ---- Self Trade Protection Designation Response: 9 bytes ---------------------
-
 // Pearl uses this format to respond to the firm assignment request
-entrypoint typedef struct _SelfTradeProtectionDesignationResponse {
+typedef struct _SelfTradeProtectionDesignationResponse {
   UINT32 client_message_id;            // bytes 0 to 3
   UINT8 mpid[4];                       // bytes 4 to 7
   UINT8 self_trade_protection_status;  // byte 8
 } SelfTradeProtectionDesignationResponse;
 
-// ---- Liquidity Mass Cancel Response: 9 bytes ---------------------------------
+// 1 to 25 single-side Order, cancel or replace
+typedef struct _LiquidityUnits {
+  UINT8 liquidity_unit[57];  // bytes 0 to 56
+} LiquidityUnits;
+
+// Firms can use this message format to send up to 25 orders, cancels or cancel replaces. The orders are processed in the sequence according to their position in the message
+typedef struct _BulkLiquidityMessage {
+  UINT32 client_message_id;                                       // bytes 0 to 3
+  UINT64 client_send_time;                                        // bytes 4 to 11
+  UINT8 liquidity_unit_count;                                     // byte 12
+  UINT8 reserved_4[4];                                            // bytes 13 to 16
+  UINT8 liquidity_units[(((UINT32) liquidity_unit_count) * 57)];
+} BulkLiquidityMessage;
+
+// 1 to N single-side order responses
+typedef struct _OrderResponse {
+  UINT8 order_status;             // byte 0
+  UINT64 engine_sequence_number;  // bytes 1 to 8
+  UINT32 open_size;               // bytes 9 to 12
+} OrderResponse;
+
+// This message format will be used to inform the firm of the status of Orders sent in the Bulk Liquidity Message request
+typedef struct _BulkLiquidityMessageResponse {
+  UINT32 client_message_id;                                                        // bytes 0 to 3
+  UINT8 bulk_order_status;                                                         // byte 4
+  UINT8 order_count;                                                               // byte 5
+  UINT8 invalid_order_count;                                                       // byte 6
+  UINT64 order_ack_time;                                                           // bytes 7 to 14
+  OrderResponse order_response[:byte-size (((UINT32) invalid_order_count) * 13)];
+} BulkLiquidityMessageResponse;
+
+// Firms can use this message format to request the cancelation of all orders for an MPID for all series for an underlying
+typedef struct _LiquidityMassCancelRequest {
+  UINT32 client_message_id;     // bytes 0 to 3
+  UINT8 mpid[4];                // bytes 4 to 7
+  UINT64 client_send_time;      // bytes 8 to 15
+  UINT8 underlying_symbol[11];  // bytes 16 to 26
+  UINT8 mass_cancel_scope;      // byte 27
+  UINT8 slap_code_1 : 1;        // byte 28
+  UINT8 slap_code_2 : 1;        // byte 28
+  UINT8 slap_code_3 : 1;        // byte 28
+  UINT8 slap_code_4 : 1;        // byte 28
+  UINT8 slap_code_5 : 1;        // byte 28
+  UINT8 slap_code_6 : 1;        // byte 28
+  UINT8 slap_code_7 : 1;        // byte 28
+  UINT8 slap_code_8 : 1;        // byte 28
+  UINT8 reserved_6[6];          // bytes 29 to 34
+} LiquidityMassCancelRequest;
 
 // This message format will be used to inform the firm about the status of their previous Mass Cancel request
-entrypoint typedef struct _LiquidityMassCancelResponse {
+typedef struct _LiquidityMassCancelResponse {
   UINT32 client_message_id;  // bytes 0 to 3
   UINT8 mpid[4];             // bytes 4 to 7
   UINT8 status;              // byte 8
 } LiquidityMassCancelResponse;
 
-// ---- Liquidity Protection Reset Response: 9 bytes ----------------------------
+// Firms use this message format to reset their Order Protection for an underlying
+typedef struct _LiquidityProtectionResetRequest {
+  UINT32 client_message_id;     // bytes 0 to 3
+  UINT8 mpid[4];                // bytes 4 to 7
+  UINT8 underlying_symbol[11];  // bytes 8 to 18
+  UINT8 scope;                  // byte 19
+  UINT8 slap_code_1 : 1;        // byte 20
+  UINT8 slap_code_2 : 1;        // byte 20
+  UINT8 slap_code_3 : 1;        // byte 20
+  UINT8 slap_code_4 : 1;        // byte 20
+  UINT8 slap_code_5 : 1;        // byte 20
+  UINT8 slap_code_6 : 1;        // byte 20
+  UINT8 slap_code_7 : 1;        // byte 20
+  UINT8 slap_code_8 : 1;        // byte 20
+  UINT8 reserved_10[10];        // bytes 21 to 30
+} LiquidityProtectionResetRequest;
 
 // This message format is used to inform the firms of the status of their Order Protection Reset Request
-entrypoint typedef struct _LiquidityProtectionResetResponse {
+typedef struct _LiquidityProtectionResetResponse {
   UINT32 client_message_id;  // bytes 0 to 3
   UINT8 mpid[4];             // bytes 4 to 7
   UINT8 status;              // byte 8
 } LiquidityProtectionResetResponse;
 
-// ---- Single Side Liquidity Protection Reset Request: 17 bytes ----------------
-
 // Request to reset Single Side Liquidity Protection for the specific Option and Side for a given MPID
-entrypoint typedef struct _SingleSideLiquidityProtectionResetRequest {
+typedef struct _SingleSideLiquidityProtectionResetRequest {
   UINT32 client_message_id;  // bytes 0 to 3
   UINT8 mpid[4];             // bytes 4 to 7
   UINT32 product_id;         // bytes 8 to 11
@@ -303,30 +727,48 @@ entrypoint typedef struct _SingleSideLiquidityProtectionResetRequest {
   UINT8 reserved_4[4];       // bytes 13 to 16
 } SingleSideLiquidityProtectionResetRequest;
 
-// ---- Single Side Liquidity Protection Reset Response: 13 bytes ---------------
-
 // Response to Single Side Liquidity Protection Reset Request
-entrypoint typedef struct _SingleSideLiquidityProtectionResetResponse {
+typedef struct _SingleSideLiquidityProtectionResetResponse {
   UINT32 client_message_id;  // bytes 0 to 3
   UINT8 mpid[4];             // bytes 4 to 7
   UINT8 reserved_4[4];       // bytes 8 to 11
   UINT8 status;              // byte 12
 } SingleSideLiquidityProtectionResetResponse;
 
-// ---- Liquidity Protection Trigger Notification: 24 bytes ---------------------
-
 // This message format will be used to notify firms when order protection is triggered for an MPID
-entrypoint typedef struct _LiquidityProtectionTriggerNotification {
+typedef struct _LiquidityProtectionTriggerNotification {
   UINT64 notification_time;     // bytes 0 to 7
   UINT8 mpid[4];                // bytes 8 to 11
   UINT8 underlying_symbol[11];  // bytes 12 to 22
   UINT8 trigger_reason;         // byte 23
 } LiquidityProtectionTriggerNotification;
 
-// ---- Order Notification: 63 bytes --------------------------------------------
+// This message format will be used to notify firms when SLAP protection is triggered for an MPID and Underlying
+typedef struct _SlapProtectionTriggerNotification {
+  UINT64 notification_time;     // bytes 0 to 7
+  UINT8 mpid[4];                // bytes 8 to 11
+  UINT8 underlying_symbol[11];  // bytes 12 to 22
+  UINT8 slap_code_1 : 1;        // byte 23
+  UINT8 slap_code_2 : 1;        // byte 23
+  UINT8 slap_code_3 : 1;        // byte 23
+  UINT8 slap_code_4 : 1;        // byte 23
+  UINT8 slap_code_5 : 1;        // byte 23
+  UINT8 slap_code_6 : 1;        // byte 23
+  UINT8 slap_code_7 : 1;        // byte 23
+  UINT8 slap_code_8 : 1;        // byte 23
+  UINT8 slap_code_1_2 : 1;      // byte 24
+  UINT8 slap_code_2_2 : 1;      // byte 24
+  UINT8 slap_code_3_2 : 1;      // byte 24
+  UINT8 slap_code_4_2 : 1;      // byte 24
+  UINT8 slap_code_5_2 : 1;      // byte 24
+  UINT8 slap_code_6_2 : 1;      // byte 24
+  UINT8 slap_code_7_2 : 1;      // byte 24
+  UINT8 slap_code_8_2 : 1;      // byte 24
+  UINT8 reserved_10[10];        // bytes 25 to 34
+} SlapProtectionTriggerNotification;
 
 // This is the message format that will be used to notify firms about orders sent by firms. Note that this is sent for new orders only (including replaces) and it is meant to provide a copy of the order
-entrypoint typedef struct _OrderNotification {
+typedef struct _OrderNotification {
   UINT64 notification_time;       // bytes 0 to 7
   UINT32 client_order_id;         // bytes 8 to 11
   UINT32 client_message_id;       // bytes 12 to 15
@@ -348,10 +790,8 @@ entrypoint typedef struct _OrderNotification {
   UINT8 account[10];              // bytes 53 to 62
 } OrderNotification;
 
-// ---- Done For The Day Notification: 63 bytes ---------------------------------
-
 // This is the message format that will be used to notify firms about the final status of the binary orders at the end of day after end of LOW
-entrypoint typedef struct _DoneForTheDayNotification {
+typedef struct _DoneForTheDayNotification {
   UINT64 notification_time;       // bytes 0 to 7
   UINT32 client_order_id;         // bytes 8 to 11
   UINT32 client_message_id;       // bytes 12 to 15
@@ -373,10 +813,42 @@ entrypoint typedef struct _DoneForTheDayNotification {
   UINT8 account[10];              // bytes 53 to 62
 } DoneForTheDayNotification;
 
-// ---- Login Request: 35 bytes -------------------------------------------------
+// Branch
+casetype _UnsequencedMessage (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x5253: ArmSettingsUpdateRequest arm_settings_update_request;
+    case 0x4141: ArmSettingsUpdateResponse arm_settings_update_response;
+    case 0x3253: Arm2UnderlyingLevelProtectionSettingsUpdateRequest arm_2_underlying_level_protection_settings_update_request;
+    case 0x3252: Arm2UnderlyingLevelProtectionSettingsUpdateResponse arm_2_underlying_level_protection_settings_update_response;
+    case 0x5341: SeriesAssignmentRequest series_assignment_request;
+    case 0x4152: SeriesAssignmentResponse series_assignment_response;
+    case 0x5350: SelfTradeProtectionDesignationRequest self_trade_protection_designation_request;
+    case 0x5352: SelfTradeProtectionDesignationResponse self_trade_protection_designation_response;
+    case 0x6C6D: BulkLiquidityMessage bulk_liquidity_message;
+    case 0x4C52: BulkLiquidityMessageResponse bulk_liquidity_message_response;
+    case 0x7871: LiquidityMassCancelRequest liquidity_mass_cancel_request;
+    case 0x5852: LiquidityMassCancelResponse liquidity_mass_cancel_response;
+    case 0x5031: LiquidityProtectionResetRequest liquidity_protection_reset_request;
+    case 0x5052: LiquidityProtectionResetResponse liquidity_protection_reset_response;
+    case 0x5353: SingleSideLiquidityProtectionResetRequest single_side_liquidity_protection_reset_request;
+    case 0x5354: SingleSideLiquidityProtectionResetResponse single_side_liquidity_protection_reset_response;
+    case 0x5150: LiquidityProtectionTriggerNotification liquidity_protection_trigger_notification;
+    case 0x534C: SlapProtectionTriggerNotification slap_protection_trigger_notification;
+    case 0x4F4E: OrderNotification order_notification;
+    case 0x4444: DoneForTheDayNotification done_for_the_day_notification;
+    case 0x584E: CancelNotification cancel_notification;
+    default: UINT8 unknown[available];
+  }
+} UnsequencedMessage;
+
+// Each unsequenced data packet carries one unsequenced message from the higher-level protocol
+typedef struct _UnsequencedDataPacket (UINT32 available) where (available >= 2) {
+  UINT16BE unsequenced_message_type;                                                                                                   // bytes 0 to 1
+  UnsequencedMessage(unsequenced_message_type, (available - 2)) unsequenced_message[:byte-size-single-element-array (available - 2)];
+} UnsequencedDataPacket;
 
 // The SesM client uses this packet to allow the server to authenticate the client and to convey to the server the last sequenced packet that the client received
-entrypoint typedef struct _LoginRequest {
+typedef struct _LoginRequest {
   UINT8 sesm_version[5];             // bytes 0 to 4
   UINT8 username[5];                 // bytes 5 to 9
   UINT8 computer_id[8];              // bytes 10 to 17
@@ -385,20 +857,66 @@ entrypoint typedef struct _LoginRequest {
   UINT64 requested_sequence_number;  // bytes 27 to 34
 } LoginRequest;
 
-// ---- Login Response: 10 bytes ------------------------------------------------
-
 // The SesM server sends a Login response packet in response to a Login request packet from the client
-entrypoint typedef struct _LoginResponse {
+typedef struct _LoginResponse {
   UINT8 login_status;              // byte 0
   UINT8 session_id;                // byte 1
   UINT64 highest_sequence_number;  // bytes 2 to 9
 } LoginResponse;
 
-// ---- Retransmission Request: 16 bytes ----------------------------------------
-
 // The SesM client uses this packet to request the server to retransmit a range of packets
-entrypoint typedef struct _RetransmissionRequest {
+typedef struct _RetransmissionRequest {
   UINT64 start_sequence_number;  // bytes 0 to 7
   UINT64 end_sequence_number;    // bytes 8 to 15
 } RetransmissionRequest;
+
+// The client may send a Logout request packet to request the connection be terminated
+typedef struct _LogoutRequest (UINT16 sesm_packet_length) where (sesm_packet_length >= 2) {
+  UINT8 logout_reason;                                     // byte 0
+  UINT8 logout_text[(((UINT32) sesm_packet_length) - 2)];
+} LogoutRequest;
+
+// The server may send a GoodBye packet to inform the client a reason for termination of the connection just before it terminates the connection
+typedef struct _GoodbyePacket (UINT16 sesm_packet_length) where (sesm_packet_length >= 2) {
+  UINT8 goodbye_reason;                                    // byte 0
+  UINT8 logout_text[(((UINT32) sesm_packet_length) - 2)];
+} GoodbyePacket;
+
+// A Test packet can be sent by either side of a SesM connection at anytime; Test packets are intended to provide human readable text that may aid in debugging problems
+typedef struct _TestPacket (UINT16 sesm_packet_length) where (sesm_packet_length >= 1) {
+  UINT8 test_text[(((UINT32) sesm_packet_length) - 1)];
+} TestPacket;
+
+// Branch
+casetype _SesmPayload (UINT8 selector, UINT32 length, UINT32 length_2, UINT16 sesm_packet_length, UINT32 available) {
+  switch (selector) {
+    case 0x53: SequencedDataPacket(length) sequenced_data_packet[:byte-size-single-element-array length];
+    case 0x55: UnsequencedDataPacket(length_2) unsequenced_data_packet[:byte-size-single-element-array length_2];
+    case 0x4C: LoginRequest login_request;
+    case 0x52: LoginResponse login_response;
+    case 0x43: unit synchronization_complete;
+    case 0x41: RetransmissionRequest retransmission_request;
+    case 0x58: LogoutRequest(sesm_packet_length) logout_request;
+    case 0x47: GoodbyePacket(sesm_packet_length) goodbye_packet;
+    case 0x45: unit end_of_session;
+    case 0x30: unit server_heartbeat;
+    case 0x31: unit client_heartbeat;
+    case 0x54: TestPacket(sesm_packet_length) test_packet;
+    default: UINT8 unknown[available];
+  }
+} SesmPayload;
+
+// SesM Tcp Packet
+typedef struct _SesmTcpPacket {
+  UINT16 sesm_packet_length { sesm_packet_length >= 1 };                                                                                                                                                                                                           // bytes 0 to 1
+  UINT8 sesm_packet_type;                                                                                                                                                                                                                                          // byte 2
+  SesmPayload(sesm_packet_type, (((UINT32) sesm_packet_length) - 1), (((UINT32) sesm_packet_length) - 1), sesm_packet_length, ((((UINT32) sesm_packet_length) + 2) - 3)) sesm_payload[:byte-size-single-element-array ((((UINT32) sesm_packet_length) + 2) - 3)];
+} SesmTcpPacket;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// SesM Packet
+entrypoint typedef struct _Packet (UINT32 available) {
+  SesmTcpPacket sesm_tcp_packet[:byte-size available];
+} Packet;
 

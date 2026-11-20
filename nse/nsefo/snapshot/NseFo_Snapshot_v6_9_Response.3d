@@ -1,34 +1,89 @@
-// National Stock Exchange of India Ltd Mtbt Order Book Snapshot Recovery
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nse NseFo Snapshot Tbt v6.9
 //
+// Protocol:
+//   Organization: National Stock Exchange of India Ltd
+//   Protocol: Mtbt Order Book Snapshot Recovery
+//   Encoding: Tbt
+//   Version: 6.9
+//   Date: 4/1/2026
+//   Specification: MTBT_FO_NNF_PROTOCOL_6_9_20260717161139.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ResponsePacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out NseFo_Snapshot_v6_9_Response.3d
-//
-// What this definition does not state, and the model does:
-// - a Reassemble rule
-// - the dispatch that chooses a message by its type
-//
-// License: MIT No Attribution
 
-// ---- Stream Header: 8 bytes --------------------------------------------------
+// ---- Values ------------------------------------------------------------------
+
+// Response Message Type: one byte code
+#define RESPONSE_MESSAGE_TYPE_ORDER_BOOK_SNAPSHOT_RECOVERY_RESPONSE_MESSAGE 0x42  // Order Book Snapshot Recovery Response Message
+
+// Request Status: one byte code
+#define REQUEST_STATUS_SUCCESS 0x53  // Success
+#define REQUEST_STATUS_ERROR 0x45    // Error
+
+// ---- Types -------------------------------------------------------------------
 
 // STREAM_HEADER. For this message the sequence number will have the value 0.
-entrypoint typedef struct _StreamHeader {
+typedef struct _StreamHeader {
   UINT16 message_length;   // bytes 0 to 1, signed, read here as unsigned
   UINT16 stream_id;        // bytes 2 to 3, signed, read here as unsigned
   UINT32 sequence_number;  // bytes 4 to 7
 } StreamHeader;
 
-// ---- Order Book Snapshot Recovery Response Message: 1 byte -------------------
-
 // Sent by the Orderbook Snapshot Recovery Server to indicate whether the request was processed successfully.
-entrypoint typedef struct _OrderBookSnapshotRecoveryResponseMessage {
+typedef struct _OrderBookSnapshotRecoveryResponseMessage {
   UINT8 request_status;  // byte 0
 } OrderBookSnapshotRecoveryResponseMessage;
+
+// Branch
+casetype _ResponsePayload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x42: OrderBookSnapshotRecoveryResponseMessage order_book_snapshot_recovery_response_message;
+    default: UINT8 unknown[available];
+  }
+} ResponsePayload;
+
+// STREAM_DATA. First field is always Message Type and must be read/interpreted first.
+typedef struct _ResponseMessage (UINT32 available) where (available >= 1) {
+  UINT8 response_message_type;                                                                                                // byte 0
+  ResponsePayload(response_message_type, (available - 1)) response_payload[:byte-size-single-element-array (available - 1)];
+} ResponseMessage;
+
+// ---- Packet: ResponsePacket --------------------------------------------------
+
+// Snapshot recovery status answered before the snapshot buffer, behind the Stream Header of the multicast feed.
+entrypoint typedef struct _ResponsePacket (UINT32 available) where (available >= 8) {
+  StreamHeader stream_header;                         // bytes 0 to 7
+  ResponseMessage((available - 8)) response_message;
+} ResponsePacket;
 

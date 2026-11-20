@@ -1,5 +1,34 @@
-// Beijing Stock Exchange Bjse Multicast Market Data
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Bjse BjseSecurities MulticastMarketData BjseBinary v1.1
 //
+// Protocol:
+//   Organization: Beijing Stock Exchange
+//   Protocol: Bjse Multicast Market Data
+//   Encoding: Bjse Binary Market Data Feed
+//   Version: 1.1
+//   Date: 12/31/2025
+//   Specification: 20250812183339_x6ls7we9i5.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
 // writes a C validator for each record below and proves, of that C, that it reads no byte
 // outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
@@ -7,6 +36,8 @@
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out BjseSecurities_MulticastMarketData_v1_1.3d
 //
@@ -16,14 +47,74 @@
 // - a field present only on a condition
 // - a run counted by a field
 // - a length prefix framing what follows
-//
-// License: MIT No Attribution
+// - the packet as a whole, which is padding to a boundary from a position that is not fixed, at packet.packetheader.padding
+
+// ---- Values ------------------------------------------------------------------
+
+// Msg Type: 4 byte code
+#define MSG_TYPE_CHANNEL_HEARTBEAT_MESSAGE 0x000497C8                    // Channel Heartbeat Message
+#define MSG_TYPE_RETRANSMISSION_MESSAGE 0x00049BB0                       // Retransmission Message
+#define MSG_TYPE_SNAPSHOT_CHANNEL_STATISTICS_MESSAGE 0x00049F98          // Snapshot Channel Statistics Message
+#define MSG_TYPE_BUSINESS_REJECT_MESSAGE 0x00000008                      // Business Reject Message
+#define MSG_TYPE_SECURITY_REAL_TIME_STATUS_MESSAGE 0x0004A380            // Security Real Time Status Message
+#define MSG_TYPE_ANNOUNCEMENT_MESSAGE 0x0004A768                         // Announcement Message
+#define MSG_TYPE_BOND_SPOT_TRADING_SNAPSHOT_MESSAGE 0x0004AB51           // Bond Spot Trading Snapshot Message
+#define MSG_TYPE_AUCTION_TRADING_SNAPSHOT_MESSAGE 0x0004AB52             // Auction Trading Snapshot Message
+#define MSG_TYPE_INDEX_SNAPSHOT_MESSAGE 0x0004AB53                       // Index Snapshot Message
+#define MSG_TYPE_BOND_SPOT_MATCHING_LARGE_ORDER_TICK_MESSAGE 0x0004AF43  // Bond Spot Matching Large Order Tick Message
+#define MSG_TYPE_AGREEMENT_TRADING_ORDER_TICK_MESSAGE 0x0004AF4D         // Agreement Trading Order Tick Message
+#define MSG_TYPE_SECURITIES_LENDING_ORDER_TICK_MESSAGE 0x0004AF4F        // Securities Lending Order Tick Message
+#define MSG_TYPE_BOND_SPOT_MATCHING_LARGE_TRADE_TICK_MESSAGE 0x0004B32B  // Bond Spot Matching Large Trade Tick Message
+#define MSG_TYPE_BOND_SPOT_NEGOTIATED_TRADE_TICK_MESSAGE 0x0004B32C      // Bond Spot Negotiated Trade Tick Message
+#define MSG_TYPE_SECURITIES_LENDING_TRADE_TICK_MESSAGE 0x0004B337        // Securities Lending Trade Tick Message
+
+// End Of Channel: 2 byte code
+#define END_OF_CHANNEL_NO 0x0000   // No
+#define END_OF_CHANNEL_YES 0x0001  // Yes
+
+// Resend Type: one byte code
+#define RESEND_TYPE_TICK_DATA 0x01     // Tick Data
+#define RESEND_TYPE_ANNOUNCEMENT 0x02  // Announcement
+
+// Resend Status: one byte code
+#define RESEND_STATUS_COMPLETE 0x01            // Complete
+#define RESEND_STATUS_PARTIALLY_COMPLETE 0x02  // Partially Complete
+#define RESEND_STATUS_NO_PERMISSION 0x03       // No Permission
+#define RESEND_STATUS_DATA_UNAVAILABLE 0x04    // Data Unavailable
+
+// Side: one byte code
+#define SIDE_BUY 0x31     // Buy
+#define SIDE_SELL 0x32    // Sell
+#define SIDE_BORROW 0x47  // Borrow
+#define SIDE_LEND 0x46    // Lend
+
+// Ord Type: one byte code
+#define ORD_TYPE_MARKET 0x31         // Market
+#define ORD_TYPE_LIMIT 0x32          // Limit
+#define ORD_TYPE_BEST_OWN_SIDE 0x55  // Best Own Side
+
+// Settl Type: one byte code
+#define SETTL_TYPE_GROSS 0x31             // Gross
+#define SETTL_TYPE_MULTILATERAL_NET 0x32  // Multilateral Net
+
+// Settl Period: one byte code
+#define SETTL_PERIOD_T_PLUS_0 0x30  // T Plus 0
+#define SETTL_PERIOD_T_PLUS_1 0x31  // T Plus 1
+#define SETTL_PERIOD_T_PLUS_2 0x32  // T Plus 2
+#define SETTL_PERIOD_T_PLUS_3 0x33  // T Plus 3
+
+// Expiration Type: one byte code
+#define EXPIRATION_TYPE_FIXED_TERM 0x01  // Fixed Term
+
+// Exec Type: one byte code
+#define EXEC_TYPE_CANCELLED 0x34  // Cancelled
+#define EXEC_TYPE_TRADE 0x46      // Trade
 
 // ---- Message Header: 8 bytes -------------------------------------------------
 
 // Bjse Binary message header, defining the type and body length of a message
 entrypoint typedef struct _MessageHeader {
-  UINT32BE msg_type;     // bytes 0 to 3
+  UINT32BE msg_type;     // bytes 0 to 3, values MSG_TYPE_
   UINT32BE body_length;  // bytes 4 to 7
 } MessageHeader;
 
@@ -33,7 +124,7 @@ entrypoint typedef struct _MessageHeader {
 entrypoint typedef struct _ChannelHeartbeatMessage {
   UINT16BE channel_no;         // bytes 0 to 1
   UINT64BE appl_last_seq_num;  // bytes 2 to 9, signed, read here as unsigned
-  UINT16BE end_of_channel;     // bytes 10 to 11
+  UINT16BE end_of_channel;     // bytes 10 to 11, values END_OF_CHANNEL_
   UINT64BE orig_time;          // bytes 12 to 19, signed, read here as unsigned
 } ChannelHeartbeatMessage;
 
@@ -41,12 +132,12 @@ entrypoint typedef struct _ChannelHeartbeatMessage {
 
 // Sent by the Vendor Supplied System to request tick data or announcements again; the gateway returns the data and then the same message type to mark the retransmission complete or report why it failed, so both sides transmit this message type.
 entrypoint typedef struct _RetransmissionMessage {
-  UINT8 resend_type;          // byte 0
+  UINT8 resend_type;          // byte 0, values RESEND_TYPE_
   UINT16BE channel_no;        // bytes 1 to 2
   UINT64BE appl_beg_seq_num;  // bytes 3 to 10, signed, read here as unsigned
   UINT64BE appl_end_seq_num;  // bytes 11 to 18, signed, read here as unsigned
   UINT8 news_id[16];          // bytes 19 to 34
-  UINT8 resend_status;        // byte 35
+  UINT8 resend_status;        // byte 35, values RESEND_STATUS_
   UINT8 reject_text[16];      // bytes 36 to 51
 } RetransmissionMessage;
 
@@ -72,11 +163,11 @@ entrypoint typedef struct _BondSpotMatchingLargeOrderTickMessage {
   UINT8 security_id_source[4];  // bytes 21 to 24
   UINT64BE price;               // bytes 25 to 32, signed, read here as unsigned
   UINT64BE order_qty;           // bytes 33 to 40, signed, read here as unsigned
-  UINT8 side;                   // byte 41
+  UINT8 side;                   // byte 41, values SIDE_
   UINT64BE transact_time;       // bytes 42 to 49, signed, read here as unsigned
-  UINT8 ord_type;               // byte 50
-  UINT8 settl_type;             // byte 51
-  UINT8 settl_period;           // byte 52
+  UINT8 ord_type;               // byte 50, values ORD_TYPE_
+  UINT8 settl_type;             // byte 51, values SETTL_TYPE_
+  UINT8 settl_period;           // byte 52, values SETTL_PERIOD_
 } BondSpotMatchingLargeOrderTickMessage;
 
 // ---- Agreement Trading Order Tick Message: 54 bytes --------------------------
@@ -90,7 +181,7 @@ entrypoint typedef struct _AgreementTradingOrderTickMessage {
   UINT8 security_id_source[4];  // bytes 21 to 24
   UINT64BE price;               // bytes 25 to 32, signed, read here as unsigned
   UINT64BE order_qty;           // bytes 33 to 40, signed, read here as unsigned
-  UINT8 side;                   // byte 41
+  UINT8 side;                   // byte 41, values SIDE_
   UINT64BE transact_time;       // bytes 42 to 49, signed, read here as unsigned
   UINT32BE confirm_id;          // bytes 50 to 53
 } AgreementTradingOrderTickMessage;
@@ -106,10 +197,10 @@ entrypoint typedef struct _SecuritiesLendingOrderTickMessage {
   UINT8 security_id_source[4];  // bytes 21 to 24
   UINT64BE price;               // bytes 25 to 32, signed, read here as unsigned
   UINT64BE order_qty;           // bytes 33 to 40, signed, read here as unsigned
-  UINT8 side;                   // byte 41
+  UINT8 side;                   // byte 41, values SIDE_
   UINT64BE transact_time;       // bytes 42 to 49, signed, read here as unsigned
   UINT16BE expiration_days;     // bytes 50 to 51
-  UINT8 expiration_type;        // byte 52
+  UINT8 expiration_type;        // byte 52, values EXPIRATION_TYPE_
 } SecuritiesLendingOrderTickMessage;
 
 // ---- Bond Spot Matching Large Trade Tick Message: 76 bytes -------------------
@@ -126,10 +217,10 @@ entrypoint typedef struct _BondSpotMatchingLargeTradeTickMessage {
   UINT64BE trade_price;         // bytes 41 to 48, signed, read here as unsigned
   UINT64BE trade_qty;           // bytes 49 to 56, signed, read here as unsigned
   UINT64BE trade_money;         // bytes 57 to 64, signed, read here as unsigned
-  UINT8 exec_type;              // byte 65
+  UINT8 exec_type;              // byte 65, values EXEC_TYPE_
   UINT64BE transact_time;       // bytes 66 to 73, signed, read here as unsigned
-  UINT8 settl_period;           // byte 74
-  UINT8 settl_type;             // byte 75
+  UINT8 settl_period;           // byte 74, values SETTL_PERIOD_
+  UINT8 settl_type;             // byte 75, values SETTL_TYPE_
 } BondSpotMatchingLargeTradeTickMessage;
 
 // ---- Bond Spot Negotiated Trade Tick Message: 76 bytes -----------------------
@@ -146,10 +237,10 @@ entrypoint typedef struct _BondSpotNegotiatedTradeTickMessage {
   UINT64BE trade_price;         // bytes 41 to 48, signed, read here as unsigned
   UINT64BE trade_qty;           // bytes 49 to 56, signed, read here as unsigned
   UINT64BE trade_money;         // bytes 57 to 64, signed, read here as unsigned
-  UINT8 exec_type;              // byte 65
+  UINT8 exec_type;              // byte 65, values EXEC_TYPE_
   UINT64BE transact_time;       // bytes 66 to 73, signed, read here as unsigned
-  UINT8 settl_period;           // byte 74
-  UINT8 settl_type;             // byte 75
+  UINT8 settl_period;           // byte 74, values SETTL_PERIOD_
+  UINT8 settl_type;             // byte 75, values SETTL_TYPE_
 } BondSpotNegotiatedTradeTickMessage;
 
 // ---- Securities Lending Trade Tick Message: 74 bytes -------------------------
@@ -166,7 +257,7 @@ entrypoint typedef struct _SecuritiesLendingTradeTickMessage {
   UINT64BE trade_price;         // bytes 41 to 48, signed, read here as unsigned
   UINT64BE trade_qty;           // bytes 49 to 56, signed, read here as unsigned
   UINT64BE trade_money;         // bytes 57 to 64, signed, read here as unsigned
-  UINT8 exec_type;              // byte 65
+  UINT8 exec_type;              // byte 65, values EXEC_TYPE_
   UINT64BE transact_time;       // bytes 66 to 73, signed, read here as unsigned
 } SecuritiesLendingTradeTickMessage;
 

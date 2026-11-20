@@ -1,35 +1,317 @@
-// Miami International Holdings Express Interface
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Miax OnyxFutures ExpressInterface Fei v1.0.c
 //
+// Protocol:
+//   Organization: Miami International Holdings
+//   Protocol: Express Interface
+//   Encoding: Futures Express Interface
+//   Version: 1.0.c
+//   Date: 5/22/2025
+//   Specification: onyx_futures_express_interface_fei_v1.0c.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out OnyxFutures_ExpressInterface_v1_0_c.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a length prefix framing what follows
-// - a field read in bits
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Sesm Packet Header: 3 bytes ---------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// SesM packet header
-entrypoint typedef struct _SesmPacketHeader {
-  UINT16 sesm_packet_length;  // bytes 0 to 1
-  UINT8 sesm_packet_type;     // byte 2
-} SesmPacketHeader;
+// Sesm Packet Type: one byte code
+#define SESM_PACKET_TYPE_SEQUENCED_DATA_PACKET 0x53     // Sequenced Data Packet
+#define SESM_PACKET_TYPE_UNSEQUENCED_DATA_PACKET 0x55   // Unsequenced Data Packet
+#define SESM_PACKET_TYPE_LOGIN_REQUEST 0x4C             // Login Request
+#define SESM_PACKET_TYPE_LOGIN_RESPONSE 0x52            // Login Response
+#define SESM_PACKET_TYPE_SYNCHRONIZATION_COMPLETE 0x43  // Synchronization Complete
+#define SESM_PACKET_TYPE_RETRANSMISSION_REQUEST 0x41    // Retransmission Request
+#define SESM_PACKET_TYPE_LOGOUT_REQUEST 0x58            // Logout Request
+#define SESM_PACKET_TYPE_GOODBYE_PACKET 0x47            // Goodbye Packet
+#define SESM_PACKET_TYPE_END_OF_SESSION 0x45            // End Of Session
+#define SESM_PACKET_TYPE_SERVER_HEARTBEAT 0x30          // Server Heartbeat
+#define SESM_PACKET_TYPE_CLIENT_HEARTBEAT 0x31          // Client Heartbeat
 
-// ---- New Order Response Message: 56 bytes ------------------------------------
+// Sequenced Message Type: 2 byte code
+#define SEQUENCED_MESSAGE_TYPE_NEW_ORDER_RESPONSE_MESSAGE 0x4E52             // New Order Response Message
+#define SEQUENCED_MESSAGE_TYPE_MODIFY_ORDER_RESPONSE 0x4D52                  // Modify Order Response
+#define SEQUENCED_MESSAGE_TYPE_CANCEL_ORDER_RESPONSE 0x4352                  // Cancel Order Response
+#define SEQUENCED_MESSAGE_TYPE_MASS_CANCEL_RESPONSE 0x5852                   // Mass Cancel Response
+#define SEQUENCED_MESSAGE_TYPE_STRATEGY_CREATION_RESPONSE_MESSAGE 0x5352     // Strategy Creation Response Message
+#define SEQUENCED_MESSAGE_TYPE_SYSTEM_STATE_NOTIFICATION_MESSAGE 0x534E      // System State Notification Message
+#define SEQUENCED_MESSAGE_TYPE_NEW_ORDER_NOTIFICATION 0x4F31                 // New Order Notification
+#define SEQUENCED_MESSAGE_TYPE_MODIFY_ORDER_NOTIFICATION 0x4D4E              // Modify Order Notification
+#define SEQUENCED_MESSAGE_TYPE_CANCEL_REDUCE_SIZE_ORDER_NOTIFICATION 0x584E  // Cancel Reduce Size Order Notification
+#define SEQUENCED_MESSAGE_TYPE_ORDER_STATUS_UPDATE_NOTIFICATION 0x4F53       // Order Status Update Notification
+#define SEQUENCED_MESSAGE_TYPE_SIMPLE_EXECUTION_NOTIFICATION 0x454E          // Simple Execution Notification
+#define SEQUENCED_MESSAGE_TYPE_COMPLEX_EXECUTION_NOTIFICATION 0x434E         // Complex Execution Notification
+
+// Order Status: one byte code
+#define ORDER_STATUS_SUCCESSFUL 0x20                                     // Successful
+#define ORDER_STATUS_DUPLICATE_CLIENT_ORDER_ID 0x41                      // Duplicate Client Order Id
+#define ORDER_STATUS_NOT_IN_LIVE_ORDER_WINDOW 0x42                       // Not In Live Order Window
+#define ORDER_STATUS_INVALID_ORDER_TYPE 0x43                             // Invalid Order Type
+#define ORDER_STATUS_INVALID_CUSTOMER_ORDER_HANDLING_INSTRUCTION 0x45    // Invalid Customer Order Handling Instruction
+#define ORDER_STATUS_INVALID_TIME_IN_FORCE_OR_ITS_USE 0x46               // Invalid Time In Force Or Its Use
+#define ORDER_STATUS_INVALID_SELF_TRADE_PROTECTION_LEVEL 0x47            // Invalid Self Trade Protection Level
+#define ORDER_STATUS_INVALID_SELF_TRADE_PROTECTION_INSTRUCTION 0x48      // Invalid Self Trade Protection Instruction
+#define ORDER_STATUS_INVALID_MPID 0x49                                   // Invalid Mpid
+#define ORDER_STATUS_INVALID_USE_SELF_TRADE_PROTECTION_INSTRUCTION 0x4B  // Invalid Use Self Trade Protection Instruction
+#define ORDER_STATUS_INVALID_SELF_TRADE_PROTECTION_GROUP 0x4C            // Invalid Self Trade Protection Group
+#define ORDER_STATUS_INVALID_USE_SELF_TRADE_PROTECTION_GROUP 0x4D        // Invalid Use Self Trade Protection Group
+#define ORDER_STATUS_INVALID_FOR_CURRENT_TRADING_STATUS 0x4E             // Invalid For Current Trading Status
+#define ORDER_STATUS_INVALID_CLIENT_ORDER_ID 0x4F                        // Invalid Client Order Id
+#define ORDER_STATUS_INVALID_PRICE 0x50                                  // Invalid Price
+#define ORDER_STATUS_INVALID_SIZE 0x51                                   // Invalid Size
+#define ORDER_STATUS_INVALID_USE_MINIMUM_QTY 0x52                        // Invalid Use Minimum Qty
+#define ORDER_STATUS_INVALID_INSTRUMENT_ID 0x53                          // Invalid Instrument Id
+#define ORDER_STATUS_INVALID_USE_ORDER_TYPE 0x55                         // Invalid Use Order Type
+#define ORDER_STATUS_INVALID_PURGE_GROUP 0x56                            // Invalid Purge Group
+#define ORDER_STATUS_INVALID_ORDER_EXPIRY_DATE_OR_ITS_USE 0x57           // Invalid Order Expiry Date Or Its Use
+#define ORDER_STATUS_BLOCKED_BY_USER_MASS_CANCEL 0x59                    // Blocked By User Mass Cancel
+#define ORDER_STATUS_BLOCKED_BY_MFP_HELP_DESK_MASS_CANCEL 0x61           // Blocked By Mfp Help Desk Mass Cancel
+#define ORDER_STATUS_BLOCKED_BY_CRM 0x62                                 // Blocked By Crm
+#define ORDER_STATUS_INVALID_ACCOUNT 0x63                                // Invalid Account
+#define ORDER_STATUS_INVALID_TRADING_COLLAR 0x64                         // Invalid Trading Collar
+#define ORDER_STATUS_INVALID_OPERATOR_ID 0x67                            // Invalid Operator Id
+#define ORDER_STATUS_INVALID_OPERATOR_LOCATION 0x68                      // Invalid Operator Location
+#define ORDER_STATUS_INVALID_CTI_CODE 0x69                               // Invalid Cti Code
+#define ORDER_STATUS_INVALID_TEXT_MEMO 0x6A                              // Invalid Text Memo
+#define ORDER_STATUS_BLOCKED_BY_DROP_COPY_ACODACOSF_EVENT 0x6B           // Blocked By Drop Copy Acodacosf Event
+#define ORDER_STATUS_DAILY_TRADING_LIMIT_BREACH 0x6C                     // Daily Trading Limit Breach
+#define ORDER_STATUS_TRADING_COLLAR_PROTECTION 0x6D                      // Trading Collar Protection
+#define ORDER_STATUS_DUPLICATE_ORDER_PROTECTION 0x6E                     // Duplicate Order Protection
+#define ORDER_STATUS_ORDER_TYPE_RESTRICTION 0x6F                         // Order Type Restriction
+#define ORDER_STATUS_RESTRICTION_FOR_CURRENT_TRADING_SESSION 0x70        // Restriction For Current Trading Session
+#define ORDER_STATUS_PRODUCT_RESTRICTION 0x71                            // Product Restriction
+#define ORDER_STATUS_UNDEFINED_REASON 0x5A                               // Undefined Reason
+#define ORDER_STATUS_DOWNGRADED_FROM_OLDER_VERSION 0x2A                  // Downgraded From Older Version
+
+// Modify Status: one byte code
+#define MODIFY_STATUS_SUCCESSFUL 0x20                                     // Successful
+#define MODIFY_STATUS_DUPLICATE_CLIENT_ORDER_ID 0x41                      // Duplicate Client Order Id
+#define MODIFY_STATUS_NOT_IN_LIVE_ORDER_WINDOW 0x42                       // Not In Live Order Window
+#define MODIFY_STATUS_CANNOT_FIND_ORDER_WITH_TARGET_CLIENT_ORDER_ID 0x44  // Cannot Find Order With Target Client Order Id
+#define MODIFY_STATUS_INVALID_CUSTOMER_ORDER_HANDLING_INSTRUCTION 0x45    // Invalid Customer Order Handling Instruction
+#define MODIFY_STATUS_INVALID_FOR_TIME_IN_FORCE 0x46                      // Invalid For Time In Force
+#define MODIFY_STATUS_INVALID_MPID 0x49                                   // Invalid Mpid
+#define MODIFY_STATUS_MPID_DOES_NOT_MATCH_TARGET_ORDER 0x4A               // Mpid Does Not Match Target Order
+#define MODIFY_STATUS_INVALID_SELF_TRADE_PROTECTION_GROUP 0x4C            // Invalid Self Trade Protection Group
+#define MODIFY_STATUS_INVALID_USE_SELF_TRADE_PROTECTION_GROUP 0x4D        // Invalid Use Self Trade Protection Group
+#define MODIFY_STATUS_INVALID_FOR_CURRENT_TRADING_STATUS 0x4E             // Invalid For Current Trading Status
+#define MODIFY_STATUS_INVALID_CLIENT_ORDER_ID 0x4F                        // Invalid Client Order Id
+#define MODIFY_STATUS_INVALID_PRICE 0x50                                  // Invalid Price
+#define MODIFY_STATUS_INVALID_SIZE 0x51                                   // Invalid Size
+#define MODIFY_STATUS_INVALID_INSTRUMENT_ID 0x53                          // Invalid Instrument Id
+#define MODIFY_STATUS_INVALID_TARGET_CLIENT_ORDER_ID 0x54                 // Invalid Target Client Order Id
+#define MODIFY_STATUS_INVALID_PURGE_GROUP 0x56                            // Invalid Purge Group
+#define MODIFY_STATUS_INVALID_ORDER_EXPIRY_DATE_OR_ITS_USE 0x57           // Invalid Order Expiry Date Or Its Use
+#define MODIFY_STATUS_BLOCKED_BY_USER_MASS_CANCEL 0x59                    // Blocked By User Mass Cancel
+#define MODIFY_STATUS_BLOCKED_BY_MFP_HELP_DESK_MASS_CANCEL 0x61           // Blocked By Mfp Help Desk Mass Cancel
+#define MODIFY_STATUS_BLOCKED_BY_CRM 0x62                                 // Blocked By Crm
+#define MODIFY_STATUS_INVALID_OPERATOR_ID 0x67                            // Invalid Operator Id
+#define MODIFY_STATUS_INVALID_OPERATOR_LOCATION 0x68                      // Invalid Operator Location
+#define MODIFY_STATUS_BLOCKED_BY_DROP_COPY_ACODACOSF_EVENT 0x6B           // Blocked By Drop Copy Acodacosf Event
+#define MODIFY_STATUS_DAILY_TRADING_LIMIT_BREACH 0x6C                     // Daily Trading Limit Breach
+#define MODIFY_STATUS_TRADING_COLLAR_PROTECTION 0x6D                      // Trading Collar Protection
+#define MODIFY_STATUS_RESTRICTION_FOR_CURRENT_TRADING_SESSION 0x70        // Restriction For Current Trading Session
+#define MODIFY_STATUS_PRODUCT_RESTRICTION 0x71                            // Product Restriction
+#define MODIFY_STATUS_UNDEFINED_REASON 0x5A                               // Undefined Reason
+#define MODIFY_STATUS_DOWNGRADED_FROM_OLDER_VERSION 0x2A                  // Downgraded From Older Version
+
+// Cancel Status: one byte code
+#define CANCEL_STATUS_SUCCESSFUL 0x20                                     // Successful
+#define CANCEL_STATUS_DUPLICATE_CLIENT_ORDER_ID 0x41                      // Duplicate Client Order Id
+#define CANCEL_STATUS_NOT_IN_LIVE_ORDER_WINDOW 0x42                       // Not In Live Order Window
+#define CANCEL_STATUS_CANNOT_FIND_ORDER_WITH_TARGET_CLIENT_ORDER_ID 0x44  // Cannot Find Order With Target Client Order Id
+#define CANCEL_STATUS_INVALID_MPID 0x49                                   // Invalid Mpid
+#define CANCEL_STATUS_MPID_DOES_NOT_MATCH_TARGET_ORDER 0x4A               // Mpid Does Not Match Target Order
+#define CANCEL_STATUS_INVALID_FOR_CURRENT_TRADING_STATUS 0x4E             // Invalid For Current Trading Status
+#define CANCEL_STATUS_INVALID_CLIENT_ORDER_ID 0x4F                        // Invalid Client Order Id
+#define CANCEL_STATUS_INVALID_INSTRUMENT_ID 0x53                          // Invalid Instrument Id
+#define CANCEL_STATUS_INVALID_TARGET_ORDER_ID 0x54                        // Invalid Target Order Id
+#define CANCEL_STATUS_INVALID_ORDER_ID_OR_ITS_USE 0x65                    // Invalid Order Id Or Its Use
+#define CANCEL_STATUS_REQUEST_NOT_PERMITTED 0x66                          // Request Not Permitted
+#define CANCEL_STATUS_INVALID_OPERATOR_ID 0x67                            // Invalid Operator Id
+#define CANCEL_STATUS_INVALID_OPERATOR_LOCATION 0x68                      // Invalid Operator Location
+#define CANCEL_STATUS_UNDEFINED_REASON 0x5A                               // Undefined Reason
+#define CANCEL_STATUS_DOWNGRADED_FROM_OLDER_VERSION 0x2A                  // Downgraded From Older Version
+
+// Mass Cancel Status: one byte code
+#define MASS_CANCEL_STATUS_SUCCESSFUL 0x20                     // Successful
+#define MASS_CANCEL_STATUS_INVALID_ACTION 0x41                 // Invalid Action
+#define MASS_CANCEL_STATUS_INVALID_SCOPE 0x42                  // Invalid Scope
+#define MASS_CANCEL_STATUS_INVALID_PURGE_GROUP 0x43            // Invalid Purge Group
+#define MASS_CANCEL_STATUS_NOT_IN_LIVE_ORDER_WINDOW 0x44       // Not In Live Order Window
+#define MASS_CANCEL_STATUS_INVALID_PRODUCT_GROUP_CODE 0x45     // Invalid Product Group Code
+#define MASS_CANCEL_STATUS_INVALID_PRODUCT_TYPE 0x46           // Invalid Product Type
+#define MASS_CANCEL_STATUS_INVALID_MPID 0x49                   // Invalid Mpid
+#define MASS_CANCEL_STATUS_INVALID_CLIENT_ORDER_ID 0x4F        // Invalid Client Order Id
+#define MASS_CANCEL_STATUS_INVALID_OPERATOR_ID 0x67            // Invalid Operator Id
+#define MASS_CANCEL_STATUS_INVALID_OPERATOR_LOCATION 0x68      // Invalid Operator Location
+#define MASS_CANCEL_STATUS_DOWNGRADED_FROM_OLDER_VERSION 0x2A  // Downgraded From Older Version
+#define MASS_CANCEL_STATUS_UNDEFINED 0x5A                      // Undefined
+
+// Strategy Creation Status: one byte code
+#define STRATEGY_CREATION_STATUS_SUCCESSFUL 0x20                         // Successful
+#define STRATEGY_CREATION_STATUS_INVALID_NUMBER_OF_LEGS 0x41             // Invalid Number Of Legs
+#define STRATEGY_CREATION_STATUS_INVALID_NOT_ALLOWED_STRATEGY 0x42       // Invalid Not Allowed Strategy
+#define STRATEGY_CREATION_STATUS_INVALID_LEG_RATIO 0x43                  // Invalid Leg Ratio
+#define STRATEGY_CREATION_STATUS_LEGS_FROM_DIFFERENT_PRODUCTS 0x44       // Legs From Different Products
+#define STRATEGY_CREATION_STATUS_REPEATING_INSTRUMENT 0x45               // Repeating Instrument
+#define STRATEGY_CREATION_STATUS_NO_MORE_STRATEGIES_CAN_BE_CREATED 0x46  // No More Strategies Can Be Created
+#define STRATEGY_CREATION_STATUS_NOT_IN_LIVE_ORDER_WINDOW 0x47           // Not In Live Order Window
+#define STRATEGY_CREATION_STATUS_INVALID_LEG_INSTRUMENT 0x48             // Invalid Leg Instrument
+#define STRATEGY_CREATION_STATUS_INVALID_MPID 0x49                       // Invalid Mpid
+#define STRATEGY_CREATION_STATUS_INVALID_CLIENT_ORDER_ID 0x4F            // Invalid Client Order Id
+#define STRATEGY_CREATION_STATUS_UNDEFINED 0x5A                          // Undefined
+#define STRATEGY_CREATION_STATUS_INVALID_OPERATOR_ID 0x67                // Invalid Operator Id
+#define STRATEGY_CREATION_STATUS_INVALID_OPERATOR_LOCATION 0x68          // Invalid Operator Location
+#define STRATEGY_CREATION_STATUS_DOWNGRADED_FOR_OLDER_VERSION 0x2A       // Downgraded For Older Version
+
+// System Status: one byte code
+#define SYSTEM_STATUS_START_OF_SYSTEM_HOURS 0x53         // Start Of System Hours
+#define SYSTEM_STATUS_END_OF_SYSTEM_HOURS 0x43           // End Of System Hours
+#define SYSTEM_STATUS_START_OF_TEST_SESSION 0x31         // Start Of Test Session
+#define SYSTEM_STATUS_END_OF_TEST_SESSION 0x32           // End Of Test Session
+#define SYSTEM_STATUS_DOWNGRADED_FOR_OLDER_VERSION 0x2A  // Downgraded For Older Version
+
+// Time In Force: one byte code
+#define TIME_IN_FORCE_IOC 0x49  // Ioc
+#define TIME_IN_FORCE_DAY 0x44  // Day
+#define TIME_IN_FORCE_FOK 0x46  // Fok
+#define TIME_IN_FORCE_GTC 0x43  // Gtc
+#define TIME_IN_FORCE_GTD 0x58  // Gtd
+
+// Order Type: one byte code
+#define ORDER_TYPE_LIMIT 0x31              // Limit
+#define ORDER_TYPE_STOP_LIMIT_ORDER 0x32   // Stop Limit Order
+#define ORDER_TYPE_MARKET 0x33             // Market
+#define ORDER_TYPE_STOP_MARKET_ORDER 0x34  // Stop Market Order
+
+// Customer Order Handling Instruction: one byte code
+#define CUSTOMER_ORDER_HANDLING_INSTRUCTION_DESK 0x57                                                                   // Desk
+#define CUSTOMER_ORDER_HANDLING_INSTRUCTION_ELECTRONIC 0x59                                                             // Electronic
+#define CUSTOMER_ORDER_HANDLING_INSTRUCTION_VENDOR_PROVIDED_PLATFORM_BILLED_BY_EXECUTING_BROKER 0x43                    // Vendor Provided Platform Billed By Executing Broker
+#define CUSTOMER_ORDER_HANDLING_INSTRUCTION_SPONSORED_ACCESS_VIA_EXCHANGE_API_OR_FIX_PROVIDED_BY_EXECUTING_BROKER 0x47  // Sponsored Access Via Exchange Api Or Fix Provided By Executing Broker
+#define CUSTOMER_ORDER_HANDLING_INSTRUCTION_PREMIUM_ALGORITHMIC_TRADING_PROVIDER_BILLED_BY_EXECUTING_BROKER 0x48        // Premium Algorithmic Trading Provider Billed By Executing Broker
+#define CUSTOMER_ORDER_HANDLING_INSTRUCTION_OTHER 0x44                                                                  // Other
+
+// Cti Code: one byte code
+#define CTI_CODE_CTI_1 0x31  // Cti 1
+#define CTI_CODE_CTI_2 0x32  // Cti 2
+#define CTI_CODE_CTI_3 0x33  // Cti 3
+#define CTI_CODE_CTI_4 0x34  // Cti 4
+
+// Cancel Reason: one byte code
+#define CANCEL_REASON_MIN_QUANTITY_NOT_SATISFIED_OR_FOK_MIN_QUANTITY_NOT_SATISFIED 0x41                      // Min Quantity Not Satisfied Or Fok Min Quantity Not Satisfied
+#define CANCEL_REASON_RESERVED_FOR_FUTURE_USE 0x42                                                           // Reserved For Future Use
+#define CANCEL_REASON_TIME_IN_FORCE_CANCELED 0x43                                                            // Time In Force Canceled
+#define CANCEL_REASON_AUTO_CANCEL_ON_DISCONNECT_ACOD 0x44                                                    // Auto Cancel On Disconnect Acod
+#define CANCEL_REASON_BREACHED_DAILY_TRADING_PRICE_RANGE 0x45                                                // Breached Daily Trading Price Range
+#define CANCEL_REASON_AUTO_CANCEL_ON_SYSTEM_FAILURE_ACOSF 0x46                                               // Auto Cancel On System Failure Acosf
+#define CANCEL_REASON_TRADING_COLLAR_PROTECTION 0x47                                                         // Trading Collar Protection
+#define CANCEL_REASON_CANCELED_BY_HELPDESK_OR_OVER_MIAX_MEMBER_FIRM_PORTAL 0x48                              // Canceled By Helpdesk Or Over Miax Member Firm Portal
+#define CANCEL_REASON_MASS_CANCEL_MPID_OR_PRODUCT_GROUP_PRODUCT_TYPE_BY_USER 0x4A                            // Mass Cancel Mpid Or Product Group Product Type By User
+#define CANCEL_REASON_MASS_CANCEL_MPID_OR_PRODUCT_GROUP_PRODUCT_TYPE_BY_HELPDESK_OR_OVER_MIAX_M_tn3rld 0x4B  // Mass Cancel Mpid Or Product Group Product Type By Helpdesk Or Over Miax Member Firm Portal
+#define CANCEL_REASON_MASS_CANCEL_SESSION_BY_USER 0x4C                                                       // Mass Cancel Session By User
+#define CANCEL_REASON_MASS_CANCEL_SESSION_BY_HELPDESK_OR_OVER_MIAX_MEMBER_FIRM_PORTAL 0x4D                   // Mass Cancel Session By Helpdesk Or Over Miax Member Firm Portal
+#define CANCEL_REASON_CROSSING_STRATEGY_MATCH_PRICE_RANGE_SMPR 0x4E                                          // Crossing Strategy Match Price Range Smpr
+#define CANCEL_REASON_CRM_PROTECTION 0x4F                                                                    // Crm Protection
+#define CANCEL_REASON_DROP_COPY_ACODACOSF_EVENT 0x50                                                         // Drop Copy Acodacosf Event
+#define CANCEL_REASON_MARKETABLE_ORDER_OUTSIDE_STRATEGY_MATCH_PRICE_RANGE_SMPR 0x51                          // Marketable Order Outside Strategy Match Price Range Smpr
+#define CANCEL_REASON_GTCGTD_ORDER_INTRODUCTION_BREACHED_PER_ORDER_RISK_METRICS 0x52                         // Gtcgtd Order Introduction Breached Per Order Risk Metrics
+#define CANCEL_REASON_CANCELED_BY_USER_THROUGH_ORDER_ENTRY_SESSION 0x55                                      // Canceled By User Through Order Entry Session
+#define CANCEL_REASON_CANCELED_BY_USER_THROUGH_A_SESSION_OTHER_THAN_THE_ORDER_ENTRY_SESSION 0x56             // Canceled By User Through A Session Other Than The Order Entry Session
+#define CANCEL_REASON_CANCEL_NEWEST_INSTRUCTION 0x31                                                         // Cancel Newest Instruction
+#define CANCEL_REASON_CANCEL_OLDEST_INSTRUCTION 0x32                                                         // Cancel Oldest Instruction
+#define CANCEL_REASON_CANCEL_BOTH_INSTRUCTION 0x33                                                           // Cancel Both Instruction
+#define CANCEL_REASON_DECREMENT_AND_CANCEL_INSTRUCTION 0x34                                                  // Decrement And Cancel Instruction
+#define CANCEL_REASON_UNDEFINED_REASON 0x5A                                                                  // Undefined Reason
+#define CANCEL_REASON_DOWNGRADED_FROM_OLDER_VERSION 0x2A                                                     // Downgraded From Older Version
+
+// Update Status: one byte code
+#define UPDATE_STATUS_STOP_ORDER_TRIGGERED 0x53  // Stop Order Triggered
+
+// Trade Status: one byte code
+#define TRADE_STATUS_NEW_EXECUTION 0x45          // New Execution
+#define TRADE_STATUS_PRICE_SIZE_CORRECTION 0x43  // Price Size Correction
+#define TRADE_STATUS_TRADE_CANCELLATION 0x58     // Trade Cancellation
+
+// Unsequenced Message Type: 2 byte code
+#define UNSEQUENCED_MESSAGE_TYPE_NEW_ORDER_REQUEST_MESSAGE 0x4E31           // New Order Request Message
+#define UNSEQUENCED_MESSAGE_TYPE_NEW_ORDER_RESPONSE_MESSAGE 0x4E52          // New Order Response Message
+#define UNSEQUENCED_MESSAGE_TYPE_MODIFY_ORDER_REQUEST_MESSAGE 0x4D31        // Modify Order Request Message
+#define UNSEQUENCED_MESSAGE_TYPE_MODIFY_ORDER_RESPONSE 0x4D52               // Modify Order Response
+#define UNSEQUENCED_MESSAGE_TYPE_CANCEL_ORDER_REQUEST_MESSAGE 0x434F        // Cancel Order Request Message
+#define UNSEQUENCED_MESSAGE_TYPE_CANCEL_ORDER_RESPONSE 0x4352               // Cancel Order Response
+#define UNSEQUENCED_MESSAGE_TYPE_MASS_CANCEL_REQUEST 0x5851                 // Mass Cancel Request
+#define UNSEQUENCED_MESSAGE_TYPE_MASS_CANCEL_RESPONSE 0x5852                // Mass Cancel Response
+#define UNSEQUENCED_MESSAGE_TYPE_STRATEGY_CREATION_REQUEST 0x5344           // Strategy Creation Request
+#define UNSEQUENCED_MESSAGE_TYPE_STRATEGY_CREATION_RESPONSE_MESSAGE 0x5352  // Strategy Creation Response Message
+
+// Scope: one byte code
+#define SCOPE_MPID 0x4D                             // Mpid
+#define SCOPE_MPID_PRODUCT_GROUP 0x50               // Mpid Product Group
+#define SCOPE_MPID_PRODUCT_GROUP_PRODUCT_TYPE 0x54  // Mpid Product Group Product Type
+#define SCOPE_SESSION 0x53                          // Session
+
+// Action: one byte code
+#define ACTION_BLOCK_ONLY 0x42                               // Block Only
+#define ACTION_MASS_CANCEL_ONLY 0x4D                         // Mass Cancel Only
+#define ACTION_BLOCK_AND_MASS_CANCEL 0x58                    // Block And Mass Cancel
+#define ACTION_REMOVE_BLOCKING_FOR_THE_SPECIFIED_SCOPE 0x52  // Remove Blocking For The Specified Scope
+
+// Product Type: one byte code
+#define PRODUCT_TYPE_OUTRIGHT_FUTURES 0x4F          // Outright Futures
+#define PRODUCT_TYPE_STANDARD_CALENDAR_SPREAD 0x53  // Standard Calendar Spread
+#define PRODUCT_TYPE_EQUITY_CALENDAR_SPREAD 0x45    // Equity Calendar Spread
+#define PRODUCT_TYPE_BUTTERFLY_SPREAD 0x42          // Butterfly Spread
+
+// Login Status: one byte code
+#define LOGIN_STATUS_SUCCESSFUL 0x20                                         // Successful
+#define LOGIN_STATUS_REJECTED 0x58                                           // Rejected
+#define LOGIN_STATUS_REQUESTED_SESSION_IS_NOT_AVAILABLE 0x53                 // Requested Session Is Not Available
+#define LOGIN_STATUS_INVALID_START_SEQUENCE_NUMBER_REQUESTED 0x4E            // Invalid Start Sequence Number Requested
+#define LOGIN_STATUS_INCOMPATIBLE_SESSION_PROTOCOL_VERSION 0x49              // Incompatible Session Protocol Version
+#define LOGIN_STATUS_INCOMPATIBLE_APPLICATION_PROTOCOL_VERSION 0x41          // Incompatible Application Protocol Version
+#define LOGIN_STATUS_REQUEST_REJECTED_BECAUSE_CLIENT_ALREADY_LOGGED_IN 0x4C  // Request Rejected Because Client Already Logged In
+
+// Logout Reason: one byte code
+#define LOGOUT_REASON_GRACEFUL_LOGOUT 0x20                     // Graceful Logout
+#define LOGOUT_REASON_BAD_PACKET 0x42                          // Bad Packet
+#define LOGOUT_REASON_TIMED_OUT 0x4C                           // Timed Out
+#define LOGOUT_REASON_APPLICATION_TERMINATING_CONNECTION 0x41  // Application Terminating Connection
+
+// ---- Types -------------------------------------------------------------------
 
 // An acknowledgement for a New Order Request accepted by MIAX Futures Onyx
-entrypoint typedef struct _NewOrderResponseMessage {
+typedef struct _NewOrderResponseMessage {
   UINT64 matching_engine_time;  // bytes 0 to 7
   UINT8 mp_id[5];               // bytes 8 to 12
   UINT8 client_order_id[20];    // bytes 13 to 32
@@ -39,10 +321,8 @@ entrypoint typedef struct _NewOrderResponseMessage {
   UINT8 reserved_10[10];        // bytes 46 to 55
 } NewOrderResponseMessage;
 
-// ---- Modify Order Response: 80 bytes -----------------------------------------
-
 // Acknowledgement for a Modify Order Request accepted by MIAX Futures Onyx
-entrypoint typedef struct _ModifyOrderResponse {
+typedef struct _ModifyOrderResponse {
   UINT64 matching_engine_time;         // bytes 0 to 7
   UINT8 mp_id[5];                      // bytes 8 to 12
   UINT8 client_order_id[20];           // bytes 13 to 32
@@ -54,10 +334,8 @@ entrypoint typedef struct _ModifyOrderResponse {
   UINT8 reserved_10[10];               // bytes 70 to 79
 } ModifyOrderResponse;
 
-// ---- Cancel Order Response: 76 bytes -----------------------------------------
-
 // provides response to an Order Cancel Request
-entrypoint typedef struct _CancelOrderResponse {
+typedef struct _CancelOrderResponse {
   UINT64 matching_engine_time;         // bytes 0 to 7
   UINT8 mp_id[5];                      // bytes 8 to 12
   UINT8 client_order_id[20];           // bytes 13 to 32
@@ -68,10 +346,8 @@ entrypoint typedef struct _CancelOrderResponse {
   UINT8 reserved_10[10];               // bytes 66 to 75
 } CancelOrderResponse;
 
-// ---- Mass Cancel Response: 44 bytes ------------------------------------------
-
 // used to inform the Firm about the status of their previous Mass Cancel Request
-entrypoint typedef struct _MassCancelResponse {
+typedef struct _MassCancelResponse {
   UINT64 matching_engine_time;  // bytes 0 to 7
   UINT8 mp_id[5];               // bytes 8 to 12
   UINT8 client_order_id[20];    // bytes 13 to 32
@@ -79,10 +355,8 @@ entrypoint typedef struct _MassCancelResponse {
   UINT8 reserved_10[10];        // bytes 34 to 43
 } MassCancelResponse;
 
-// ---- Strategy Creation Response Message: 54 bytes ----------------------------
-
 // response to the Strategy Creation Request
-entrypoint typedef struct _StrategyCreationResponseMessage {
+typedef struct _StrategyCreationResponseMessage {
   UINT64 matching_engine_time;     // bytes 0 to 7
   UINT8 mp_id[5];                  // bytes 8 to 12
   UINT8 client_order_id[20];       // bytes 13 to 32
@@ -91,10 +365,8 @@ entrypoint typedef struct _StrategyCreationResponseMessage {
   UINT8 reserved_16[16];           // bytes 38 to 53
 } StrategyCreationResponseMessage;
 
-// ---- System State Notification Message: 26 bytes -----------------------------
-
 // published whenever system state events take place
-entrypoint typedef struct _SystemStateNotificationMessage {
+typedef struct _SystemStateNotificationMessage {
   UINT64 matching_engine_time;  // bytes 0 to 7
   UINT8 version[8];             // bytes 8 to 15
   UINT8 session_id;             // byte 16
@@ -102,10 +374,70 @@ entrypoint typedef struct _SystemStateNotificationMessage {
   UINT8 reserved_8[8];          // bytes 18 to 25
 } SystemStateNotificationMessage;
 
-// ---- Cancel Reduce Size Order Notification: 102 bytes ------------------------
+// published whenever New Order Request is accepted by MIAX Futures Onyx
+typedef struct _NewOrderNotification {
+  UINT64 matching_engine_time;                  // bytes 0 to 7
+  UINT8 mp_id[5];                               // bytes 8 to 12
+  UINT64 order_id;                              // bytes 13 to 20
+  UINT64 client_send_time;                      // bytes 21 to 28
+  UINT8 operator_id[18];                        // bytes 29 to 46
+  UINT8 operator_location[6];                   // bytes 47 to 52
+  UINT8 account[16];                            // bytes 53 to 68
+  UINT8 client_order_id[20];                    // bytes 69 to 88
+  UINT32 instrument_id;                         // bytes 89 to 92
+  UINT64 price;                                 // bytes 93 to 100, signed, read here as unsigned
+  UINT64 stop_order_trigger_price;              // bytes 101 to 108, signed, read here as unsigned
+  UINT32 size_binary_u_4;                       // bytes 109 to 112
+  UINT16 side : 1;                              // bytes 113 to 114
+  UINT16 unused_15 : 15;                        // bytes 113 to 114
+  UINT8 time_in_force;                          // byte 115
+  UINT8 order_type;                             // byte 116
+  UINT8 self_trade_protection_level : 3;        // byte 117
+  UINT8 self_trade_protection_instruction : 3;  // byte 117
+  UINT8 unused_2 : 2;                           // byte 117
+  UINT8 self_trade_protection_group[2];         // bytes 118 to 119
+  UINT8 purge_group;                            // byte 120
+  UINT8 customer_order_handling_instruction;    // byte 121
+  UINT8 customer_of_firm_designation : 1;       // byte 122
+  UINT8 manual_order_indicator : 1;             // byte 122
+  UINT8 open_close_position_indicator : 1;      // byte 122
+  UINT8 unused_5 : 5;                           // byte 122
+  UINT32 min_qty;                               // bytes 123 to 126
+  UINT16 order_expiry_date;                     // bytes 127 to 128
+  UINT64 trading_collar_dollar_value;           // bytes 129 to 136, signed, read here as unsigned
+  UINT8 cti_code;                               // byte 137
+  UINT8 text_memo[20];                          // bytes 138 to 157
+  UINT8 reserved_32[32];                        // bytes 158 to 189
+} NewOrderNotification;
+
+// published whenever a Modify Order Request is accepted by MIAX Futures Onyx
+typedef struct _ModifyOrderNotification {
+  UINT64 matching_engine_time;                // bytes 0 to 7
+  UINT8 mp_id[5];                             // bytes 8 to 12
+  UINT64 order_id;                            // bytes 13 to 20
+  UINT64 client_send_time;                    // bytes 21 to 28
+  UINT32 leaves_qty;                          // bytes 29 to 32
+  UINT8 operator_id[18];                      // bytes 33 to 50
+  UINT8 operator_location[6];                 // bytes 51 to 56
+  UINT8 client_order_id[20];                  // bytes 57 to 76
+  UINT8 original_client_order_id[20];         // bytes 77 to 96
+  UINT32 instrument_id;                       // bytes 97 to 100
+  UINT64 price;                               // bytes 101 to 108, signed, read here as unsigned
+  UINT64 stop_order_trigger_price;            // bytes 109 to 116, signed, read here as unsigned
+  UINT32 size_binary_s_4;                     // bytes 117 to 120, signed, read here as unsigned
+  UINT16 order_expiry_date;                   // bytes 121 to 122
+  UINT8 self_trade_protection_group[2];       // bytes 123 to 124
+  UINT8 purge_group;                          // byte 125
+  UINT8 customer_order_handling_instruction;  // byte 126
+  UINT8 customer_of_firm_designation : 1;     // byte 127
+  UINT8 manual_order_indicator : 1;           // byte 127
+  UINT8 open_close_position_indicator : 1;    // byte 127
+  UINT8 unused_5 : 5;                         // byte 127
+  UINT8 reserved_32[32];                      // bytes 128 to 159
+} ModifyOrderNotification;
 
 // used when Cancel Order Request is accepted by MIAX Futures Onyx or when unsolicited order cancels or order size reductions are to be notified to firms
-entrypoint typedef struct _CancelReduceSizeOrderNotification {
+typedef struct _CancelReduceSizeOrderNotification {
   UINT64 matching_engine_time;  // bytes 0 to 7
   UINT8 mp_id[5];               // bytes 8 to 12
   UINT8 operator_id[18];        // bytes 13 to 30
@@ -121,10 +453,8 @@ entrypoint typedef struct _CancelReduceSizeOrderNotification {
   UINT8 reserved_8[8];          // bytes 94 to 101
 } CancelReduceSizeOrderNotification;
 
-// ---- Order Status Update Notification: 53 bytes ------------------------------
-
 // used to notify the firms about order status updates
-entrypoint typedef struct _OrderStatusUpdateNotification {
+typedef struct _OrderStatusUpdateNotification {
   UINT64 matching_engine_time;  // bytes 0 to 7
   UINT32 instrument_id;         // bytes 8 to 11
   UINT64 order_id;              // bytes 12 to 19
@@ -132,10 +462,130 @@ entrypoint typedef struct _OrderStatusUpdateNotification {
   UINT8 reserved_32[32];        // bytes 21 to 52
 } OrderStatusUpdateNotification;
 
-// ---- Cancel Order Request Message: 99 bytes ----------------------------------
+// used to notify the firms of their Simple order executions, trade corrections and cancellations
+typedef struct _SimpleExecutionNotification {
+  UINT64 matching_engine_time;   // bytes 0 to 7
+  UINT8 mp_id[5];                // bytes 8 to 12
+  UINT8 operator_id[18];         // bytes 13 to 30
+  UINT8 operator_location[6];    // bytes 31 to 36
+  UINT32 instrument_id;          // bytes 37 to 40
+  UINT8 client_order_id[20];     // bytes 41 to 60
+  UINT64 simple_trade_id;        // bytes 61 to 68
+  UINT64 complex_trade_id;       // bytes 69 to 76
+  UINT64 execution_id;           // bytes 77 to 84
+  UINT16 trade_date;             // bytes 85 to 86
+  UINT8 correction_number;       // byte 87
+  UINT8 trade_status;            // byte 88
+  UINT64 last_price;             // bytes 89 to 96, signed, read here as unsigned
+  UINT32 last_size;              // bytes 97 to 100
+  UINT16 side : 1;               // bytes 101 to 102
+  UINT16 unused_15 : 15;         // bytes 101 to 102
+  UINT8 cti_code;                // byte 103
+  UINT8 text_memo[20];           // bytes 104 to 123
+  UINT8 liquidity_indicator[3];  // bytes 124 to 126
+  UINT8 reserved_32[32];         // bytes 127 to 158
+} SimpleExecutionNotification;
+
+// used to notify the firms of their Complex order executions
+typedef struct _ComplexExecutionNotification {
+  UINT64 matching_engine_time;  // bytes 0 to 7
+  UINT8 mp_id[5];               // bytes 8 to 12
+  UINT32 instrument_id;         // bytes 13 to 16
+  UINT8 client_order_id[20];    // bytes 17 to 36
+  UINT64 complex_trade_id;      // bytes 37 to 44
+  UINT16 trade_date;            // bytes 45 to 46
+  UINT64 last_net_price;        // bytes 47 to 54, signed, read here as unsigned
+  UINT32 last_size;             // bytes 55 to 58
+  UINT16 side : 1;              // bytes 59 to 60
+  UINT16 unused_15 : 15;        // bytes 59 to 60
+  UINT8 reserved_32[32];        // bytes 61 to 92
+} ComplexExecutionNotification;
+
+// Branch
+casetype _SequencedMessage (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x4E52: NewOrderResponseMessage new_order_response_message;
+    case 0x4D52: ModifyOrderResponse modify_order_response;
+    case 0x4352: CancelOrderResponse cancel_order_response;
+    case 0x5852: MassCancelResponse mass_cancel_response;
+    case 0x5352: StrategyCreationResponseMessage strategy_creation_response_message;
+    case 0x534E: SystemStateNotificationMessage system_state_notification_message;
+    case 0x4F31: NewOrderNotification new_order_notification;
+    case 0x4D4E: ModifyOrderNotification modify_order_notification;
+    case 0x584E: CancelReduceSizeOrderNotification cancel_reduce_size_order_notification;
+    case 0x4F53: OrderStatusUpdateNotification order_status_update_notification;
+    case 0x454E: SimpleExecutionNotification simple_execution_notification;
+    case 0x434E: ComplexExecutionNotification complex_execution_notification;
+    default: UINT8 unknown[available];
+  }
+} SequencedMessage;
+
+// The SesM server uses Sequenced data packets to send all messages that must be recoverable by the client in case of a connection loss
+typedef struct _SequencedDataPacket (UINT16 sesm_packet_length) where (sesm_packet_length >= 11) {
+  UINT64 sequence_number;                                                                                                                                                  // bytes 0 to 7
+  UINT16BE sequenced_message_type;                                                                                                                                         // bytes 8 to 9
+  SequencedMessage(sequenced_message_type, (((UINT32) sesm_packet_length) - 11)) sequenced_message[:byte-size-single-element-array (((UINT32) sesm_packet_length) - 11)];
+} SequencedDataPacket;
+
+// use this format to send a single New Order Request
+typedef struct _NewOrderRequestMessage {
+  UINT64 client_send_time;                      // bytes 0 to 7
+  UINT8 mp_id[5];                               // bytes 8 to 12
+  UINT8 operator_id[18];                        // bytes 13 to 30
+  UINT8 operator_location[6];                   // bytes 31 to 36
+  UINT8 account[16];                            // bytes 37 to 52
+  UINT8 client_order_id[20];                    // bytes 53 to 72
+  UINT32 instrument_id;                         // bytes 73 to 76
+  UINT64 price;                                 // bytes 77 to 84, signed, read here as unsigned
+  UINT64 stop_order_trigger_price;              // bytes 85 to 92, signed, read here as unsigned
+  UINT32 size_binary_u_4;                       // bytes 93 to 96
+  UINT16 side : 1;                              // bytes 97 to 98
+  UINT16 unused_15 : 15;                        // bytes 97 to 98
+  UINT8 time_in_force;                          // byte 99
+  UINT8 order_type;                             // byte 100
+  UINT8 self_trade_protection_level : 3;        // byte 101
+  UINT8 self_trade_protection_instruction : 3;  // byte 101
+  UINT8 unused_2 : 2;                           // byte 101
+  UINT8 self_trade_protection_group[2];         // bytes 102 to 103
+  UINT8 purge_group;                            // byte 104
+  UINT8 customer_order_handling_instruction;    // byte 105
+  UINT8 customer_of_firm_designation : 1;       // byte 106
+  UINT8 manual_order_indicator : 1;             // byte 106
+  UINT8 open_close_position_indicator : 1;      // byte 106
+  UINT8 unused_5 : 5;                           // byte 106
+  UINT32 min_qty;                               // bytes 107 to 110
+  UINT16 order_expiry_date;                     // bytes 111 to 112
+  UINT64 trading_collar_dollar_value;           // bytes 113 to 120, signed, read here as unsigned
+  UINT8 cti_code;                               // byte 121
+  UINT8 text_memo[20];                          // bytes 122 to 141
+  UINT8 reserved_32[32];                        // bytes 142 to 173
+} NewOrderRequestMessage;
+
+// use this format to send a request to modify a resting order
+typedef struct _ModifyOrderRequestMessage {
+  UINT64 client_send_time;                    // bytes 0 to 7
+  UINT8 mp_id[5];                             // bytes 8 to 12
+  UINT8 operator_id[18];                      // bytes 13 to 30
+  UINT8 operator_location[6];                 // bytes 31 to 36
+  UINT8 client_order_id[20];                  // bytes 37 to 56
+  UINT8 original_client_order_id[20];         // bytes 57 to 76
+  UINT32 instrument_id;                       // bytes 77 to 80
+  UINT64 price;                               // bytes 81 to 88, signed, read here as unsigned
+  UINT64 stop_order_trigger_price;            // bytes 89 to 96, signed, read here as unsigned
+  UINT32 size_binary_s_4;                     // bytes 97 to 100, signed, read here as unsigned
+  UINT16 order_expiry_date;                   // bytes 101 to 102
+  UINT8 self_trade_protection_group[2];       // bytes 103 to 104
+  UINT8 purge_group;                          // byte 105
+  UINT8 customer_order_handling_instruction;  // byte 106
+  UINT8 customer_of_firm_designation : 1;     // byte 107
+  UINT8 manual_order_indicator : 1;           // byte 107
+  UINT8 open_close_position_indicator : 1;    // byte 107
+  UINT8 unused_5 : 5;                         // byte 107
+  UINT8 reserved_32[32];                      // bytes 108 to 139
+} ModifyOrderRequestMessage;
 
 // a cancel request for a resting order
-entrypoint typedef struct _CancelOrderRequestMessage {
+typedef struct _CancelOrderRequestMessage {
   UINT64 client_send_time;             // bytes 0 to 7
   UINT8 mp_id[5];                      // bytes 8 to 12
   UINT8 operator_id[18];               // bytes 13 to 30
@@ -147,10 +597,8 @@ entrypoint typedef struct _CancelOrderRequestMessage {
   UINT8 reserved_10[10];               // bytes 89 to 98
 } CancelOrderRequestMessage;
 
-// ---- Mass Cancel Request: 86 bytes -------------------------------------------
-
 // request the cancellation of all orders based on the requested scope and the provided criteria
-entrypoint typedef struct _MassCancelRequest {
+typedef struct _MassCancelRequest {
   UINT64 client_send_time;      // bytes 0 to 7
   UINT8 mp_id[5];               // bytes 8 to 12
   UINT8 operator_id[18];        // bytes 13 to 30
@@ -165,10 +613,50 @@ entrypoint typedef struct _MassCancelRequest {
   UINT8 reserved_9[9];          // bytes 77 to 85
 } MassCancelRequest;
 
-// ---- Login Request: 35 bytes -------------------------------------------------
+// Number of Legs
+typedef struct _StrategyLeg {
+  UINT32 instrument_id;  // bytes 0 to 3
+  UINT32 leg_ratio;      // bytes 4 to 7, signed, read here as unsigned
+  UINT8 reserved_8[8];   // bytes 8 to 15
+} StrategyLeg;
+
+// create a Complex Strategy order
+typedef struct _StrategyCreationRequest {
+  UINT64 client_send_time;                                                // bytes 0 to 7
+  UINT8 mp_id[5];                                                         // bytes 8 to 12
+  UINT8 operator_id[18];                                                  // bytes 13 to 30
+  UINT8 operator_location[6];                                             // bytes 31 to 36
+  UINT8 client_order_id[20];                                              // bytes 37 to 56
+  UINT8 reserved_16[16];                                                  // bytes 57 to 72
+  UINT8 number_of_legs;                                                   // byte 73
+  StrategyLeg strategy_leg[:byte-size (((UINT32) number_of_legs) * 16)];
+} StrategyCreationRequest;
+
+// Branch
+casetype _UnsequencedMessage (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x4E31: NewOrderRequestMessage new_order_request_message;
+    case 0x4E52: NewOrderResponseMessage new_order_response_message;
+    case 0x4D31: ModifyOrderRequestMessage modify_order_request_message;
+    case 0x4D52: ModifyOrderResponse modify_order_response;
+    case 0x434F: CancelOrderRequestMessage cancel_order_request_message;
+    case 0x4352: CancelOrderResponse cancel_order_response;
+    case 0x5851: MassCancelRequest mass_cancel_request;
+    case 0x5852: MassCancelResponse mass_cancel_response;
+    case 0x5344: StrategyCreationRequest strategy_creation_request;
+    case 0x5352: StrategyCreationResponseMessage strategy_creation_response_message;
+    default: UINT8 unknown[available];
+  }
+} UnsequencedMessage;
+
+// Each unsequenced data packet carries one unsequenced message from the higher-level protocol
+typedef struct _UnsequencedDataPacket (UINT32 available) where (available >= 2) {
+  UINT16BE unsequenced_message_type;                                                                                                   // bytes 0 to 1
+  UnsequencedMessage(unsequenced_message_type, (available - 2)) unsequenced_message[:byte-size-single-element-array (available - 2)];
+} UnsequencedDataPacket;
 
 // The SesM client must send a Login request packet immediately upon establishing a new TCP/IP socket connection to the server
-entrypoint typedef struct _LoginRequest {
+typedef struct _LoginRequest {
   UINT8 sesm_version[5];             // bytes 0 to 4
   UINT8 username[5];                 // bytes 5 to 9
   UINT8 computer_id[8];              // bytes 10 to 17
@@ -177,20 +665,60 @@ entrypoint typedef struct _LoginRequest {
   UINT64 requested_sequence_number;  // bytes 27 to 34
 } LoginRequest;
 
-// ---- Login Response: 10 bytes ------------------------------------------------
-
 // The SesM server sends a Login response packet in response a Login request packet from the client
-entrypoint typedef struct _LoginResponse {
+typedef struct _LoginResponse {
   UINT8 login_status;              // byte 0
   UINT8 session_id;                // byte 1
   UINT64 highest_sequence_number;  // bytes 2 to 9
 } LoginResponse;
 
-// ---- Retransmission Request: 16 bytes ----------------------------------------
-
 // The SesM client uses this packet to request the server to retransmit a range of packets
-entrypoint typedef struct _RetransmissionRequest {
+typedef struct _RetransmissionRequest {
   UINT64 start_sequence_number;  // bytes 0 to 7
   UINT64 end_sequence_number;    // bytes 8 to 15
 } RetransmissionRequest;
+
+// The client may send a Logout request packet to request the connection be terminated
+typedef struct _LogoutRequest (UINT16 sesm_packet_length) where (sesm_packet_length >= 2) {
+  UINT8 logout_reason;                                     // byte 0
+  UINT8 logout_text[(((UINT32) sesm_packet_length) - 2)];
+} LogoutRequest;
+
+// The server may send a GoodBye packet to inform the client a reason for termination of the connection just before it terminates the connection
+typedef struct _GoodbyePacket (UINT16 sesm_packet_length) where (sesm_packet_length >= 2) {
+  UINT8 logout_reason;                                     // byte 0
+  UINT8 logout_text[(((UINT32) sesm_packet_length) - 2)];
+} GoodbyePacket;
+
+// Branch
+casetype _SesmPayload (UINT8 selector, UINT32 length, UINT32 length_2, UINT16 sesm_packet_length, UINT32 available) {
+  switch (selector) {
+    case 0x53: SequencedDataPacket(sesm_packet_length) sequenced_data_packet[:byte-size-single-element-array length];
+    case 0x55: UnsequencedDataPacket(length_2) unsequenced_data_packet[:byte-size-single-element-array length_2];
+    case 0x4C: LoginRequest login_request;
+    case 0x52: LoginResponse login_response;
+    case 0x43: unit synchronization_complete;
+    case 0x41: RetransmissionRequest retransmission_request;
+    case 0x58: LogoutRequest(sesm_packet_length) logout_request;
+    case 0x47: GoodbyePacket(sesm_packet_length) goodbye_packet;
+    case 0x45: unit end_of_session;
+    case 0x30: unit server_heartbeat;
+    case 0x31: unit client_heartbeat;
+    default: UINT8 unknown[available];
+  }
+} SesmPayload;
+
+// SesM Tcp Packet
+typedef struct _SesmTcpPacket {
+  UINT16 sesm_packet_length { sesm_packet_length >= 1 };                                                                                                                                                                                                           // bytes 0 to 1
+  UINT8 sesm_packet_type;                                                                                                                                                                                                                                          // byte 2
+  SesmPayload(sesm_packet_type, (((UINT32) sesm_packet_length) - 1), (((UINT32) sesm_packet_length) - 1), sesm_packet_length, ((((UINT32) sesm_packet_length) + 2) - 3)) sesm_payload[:byte-size-single-element-array ((((UINT32) sesm_packet_length) + 2) - 3)];
+} SesmTcpPacket;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// SesM Packet
+entrypoint typedef struct _Packet (UINT32 available) {
+  SesmTcpPacket sesm_tcp_packet[:byte-size available];
+} Packet;
 

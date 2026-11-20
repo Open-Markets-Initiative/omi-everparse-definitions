@@ -1,44 +1,279 @@
-// National Association of Securities Dealers Automated Quotations (Nasdaq) Ouch to Trade Options
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nasdaq IseOptions Otto Ouch v3.0.0
 //
+// Protocol:
+//   Organization: National Association of Securities Dealers Automated Quotations (Nasdaq)
+//   Protocol: Ouch to Trade Options
+//   Encoding: Ouch
+//   Version: 3.0.0
+//   Date: 08/17/2026
+//   Specification: Options_OTTO.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ClientPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out IseOptions_Otto_v3_0_0_Client.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a length prefix framing what follows
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Client Packet Header: 3 bytes -------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Packet header of a packet sent by the client
-entrypoint typedef struct _ClientPacketHeader {
-  UINT16BE packet_length;    // bytes 0 to 1
-  UINT8 client_packet_type;  // byte 2
-} ClientPacketHeader;
+// Client Packet Type: one byte code
+#define CLIENT_PACKET_TYPE_DEBUG_PACKET 0x2B             // Debug Packet
+#define CLIENT_PACKET_TYPE_LOGIN_REQUEST_PACKET 0x4C     // Login Request Packet
+#define CLIENT_PACKET_TYPE_UNSEQUENCED_DATA_PACKET 0x55  // Unsequenced Data Packet
+#define CLIENT_PACKET_TYPE_CLIENT_HEARTBEAT_PACKET 0x52  // Client Heartbeat Packet
+#define CLIENT_PACKET_TYPE_LOGOUT_REQUEST_PACKET 0x4F    // Logout Request Packet
 
-// ---- Login Request Packet: 46 bytes ------------------------------------------
+// Unsequenced Message Type: one byte code
+#define UNSEQUENCED_MESSAGE_TYPE_NEW_ORDER_LONG_FORM_MESSAGE 0x41         // New Order Long Form Message
+#define UNSEQUENCED_MESSAGE_TYPE_NEW_ORDER_SHORT_FORM_MESSAGE 0x42        // New Order Short Form Message
+#define UNSEQUENCED_MESSAGE_TYPE_REPLACE_ORDER_MESSAGE 0x52               // Replace Order Message
+#define UNSEQUENCED_MESSAGE_TYPE_CANCEL_ORDER_MESSAGE 0x43                // Cancel Order Message
+#define UNSEQUENCED_MESSAGE_TYPE_MASS_CANCEL_MESSAGE 0x55                 // Mass Cancel Message
+#define UNSEQUENCED_MESSAGE_TYPE_NEW_CROSS_ORDER_MESSAGE 0x58             // New Cross Order Message
+#define UNSEQUENCED_MESSAGE_TYPE_ADD_COMPLEX_INSTRUMENT_MESSAGE 0x53      // Add Complex Instrument Message
+#define UNSEQUENCED_MESSAGE_TYPE_MODIFY_TRADE_MESSAGE 0x4D                // Modify Trade Message
+#define UNSEQUENCED_MESSAGE_TYPE_MEMBER_KILL_SWITCH_REQUEST_MESSAGE 0x4B  // Member Kill Switch Request Message
+#define UNSEQUENCED_MESSAGE_TYPE_SUBSCRIPTION_REQUEST_MESSAGE 0x46        // Subscription Request Message
+
+// Alo Inst: one byte code
+#define ALO_INST_NOT_ALO 0x4E  // Not Alo
+#define ALO_INST_ALO 0x59      // Alo
+
+// Iso: one byte code
+#define ISO_NOT_ISO 0x4E  // Not Iso
+#define ISO_ISO 0x49      // Iso
+
+// Side: one byte code
+#define SIDE_BUY 0x42            // Buy
+#define SIDE_SELL 0x53           // Sell
+#define SIDE_OFFER 0x4F          // Offer
+#define SIDE_NOT_DISCLOSED 0x4E  // Not Disclosed
+
+// Order Type: one byte code
+#define ORDER_TYPE_LIMIT 0x4C          // Limit
+#define ORDER_TYPE_MARKET 0x4D         // Market
+#define ORDER_TYPE_NOT_DISCLOSED 0x4E  // Not Disclosed
+
+// Tif: one byte code
+#define TIF_DAY 0x44  // Day
+#define TIF_FOK 0x46  // Fok
+#define TIF_IOC 0x49  // Ioc
+
+// Capacity: one byte code
+#define CAPACITY_CUSTOMER 0x43                                // Customer
+#define CAPACITY_FIRM 0x46                                    // Firm
+#define CAPACITY_MARKET_MAKER 0x4D                            // Market Maker
+#define CAPACITY_OTHER_EXCHANGE_REGISTERED_MARKET_MAKER 0x4F  // Other Exchange Registered Market Maker
+#define CAPACITY_PROFESSIONAL_CUSTOMER 0x50                   // Professional Customer
+#define CAPACITY_BROKER_DEALER 0x42                           // Broker Dealer
+#define CAPACITY_RETAIL 0x52                                  // Retail
+#define CAPACITY_NOT_APPLICABLE 0x20                          // Not Applicable
+
+// Auction Type: one byte code
+#define AUCTION_TYPE_BLOCK_ORDER_AUCTION 0x42       // Block Order Auction
+#define AUCTION_TYPE_COMPLEX_EXPOSURE_AUCTION 0x45  // Complex Exposure Auction
+#define AUCTION_TYPE_SIMPLE_EXPOSURE_ORDER 0x46     // Simple Exposure Order
+#define AUCTION_TYPE_OPENING_AUCTION 0x4F           // Opening Auction
+#define AUCTION_TYPE_FLEX_AUCTION 0x58              // Flex Auction
+#define AUCTION_TYPE_PIM_PIXL_AUCTION 0x50          // Pim Pixl Auction
+#define AUCTION_TYPE_FACILITATION_AUCTION 0x48      // Facilitation Auction
+#define AUCTION_TYPE_SOLICITATION_AUCTION 0x53      // Solicitation Auction
+#define AUCTION_TYPE_NONE 0x4E                      // None
+
+// Price Protection: one byte code
+#define PRICE_PROTECTION_LOCAL 0x4C     // Local
+#define PRICE_PROTECTION_NATIONAL 0x4E  // National
+
+// Display When: one byte code
+#define DISPLAY_WHEN_IMMEDIATE 0x49       // Immediate
+#define DISPLAY_WHEN_EXHAUST 0x45         // Exhaust
+#define DISPLAY_WHEN_NOT_APPLICABLE 0x4E  // Not Applicable
+
+// Display Method: one byte code
+#define DISPLAY_METHOD_INITIAL 0x49  // Initial
+#define DISPLAY_METHOD_RANDOM 0x52   // Random
+#define DISPLAY_METHOD_NONE 0x4E     // None
+
+// Stock Leg Short Sale: one byte code
+#define STOCK_LEG_SHORT_SALE_NOT_APPLICABLE 0x4E     // Not Applicable
+#define STOCK_LEG_SHORT_SALE_SELL_SHORT 0x48         // Sell Short
+#define STOCK_LEG_SHORT_SALE_SELL_SHORT_EXEMPT 0x45  // Sell Short Exempt
+
+// Stock Capacity: one byte code
+#define STOCK_CAPACITY_PRINCIPAL 0x50           // Principal
+#define STOCK_CAPACITY_AGENCY 0x41              // Agency
+#define STOCK_CAPACITY_RISKLESS_PRINCIPAL 0x52  // Riskless Principal
+#define STOCK_CAPACITY_NOT_APPLICABLE 0x20      // Not Applicable
+
+// Instrument Type: one byte code
+#define INSTRUMENT_TYPE_ALL 0x41                   // All
+#define INSTRUMENT_TYPE_SIMPLE_INSTRUMENT 0x4F     // Simple Instrument
+#define INSTRUMENT_TYPE_STANDARD_COMBINATION 0x43  // Standard Combination
+#define INSTRUMENT_TYPE_STOCK_COMBINATION 0x53     // Stock Combination
+
+// Scope: one byte code
+#define SCOPE_PRODUCT 0x50     // Product
+#define SCOPE_INSTRUMENT 0x49  // Instrument
+#define SCOPE_FIRM 0x46        // Firm
+
+// Cross Type: one byte code
+#define CROSS_TYPE_AUCTION 0x41  // Auction
+#define CROSS_TYPE_QCC 0x51      // Qcc
+#define CROSS_TYPE_CCC 0x43      // Ccc
+
+// Primary Capacity: one byte code
+#define PRIMARY_CAPACITY_CUSTOMER 0x43                                // Customer
+#define PRIMARY_CAPACITY_FIRM 0x46                                    // Firm
+#define PRIMARY_CAPACITY_MARKET_MAKER 0x4D                            // Market Maker
+#define PRIMARY_CAPACITY_OTHER_EXCHANGE_REGISTERED_MARKET_MAKER 0x4F  // Other Exchange Registered Market Maker
+#define PRIMARY_CAPACITY_PROFESSIONAL_CUSTOMER 0x50                   // Professional Customer
+#define PRIMARY_CAPACITY_BROKER_DEALER 0x42                           // Broker Dealer
+#define PRIMARY_CAPACITY_RETAIL 0x52                                  // Retail
+#define PRIMARY_CAPACITY_NOT_APPLICABLE 0x20                          // Not Applicable
+
+// Primary Stock Leg Short Sale: one byte code
+#define PRIMARY_STOCK_LEG_SHORT_SALE_NOT_APPLICABLE 0x4E     // Not Applicable
+#define PRIMARY_STOCK_LEG_SHORT_SALE_SELL_SHORT 0x48         // Sell Short
+#define PRIMARY_STOCK_LEG_SHORT_SALE_SELL_SHORT_EXEMPT 0x45  // Sell Short Exempt
+
+// Primary Stock Capacity: one byte code
+#define PRIMARY_STOCK_CAPACITY_PRINCIPAL 0x50           // Principal
+#define PRIMARY_STOCK_CAPACITY_AGENCY 0x41              // Agency
+#define PRIMARY_STOCK_CAPACITY_RISKLESS_PRINCIPAL 0x52  // Riskless Principal
+#define PRIMARY_STOCK_CAPACITY_NOT_APPLICABLE 0x20      // Not Applicable
+
+// Contra Order Type: one byte code
+#define CONTRA_ORDER_TYPE_LIMIT 0x4C   // Limit
+#define CONTRA_ORDER_TYPE_MARKET 0x4D  // Market
+
+// Contra Capacity: one byte code
+#define CONTRA_CAPACITY_CUSTOMER 0x43                                // Customer
+#define CONTRA_CAPACITY_FIRM 0x46                                    // Firm
+#define CONTRA_CAPACITY_MARKET_MAKER 0x4D                            // Market Maker
+#define CONTRA_CAPACITY_OTHER_EXCHANGE_REGISTERED_MARKET_MAKER 0x4F  // Other Exchange Registered Market Maker
+#define CONTRA_CAPACITY_PROFESSIONAL_CUSTOMER 0x50                   // Professional Customer
+#define CONTRA_CAPACITY_BROKER_DEALER 0x42                           // Broker Dealer
+#define CONTRA_CAPACITY_RETAIL 0x52                                  // Retail
+#define CONTRA_CAPACITY_NOT_APPLICABLE 0x20                          // Not Applicable
+
+// Contra Stock Leg Short Sale: one byte code
+#define CONTRA_STOCK_LEG_SHORT_SALE_NOT_APPLICABLE 0x4E     // Not Applicable
+#define CONTRA_STOCK_LEG_SHORT_SALE_SELL_SHORT 0x48         // Sell Short
+#define CONTRA_STOCK_LEG_SHORT_SALE_SELL_SHORT_EXEMPT 0x45  // Sell Short Exempt
+
+// Contra Stock Capacity: one byte code
+#define CONTRA_STOCK_CAPACITY_PRINCIPAL 0x50           // Principal
+#define CONTRA_STOCK_CAPACITY_AGENCY 0x41              // Agency
+#define CONTRA_STOCK_CAPACITY_RISKLESS_PRINCIPAL 0x52  // Riskless Principal
+#define CONTRA_STOCK_CAPACITY_NOT_APPLICABLE 0x20      // Not Applicable
+
+// Leg Type: one byte code
+#define LEG_TYPE_OPTION 0x4F  // Option
+#define LEG_TYPE_STOCK 0x53   // Stock
+
+// Leg Side: one byte code
+#define LEG_SIDE_BUY 0x42   // Buy
+#define LEG_SIDE_SELL 0x53  // Sell
+
+// Open Close: one byte code
+#define OPEN_CLOSE_OPEN 0x4F           // Open
+#define OPEN_CLOSE_CLOSED 0x43         // Closed
+#define OPEN_CLOSE_CARRY_FORWARD 0x20  // Carry Forward
+
+// Kill Action: one byte code
+#define KILL_ACTION_BLOCK_AND_DELETE 0x41  // Block And Delete
+#define KILL_ACTION_BLOCK_REMOVED 0x52     // Block Removed
+#define KILL_ACTION_BLOCK 0x42             // Block
+
+// ---- Types -------------------------------------------------------------------
+
+// Debug packets are intended to provide human readable text that may aid in debugging problems
+typedef struct _DebugPacket (UINT16 packet_length) where (packet_length >= 1) {
+  UINT8 debug_text[(((UINT32) packet_length) - 1)];
+} DebugPacket;
 
 // The SoupBinTCP client must send a Login Request Packet immediately upon establishing a new TCP/IP socket connection to the server
-entrypoint typedef struct _LoginRequestPacket {
+typedef struct _LoginRequestPacket {
   UINT8 username[6];                    // bytes 0 to 5
   UINT8 password[10];                   // bytes 6 to 15
   UINT8 requested_session[10];          // bytes 16 to 25
   UINT8 requested_sequence_number[20];  // bytes 26 to 45
 } LoginRequestPacket;
 
-// ---- New Order Short Form Message: 49 bytes ----------------------------------
+// Leg Definitions (1-10) of New Order (Long Form) and New Cross Order: Leg Prices on Flex instruments, to be used for Leg Deltas on the Delta-Adjusted At Close feature
+typedef struct _FlexLegPrices {
+  UINT64BE leg_prices;  // bytes 0 to 7, signed, read here as unsigned
+  UINT8 reserved_8[8];  // bytes 8 to 15
+} FlexLegPrices;
+
+// Long form of the New Order request provides full flexibility of configuring order attributes: simple and multi-leg instruments (up to 10 legs), clearing overrides, preferenced, AON/FOK, reserve and attributable orders, one-sided auction initiation (Block, Exposure and Flex auctions), auction responses and Do Not Trade Through orders. Acknowledged by Order Accepted (Long Form).
+typedef struct _NewOrderLongFormMessage {
+  UINT8 firm_id[4];                                                                 // bytes 0 to 3
+  UINT32BE instrument_id;                                                           // bytes 4 to 7
+  UINT8 cl_ord_id[16];                                                              // bytes 8 to 23
+  UINT32BE cmta;                                                                    // bytes 24 to 27
+  UINT8 clearing_account[4];                                                        // bytes 28 to 31
+  UINT32BE occ_account;                                                             // bytes 32 to 35
+  UINT8 cust_acct[10];                                                              // bytes 36 to 45
+  UINT8 preferred_party[3];                                                         // bytes 46 to 48
+  UINT8 alo_inst;                                                                   // byte 49
+  UINT8 iso;                                                                        // byte 50
+  UINT8 side;                                                                       // byte 51
+  UINT8 order_type;                                                                 // byte 52
+  UINT64BE price;                                                                   // bytes 53 to 60, signed, read here as unsigned
+  UINT32BE quantity;                                                                // bytes 61 to 64
+  UINT32BE min_qty;                                                                 // bytes 65 to 68
+  UINT8 tif;                                                                        // byte 69
+  UINT8 capacity;                                                                   // byte 70
+  UINT8 auction_type;                                                               // byte 71
+  UINT32BE auction_id;                                                              // bytes 72 to 75
+  UINT32BE auction_duration;                                                        // bytes 76 to 79
+  UINT8 disclosure_mask;                                                            // byte 80
+  UINT8 price_protection;                                                           // byte 81
+  UINT16BE display_qty;                                                             // bytes 82 to 83
+  UINT8 display_when;                                                               // byte 84
+  UINT8 display_method;                                                             // byte 85
+  UINT16BE display_low_qty;                                                         // bytes 86 to 87
+  UINT16BE display_high_qty;                                                        // bytes 88 to 89
+  UINT16BE position_effect_mask;                                                    // bytes 90 to 91
+  UINT8 stock_leg_short_sale;                                                       // byte 92
+  UINT8 stock_leg_mpid[4];                                                          // bytes 93 to 96
+  UINT8 stock_capacity;                                                             // byte 97
+  UINT8 reserved_9[9];                                                              // bytes 98 to 106
+  UINT8 number_of_flex_legs;                                                        // byte 107
+  FlexLegPrices flex_leg_prices[:byte-size (((UINT32) number_of_flex_legs) * 16)];
+} NewOrderLongFormMessage;
 
 // Short format of the New Order request is a compact message (50 bytes) with limited flexibility: simple and multi-leg instruments, quantity up to 65535, auction responses, default clearing configuration for the Firm. Acknowledged by Order Accepted (Short Form).
-entrypoint typedef struct _NewOrderShortFormMessage {
+typedef struct _NewOrderShortFormMessage {
   UINT8 firm_id[4];               // bytes 0 to 3
   UINT32BE instrument_id;         // bytes 4 to 7
   UINT8 cl_ord_id[16];            // bytes 8 to 23
@@ -57,10 +292,8 @@ entrypoint typedef struct _NewOrderShortFormMessage {
   UINT8 stock_capacity;           // byte 48
 } NewOrderShortFormMessage;
 
-// ---- Replace Order Message: 61 bytes -----------------------------------------
-
 // Replace Order message is used to modify an existing order for both simple and complex instruments. It can also be used to alter price of the contra side of Cross Orders. The order to be replaced is identified by OrigClOrdId.
-entrypoint typedef struct _ReplaceOrderMessage {
+typedef struct _ReplaceOrderMessage {
   UINT8 firm_id[4];          // bytes 0 to 3
   UINT8 orig_cl_ord_id[16];  // bytes 4 to 19
   UINT8 cl_ord_id[16];       // bytes 20 to 35
@@ -72,18 +305,14 @@ entrypoint typedef struct _ReplaceOrderMessage {
   UINT8 price_protection;    // byte 60
 } ReplaceOrderMessage;
 
-// ---- Cancel Order Message: 20 bytes ------------------------------------------
-
 // Cancel Order by Client ID. Deletes a single simple order, a single complex order, or a Cross Order (terminating an ongoing auction). The order to be deleted is identified by the ClOrdId field.
-entrypoint typedef struct _CancelOrderMessage {
+typedef struct _CancelOrderMessage {
   UINT8 firm_id[4];     // bytes 0 to 3
   UINT8 cl_ord_id[16];  // bytes 4 to 19
 } CancelOrderMessage;
 
-// ---- Mass Cancel Message: 41 bytes -------------------------------------------
-
 // This message is used to mass-delete multiple open orders based on the specified Scope. The sequence of Order Canceled messages is terminated with a single Mass Cancel Response.
-entrypoint typedef struct _MassCancelMessage {
+typedef struct _MassCancelMessage {
   UINT8 firm_id[4];             // bytes 0 to 3
   UINT8 cl_request_id[16];      // bytes 4 to 19
   UINT8 instrument_type;        // byte 20
@@ -93,22 +322,155 @@ entrypoint typedef struct _MassCancelMessage {
   UINT8 underlying_symbol[13];  // bytes 28 to 40
 } MassCancelMessage;
 
-// ---- Member Kill Switch Request Message: 25 bytes ----------------------------
+// Cross Order message allows specifying two opposite sides to trade against each other. The primary side of the order is exposed in an auction if CrossType is set to A (Auction). Other cross types (QCC and CCC) trade the two sides without market exposure. The Primary Side and Contra Side blocks of the document are carried as Primary and Contra prefixed fields.
+typedef struct _NewCrossOrderMessage {
+  UINT8 firm_id[4];                                                                 // bytes 0 to 3
+  UINT32BE instrument_id;                                                           // bytes 4 to 7
+  UINT8 cross_type;                                                                 // byte 8
+  UINT8 auction_type;                                                               // byte 9
+  UINT8 auction_alloc_pct;                                                          // byte 10
+  UINT8 side;                                                                       // byte 11
+  UINT8 iso;                                                                        // byte 12
+  UINT8 price_protection;                                                           // byte 13
+  UINT64BE effective_time;                                                          // bytes 14 to 21
+  UINT8 disclosure_mask;                                                            // byte 22
+  UINT32BE auction_duration;                                                        // bytes 23 to 26
+  UINT8 reserved_9[9];                                                              // bytes 27 to 35
+  UINT8 primary_cl_ord_id[16];                                                      // bytes 36 to 51
+  UINT32BE primary_cmta;                                                            // bytes 52 to 55
+  UINT8 primary_clearing_account[4];                                                // bytes 56 to 59
+  UINT32BE primary_occ_account;                                                     // bytes 60 to 63
+  UINT8 primary_cust_acct[10];                                                      // bytes 64 to 73
+  UINT64BE primary_price;                                                           // bytes 74 to 81, signed, read here as unsigned
+  UINT32BE primary_quantity;                                                        // bytes 82 to 85
+  UINT8 primary_capacity;                                                           // byte 86
+  UINT16BE primary_position_effect_mask;                                            // bytes 87 to 88
+  UINT8 primary_stock_leg_short_sale;                                               // byte 89
+  UINT8 primary_stock_leg_mpid[4];                                                  // bytes 90 to 93
+  UINT8 primary_stock_capacity;                                                     // byte 94
+  UINT8 contra_cl_ord_id[16];                                                       // bytes 95 to 110
+  UINT32BE contra_cmta;                                                             // bytes 111 to 114
+  UINT8 contra_clearing_account[4];                                                 // bytes 115 to 118
+  UINT32BE contra_occ_account;                                                      // bytes 119 to 122
+  UINT8 contra_cust_acct[10];                                                       // bytes 123 to 132
+  UINT8 contra_order_type;                                                          // byte 133
+  UINT64BE contra_price;                                                            // bytes 134 to 141, signed, read here as unsigned
+  UINT32BE contra_quantity;                                                         // bytes 142 to 145
+  UINT8 contra_capacity;                                                            // byte 146
+  UINT16BE contra_position_effect_mask;                                             // bytes 147 to 148
+  UINT8 contra_stock_leg_short_sale;                                                // byte 149
+  UINT8 contra_stock_leg_mpid[4];                                                   // bytes 150 to 153
+  UINT8 contra_stock_capacity;                                                      // byte 154
+  UINT8 number_of_flex_legs;                                                        // byte 155
+  FlexLegPrices flex_leg_prices[:byte-size (((UINT32) number_of_flex_legs) * 16)];
+} NewCrossOrderMessage;
+
+// Leg Definitions (2-10) of Add Complex Instrument
+typedef struct _ComplexInstrumentLegs {
+  UINT8 leg_type;              // byte 0
+  UINT32BE leg_instrument_id;  // bytes 1 to 4
+  UINT8 leg_side;              // byte 5
+  UINT16BE leg_ratio;          // bytes 6 to 7
+} ComplexInstrumentLegs;
+
+// This is a variable length message where length is controlled by the number of legs in the instrument. Results in Add Complex Instrument Response and Complex Instrument Directory messages, or a Reject.
+typedef struct _AddComplexInstrumentMessage {
+  UINT8 firm_id[4];                                                                     // bytes 0 to 3
+  UINT8 cl_request_id[16];                                                              // bytes 4 to 19
+  UINT16BE product_id;                                                                  // bytes 20 to 21
+  UINT8 product_name[13];                                                               // bytes 22 to 34
+  UINT8 num_legs;                                                                       // byte 35
+  ComplexInstrumentLegs complex_instrument_legs[:byte-size (((UINT32) num_legs) * 8)];
+} AddComplexInstrumentMessage;
+
+// Trade Splits 1..10 of Modify Trade: clearing configuration for each party the trade is being split into
+typedef struct _TradeSplits {
+  UINT32BE alloc_qty;         // bytes 0 to 3
+  UINT32BE cmta;              // bytes 4 to 7
+  UINT8 clearing_account[4];  // bytes 8 to 11
+  UINT32BE occ_account;       // bytes 12 to 15
+  UINT8 cust_acct[10];        // bytes 16 to 25
+  UINT8 stock_leg_mpid[4];    // bytes 26 to 29
+  UINT8 capacity;             // byte 30
+  UINT8 open_close;           // byte 31
+  UINT8 stock_capacity;       // byte 32
+} TradeSplits;
+
+// The Modify Trade request is used to change clearing information on an existing trade as well as split a trade into multiple components with different clearing assignments. The trade to be changed is identified by the MatchId field. Acknowledged by Modify Trade Response.
+typedef struct _ModifyTradeMessage {
+  UINT8 firm_id[4];                                                   // bytes 0 to 3
+  UINT32BE instrument_id;                                             // bytes 4 to 7
+  UINT8 cl_request_id[16];                                            // bytes 8 to 23
+  UINT8 cl_ord_id[16];                                                // bytes 24 to 39
+  UINT32BE cross_id;                                                  // bytes 40 to 43
+  UINT32BE match_id;                                                  // bytes 44 to 47
+  UINT8 side;                                                         // byte 48
+  UINT32BE quantity;                                                  // bytes 49 to 52
+  UINT16BE num_splits;                                                // bytes 53 to 54
+  TradeSplits trade_splits[:byte-size (((UINT32) num_splits) * 33)];
+} ModifyTradeMessage;
 
 // The Member Kill Switch Request is used to block ability to enter new orders, alter existing orders, delete orders, and create complex instruments. Scope of the Kill Switch Request is one firm per request. Answered by Member Kill Switch Notification or Reject.
-entrypoint typedef struct _MemberKillSwitchRequestMessage {
+typedef struct _MemberKillSwitchRequestMessage {
   UINT8 firm_id[4];         // bytes 0 to 3
   UINT8 cl_request_id[16];  // bytes 4 to 19
   UINT8 target_firm_id[4];  // bytes 20 to 23
   UINT8 kill_action;        // byte 24
 } MemberKillSwitchRequestMessage;
 
-// ---- Subscription Request Message: 36 bytes ----------------------------------
-
 // Subscription Request message allows client to modify the set of optional notification types it receives on the OTTO connection for the current session. Supported on PHLX, ISE, GEMX and MRX. Answered by Subscription Response or Reject.
-entrypoint typedef struct _SubscriptionRequestMessage {
+typedef struct _SubscriptionRequestMessage {
   UINT8 firm_id[4];         // bytes 0 to 3
   UINT8 cl_request_id[16];  // bytes 4 to 19
   UINT8 subscription[16];   // bytes 20 to 35
 } SubscriptionRequestMessage;
+
+// The unsequenced (client to server) message carried by the packet, opaque bytes unless an application source dispatches it
+casetype _UnsequencedMessage (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x41: NewOrderLongFormMessage new_order_long_form_message;
+    case 0x42: NewOrderShortFormMessage new_order_short_form_message;
+    case 0x52: ReplaceOrderMessage replace_order_message;
+    case 0x43: CancelOrderMessage cancel_order_message;
+    case 0x55: MassCancelMessage mass_cancel_message;
+    case 0x58: NewCrossOrderMessage new_cross_order_message;
+    case 0x53: AddComplexInstrumentMessage add_complex_instrument_message;
+    case 0x4D: ModifyTradeMessage modify_trade_message;
+    case 0x4B: MemberKillSwitchRequestMessage member_kill_switch_request_message;
+    case 0x46: SubscriptionRequestMessage subscription_request_message;
+    default: UINT8 unknown[available];
+  }
+} UnsequencedMessage;
+
+// The Unsequenced Data Packets act as an envelope to carry the actual data messages that are transferred from the client to the server
+typedef struct _UnsequencedDataPacket (UINT16 packet_length) where (packet_length >= 2) {
+  UINT8 unsequenced_message_type;                                                                                                                                    // byte 0
+  UnsequencedMessage(unsequenced_message_type, (((UINT32) packet_length) - 2)) unsequenced_message[:byte-size-single-element-array (((UINT32) packet_length) - 2)];
+} UnsequencedDataPacket;
+
+// Branch
+casetype _ClientPayload (UINT8 selector, UINT32 length, UINT16 packet_length, UINT32 available) {
+  switch (selector) {
+    case 0x2B: DebugPacket(packet_length) debug_packet;
+    case 0x4C: LoginRequestPacket login_request_packet;
+    case 0x55: UnsequencedDataPacket(packet_length) unsequenced_data_packet[:byte-size-single-element-array length];
+    case 0x52: unit client_heartbeat_packet;
+    case 0x4F: unit logout_request_packet;
+    default: UINT8 unknown[available];
+  }
+} ClientPayload;
+
+// Soup Bin Tcp Packet sent by the client
+typedef struct _ClientSoupBinTcpPacket {
+  UINT16BE packet_length { packet_length >= 1 };                                                                                                                                                                // bytes 0 to 1
+  UINT8 client_packet_type;                                                                                                                                                                                     // byte 2
+  ClientPayload(client_packet_type, (((UINT32) packet_length) - 1), packet_length, ((((UINT32) packet_length) + 2) - 3)) client_payload[:byte-size-single-element-array ((((UINT32) packet_length) + 2) - 3)];
+} ClientSoupBinTcpPacket;
+
+// ---- Packet: ClientPacket ----------------------------------------------------
+
+// SoupBinTCP Packet sent by the client
+entrypoint typedef struct _ClientPacket (UINT32 available) {
+  ClientSoupBinTcpPacket client_soup_bin_tcp_packet[:byte-size available];
+} ClientPacket;
 

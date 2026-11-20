@@ -1,68 +1,105 @@
-// Osaka Digital Exchange Proprietary Trading System
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Odx OdxEquities Pts Itch v2.2
 //
+// Protocol:
+//   Organization: Osaka Digital Exchange
+//   Protocol: Proprietary Trading System
+//   Encoding: Itch
+//   Version: 2.2
+//   Date: 4/6/2026
+//   Specification: ODX_PTS_ITCH_Equities_v2.2.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out OdxEquities_Pts_v2_2.3d
-//
-// What this definition does not state, and the model does:
-// - the dispatch that chooses a message by its type
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 20 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Itch Mold Udp 64 Packet Header
-entrypoint typedef struct _PacketHeader {
-  UINT8 session[10];         // bytes 0 to 9
-  UINT64BE sequence_number;  // bytes 10 to 17
-  UINT16BE message_count;    // bytes 18 to 19
-} PacketHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_SECONDS_MESSAGE 0x54                                // Seconds Message
+#define MESSAGE_TYPE_SYSTEM_EVENT_MESSAGE 0x53                           // System Event Message
+#define MESSAGE_TYPE_PRICE_TICK_SIZE_MESSAGE 0x4C                        // Price Tick Size Message
+#define MESSAGE_TYPE_ORDERBOOK_DIRECTORY_MESSAGE 0x52                    // Orderbook Directory Message
+#define MESSAGE_TYPE_TRADING_STATE_MESSAGE 0x48                          // Trading State Message
+#define MESSAGE_TYPE_SHORT_SELLING_PRICE_RESTRICTION_STATE_MESSAGE 0x59  // Short Selling Price Restriction State Message
+#define MESSAGE_TYPE_ORDER_ADDED_MESSAGE 0x41                            // Order Added Message
+#define MESSAGE_TYPE_ORDER_EXECUTED_MESSAGE 0x45                         // Order Executed Message
+#define MESSAGE_TYPE_ORDER_DELETED_MESSAGE 0x44                          // Order Deleted Message
+#define MESSAGE_TYPE_ORDER_REPLACED_MESSAGE 0x55                         // Order Replaced Message
 
-// ---- Message Header: 3 bytes -------------------------------------------------
+// System Event: one byte code
+#define SYSTEM_EVENT_START_OF_MESSAGES 0x4F      // Start Of Messages
+#define SYSTEM_EVENT_START_OF_SYSTEM_HOURS 0x53  // Start Of System Hours
+#define SYSTEM_EVENT_START_OF_MARKET_HOURS 0x51  // Start Of Market Hours
+#define SYSTEM_EVENT_END_OF_MARKET_HOURS 0x4D    // End Of Market Hours
+#define SYSTEM_EVENT_END_OF_SYSTEM_HOURS 0x45    // End Of System Hours
+#define SYSTEM_EVENT_END_OF_MESSAGES 0x43        // End Of Messages
 
-// Mold Udp 64 Message Header
-entrypoint typedef struct _MessageHeader {
-  UINT16BE message_length;  // bytes 0 to 1
-  UINT8 message_type;       // byte 2
-} MessageHeader;
+// Trading State: one byte code
+#define TRADING_STATE_TRADING 0x54    // Trading
+#define TRADING_STATE_SUSPENDED 0x56  // Suspended
 
-// ---- Seconds Message: 4 bytes ------------------------------------------------
+// Short Selling State: one byte code
+#define SHORT_SELLING_STATE_NO_PRICE_RESTRICTION 0x30         // No Price Restriction
+#define SHORT_SELLING_STATE_PRICE_RESTRICTION_IN_EFFECT 0x31  // Price Restriction In Effect
+
+// Buy Sell Indicator: one byte code
+#define BUY_SELL_INDICATOR_BUY 0x42   // Buy
+#define BUY_SELL_INDICATOR_SELL 0x53  // Sell
+
+// ---- Types -------------------------------------------------------------------
 
 // Reflects the number of seconds past midnight
-entrypoint typedef struct _SecondsMessage {
+typedef struct _SecondsMessage {
   UINT32BE seconds;  // bytes 0 to 3
 } SecondsMessage;
 
-// ---- System Event Message: 9 bytes -------------------------------------------
-
 // System Event Messages signal data feed, system and market events
-entrypoint typedef struct _SystemEventMessage {
+typedef struct _SystemEventMessage {
   UINT32BE nanoseconds;  // bytes 0 to 3
   UINT8 group[4];        // bytes 4 to 7
   UINT8 system_event;    // byte 8
 } SystemEventMessage;
 
-// ---- Price Tick Size Message: 16 bytes ---------------------------------------
-
 // The Price Tick Size Message is used to communicate tick size information for a given price range
-entrypoint typedef struct _PriceTickSizeMessage {
+typedef struct _PriceTickSizeMessage {
   UINT32BE nanoseconds;               // bytes 0 to 3
   UINT32BE price_tick_size_table_id;  // bytes 4 to 7
   UINT32BE price_tick_size;           // bytes 8 to 11
   UINT32BE price_start;               // bytes 12 to 15
 } PriceTickSizeMessage;
 
-// ---- Orderbook Directory Message: 44 bytes -----------------------------------
-
 // The Orderbook Directory Message is used to disseminate orderbook information for all active orderbooks
-entrypoint typedef struct _OrderbookDirectoryMessage {
+typedef struct _OrderbookDirectoryMessage {
   UINT32BE nanoseconds;               // bytes 0 to 3
   UINT8 orderbook_id[4];              // bytes 4 to 7
   UINT8 orderbook_code[12];           // bytes 8 to 19
@@ -74,30 +111,24 @@ entrypoint typedef struct _OrderbookDirectoryMessage {
   UINT32BE lower_price_limit;         // bytes 40 to 43
 } OrderbookDirectoryMessage;
 
-// ---- Trading State Message: 13 bytes -----------------------------------------
-
 // The Trading State Message is used to indicate the current trading state of an orderbook
-entrypoint typedef struct _TradingStateMessage {
+typedef struct _TradingStateMessage {
   UINT32BE nanoseconds;   // bytes 0 to 3
   UINT8 orderbook_id[4];  // bytes 4 to 7
   UINT8 group[4];         // bytes 8 to 11
   UINT8 trading_state;    // byte 12
 } TradingStateMessage;
 
-// ---- Short Selling Price Restriction State Message: 13 bytes -----------------
-
 // The Short Selling Price Restriction State Message is used to indicate the current short selling price restriction state of an orderbook
-entrypoint typedef struct _ShortSellingPriceRestrictionStateMessage {
+typedef struct _ShortSellingPriceRestrictionStateMessage {
   UINT32BE nanoseconds;       // bytes 0 to 3
   UINT8 orderbook_id[4];      // bytes 4 to 7
   UINT8 group[4];             // bytes 8 to 11
   UINT8 short_selling_state;  // byte 12
 } ShortSellingPriceRestrictionStateMessage;
 
-// ---- Order Added Message: 29 bytes -------------------------------------------
-
 // An Order Added Message is generated each time a new order is accepted by the ODX PTS execution system
-entrypoint typedef struct _OrderAddedMessage {
+typedef struct _OrderAddedMessage {
   UINT32BE nanoseconds;      // bytes 0 to 3
   UINT64BE order_number;     // bytes 4 to 11
   UINT8 buy_sell_indicator;  // byte 12
@@ -107,32 +138,77 @@ entrypoint typedef struct _OrderAddedMessage {
   UINT32BE price;            // bytes 25 to 28
 } OrderAddedMessage;
 
-// ---- Order Executed Message: 24 bytes ----------------------------------------
-
 // An Order Executed Message is sent whenever an order on the book is executed in whole or in part
-entrypoint typedef struct _OrderExecutedMessage {
+typedef struct _OrderExecutedMessage {
   UINT32BE nanoseconds;        // bytes 0 to 3
   UINT64BE order_number;       // bytes 4 to 11
   UINT32BE executed_quantity;  // bytes 12 to 15
   UINT64BE match_number;       // bytes 16 to 23
 } OrderExecutedMessage;
 
-// ---- Order Deleted Message: 12 bytes -----------------------------------------
-
 // An Order Deleted Message is sent whenever an order on the book is cancelled
-entrypoint typedef struct _OrderDeletedMessage {
+typedef struct _OrderDeletedMessage {
   UINT32BE nanoseconds;   // bytes 0 to 3
   UINT64BE order_number;  // bytes 4 to 11
 } OrderDeletedMessage;
 
-// ---- Order Replaced Message: 28 bytes ----------------------------------------
-
 // An Order Replaced Message is sent whenever an order on the book is replaced
-entrypoint typedef struct _OrderReplacedMessage {
+typedef struct _OrderReplacedMessage {
   UINT32BE nanoseconds;            // bytes 0 to 3
   UINT64BE original_order_number;  // bytes 4 to 11
   UINT64BE new_order_number;       // bytes 12 to 19
   UINT32BE quantity;               // bytes 20 to 23
   UINT32BE price;                  // bytes 24 to 27
 } OrderReplacedMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x54: SecondsMessage seconds_message;
+    case 0x53: SystemEventMessage system_event_message;
+    case 0x4C: PriceTickSizeMessage price_tick_size_message;
+    case 0x52: OrderbookDirectoryMessage orderbook_directory_message;
+    case 0x48: TradingStateMessage trading_state_message;
+    case 0x59: ShortSellingPriceRestrictionStateMessage short_selling_price_restriction_state_message;
+    case 0x41: OrderAddedMessage order_added_message;
+    case 0x45: OrderExecutedMessage order_executed_message;
+    case 0x44: OrderDeletedMessage order_deleted_message;
+    case 0x55: OrderReplacedMessage order_replaced_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// Mold Udp64 Message
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16BE message_length { message_length >= 1 };                                                                                                                 // bytes 0 to 1
+  UINT8 message_type;                                                                                                                                              // byte 2
+  Payload(message_type, (((UINT32) message_length) - 1)) payload[:byte-size-single-element-array (((UINT32) message_length) - 1)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// Mold Udp64 Message
+typedef struct _MessageRun (UINT16 message_count, UINT32 available, mutable UINT32 * tally) {
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size available];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} MessageRun;
+
+// Branch
+casetype _Messages (UINT16 selector, UINT16 message_count, UINT32 available, mutable UINT32 * tally) {
+  switch (selector) {
+    case 0x0000: unit heartbeat;
+    case 0xFFFF: unit end_of_session;
+    default: MessageRun(message_count, available, tally) message;
+  }
+} Messages;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Itch Mold Udp 64 Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 20) {
+  UINT8 session[10];                                                                                                           // bytes 0 to 9
+  UINT64BE sequence_number;                                                                                                    // bytes 10 to 17
+  UINT16BE message_count;                                                                                                      // bytes 18 to 19
+  Messages(message_count, message_count, (available - 20), tally) messages[:byte-size-single-element-array (available - 20)];
+} Packet;
 

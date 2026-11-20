@@ -1,34 +1,407 @@
-// Eurex Exchange Enhanced Order Book Interface
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Eurex T7 Eobi Fbe v14.1
 //
+// Protocol:
+//   Organization: Eurex Exchange
+//   Protocol: Enhanced Order Book Interface
+//   Encoding: Flat Binary Encoding
+//   Version: 14.1
+//   Date: 3/20/2026
+//   Specification: T7_R.14.1_ EOBI_Manual_Version_1.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out Eurex_T7_Eobi_v14_1.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Eobi Header: 8 bytes ----------------------------------------------------
+// ---- Values ------------------------------------------------------------------
+
+// Template Id: 2 byte code
+#define TEMPLATE_ID_ADD_COMPLEX_INSTRUMENT 0x3458        // Add Complex Instrument
+#define TEMPLATE_ID_ADD_FLEXIBLE_INSTRUMENT 0x3459       // Add Flexible Instrument
+#define TEMPLATE_ID_ADD_SCALED_SIMPLE_INSTRUMENT 0x345A  // Add Scaled Simple Instrument
+#define TEMPLATE_ID_AUCTION_BBO 0x34BC                   // Auction Bbo
+#define TEMPLATE_ID_AUCTION_CLEARING_PRICE 0x34BD        // Auction Clearing Price
+#define TEMPLATE_ID_CROSS_REQUEST 0x34BE                 // Cross Request
+#define TEMPLATE_ID_EXECUTION_SUMMARY 0x3392             // Execution Summary
+#define TEMPLATE_ID_FULL_ORDER_EXECUTION 0x3330          // Full Order Execution
+#define TEMPLATE_ID_HEARTBEAT 0x32C9                     // Heartbeat
+#define TEMPLATE_ID_INSTRUMENT_STATE_CHANGE 0x33F5       // Instrument State Change
+#define TEMPLATE_ID_INSTRUMENT_SUMMARY 0x3521            // Instrument Summary
+#define TEMPLATE_ID_MASS_INSTRUMENT_STATE_CHANGE 0x33F6  // Mass Instrument State Change
+#define TEMPLATE_ID_ORDER_ADD 0x332C                     // Order Add
+#define TEMPLATE_ID_ORDER_DELETE 0x332E                  // Order Delete
+#define TEMPLATE_ID_ORDER_MASS_DELETE 0x332F             // Order Mass Delete
+#define TEMPLATE_ID_ORDER_MODIFY 0x332D                  // Order Modify
+#define TEMPLATE_ID_ORDER_MODIFY_SAME_PRIO 0x3332        // Order Modify Same Prio
+#define TEMPLATE_ID_PACKET_HEADER 0x32CA                 // Packet Header
+#define TEMPLATE_ID_PARTIAL_ORDER_EXECUTION 0x3331       // Partial Order Execution
+#define TEMPLATE_ID_PRODUCT_STATE_CHANGE 0x33F4          // Product State Change
+#define TEMPLATE_ID_PRODUCT_SUMMARY 0x3520               // Product Summary
+#define TEMPLATE_ID_QUOTE_REQUEST 0x34BF                 // Quote Request
+#define TEMPLATE_ID_SNAPSHOT_ORDER 0x3522                // Snapshot Order
+#define TEMPLATE_ID_TES_TRADE_REPORT 0x3393              // Tes Trade Report
+#define TEMPLATE_ID_TOP_OF_BOOK 0x34C0                   // Top Of Book
+#define TEMPLATE_ID_TRADE_REPORT 0x3391                  // Trade Report
+#define TEMPLATE_ID_TRADE_REVERSAL 0x3390                // Trade Reversal
+
+// Completion Indicator: one byte code
+#define COMPLETION_INDICATOR_INCOMPLETE 0x00  // Incomplete
+#define COMPLETION_INDICATOR_COMPLETE 0x01    // Complete
+
+// Appl Seq Reset Indicator: one byte code
+#define APPL_SEQ_RESET_INDICATOR_NO_RESET 0x00  // No Reset
+#define APPL_SEQ_RESET_INDICATOR_RESET 0x01     // Reset
+
+// Product Complex: one byte code
+#define PRODUCT_COMPLEX_SIMPLE_INSTRUMENT 0x01                 // Simple Instrument
+#define PRODUCT_COMPLEX_STANDARD_OPTION_STRATEGY 0x02          // Standard Option Strategy
+#define PRODUCT_COMPLEX_NON_STANDARD_OPTION_STRATEGY 0x03      // Non Standard Option Strategy
+#define PRODUCT_COMPLEX_VOLATILITY_STRATEGY 0x04               // Volatility Strategy
+#define PRODUCT_COMPLEX_FUTURES_SPREAD 0x05                    // Futures Spread
+#define PRODUCT_COMPLEX_INTER_PRODUCT_SPREAD 0x06              // Inter Product Spread
+#define PRODUCT_COMPLEX_STANDARD_FUTURES_STRATEGY 0x07         // Standard Futures Strategy
+#define PRODUCT_COMPLEX_PACK_AND_BUNDLE 0x08                   // Pack And Bundle
+#define PRODUCT_COMPLEX_STRIP 0x09                             // Strip
+#define PRODUCT_COMPLEX_FLEXIBLE_INSTRUMENT 0x0A               // Flexible Instrument
+#define PRODUCT_COMPLEX_COMMODITY_STRIP 0x0B                   // Commodity Strip
+#define PRODUCT_COMPLEX_SCALED_SIMPLE_INSTRUMENT 0x0C          // Scaled Simple Instrument
+#define PRODUCT_COMPLEX_NON_STANDARD_VOLATILITY_STRATEGY 0x0D  // Non Standard Volatility Strategy
+#define PRODUCT_COMPLEX_TOTAL_RETURN_FUTURE_STRATEGY 0x0E      // Total Return Future Strategy
+
+// Implied Market Indicator: one byte code
+#define IMPLIED_MARKET_INDICATOR_NOT_IMPLIED 0x00     // Not Implied
+#define IMPLIED_MARKET_INDICATOR_IMPLIED_IN_OUT 0x03  // Implied In Out
+
+// Last Fragment: one byte code
+#define LAST_FRAGMENT_N 0x00  // N
+#define LAST_FRAGMENT_Y 0x01  // Y
+
+// Leg Security Type: one byte code
+#define LEG_SECURITY_TYPE_LEG_SECURITY_MULTI_LEG 0x01       // Leg Security Multi Leg
+#define LEG_SECURITY_TYPE_LEG_SECURITY_UNDERLYING_LEG 0x02  // Leg Security Underlying Leg
+
+// Leg Side: one byte code
+#define LEG_SIDE_BUY 0x01   // Buy
+#define LEG_SIDE_SELL 0x02  // Sell
+
+// Related Price Type: one byte code
+#define RELATED_PRICE_TYPE_BASIS 0x01                    // Basis
+#define RELATED_PRICE_TYPE_CUSTOM_UNDERLYING_PRICE 0x02  // Custom Underlying Price
+
+// Trading Style: one byte code
+#define TRADING_STYLE_REGULAR 0x01  // Regular
+#define TRADING_STYLE_TRFTAC 0x02   // Trftac
+#define TRADING_STYLE_TRFTAM 0x03   // Trftam
+#define TRADING_STYLE_MOC 0x04      // Moc
+
+// Security Type: one byte code
+#define SECURITY_TYPE_OPT 0x01   // Opt
+#define SECURITY_TYPE_FUT 0x02   // Fut
+#define SECURITY_TYPE_MLEG 0x03  // Mleg
+
+// Put Or Call: one byte code
+#define PUT_OR_CALL_PUT 0x00   // Put
+#define PUT_OR_CALL_CALL 0x01  // Call
+
+// Exercise Style: one byte code
+#define EXERCISE_STYLE_EUROPEAN 0x00  // European
+#define EXERCISE_STYLE_AMERICAN 0x01  // American
+
+// Settl Method: one byte code
+#define SETTL_METHOD_CASH 0x00      // Cash
+#define SETTL_METHOD_PHYSICAL 0x01  // Physical
+
+// Potential Security Trading Event: one byte code
+#define POTENTIAL_SECURITY_TRADING_EVENT_NONE 0x00                                  // None
+#define POTENTIAL_SECURITY_TRADING_EVENT_PRICE_VOLATILITY_AUCTION_IS_EXTENDED 0x0A  // Price Volatility Auction Is Extended
+
+// Bid Ord Type: one byte code
+#define BID_ORD_TYPE_MARKET 0x01  // Market
+
+// Offer Ord Type: one byte code
+#define OFFER_ORD_TYPE_MARKET 0x01  // Market
+
+// Security Trading Status: one byte code
+#define SECURITY_TRADING_STATUS_TRADING_HALT 0x02                                                     // Trading Halt
+#define SECURITY_TRADING_STATUS_MARKET_IMBALANCE_BUY 0x07                                             // Market Imbalance Buy
+#define SECURITY_TRADING_STATUS_MARKET_IMBALANCE_SELL 0x08                                            // Market Imbalance Sell
+#define SECURITY_TRADING_STATUS_CLOSED 0xC8                                                           // Closed
+#define SECURITY_TRADING_STATUS_RESTRICTED 0xC9                                                       // Restricted
+#define SECURITY_TRADING_STATUS_BOOK 0xCA                                                             // Book
+#define SECURITY_TRADING_STATUS_CONTINUOUS 0xCB                                                       // Continuous
+#define SECURITY_TRADING_STATUS_OPENING_AUCTION 0xCC                                                  // Opening Auction
+#define SECURITY_TRADING_STATUS_OPENING_AUCTION_FREEZE 0xCD                                           // Opening Auction Freeze
+#define SECURITY_TRADING_STATUS_INTRADAY_AUCTION 0xCE                                                 // Intraday Auction
+#define SECURITY_TRADING_STATUS_INTRADAY_AUCTION_FREEZE 0xCF                                          // Intraday Auction Freeze
+#define SECURITY_TRADING_STATUS_CIRCUIT_BREAKER_AUCTION 0xD0                                          // Circuit Breaker Auction
+#define SECURITY_TRADING_STATUS_CIRCUIT_BREAKER_AUCTION_FREEZE 0xD1                                   // Circuit Breaker Auction Freeze
+#define SECURITY_TRADING_STATUS_CLOSING_AUCTION 0xD2                                                  // Closing Auction
+#define SECURITY_TRADING_STATUS_CLOSING_AUCTION_FREEZE 0xD3                                           // Closing Auction Freeze
+#define SECURITY_TRADING_STATUS_IPO_AUCTION 0xD4                                                      // Ipo Auction
+#define SECURITY_TRADING_STATUS_IPO_AUCTION_FREEZE 0xD5                                               // Ipo Auction Freeze
+#define SECURITY_TRADING_STATUS_PRE_CALL 0xD6                                                         // Pre Call
+#define SECURITY_TRADING_STATUS_CALL 0xD7                                                             // Call
+#define SECURITY_TRADING_STATUS_FREEZE 0xD8                                                           // Freeze
+#define SECURITY_TRADING_STATUS_TRADE_AT_CLOSE 0xD9                                                   // Trade At Close
+#define SECURITY_TRADING_STATUS_RETAIL_PRE_CALL 0xDA                                                  // Retail Pre Call
+#define SECURITY_TRADING_STATUS_RETAIL_CALL 0xDB                                                      // Retail Call
+#define SECURITY_TRADING_STATUS_CIRCUIT_BREAKER_AUCTION_TRIGGERED_BY_STATIC_LIMIT_BREACH 0xDC         // Circuit Breaker Auction Triggered By Static Limit Breach
+#define SECURITY_TRADING_STATUS_CIRCUIT_BREAKER_AUCTION_TRIGGERED_BY_STATIC_LIMIT_BREACH_FREEZE 0xDD  // Circuit Breaker Auction Triggered By Static Limit Breach Freeze
+
+// Side: one byte code
+#define SIDE_BUY 0x01   // Buy
+#define SIDE_SELL 0x02  // Sell
+
+// Cross Request Type: one byte code
+#define CROSS_REQUEST_TYPE_CROSS_ANNOUNCEMENT 0x01           // Cross Announcement
+#define CROSS_REQUEST_TYPE_LIQUIDITY_IMPROVEMENT_CROSS 0x02  // Liquidity Improvement Cross
+
+// Input Source: one byte code
+#define INPUT_SOURCE_CLIP_CLIENT_BROKER 0x01  // Clip Client Broker
+
+// Aggressor Side: one byte code
+#define AGGRESSOR_SIDE_BUY 0x01   // Buy
+#define AGGRESSOR_SIDE_SELL 0x02  // Sell
+
+// Trade Condition: 2 byte code
+#define TRADE_CONDITION_IMPLIED_TRADE 0x0001              // Implied Trade
+#define TRADE_CONDITION_OUT_OF_SEQUENCE 0x006B            // Out Of Sequence
+#define TRADE_CONDITION_MIDPOINT_PRICE 0x009B             // Midpoint Price
+#define TRADE_CONDITION_TRADING_ON_TERMS_OF_ISSUE 0x009C  // Trading On Terms Of Issue
+#define TRADE_CONDITION_SPECIAL_AUCTION 0x0254            // Special Auction
+#define TRADE_CONDITION_TRADE_AT_CLOSE 0x0270             // Trade At Close
+#define TRADE_CONDITION_RETAIL 0x02E7                     // Retail
+#define TRADE_CONDITION_AUCTION_VOLUME_DISCOVERY 0x00CE   // Auction Volume Discovery
+
+// Ord Type: one byte code
+#define ORD_TYPE_MARKET 0x01  // Market
+
+// Algorithmic Trade Indicator: one byte code
+#define ALGORITHMIC_TRADE_INDICATOR_ALGORITHMIC_TRADE 0x01  // Algorithmic Trade
+
+// Security Status: one byte code
+#define SECURITY_STATUS_ACTIVE 0x01                     // Active
+#define SECURITY_STATUS_INACTIVE 0x02                   // Inactive
+#define SECURITY_STATUS_EXPIRED 0x04                    // Expired
+#define SECURITY_STATUS_KNOCKED_OUT 0x06                // Knocked Out
+#define SECURITY_STATUS_KNOCK_OUT_REVOKED 0x07          // Knock Out Revoked
+#define SECURITY_STATUS_SUSPENDED 0x09                  // Suspended
+#define SECURITY_STATUS_PENDING_DELETION 0x0B           // Pending Deletion
+#define SECURITY_STATUS_KNOCKED_OUT_AND_SUSPENDED 0x0C  // Knocked Out And Suspended
+
+// Market Condition: one byte code
+#define MARKET_CONDITION_NORMAL 0x00    // Normal
+#define MARKET_CONDITION_STRESSED 0x01  // Stressed
+
+// Fast Market Indicator: one byte code
+#define FAST_MARKET_INDICATOR_NO 0x00   // No
+#define FAST_MARKET_INDICATOR_YES 0x01  // Yes
+
+// Security Trading Event: one byte code
+#define SECURITY_TRADING_EVENT_PRICE_VOLATILITY_AUCTION_IS_EXTENDED 0x0A        // Price Volatility Auction Is Extended
+#define SECURITY_TRADING_EVENT_PRICE_VOLATILITY_AUCTION_IS_EXTENDED_AGAIN 0x0B  // Price Volatility Auction Is Extended Again
+
+// Sold Out Indicator: one byte code
+#define SOLD_OUT_INDICATOR_SOLD_OUT 0x01  // Sold Out
+
+// Tes Security Status: one byte code
+#define TES_SECURITY_STATUS_ACTIVE 0x01     // Active
+#define TES_SECURITY_STATUS_INACTIVE 0x02   // Inactive
+#define TES_SECURITY_STATUS_EXPIRED 0x04    // Expired
+#define TES_SECURITY_STATUS_SUSPENDED 0x09  // Suspended
+
+// Md Origin Type: one byte code
+#define MD_ORIGIN_TYPE_BOOK 0x00      // Book
+#define MD_ORIGIN_TYPE_OFF_BOOK 0x01  // Off Book
+
+// Md Entry Type: one byte code
+#define MD_ENTRY_TYPE_TRADE 0x02                    // Trade
+#define MD_ENTRY_TYPE_OPENING_PRICE 0x04            // Opening Price
+#define MD_ENTRY_TYPE_CLOSING_PRICE 0x05            // Closing Price
+#define MD_ENTRY_TYPE_HIGH_PRICE 0x07               // High Price
+#define MD_ENTRY_TYPE_LOW_PRICE 0x08                // Low Price
+#define MD_ENTRY_TYPE_TRADE_VOLUME 0x42             // Trade Volume
+#define MD_ENTRY_TYPE_PREVIOUS_CLOSING_PRICE 0x65   // Previous Closing Price
+#define MD_ENTRY_TYPE_OPENING_AUCTION 0xC8          // Opening Auction
+#define MD_ENTRY_TYPE_INTRADAY_AUCTION 0xC9         // Intraday Auction
+#define MD_ENTRY_TYPE_CIRCUIT_BREAKER_AUCTION 0xCA  // Circuit Breaker Auction
+#define MD_ENTRY_TYPE_CLOSING_AUCTION 0xCB          // Closing Auction
+#define MD_ENTRY_TYPE_IPO_AUCTION 0xCC              // Ipo Auction
+#define MD_ENTRY_TYPE_RETAIL_AUCTION 0xCD           // Retail Auction
+
+// Trd Type: 2 byte code
+#define TRD_TYPE_BLOCK_TRADE 0x0001                          // Block Trade
+#define TRD_TYPE_EFP 0x0002                                  // Efp
+#define TRD_TYPE_EFS 0x000C                                  // Efs
+#define TRD_TYPE_OTC 0x0036                                  // Otc
+#define TRD_TYPE_EXCHANGE_BASIS_FACILITY 0x0037              // Exchange Basis Facility
+#define TRD_TYPE_VOLA_TRADE 0x03E8                           // Vola Trade
+#define TRD_TYPE_EFP_FIN_TRADE 0x03E9                        // Efp Fin Trade
+#define TRD_TYPE_EFP_INDEX_FUTURES_TRADE 0x03EA              // Efp Index Futures Trade
+#define TRD_TYPE_BLOCK_TRADE_AT_MARKET 0x03EC                // Block Trade At Market
+#define TRD_TYPE_XETRA_EUREX_ENLIGHT_TRIGGERED_TRADE 0x03EE  // Xetra Eurex Enlight Triggered Trade
+#define TRD_TYPE_BLOCK_QTPIP_TRADE 0x03EF                    // Block Qtpip Trade
+
+// Multi Leg Reporting Type: one byte code
+#define MULTI_LEG_REPORTING_TYPE_SINGLE_SECURITY 0x01                         // Single Security
+#define MULTI_LEG_REPORTING_TYPE_INDIVIDUAL_LEG_OF_A_MULTI_LEG_SECURITY 0x02  // Individual Leg Of A Multi Leg Security
+#define MULTI_LEG_REPORTING_TYPE_MULTI_LEG_SECURITY 0x03                      // Multi Leg Security
+
+// Multi Leg Price Model: one byte code
+#define MULTI_LEG_PRICE_MODEL_STANDARD 0x00      // Standard
+#define MULTI_LEG_PRICE_MODEL_USER_DEFINED 0x01  // User Defined
+
+// Instrument Scope Product Complex: one byte code
+#define INSTRUMENT_SCOPE_PRODUCT_COMPLEX_SIMPLE_INSTRUMENT 0x01                 // Simple Instrument
+#define INSTRUMENT_SCOPE_PRODUCT_COMPLEX_STANDARD_OPTION_STRATEGY 0x02          // Standard Option Strategy
+#define INSTRUMENT_SCOPE_PRODUCT_COMPLEX_NON_STANDARD_OPTION_STRATEGY 0x03      // Non Standard Option Strategy
+#define INSTRUMENT_SCOPE_PRODUCT_COMPLEX_VOLATILITY_STRATEGY 0x04               // Volatility Strategy
+#define INSTRUMENT_SCOPE_PRODUCT_COMPLEX_FUTURES_SPREAD 0x05                    // Futures Spread
+#define INSTRUMENT_SCOPE_PRODUCT_COMPLEX_INTER_PRODUCT_SPREAD 0x06              // Inter Product Spread
+#define INSTRUMENT_SCOPE_PRODUCT_COMPLEX_STANDARD_FUTURES_STRATEGY 0x07         // Standard Futures Strategy
+#define INSTRUMENT_SCOPE_PRODUCT_COMPLEX_PACK_AND_BUNDLE 0x08                   // Pack And Bundle
+#define INSTRUMENT_SCOPE_PRODUCT_COMPLEX_STRIP 0x09                             // Strip
+#define INSTRUMENT_SCOPE_PRODUCT_COMPLEX_FLEXIBLE_INSTRUMENT 0x0A               // Flexible Instrument
+#define INSTRUMENT_SCOPE_PRODUCT_COMPLEX_COMMODITY_STRIP 0x0B                   // Commodity Strip
+#define INSTRUMENT_SCOPE_PRODUCT_COMPLEX_SCALED_SIMPLE_INSTRUMENT 0x0C          // Scaled Simple Instrument
+#define INSTRUMENT_SCOPE_PRODUCT_COMPLEX_NON_STANDARD_VOLATILITY_STRATEGY 0x0D  // Non Standard Volatility Strategy
+#define INSTRUMENT_SCOPE_PRODUCT_COMPLEX_TOTAL_RETURN_FUTURE_STRATEGY 0x0E      // Total Return Future Strategy
+
+// Security Mass Status: one byte code
+#define SECURITY_MASS_STATUS_ACTIVE 0x01                     // Active
+#define SECURITY_MASS_STATUS_INACTIVE 0x02                   // Inactive
+#define SECURITY_MASS_STATUS_EXPIRED 0x04                    // Expired
+#define SECURITY_MASS_STATUS_KNOCKED_OUT 0x06                // Knocked Out
+#define SECURITY_MASS_STATUS_KNOCK_OUT_REVOKED 0x07          // Knock Out Revoked
+#define SECURITY_MASS_STATUS_SUSPENDED 0x09                  // Suspended
+#define SECURITY_MASS_STATUS_PENDING_DELETION 0x0B           // Pending Deletion
+#define SECURITY_MASS_STATUS_KNOCKED_OUT_AND_SUSPENDED 0x0C  // Knocked Out And Suspended
+
+// Security Mass Trading Status: one byte code
+#define SECURITY_MASS_TRADING_STATUS_TRADING_HALT 0x02                                                     // Trading Halt
+#define SECURITY_MASS_TRADING_STATUS_MARKET_IMBALANCE_BUY 0x07                                             // Market Imbalance Buy
+#define SECURITY_MASS_TRADING_STATUS_MARKET_IMBALANCE_SELL 0x08                                            // Market Imbalance Sell
+#define SECURITY_MASS_TRADING_STATUS_CLOSED 0xC8                                                           // Closed
+#define SECURITY_MASS_TRADING_STATUS_RESTRICTED 0xC9                                                       // Restricted
+#define SECURITY_MASS_TRADING_STATUS_BOOK 0xCA                                                             // Book
+#define SECURITY_MASS_TRADING_STATUS_CONTINUOUS 0xCB                                                       // Continuous
+#define SECURITY_MASS_TRADING_STATUS_OPENING_AUCTION 0xCC                                                  // Opening Auction
+#define SECURITY_MASS_TRADING_STATUS_OPENING_AUCTION_FREEZE 0xCD                                           // Opening Auction Freeze
+#define SECURITY_MASS_TRADING_STATUS_INTRADAY_AUCTION 0xCE                                                 // Intraday Auction
+#define SECURITY_MASS_TRADING_STATUS_INTRADAY_AUCTION_FREEZE 0xCF                                          // Intraday Auction Freeze
+#define SECURITY_MASS_TRADING_STATUS_CIRCUIT_BREAKER_AUCTION 0xD0                                          // Circuit Breaker Auction
+#define SECURITY_MASS_TRADING_STATUS_CIRCUIT_BREAKER_AUCTION_FREEZE 0xD1                                   // Circuit Breaker Auction Freeze
+#define SECURITY_MASS_TRADING_STATUS_CLOSING_AUCTION 0xD2                                                  // Closing Auction
+#define SECURITY_MASS_TRADING_STATUS_CLOSING_AUCTION_FREEZE 0xD3                                           // Closing Auction Freeze
+#define SECURITY_MASS_TRADING_STATUS_IPO_AUCTION 0xD4                                                      // Ipo Auction
+#define SECURITY_MASS_TRADING_STATUS_IPO_AUCTION_FREEZE 0xD5                                               // Ipo Auction Freeze
+#define SECURITY_MASS_TRADING_STATUS_PRE_CALL 0xD6                                                         // Pre Call
+#define SECURITY_MASS_TRADING_STATUS_CALL 0xD7                                                             // Call
+#define SECURITY_MASS_TRADING_STATUS_FREEZE 0xD8                                                           // Freeze
+#define SECURITY_MASS_TRADING_STATUS_TRADE_AT_CLOSE 0xD9                                                   // Trade At Close
+#define SECURITY_MASS_TRADING_STATUS_RETAIL_PRE_CALL 0xDA                                                  // Retail Pre Call
+#define SECURITY_MASS_TRADING_STATUS_RETAIL_CALL 0xDB                                                      // Retail Call
+#define SECURITY_MASS_TRADING_STATUS_CIRCUIT_BREAKER_AUCTION_TRIGGERED_BY_STATIC_LIMIT_BREACH 0xDC         // Circuit Breaker Auction Triggered By Static Limit Breach
+#define SECURITY_MASS_TRADING_STATUS_CIRCUIT_BREAKER_AUCTION_TRIGGERED_BY_STATIC_LIMIT_BREACH_FREEZE 0xDD  // Circuit Breaker Auction Triggered By Static Limit Breach Freeze
+
+// Mass Market Condition: one byte code
+#define MASS_MARKET_CONDITION_NORMAL 0x00    // Normal
+#define MASS_MARKET_CONDITION_STRESSED 0x01  // Stressed
+
+// Security Mass Trading Event: one byte code
+#define SECURITY_MASS_TRADING_EVENT_PRICE_VOLATILITY_AUCTION_IS_EXTENDED 0x0A        // Price Volatility Auction Is Extended
+#define SECURITY_MASS_TRADING_EVENT_PRICE_VOLATILITY_AUCTION_IS_EXTENDED_AGAIN 0x0B  // Price Volatility Auction Is Extended Again
+
+// Mass Sold Out Indicator: one byte code
+#define MASS_SOLD_OUT_INDICATOR_SOLD_OUT 0x01  // Sold Out
+
+// Tes Security Mass Status: one byte code
+#define TES_SECURITY_MASS_STATUS_ACTIVE 0x01     // Active
+#define TES_SECURITY_MASS_STATUS_INACTIVE 0x02   // Inactive
+#define TES_SECURITY_MASS_STATUS_EXPIRED 0x04    // Expired
+#define TES_SECURITY_MASS_STATUS_SUSPENDED 0x09  // Suspended
+
+// Trading Session Id: one byte code
+#define TRADING_SESSION_ID_DAY 0x01          // Day
+#define TRADING_SESSION_ID_MORNING 0x03      // Morning
+#define TRADING_SESSION_ID_EVENING 0x05      // Evening
+#define TRADING_SESSION_ID_AFTER_HOURS 0x06  // After Hours
+#define TRADING_SESSION_ID_HOLIDAY 0x07      // Holiday
+
+// Trading Session Sub Id: one byte code
+#define TRADING_SESSION_SUB_ID_PRE_TRADING 0x01                  // Pre Trading
+#define TRADING_SESSION_SUB_ID_CONTINUOUS 0x03                   // Continuous
+#define TRADING_SESSION_SUB_ID_CLOSING 0x04                      // Closing
+#define TRADING_SESSION_SUB_ID_POST_TRADING 0x05                 // Post Trading
+#define TRADING_SESSION_SUB_ID_QUIESCENT 0x07                    // Quiescent
+#define TRADING_SESSION_SUB_ID_OUT_OF_MAIN_SESSION_TRADING 0x0A  // Out Of Main Session Trading
+
+// Trad Ses Status: one byte code
+#define TRAD_SES_STATUS_HALTED 0x01  // Halted
+#define TRAD_SES_STATUS_OPEN 0x02    // Open
+#define TRAD_SES_STATUS_CLOSED 0x03  // Closed
+
+// Tes Trad Ses Status: one byte code
+#define TES_TRAD_SES_STATUS_HALTED 0x01     // Halted
+#define TES_TRAD_SES_STATUS_OPEN 0x02       // Open
+#define TES_TRAD_SES_STATUS_CLOSED 0x03     // Closed
+#define TES_TRAD_SES_STATUS_PRE_CLOSE 0x05  // Pre Close
+
+// Match Type: one byte code
+#define MATCH_TYPE_CONFIRMED_TRADE_REPORT 0x03       // Confirmed Trade Report
+#define MATCH_TYPE_CROSS_AUCTION 0x05                // Cross Auction
+#define MATCH_TYPE_CALL_AUCTION 0x07                 // Call Auction
+#define MATCH_TYPE_LIQUIDITY_IMPROVEMENT_CROSS 0x0D  // Liquidity Improvement Cross
+#define MATCH_TYPE_CONTINUOUS_AUCTION 0x0E           // Continuous Auction
+
+// Match Sub Type: one byte code
+#define MATCH_SUB_TYPE_OPENING_AUCTION 0x01            // Opening Auction
+#define MATCH_SUB_TYPE_CLOSING_AUCTION 0x02            // Closing Auction
+#define MATCH_SUB_TYPE_INTRADAY_AUCTION 0x03           // Intraday Auction
+#define MATCH_SUB_TYPE_CIRCUIT_BREAKER_AUCTION 0x04    // Circuit Breaker Auction
+#define MATCH_SUB_TYPE_IPO_AUCTION 0x05                // Ipo Auction
+#define MATCH_SUB_TYPE_RETAIL_AUCTION_VOLA_TRADE 0x06  // Retail Auction Vola Trade
+
+// ---- Types -------------------------------------------------------------------
 
 // EOBI PacketHeader MessageHeaderComp (BodyLen + TemplateID + MsgSeqNum) first 8 bytes of every Eurex T7 EOBI packet.
-entrypoint typedef struct _EobiHeader {
+typedef struct _EobiHeader {
   UINT16 body_len;     // bytes 0 to 1
   UINT16 template_id;  // bytes 2 to 3
   UINT32 msg_seq_num;  // bytes 4 to 7
 } EobiHeader;
 
-// ---- Packet Header: 32 bytes -------------------------------------------------
-
 // Eurex Eobi Packet Header
-entrypoint typedef struct _PacketHeader {
+typedef struct _PacketHeader {
   EobiHeader eobi_header;          // bytes 0 to 7
   UINT32 appl_seq_num;             // bytes 8 to 11
   UINT32 market_segment_id;        // bytes 12 to 15, signed, read here as unsigned
@@ -40,17 +413,35 @@ entrypoint typedef struct _PacketHeader {
   UINT64 transact_time;            // bytes 24 to 31
 } PacketHeader;
 
-// ---- Message Header Comp: 8 bytes --------------------------------------------
+typedef struct _InstrmtLegGrpComp {
+  UINT32 leg_symbol;         // bytes 0 to 3, signed, read here as unsigned
+  UINT8 pad4[4];             // bytes 4 to 7
+  UINT64 leg_security_id;    // bytes 8 to 15, signed, read here as unsigned
+  UINT64 leg_price;          // bytes 16 to 23, signed, read here as unsigned
+  UINT32 leg_ratio_qty;      // bytes 24 to 27, signed, read here as unsigned
+  UINT8 leg_security_type;   // byte 28
+  UINT8 leg_side;            // byte 29
+  UINT8 related_price_type;  // byte 30
+  UINT8 trading_style;       // byte 31
+  UINT64 related_price;      // bytes 32 to 39, signed, read here as unsigned
+} InstrmtLegGrpComp;
 
-entrypoint typedef struct _MessageHeaderComp {
-  UINT16 body_len;     // bytes 0 to 1
-  UINT16 template_id;  // bytes 2 to 3
-  UINT32 msg_seq_num;  // bytes 4 to 7
-} MessageHeaderComp;
+typedef struct _AddComplexInstrument {
+  UINT64 security_id;                                      // bytes 0 to 7, signed, read here as unsigned
+  UINT64 transact_time;                                    // bytes 8 to 15
+  UINT8 security_desc[40];                                 // bytes 16 to 55
+  UINT32 security_sub_type;                                // bytes 56 to 59, signed, read here as unsigned
+  UINT8 product_complex;                                   // byte 60
+  UINT8 implied_market_indicator;                          // byte 61
+  UINT16 quantity_scaling_factor;                          // bytes 62 to 63
+  UINT32 leg_ratio_multiplier;                             // bytes 64 to 67
+  UINT8 no_legs;                                           // byte 68
+  UINT8 pad2[2];                                           // bytes 69 to 70
+  UINT8 last_fragment;                                     // byte 71
+  InstrmtLegGrpComp instrmt_leg_grp_comp[:byte-size 800];  // bytes 72 to 871
+} AddComplexInstrument;
 
-// ---- Add Flexible Instrument: 88 bytes ---------------------------------------
-
-entrypoint typedef struct _AddFlexibleInstrument {
+typedef struct _AddFlexibleInstrument {
   UINT64 security_id;                         // bytes 0 to 7, signed, read here as unsigned
   UINT64 transact_time;                       // bytes 8 to 15
   UINT8 security_desc[40];                    // bytes 16 to 55
@@ -66,15 +457,11 @@ entrypoint typedef struct _AddFlexibleInstrument {
   UINT8 pad4[4];                              // bytes 84 to 87
 } AddFlexibleInstrument;
 
-// ---- Related Instrument Grp Comp: 8 bytes ------------------------------------
-
-entrypoint typedef struct _RelatedInstrumentGrpComp {
+typedef struct _RelatedInstrumentGrpComp {
   UINT64 related_security_id;  // bytes 0 to 7, signed, read here as unsigned
 } RelatedInstrumentGrpComp;
 
-// ---- Add Scaled Simple Instrument: 72 bytes ----------------------------------
-
-entrypoint typedef struct _AddScaledSimpleInstrument {
+typedef struct _AddScaledSimpleInstrument {
   UINT64 security_id;                                    // bytes 0 to 7, signed, read here as unsigned
   UINT64 transact_time;                                  // bytes 8 to 15
   UINT8 security_desc[40];                               // bytes 16 to 55
@@ -85,9 +472,7 @@ entrypoint typedef struct _AddScaledSimpleInstrument {
   RelatedInstrumentGrpComp related_instrument_grp_comp;  // bytes 64 to 71
 } AddScaledSimpleInstrument;
 
-// ---- Auction Bbo: 56 bytes ---------------------------------------------------
-
-entrypoint typedef struct _AuctionBbo {
+typedef struct _AuctionBbo {
   UINT64 transact_time;                    // bytes 0 to 7
   UINT64 security_id;                      // bytes 8 to 15, signed, read here as unsigned
   UINT64 bid_px;                           // bytes 16 to 23, signed, read here as unsigned
@@ -100,9 +485,7 @@ entrypoint typedef struct _AuctionBbo {
   UINT8 pad5[5];                           // bytes 51 to 55
 } AuctionBbo;
 
-// ---- Auction Clearing Price: 48 bytes ----------------------------------------
-
-entrypoint typedef struct _AuctionClearingPrice {
+typedef struct _AuctionClearingPrice {
   UINT64 transact_time;                    // bytes 0 to 7
   UINT64 security_id;                      // bytes 8 to 15, signed, read here as unsigned
   UINT64 last_px;                          // bytes 16 to 23, signed, read here as unsigned
@@ -113,9 +496,7 @@ entrypoint typedef struct _AuctionClearingPrice {
   UINT8 pad6[6];                           // bytes 42 to 47
 } AuctionClearingPrice;
 
-// ---- Cross Request: 40 bytes -------------------------------------------------
-
-entrypoint typedef struct _CrossRequest {
+typedef struct _CrossRequest {
   UINT64 security_id;        // bytes 0 to 7, signed, read here as unsigned
   UINT64 last_px;            // bytes 8 to 15, signed, read here as unsigned
   UINT64 last_qty;           // bytes 16 to 23, signed, read here as unsigned
@@ -126,17 +507,13 @@ entrypoint typedef struct _CrossRequest {
   UINT64 transact_time;      // bytes 32 to 39
 } CrossRequest;
 
-// ---- Remaining Order Details Comp: 24 bytes ----------------------------------
-
-entrypoint typedef struct _RemainingOrderDetailsComp {
+typedef struct _RemainingOrderDetailsComp {
   UINT64 trd_reg_ts_prev_time_priority;  // bytes 0 to 7
   UINT64 display_qty;                    // bytes 8 to 15, signed, read here as unsigned
   UINT64 price;                          // bytes 16 to 23, signed, read here as unsigned
 } RemainingOrderDetailsComp;
 
-// ---- Execution Summary: 96 bytes ---------------------------------------------
-
-entrypoint typedef struct _ExecutionSummary {
+typedef struct _ExecutionSummary {
   UINT64 security_id;                                      // bytes 0 to 7, signed, read here as unsigned
   UINT64 request_time;                                     // bytes 8 to 15
   UINT64 exec_id;                                          // bytes 16 to 23
@@ -153,9 +530,7 @@ entrypoint typedef struct _ExecutionSummary {
   UINT64 aggressor_time;                                   // bytes 88 to 95
 } ExecutionSummary;
 
-// ---- Full Order Execution: 48 bytes ------------------------------------------
-
-entrypoint typedef struct _FullOrderExecution {
+typedef struct _FullOrderExecution {
   UINT8 side;                         // byte 0
   UINT8 ord_type;                     // byte 1
   UINT8 algorithmic_trade_indicator;  // byte 2
@@ -168,16 +543,12 @@ entrypoint typedef struct _FullOrderExecution {
   UINT64 last_px;                     // bytes 40 to 47, signed, read here as unsigned
 } FullOrderExecution;
 
-// ---- Heartbeat: 8 bytes ------------------------------------------------------
-
-entrypoint typedef struct _Heartbeat {
+typedef struct _Heartbeat {
   UINT32 last_msg_seq_num_processed;  // bytes 0 to 3
   UINT8 pad4[4];                      // bytes 4 to 7
 } Heartbeat;
 
-// ---- Instrument State Change: 48 bytes ---------------------------------------
-
-entrypoint typedef struct _InstrumentStateChange {
+typedef struct _InstrumentStateChange {
   UINT64 security_id;             // bytes 0 to 7, signed, read here as unsigned
   UINT8 security_status;          // byte 8
   UINT8 security_trading_status;  // byte 9
@@ -193,9 +564,68 @@ entrypoint typedef struct _InstrumentStateChange {
   UINT8 pad7[7];                  // bytes 41 to 47
 } InstrumentStateChange;
 
-// ---- Order Details Comp: 32 bytes --------------------------------------------
+typedef struct _MdInstrumentEntryGrpComp {
+  UINT64 md_entry_px;                 // bytes 0 to 7, signed, read here as unsigned
+  UINT64 md_entry_size;               // bytes 8 to 15, signed, read here as unsigned
+  UINT8 md_origin_type;               // byte 16
+  UINT8 md_entry_type;                // byte 17
+  UINT16 trade_condition;             // bytes 18 to 19
+  UINT16 trd_type;                    // bytes 20 to 21
+  UINT8 multi_leg_reporting_type;     // byte 22
+  UINT8 multi_leg_price_model;        // byte 23
+  UINT64 non_disclosed_trade_volume;  // bytes 24 to 31, signed, read here as unsigned
+} MdInstrumentEntryGrpComp;
 
-entrypoint typedef struct _OrderDetailsComp {
+typedef struct _InstrumentSummary {
+  UINT64 security_id;                                                     // bytes 0 to 7, signed, read here as unsigned
+  UINT64 last_update_time;                                                // bytes 8 to 15
+  UINT64 trd_reg_ts_execution_time;                                       // bytes 16 to 23
+  UINT16 tot_no_orders;                                                   // bytes 24 to 25
+  UINT8 security_status;                                                  // byte 26
+  UINT8 security_trading_status;                                          // byte 27
+  UINT8 market_condition;                                                 // byte 28
+  UINT8 fast_market_indicator;                                            // byte 29
+  UINT8 security_trading_event;                                           // byte 30
+  UINT8 sold_out_indicator;                                               // byte 31
+  UINT64 high_px;                                                         // bytes 32 to 39, signed, read here as unsigned
+  UINT64 low_px;                                                          // bytes 40 to 47, signed, read here as unsigned
+  UINT8 product_complex;                                                  // byte 48
+  UINT8 no_md_entries;                                                    // byte 49
+  UINT8 tes_security_status;                                              // byte 50
+  UINT8 pad5[5];                                                          // bytes 51 to 55
+  MdInstrumentEntryGrpComp md_instrument_entry_grp_comp[:byte-size 576];  // bytes 56 to 631
+} InstrumentSummary;
+
+typedef struct _SecMassStatGrpComp {
+  UINT64 security_id;             // bytes 0 to 7, signed, read here as unsigned
+  UINT64 high_px;                 // bytes 8 to 15, signed, read here as unsigned
+  UINT64 low_px;                  // bytes 16 to 23, signed, read here as unsigned
+  UINT8 security_status;          // byte 24
+  UINT8 security_trading_status;  // byte 25
+  UINT8 market_condition;         // byte 26
+  UINT8 security_trading_event;   // byte 27
+  UINT8 sold_out_indicator;       // byte 28
+  UINT8 tes_security_status;      // byte 29
+  UINT8 pad2[2];                  // bytes 30 to 31
+} SecMassStatGrpComp;
+
+typedef struct _MassInstrumentStateChange {
+  UINT8 instrument_scope_product_complex;                     // byte 0
+  UINT8 security_mass_status;                                 // byte 1
+  UINT8 security_mass_trading_status;                         // byte 2
+  UINT8 mass_market_condition;                                // byte 3
+  UINT8 fast_market_indicator;                                // byte 4
+  UINT8 security_mass_trading_event;                          // byte 5
+  UINT8 mass_sold_out_indicator;                              // byte 6
+  UINT8 tes_security_mass_status;                             // byte 7
+  UINT64 transact_time;                                       // bytes 8 to 15
+  UINT8 last_fragment;                                        // byte 16
+  UINT8 no_related_sym;                                       // byte 17
+  UINT8 pad6[6];                                              // bytes 18 to 23
+  SecMassStatGrpComp sec_mass_stat_grp_comp[:byte-size 768];  // bytes 24 to 791
+} MassInstrumentStateChange;
+
+typedef struct _OrderDetailsComp {
   UINT64 trd_reg_ts_time_priority;  // bytes 0 to 7
   UINT64 display_qty;               // bytes 8 to 15, signed, read here as unsigned
   UINT8 side;                       // byte 16
@@ -205,33 +635,25 @@ entrypoint typedef struct _OrderDetailsComp {
   UINT64 price;                     // bytes 24 to 31, signed, read here as unsigned
 } OrderDetailsComp;
 
-// ---- Order Add: 48 bytes -----------------------------------------------------
-
-entrypoint typedef struct _OrderAdd {
+typedef struct _OrderAdd {
   UINT64 request_time;                  // bytes 0 to 7
   UINT64 security_id;                   // bytes 8 to 15, signed, read here as unsigned
   OrderDetailsComp order_details_comp;  // bytes 16 to 47
 } OrderAdd;
 
-// ---- Order Delete: 56 bytes --------------------------------------------------
-
-entrypoint typedef struct _OrderDelete {
+typedef struct _OrderDelete {
   UINT64 request_time;                  // bytes 0 to 7
   UINT64 transact_time;                 // bytes 8 to 15
   UINT64 security_id;                   // bytes 16 to 23, signed, read here as unsigned
   OrderDetailsComp order_details_comp;  // bytes 24 to 55
 } OrderDelete;
 
-// ---- Order Mass Delete: 16 bytes ---------------------------------------------
-
-entrypoint typedef struct _OrderMassDelete {
+typedef struct _OrderMassDelete {
   UINT64 security_id;    // bytes 0 to 7, signed, read here as unsigned
   UINT64 transact_time;  // bytes 8 to 15
 } OrderMassDelete;
 
-// ---- Order Modify: 80 bytes --------------------------------------------------
-
-entrypoint typedef struct _OrderModify {
+typedef struct _OrderModify {
   UINT64 request_time;                   // bytes 0 to 7
   UINT64 trd_reg_ts_prev_time_priority;  // bytes 8 to 15
   UINT64 prev_price;                     // bytes 16 to 23, signed, read here as unsigned
@@ -242,9 +664,7 @@ entrypoint typedef struct _OrderModify {
   UINT8 pad7[7];                         // bytes 73 to 79
 } OrderModify;
 
-// ---- Order Modify Same Prio: 64 bytes ----------------------------------------
-
-entrypoint typedef struct _OrderModifySamePrio {
+typedef struct _OrderModifySamePrio {
   UINT64 request_time;                  // bytes 0 to 7
   UINT64 transact_time;                 // bytes 8 to 15
   UINT64 prev_display_qty;              // bytes 16 to 23, signed, read here as unsigned
@@ -252,24 +672,7 @@ entrypoint typedef struct _OrderModifySamePrio {
   OrderDetailsComp order_details_comp;  // bytes 32 to 63
 } OrderModifySamePrio;
 
-// ---- Partial Order Execution: 48 bytes ---------------------------------------
-
-entrypoint typedef struct _PartialOrderExecution {
-  UINT8 side;                         // byte 0
-  UINT8 ord_type;                     // byte 1
-  UINT8 algorithmic_trade_indicator;  // byte 2
-  UINT8 hhi_indicator;                // byte 3, signed, read here as unsigned
-  UINT32 trd_match_id;                // bytes 4 to 7
-  UINT64 price;                       // bytes 8 to 15, signed, read here as unsigned
-  UINT64 trd_reg_ts_time_priority;    // bytes 16 to 23
-  UINT64 security_id;                 // bytes 24 to 31, signed, read here as unsigned
-  UINT64 last_qty;                    // bytes 32 to 39, signed, read here as unsigned
-  UINT64 last_px;                     // bytes 40 to 47, signed, read here as unsigned
-} PartialOrderExecution;
-
-// ---- Product State Change: 16 bytes ------------------------------------------
-
-entrypoint typedef struct _ProductStateChange {
+typedef struct _ProductStateChange {
   UINT8 trading_session_id;      // byte 0
   UINT8 trading_session_sub_id;  // byte 1
   UINT8 trad_ses_status;         // byte 2
@@ -280,9 +683,7 @@ entrypoint typedef struct _ProductStateChange {
   UINT64 transact_time;          // bytes 8 to 15
 } ProductStateChange;
 
-// ---- Product Summary: 16 bytes -----------------------------------------------
-
-entrypoint typedef struct _ProductSummary {
+typedef struct _ProductSummary {
   UINT32 last_msg_seq_num_processed;  // bytes 0 to 3
   UINT8 trading_session_id;           // byte 4
   UINT8 trading_session_sub_id;       // byte 5
@@ -293,9 +694,7 @@ entrypoint typedef struct _ProductSummary {
   UINT8 pad6[6];                      // bytes 10 to 15
 } ProductSummary;
 
-// ---- Quote Request: 32 bytes -------------------------------------------------
-
-entrypoint typedef struct _QuoteRequest {
+typedef struct _QuoteRequest {
   UINT64 security_id;    // bytes 0 to 7, signed, read here as unsigned
   UINT64 last_qty;       // bytes 8 to 15, signed, read here as unsigned
   UINT8 side;            // byte 16
@@ -303,15 +702,11 @@ entrypoint typedef struct _QuoteRequest {
   UINT64 transact_time;  // bytes 24 to 31
 } QuoteRequest;
 
-// ---- Snapshot Order: 32 bytes ------------------------------------------------
-
-entrypoint typedef struct _SnapshotOrder {
+typedef struct _SnapshotOrder {
   OrderDetailsComp order_details_comp;  // bytes 0 to 31
 } SnapshotOrder;
 
-// ---- Tes Trade Report: 72 bytes ----------------------------------------------
-
-entrypoint typedef struct _TesTradeReport {
+typedef struct _TesTradeReport {
   UINT64 security_id;                 // bytes 0 to 7, signed, read here as unsigned
   UINT64 transact_time;               // bytes 8 to 15
   UINT64 last_qty;                    // bytes 16 to 23, signed, read here as unsigned
@@ -329,9 +724,7 @@ entrypoint typedef struct _TesTradeReport {
   UINT8 pad4[4];                      // bytes 68 to 71
 } TesTradeReport;
 
-// ---- Top Of Book: 56 bytes ---------------------------------------------------
-
-entrypoint typedef struct _TopOfBook {
+typedef struct _TopOfBook {
   UINT64 transact_time;          // bytes 0 to 7
   UINT64 security_id;            // bytes 8 to 15, signed, read here as unsigned
   UINT64 bid_px;                 // bytes 16 to 23, signed, read here as unsigned
@@ -343,9 +736,7 @@ entrypoint typedef struct _TopOfBook {
   UINT8 pad4[4];                 // bytes 52 to 55
 } TopOfBook;
 
-// ---- Trade Report: 48 bytes --------------------------------------------------
-
-entrypoint typedef struct _TradeReport {
+typedef struct _TradeReport {
   UINT64 security_id;                 // bytes 0 to 7, signed, read here as unsigned
   UINT64 transact_time;               // bytes 8 to 15
   UINT64 last_qty;                    // bytes 16 to 23, signed, read here as unsigned
@@ -358,4 +749,73 @@ entrypoint typedef struct _TradeReport {
   UINT16 trade_condition;             // bytes 40 to 41
   UINT8 pad6[6];                      // bytes 42 to 47
 } TradeReport;
+
+typedef struct _MdTradeEntryGrpComp {
+  UINT64 md_entry_px;    // bytes 0 to 7, signed, read here as unsigned
+  UINT64 md_entry_size;  // bytes 8 to 15, signed, read here as unsigned
+  UINT8 md_entry_type;   // byte 16
+  UINT8 pad7[7];         // bytes 17 to 23
+} MdTradeEntryGrpComp;
+
+typedef struct _TradeReversal {
+  UINT64 security_id;                                           // bytes 0 to 7, signed, read here as unsigned
+  UINT64 transact_time;                                         // bytes 8 to 15
+  UINT64 last_qty;                                              // bytes 16 to 23, signed, read here as unsigned
+  UINT64 last_px;                                               // bytes 24 to 31, signed, read here as unsigned
+  UINT64 trd_reg_ts_execution_time;                             // bytes 32 to 39
+  UINT32 trd_match_id;                                          // bytes 40 to 43
+  UINT16 trade_condition;                                       // bytes 44 to 45
+  UINT8 md_origin_type;                                         // byte 46
+  UINT8 no_md_entries;                                          // byte 47
+  MdTradeEntryGrpComp md_trade_entry_grp_comp[:byte-size 432];  // bytes 48 to 479
+} TradeReversal;
+
+// Branch
+casetype _Payload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x3458: AddComplexInstrument add_complex_instrument;
+    case 0x3459: AddFlexibleInstrument add_flexible_instrument;
+    case 0x345A: AddScaledSimpleInstrument add_scaled_simple_instrument;
+    case 0x34BC: AuctionBbo auction_bbo;
+    case 0x34BD: AuctionClearingPrice auction_clearing_price;
+    case 0x34BE: CrossRequest cross_request;
+    case 0x3392: ExecutionSummary execution_summary;
+    case 0x3330: FullOrderExecution full_order_execution;
+    case 0x32C9: Heartbeat heartbeat;
+    case 0x33F5: InstrumentStateChange instrument_state_change;
+    case 0x3521: InstrumentSummary instrument_summary;
+    case 0x33F6: MassInstrumentStateChange mass_instrument_state_change;
+    case 0x332C: OrderAdd order_add;
+    case 0x332E: OrderDelete order_delete;
+    case 0x332F: OrderMassDelete order_mass_delete;
+    case 0x332D: OrderModify order_modify;
+    case 0x3332: OrderModifySamePrio order_modify_same_prio;
+    case 0x3331: FullOrderExecution partial_order_execution;
+    case 0x33F4: ProductStateChange product_state_change;
+    case 0x3520: ProductSummary product_summary;
+    case 0x34BF: QuoteRequest quote_request;
+    case 0x3522: SnapshotOrder snapshot_order;
+    case 0x3393: TesTradeReport tes_trade_report;
+    case 0x34C0: TopOfBook top_of_book;
+    case 0x3391: TradeReport trade_report;
+    case 0x3390: TradeReversal trade_reversal;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// Eurex Eobi Message
+typedef struct _Message {
+  UINT16 body_len { body_len >= 8 };                                                                                   // bytes 0 to 1
+  UINT16 template_id;                                                                                                  // bytes 2 to 3
+  UINT32 msg_seq_num;                                                                                                  // bytes 4 to 7
+  Payload(template_id, (((UINT32) body_len) - 8)) payload[:byte-size-single-element-array (((UINT32) body_len) - 8)];
+} Message;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Eurex Eobi Packet
+entrypoint typedef struct _Packet (UINT32 available) where (available >= 32) {
+  PacketHeader packet_header;                    // bytes 0 to 31
+  Message message[:byte-size (available - 32)];
+} Packet;
 

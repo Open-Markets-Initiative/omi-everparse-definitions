@@ -1,42 +1,108 @@
-// Tradelogiq Markets Inc. Lynx Multicast Level 1
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Tradelogiq LynxAts MulticastLevel1 Itch v1.01
 //
+// Protocol:
+//   Organization: Tradelogiq Markets Inc.
+//   Protocol: Lynx Multicast Level 1
+//   Encoding: Itch
+//   Version: 1.01
+//   Date: 01/30/2022
+//   Specification: TradelogiQ-Level-1-ITCH-5.0-Specification-v1.01.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out LynxAts_MulticastLevel1_v1_01_Udp.3d
-//
-// What this definition does not state, and the model does:
-// - the dispatch that chooses a message by its type
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 20 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Tradelogiq Qtp Downstream Packet Header
-entrypoint typedef struct _PacketHeader {
-  UINT8 session[10];         // bytes 0 to 9
-  UINT64BE sequence_number;  // bytes 10 to 17
-  UINT16BE message_count;    // bytes 18 to 19
-} PacketHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_QUOTE_MESSAGE 0x57                     // Quote Message
+#define MESSAGE_TYPE_TRADE_REPORT_MESSAGE 0x54              // Trade Report Message
+#define MESSAGE_TYPE_TRADE_BUST_MESSAGE 0x4E                // Trade Bust Message
+#define MESSAGE_TYPE_TRADE_CORRECTION_MESSAGE 0x4D          // Trade Correction Message
+#define MESSAGE_TYPE_SYSTEM_EVENT_MESSAGE 0x53              // System Event Message
+#define MESSAGE_TYPE_STOCK_DIRECTORY_MESSAGE 0x52           // Stock Directory Message
+#define MESSAGE_TYPE_EXTENDED_STOCK_DIRECTORY_MESSAGE 0x72  // Extended Stock Directory Message
+#define MESSAGE_TYPE_STOCK_STATUS_MESSAGE 0x48              // Stock Status Message
 
-// ---- Message Header: 3 bytes -------------------------------------------------
+// Event Code: one byte code
+#define EVENT_CODE_START_OF_MESSAGES 0x4F      // Start Of Messages
+#define EVENT_CODE_START_OF_SYSTEM_HOURS 0x53  // Start Of System Hours
+#define EVENT_CODE_START_OF_MARKET_HOURS 0x51  // Start Of Market Hours
+#define EVENT_CODE_END_OF_MARKET_HOURS 0x4D    // End Of Market Hours
+#define EVENT_CODE_END_OF_SYSTEM_HOURS 0x45    // End Of System Hours
+#define EVENT_CODE_END_OF_MESSAGES 0x43        // End Of Messages
+#define EVENT_CODE_TRADING_HALTED 0x42         // Trading Halted
+#define EVENT_CODE_TRADING_RESUMED 0x52        // Trading Resumed
 
-// Tradelogiq Qtp Message Block Header
-entrypoint typedef struct _MessageHeader {
-  UINT16BE message_length;  // bytes 0 to 1
-  UINT8 message_type;       // byte 2
-} MessageHeader;
+// Market: one byte code
+#define MARKET_TSX 0x74            // Tsx
+#define MARKET_VENTURE 0x76        // Venture
+#define MARKET_CNSX 0x63           // Cnsx
+#define MARKET_NASDAQ_CANADA 0x71  // Nasdaq Canada
+#define MARKET_OMEGA 0x6F          // Omega
+#define MARKET_AEQUITAS 0x7A       // Aequitas
 
-// ---- Quote Message: 43 bytes -------------------------------------------------
+// Shortable: one byte code
+#define SHORTABLE_SHORT_EXEMPT 0x45   // Short Exempt
+#define SHORTABLE_SHORTABLE 0x53      // Shortable
+#define SHORTABLE_NOT_SHORTABLE 0x4E  // Not Shortable
+
+// Dividend Indicator: one byte code
+#define DIVIDEND_INDICATOR_ANNUAL 0x41       // Annual
+#define DIVIDEND_INDICATOR_SEMI_ANNUAL 0x53  // Semi Annual
+#define DIVIDEND_INDICATOR_QUARTERLY 0x51    // Quarterly
+#define DIVIDEND_INDICATOR_MONTHLY 0x4D      // Monthly
+
+// Frequency: one byte code
+#define FREQUENCY_ANNUAL 0x41       // Annual
+#define FREQUENCY_SEMI_ANNUAL 0x53  // Semi Annual
+#define FREQUENCY_QUARTERLY 0x51    // Quarterly
+#define FREQUENCY_MONTHLY 0x4D      // Monthly
+
+// Security Type: one byte code
+#define SECURITY_TYPE_DEBENTURES 0x64  // Debentures
+#define SECURITY_TYPE_RIGHTS 0x72      // Rights
+#define SECURITY_TYPE_NOTES 0x6E       // Notes
+#define SECURITY_TYPE_WARRANTS 0x77    // Warrants
+
+// Trading State: one byte code
+#define TRADING_STATE_HALTED 0x48   // Halted
+#define TRADING_STATE_TRADING 0x54  // Trading
+
+// ---- Types -------------------------------------------------------------------
 
 // Tradelogiq's BBO will broadcast real-time updates every time Tradelogiq's top of book changes.
-entrypoint typedef struct _QuoteMessage {
+typedef struct _QuoteMessage {
   UINT8 reserved_1;         // byte 0
   UINT8 stock_symbol[10];   // bytes 1 to 10
   UINT64BE timestamp;       // bytes 11 to 18
@@ -46,10 +112,8 @@ entrypoint typedef struct _QuoteMessage {
   UINT32BE best_ask_size;   // bytes 39 to 42
 } QuoteMessage;
 
-// ---- Trade Report Message: 43 bytes ------------------------------------------
-
 // Relays all transactions available from or reported by Tradelogiq's two trading books for the current business day.
-entrypoint typedef struct _TradeReportMessage {
+typedef struct _TradeReportMessage {
   UINT8 conditions[5];     // bytes 0 to 4
   UINT8 stock_symbol[10];  // bytes 5 to 14
   UINT64BE timestamp;      // bytes 15 to 22
@@ -60,20 +124,16 @@ entrypoint typedef struct _TradeReportMessage {
   UINT16BE sell_broker;    // bytes 41 to 42
 } TradeReportMessage;
 
-// ---- Trade Bust Message: 23 bytes --------------------------------------------
-
 // If trade is cancelled or busted during the day Trade Bust Message will be sent.
-entrypoint typedef struct _TradeBustMessage {
+typedef struct _TradeBustMessage {
   UINT8 reserved_1;        // byte 0
   UINT8 stock_symbol[10];  // bytes 1 to 10
   UINT64BE timestamp;      // bytes 11 to 18
   UINT32BE trade_id;       // bytes 19 to 22
 } TradeBustMessage;
 
-// ---- Trade Correction Message: 47 bytes --------------------------------------
-
 // Trade amendments during the day will send this message.
-entrypoint typedef struct _TradeCorrectionMessage {
+typedef struct _TradeCorrectionMessage {
   UINT8 reserved_1;                // byte 0
   UINT8 stock_symbol[10];          // bytes 1 to 10
   UINT64BE timestamp;              // bytes 11 to 18
@@ -84,19 +144,15 @@ entrypoint typedef struct _TradeCorrectionMessage {
   UINT32BE corrected_trade_size;   // bytes 43 to 46
 } TradeCorrectionMessage;
 
-// ---- System Event Message: 11 bytes ------------------------------------------
-
 // The system event message is used to signal a market or a data feed handler event.
-entrypoint typedef struct _SystemEventMessage {
+typedef struct _SystemEventMessage {
   UINT8 event_code;     // byte 0
   UINT8 reserved_2[2];  // bytes 1 to 2
   UINT64BE timestamp;   // bytes 3 to 10
 } SystemEventMessage;
 
-// ---- Stock Directory Message: 39 bytes ---------------------------------------
-
 // At start of each trading day, OSI disseminates stock directory messages for supported securities.
-entrypoint typedef struct _StockDirectoryMessage {
+typedef struct _StockDirectoryMessage {
   UINT8 market;              // byte 0
   UINT8 stock[10];           // bytes 1 to 10
   UINT64BE timestamp;        // bytes 11 to 18
@@ -108,10 +164,8 @@ entrypoint typedef struct _StockDirectoryMessage {
   UINT8 currency[3];         // bytes 36 to 38
 } StockDirectoryMessage;
 
-// ---- Extended Stock Directory Message: 71 bytes ------------------------------
-
 // Extended Stock Directory are for Special stock symbols eg warrants debentures rights.
-entrypoint typedef struct _ExtendedStockDirectoryMessage {
+typedef struct _ExtendedStockDirectoryMessage {
   UINT8 market;             // byte 0
   UINT8 stock[10];          // bytes 1 to 10
   UINT64BE timestamp;       // bytes 11 to 18
@@ -127,13 +181,59 @@ entrypoint typedef struct _ExtendedStockDirectoryMessage {
   UINT8 reserved_3[3];      // bytes 68 to 70
 } ExtendedStockDirectoryMessage;
 
-// ---- Stock Status Message: 23 bytes ------------------------------------------
-
 // This message indicates the current trading status of a stock.
-entrypoint typedef struct _StockStatusMessage {
+typedef struct _StockStatusMessage {
   UINT8 trading_state;  // byte 0
   UINT8 stock[10];      // bytes 1 to 10
   UINT64BE timestamp;   // bytes 11 to 18
   UINT8 reason[4];      // bytes 19 to 22
 } StockStatusMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x57: QuoteMessage quote_message;
+    case 0x54: TradeReportMessage trade_report_message;
+    case 0x4E: TradeBustMessage trade_bust_message;
+    case 0x4D: TradeCorrectionMessage trade_correction_message;
+    case 0x53: SystemEventMessage system_event_message;
+    case 0x52: StockDirectoryMessage stock_directory_message;
+    case 0x72: ExtendedStockDirectoryMessage extended_stock_directory_message;
+    case 0x48: StockStatusMessage stock_status_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// Tradelogiq Qtp Message Block
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16BE message_length { message_length >= 1 };                                                                                                                 // bytes 0 to 1
+  UINT8 message_type;                                                                                                                                              // byte 2
+  Payload(message_type, (((UINT32) message_length) - 1)) payload[:byte-size-single-element-array (((UINT32) message_length) - 1)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// Tradelogiq Qtp Message Block
+typedef struct _MessageRun (UINT16 message_count, UINT32 available, mutable UINT32 * tally) {
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size available];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} MessageRun;
+
+// Branch
+casetype _Messages (UINT16 selector, UINT16 message_count, UINT32 available, mutable UINT32 * tally) {
+  switch (selector) {
+    case 0x0000: unit heartbeat;
+    default: MessageRun(message_count, available, tally) message;
+  }
+} Messages;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Tradelogiq Qtp Downstream Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 20) {
+  UINT8 session[10];                                                                                                           // bytes 0 to 9
+  UINT64BE sequence_number;                                                                                                    // bytes 10 to 17
+  UINT16BE message_count;                                                                                                      // bytes 18 to 19
+  Messages(message_count, message_count, (available - 20), tally) messages[:byte-size-single-element-array (available - 20)];
+} Packet;
 

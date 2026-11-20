@@ -1,37 +1,693 @@
-// Gie da Papier w Warto ciowych w Warszawie Warsaw Stock Exchange Native Order Gateway
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Gpw Wse OrderEntry Wats v1.7.6.20
 //
+// Protocol:
+//   Organization: Gie da Papier w Warto ciowych w Warszawie
+//   Protocol: Warsaw Stock Exchange Native Order Gateway
+//   Encoding: Warsaw Automated Trading System
+//   Version: 1.7.6.20
+//   Date: 10/05/2026
+//   Specification: GPW_WATS_2.01_Native_Order_Gateway_Specification_v1.7.6.20.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out Wse_OrderEntry_v1_7_6_20.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a field read in bits
-// - a run of a stated number of entries
-//
-// License: MIT No Attribution
 
-// ---- Message Header: 24 bytes ------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Every order gateway message opens with the same 24 byte header
-entrypoint typedef struct _MessageHeader {
-  UINT16 message_length;    // bytes 0 to 1
-  UINT16 message_type;      // bytes 2 to 3
-  UINT32 sequence_number;   // bytes 4 to 7
-  UINT64 timestamp;         // bytes 8 to 15
-  UINT64 source_timestamp;  // bytes 16 to 23
-} MessageHeader;
+// Message Type: 2 byte code
+#define MESSAGE_TYPE_LOGIN 0x0002                          // Login
+#define MESSAGE_TYPE_LOGIN_RESPONSE 0x0003                 // Login Response
+#define MESSAGE_TYPE_LOGOUT 0x000B                         // Logout
+#define MESSAGE_TYPE_LOGOUT_RESPONSE 0x000E                // Logout Response
+#define MESSAGE_TYPE_CONNECTION_CLOSE 0x000C               // Connection Close
+#define MESSAGE_TYPE_HEARTBEAT 0x000D                      // Heartbeat
+#define MESSAGE_TYPE_REJECT 0x000F                         // Reject
+#define MESSAGE_TYPE_GAP_FILL 0x0022                       // Gap Fill
+#define MESSAGE_TYPE_TEST 0x0001                           // Test
+#define MESSAGE_TYPE_TEST_EVENT 0x00FF                     // Test Event
+#define MESSAGE_TYPE_TRADING_SESSION_STATUS 0x0023         // Trading Session Status
+#define MESSAGE_TYPE_ORDER_ADD 0x0004                      // Order Add
+#define MESSAGE_TYPE_ORDER_ADD_RESPONSE 0x0005             // Order Add Response
+#define MESSAGE_TYPE_ORDER_CANCEL 0x0006                   // Order Cancel
+#define MESSAGE_TYPE_ORDER_CANCEL_RESPONSE 0x0007          // Order Cancel Response
+#define MESSAGE_TYPE_ORDER_MODIFY 0x0008                   // Order Modify
+#define MESSAGE_TYPE_ORDER_MODIFY_RESPONSE 0x0009          // Order Modify Response
+#define MESSAGE_TYPE_ORDER_MASS_CANCEL 0x001D              // Order Mass Cancel
+#define MESSAGE_TYPE_ORDER_MASS_CANCEL_RESPONSE 0x001E     // Order Mass Cancel Response
+#define MESSAGE_TYPE_ORDER_EXECUTE 0x000A                  // Order Execute
+#define MESSAGE_TYPE_MASS_QUOTE 0x0018                     // Mass Quote
+#define MESSAGE_TYPE_MASS_QUOTE_RESPONSE 0x0019            // Mass Quote Response
+#define MESSAGE_TYPE_MARKET_MAKER_COMMAND 0x0020           // Market Maker Command
+#define MESSAGE_TYPE_MARKET_MAKER_COMMAND_RESPONSE 0x0021  // Market Maker Command Response
+#define MESSAGE_TYPE_REQUEST_FOR_EXECUTION 0x001C          // Request For Execution
+#define MESSAGE_TYPE_BID_OFFER_UPDATE 0x001F               // Bid Offer Update
+#define MESSAGE_TYPE_TRADE_CAPTURE_REPORT_SINGLE 0x0012    // Trade Capture Report Single
+#define MESSAGE_TYPE_TRADE_CAPTURE_REPORT_DUAL 0x0013      // Trade Capture Report Dual
+#define MESSAGE_TYPE_TRADE_CAPTURE_REPORT_RESPONSE 0x0014  // Trade Capture Report Response
+#define MESSAGE_TYPE_TRADE_BUST 0x0017                     // Trade Bust
 
-// ---- Login: 20 bytes ---------------------------------------------------------
+// Login Result: one byte code
+#define LOGIN_RESULT_OK 0x01                         // Ok
+#define LOGIN_RESULT_NOT_FOUND 0x02                  // Not Found
+#define LOGIN_RESULT_INVALID_TOKEN 0x03              // Invalid Token
+#define LOGIN_RESULT_ALREADY_LOGGED_IN 0x04          // Already Logged In
+#define LOGIN_RESULT_ACCOUNT_LOCKED 0x05             // Account Locked
+#define LOGIN_RESULT_LOGIN_NOT_ALLOWED 0x06          // Login Not Allowed
+#define LOGIN_RESULT_INVALID_LOGIN_PARAMETERS 0x07   // Invalid Login Parameters
+#define LOGIN_RESULT_THROTTLING_TEMPORARY_LOCK 0x08  // Throttling Temporary Lock
+#define LOGIN_RESULT_OTHER 0x09                      // Other
+
+// Connection Close Reason: one byte code
+#define CONNECTION_CLOSE_REASON_PROTOCOL_ERROR 0x01                    // Protocol Error
+#define CONNECTION_CLOSE_REASON_INVALID_SEQ_NUM 0x02                   // Invalid Seq Num
+#define CONNECTION_CLOSE_REASON_END_OF_DAY 0x03                        // End Of Day
+#define CONNECTION_CLOSE_REASON_SYNC_FAIL 0x04                         // Sync Fail
+#define CONNECTION_CLOSE_REASON_ANTI_FLOODING_THRESHOLD_EXCEEDED 0x05  // Anti Flooding Threshold Exceeded
+#define CONNECTION_CLOSE_REASON_CONNECTION_CONFIG_CHANGED 0x06         // Connection Config Changed
+#define CONNECTION_CLOSE_REASON_CLOSE_OPS 0x07                         // Close Ops
+#define CONNECTION_CLOSE_REASON_DISCONNECT 0x08                        // Disconnect
+
+// Reject Reason: one byte code
+#define REJECT_REASON_NA 0x00                                                                  // Na
+#define REJECT_REASON_MAX_THROUGHPUT_EXCEEDED 0x01                                             // Max Throughput Exceeded
+#define REJECT_REASON_INVALID_MSG_TYPE 0x02                                                    // Invalid Msg Type
+#define REJECT_REASON_INVALID_EXPIRE_TIME_PRECISION 0x03                                       // Invalid Expire Time Precision
+#define REJECT_REASON_INVALID_SETTLEMENT_DATE 0x04                                             // Invalid Settlement Date
+#define REJECT_REASON_SETTLEMENT_DATE_REQUIRED 0x05                                            // Settlement Date Required
+#define REJECT_REASON_TRADE_REPORT_ID_REQUIRED 0x06                                            // Trade Report Id Required
+#define REJECT_REASON_MISSING_REPORT_ID_SECONDARY_TRADE_REPORT_ID_OR_TRADE_REPORT_REF_ID 0x07  // Missing Report Id Secondary Trade Report Id Or Trade Report Ref Id
+#define REJECT_REASON_INVALID_TRADE_ID 0x08                                                    // Invalid Trade Id
+#define REJECT_REASON_INVALID_ALGORITHMIC_TRADE_INDICATOR 0x09                                 // Invalid Algorithmic Trade Indicator
+#define REJECT_REASON_INVALID_TRADE_REPORT_ID 0x0A                                             // Invalid Trade Report Id
+#define REJECT_REASON_INVALID_GAP_FILL_SEQ_NUM 0x0B                                            // Invalid Gap Fill Seq Num
+
+// Event Type: one byte code
+#define EVENT_TYPE_FLUSH 0x01           // Flush
+#define EVENT_TYPE_SCENARIO_START 0x02  // Scenario Start
+#define EVENT_TYPE_SCENARIO_END 0x03    // Scenario End
+
+// Trading Session Event: one byte code
+#define TRADING_SESSION_EVENT_PREVIOUS_DAY_RESTATE_START 0x01    // Previous Day Restate Start
+#define TRADING_SESSION_EVENT_PREVIOUS_DAY_RESTATE_END 0x02      // Previous Day Restate End
+#define TRADING_SESSION_EVENT_START_OF_TRADING_SESSION_MIC 0x03  // Start Of Trading Session Mic
+#define TRADING_SESSION_EVENT_END_OF_TRADING_SESSION_MIC 0x04    // End Of Trading Session Mic
+
+// Order Type: one byte code
+#define ORDER_TYPE_LIMIT 0x01            // Limit
+#define ORDER_TYPE_MARKET 0x02           // Market
+#define ORDER_TYPE_MARKET_TO_LIMIT 0x03  // Market To Limit
+#define ORDER_TYPE_ICEBERG 0x04          // Iceberg
+#define ORDER_TYPE_STOP_LIMIT 0x05       // Stop Limit
+#define ORDER_TYPE_STOP_LOSS 0x06        // Stop Loss
+
+// Time In Force: one byte code
+#define TIME_IN_FORCE_DAY 0x01  // Day
+#define TIME_IN_FORCE_GTC 0x02  // Gtc
+#define TIME_IN_FORCE_IOC 0x03  // Ioc
+#define TIME_IN_FORCE_FOK 0x04  // Fok
+#define TIME_IN_FORCE_VFA 0x05  // Vfa
+#define TIME_IN_FORCE_GTD 0x06  // Gtd
+#define TIME_IN_FORCE_VFC 0x07  // Vfc
+#define TIME_IN_FORCE_GTT 0x08  // Gtt
+
+// Side: one byte code
+#define SIDE_BUY 0x01   // Buy
+#define SIDE_SELL 0x02  // Sell
+
+// Capacity: one byte code
+#define CAPACITY_AGENCY 0x01              // Agency
+#define CAPACITY_PRINCIPAL 0x02           // Principal
+#define CAPACITY_RISKLESS_PRINCIPAL 0x03  // Riskless Principal
+
+// Account Type: one byte code
+#define ACCOUNT_TYPE_MISSING 0x01   // Missing
+#define ACCOUNT_TYPE_CUSTOMER 0x02  // Customer
+#define ACCOUNT_TYPE_HOUSE 0x03     // House
+
+// Qualifier: one byte code
+#define QUALIFIER_NA 0x01                    // Na
+#define QUALIFIER_ALGORITHM 0x02             // Algorithm
+#define QUALIFIER_FIRM_OR_LEGAL_ENTITY 0x03  // Firm Or Legal Entity
+#define QUALIFIER_NATURAL_PERSON 0x04        // Natural Person
+
+// Clearing Member Clearing Identifier: one byte code
+#define CLEARING_MEMBER_CLEARING_IDENTIFIER_NOT_APPLICABLE 0x21  // Not Applicable
+#define CLEARING_MEMBER_CLEARING_IDENTIFIER_LEI 0x4E             // Lei
+#define CLEARING_MEMBER_CLEARING_IDENTIFIER_CUSTOM 0x44          // Custom
+
+// Order Status: one byte code
+#define ORDER_STATUS_NEW 0x01               // New
+#define ORDER_STATUS_CANCELLED 0x02         // Cancelled
+#define ORDER_STATUS_REJECTED 0x03          // Rejected
+#define ORDER_STATUS_FILLED 0x04            // Filled
+#define ORDER_STATUS_PARTIALLY_FILLED 0x05  // Partially Filled
+#define ORDER_STATUS_EXPIRED 0x06           // Expired
+
+// Order Rejection Reason: 2 byte code
+#define ORDER_REJECTION_REASON_NA 0x0000                                                                        // Na
+#define ORDER_REJECTION_REASON_UNKNOWN_ORDER 0x0001                                                             // Unknown Order
+#define ORDER_REJECTION_REASON_EXCHANGE_CLOSED 0x0002                                                           // Exchange Closed
+#define ORDER_REJECTION_REASON_INVALID_PRICE_INCREMENT 0x0012                                                   // Invalid Price Increment
+#define ORDER_REJECTION_REASON_OTHER 0x0063                                                                     // Other
+#define ORDER_REJECTION_REASON_INSTRUMENT_PHASE_NO_TRADING 0x006A                                               // Instrument Phase No Trading
+#define ORDER_REJECTION_REASON_UNKNOWN_INSTRUMENT 0x03E9                                                        // Unknown Instrument
+#define ORDER_REJECTION_REASON_INVALID_EXECUTION_TRADER 0x03ED                                                  // Invalid Execution Trader
+#define ORDER_REJECTION_REASON_INVALID_DECISION_MAKER 0x03EE                                                    // Invalid Decision Maker
+#define ORDER_REJECTION_REASON_INVALID_CLIENT_ID 0x03EF                                                         // Invalid Client Id
+#define ORDER_REJECTION_REASON_INVALID_PARTY_ROLE_QUALIFIER_FOR_CLIENT_ID 0x03F0                                // Invalid Party Role Qualifier For Client Id
+#define ORDER_REJECTION_REASON_INVALID_PARTY_ROLE_QUALIFIER_FOR_EXECUTING_TRADER 0x03F1                         // Invalid Party Role Qualifier For Executing Trader
+#define ORDER_REJECTION_REASON_INVALID_PARTY_ROLE_QUALIFIER_FOR_INVESTMENT_DECISION_MAKER 0x03F2                // Invalid Party Role Qualifier For Investment Decision Maker
+#define ORDER_REJECTION_REASON_CANNOT_MODIFY_MIFID_FLAGS 0x03F4                                                 // Cannot Modify Mifid Flags
+#define ORDER_REJECTION_REASON_WRONG_DISPLAY_QTY_VALUE 0x03F5                                                   // Wrong Display Qty Value
+#define ORDER_REJECTION_REASON_INVALID_DISPLAY_QTY 0x03F6                                                       // Invalid Display Qty
+#define ORDER_REJECTION_REASON_ICEBERG_ORDER_VALUE_LESS_THAN_REQUIRED 0x03F7                                    // Iceberg Order Value Less Than Required
+#define ORDER_REJECTION_REASON_COD_DISABLED_FOR_THE_CONNECTION_ID 0x03FB                                        // Cod Disabled For The Connection Id
+#define ORDER_REJECTION_REASON_ORDER_QUANTITY_MUST_BE_GREATER_THAN_MINIMUM_QUANTITY 0x0401                      // Order Quantity Must Be Greater Than Minimum Quantity
+#define ORDER_REJECTION_REASON_ORDER_QUANTITY_MUST_BE_LOWER_THAN_MAXIMUM_QUANTITY 0x0402                        // Order Quantity Must Be Lower Than Maximum Quantity
+#define ORDER_REJECTION_REASON_ORDER_PRICE_MUST_BE_GREATER_THAN_MINIMUM_PRICE 0x0403                            // Order Price Must Be Greater Than Minimum Price
+#define ORDER_REJECTION_REASON_ORDER_PRICE_MUST_BE_LOWER_THAN_MAXIMUM_PRICE 0x0404                              // Order Price Must Be Lower Than Maximum Price
+#define ORDER_REJECTION_REASON_ORDER_PRICE_MUST_BE_NONZERO 0x0405                                               // Order Price Must Be Nonzero
+#define ORDER_REJECTION_REASON_ORDER_VALUE_MUST_BE_GREATER_THAN_MINIMUM_VALUE 0x0406                            // Order Value Must Be Greater Than Minimum Value
+#define ORDER_REJECTION_REASON_ORDER_VALUE_MUST_BE_LOWER_THAN_MAXIMUM_VALUE 0x0407                              // Order Value Must Be Lower Than Maximum Value
+#define ORDER_REJECTION_REASON_INVALID_ORD_TYPE_FOR_SELECTED_MARKET_MODEL 0x0408                                // Invalid Ord Type For Selected Market Model
+#define ORDER_REJECTION_REASON_LEAVES_QUANTITY_MUST_BE_GREATER_THAN_ZERO_AFTER_MODIFICATION 0x040A              // Leaves Quantity Must Be Greater Than Zero After Modification
+#define ORDER_REJECTION_REASON_PRICE_NOT_ALLOWED 0x040B                                                         // Price Not Allowed
+#define ORDER_REJECTION_REASON_INVALID_TIME_IN_FORCE_FOR_ORDER_TYPE 0x040F                                      // Invalid Time In Force For Order Type
+#define ORDER_REJECTION_REASON_INVALID_TIME_IN_FORCE_FOR_CURRENT_MARKET_PHASE 0x0410                            // Invalid Time In Force For Current Market Phase
+#define ORDER_REJECTION_REASON_INVALID_TIME_IN_FORCE_FOR_SELECTED_MARKET_MODEL 0x0411                           // Invalid Time In Force For Selected Market Model
+#define ORDER_REJECTION_REASON_FORBIDDEN_ORD_TYPE_AND_TIME_IN_FORCE_COMBINATION_FOR_MARKET_SEGMENT 0x0412       // Forbidden Ord Type And Time In Force Combination For Market Segment
+#define ORDER_REJECTION_REASON_EXPIRE_TIME_CANNOT_BE_MODIFIED 0x0413                                            // Expire Time Cannot Be Modified
+#define ORDER_REJECTION_REASON_OBSOLETE_EXPIRE_DATE 0x0414                                                      // Obsolete Expire Date
+#define ORDER_REJECTION_REASON_EXPIRE_DATE_IN_PAST 0x0415                                                       // Expire Date In Past
+#define ORDER_REJECTION_REASON_OBSOLETE_EXPIRE_TIME 0x0416                                                      // Obsolete Expire Time
+#define ORDER_REJECTION_REASON_EXPIRE_TIME_IN_PAST 0x0417                                                       // Expire Time In Past
+#define ORDER_REJECTION_REASON_AMBIGOUS_EXPIRE 0x0418                                                           // Ambigous Expire
+#define ORDER_REJECTION_REASON_EXPIRE_DATE_EXCEEDS_LIMIT 0x0419                                                 // Expire Date Exceeds Limit
+#define ORDER_REJECTION_REASON_PRICE_BELOW_LOW_COLLAR 0x040D                                                    // Price Below Low Collar
+#define ORDER_REJECTION_REASON_PRICE_ABOVE_HIGH_COLLAR 0x040E                                                   // Price Above High Collar
+#define ORDER_REJECTION_REASON_FIRM_IS_NOT_A_MARKET_MAKER 0x041A                                                // Firm Is Not A Market Maker
+#define ORDER_REJECTION_REASON_MISSING_ORDER_ORIGINATION_FOR_SPONSORED_ACCESS_CONNECTION 0x041F                 // Missing Order Origination For Sponsored Access Connection
+#define ORDER_REJECTION_REASON_OPERATION_ON_REDISTRIBUTED_INSTRUMENTS_FORBIDDEN 0x0420                          // Operation On Redistributed Instruments Forbidden
+#define ORDER_REJECTION_REASON_FIRM_NOT_AUTHORIZED_TO_BUY_AND_SELL_THE_INSTRUMENT 0x0421                        // Firm Not Authorized To Buy And Sell The Instrument
+#define ORDER_REJECTION_REASON_FIRM_NOT_AUTHORIZED_TO_BUY_THE_INSTRUMENT 0x0422                                 // Firm Not Authorized To Buy The Instrument
+#define ORDER_REJECTION_REASON_FIRM_NOT_AUTHORIZED_TO_SELL_THE_INSTRUMENT 0x0423                                // Firm Not Authorized To Sell The Instrument
+#define ORDER_REJECTION_REASON_OPERATIONS_ON_ORDERS_AND_QUOTES_FORBIDDEN_DURING_UNCROSSING 0x0424               // Operations On Orders And Quotes Forbidden During Uncrossing
+#define ORDER_REJECTION_REASON_OPERATIONS_ON_ORDERS_AND_QUOTES_FORBIDDEN_DURING_INSTRUMENT_SUSPENSION 0x0425    // Operations On Orders And Quotes Forbidden During Instrument Suspension
+#define ORDER_REJECTION_REASON_OPERATIONS_ON_ORDERS_AND_QUOTES_FORBIDDEN_DUE_TO_DROP_COPY_DISCONNECTION 0x0426  // Operations On Orders And Quotes Forbidden Due To Drop Copy Disconnection
+#define ORDER_REJECTION_REASON_TRIGGER_PRICE_NOT_ALLOWED 0x0427                                                 // Trigger Price Not Allowed
+#define ORDER_REJECTION_REASON_TRIGGER_PRICE_NOT_HIGHER_THAN_LTP 0x0428                                         // Trigger Price Not Higher Than Ltp
+#define ORDER_REJECTION_REASON_TRIGGER_PRICE_NOT_LOWER_THAN_LTP 0x0429                                          // Trigger Price Not Lower Than Ltp
+#define ORDER_REJECTION_REASON_TRIGGER_PRICE_LOWER_THAN_PRICE 0x042A                                            // Trigger Price Lower Than Price
+#define ORDER_REJECTION_REASON_TRIGGER_PRICE_HIGHER_THAN_PRICE 0x042B                                           // Trigger Price Higher Than Price
+#define ORDER_REJECTION_REASON_TRIGGER_PRICE_MODIFIED_FOR_ACTIVATED_ORDER 0x042C                                // Trigger Price Modified For Activated Order
+#define ORDER_REJECTION_REASON_TRIGGER_PRICE_MUST_BE_GREATER_THAN_ZERO 0x042D                                   // Trigger Price Must Be Greater Than Zero
+#define ORDER_REJECTION_REASON_INVALID_PARTY_ID_FOR_CLIENT_ID 0x042E                                            // Invalid Party Id For Client Id
+#define ORDER_REJECTION_REASON_INVALID_PARTY_ID_FOR_EXECUTING_TRADER 0x042F                                     // Invalid Party Id For Executing Trader
+#define ORDER_REJECTION_REASON_INVALID_PARTY_ID_FOR_INVESTMENT_DECISION_MAKER 0x0430                            // Invalid Party Id For Investment Decision Maker
+#define ORDER_REJECTION_REASON_INVALID_PARTY_ROLE_QUALIFIER_FOR_PARTY_ID 0x0433                                 // Invalid Party Role Qualifier For Party Id
+#define ORDER_REJECTION_REASON_MISSING_CLEARING_MEMBER_CODE 0x0434                                              // Missing Clearing Member Code
+#define ORDER_REJECTION_REASON_FORBIDDEN_CLEARING_MEMBER_CODE 0x0435                                            // Forbidden Clearing Member Code
+#define ORDER_REJECTION_REASON_INVALID_CLIENT_ID_FOR_SPONSORED_CONNECTION 0x0436                                // Invalid Client Id For Sponsored Connection
+#define ORDER_REJECTION_REASON_INVALID_ORD_TYPE_FOR_SPONSORED_CONNECTION 0x0437                                 // Invalid Ord Type For Sponsored Connection
+#define ORDER_REJECTION_REASON_FORBIDDEN_ORDER_CAPACITY_VALUE_FOR_SPONSORED_CONNECTION 0x0438                   // Forbidden Order Capacity Value For Sponsored Connection
+#define ORDER_REJECTION_REASON_MARKET_MODEL_NOT_SUPPORTED_ON_SPONSORED_CONNECTION 0x0439                        // Market Model Not Supported On Sponsored Connection
+#define ORDER_REJECTION_REASON_INVALID_TIME_IN_FORCE_FOR_SPONSORED_CONNECTION 0x043B                            // Invalid Time In Force For Sponsored Connection
+#define ORDER_REJECTION_REASON_OPERATION_FORBIDDEN_DURING_EARLY_LATE_MONITORING 0x043C                          // Operation Forbidden During Early Late Monitoring
+#define ORDER_REJECTION_REASON_INVALID_CLEARING_MEMBER_CODE_LENGTH 0x043D                                       // Invalid Clearing Member Code Length
+#define ORDER_REJECTION_REASON_OPERATION_UNSUCCESSFUL_RETRY_NEEDED 0x043E                                       // Operation Unsuccessful Retry Needed
+#define ORDER_REJECTION_REASON_MASS_QUOTE_NOT_ALLOWED_FOR_SELECTED_MARKET_MODEL 0x04B1                          // Mass Quote Not Allowed For Selected Market Model
+#define ORDER_REJECTION_REASON_INSTRUMENT_CLOSED 0x04B3                                                         // Instrument Closed
+#define ORDER_REJECTION_REASON_INVALID_BID_ASK_SPREAD 0x04B8                                                    // Invalid Bid Ask Spread
+#define ORDER_REJECTION_REASON_NOT_AUTHORIZED_TO_QUOTE_INSTRUMENT 0x04B9                                        // Not Authorized To Quote Instrument
+#define ORDER_REJECTION_REASON_BUY_ORDER_NOT_ALLOWED 0x0515                                                     // Buy Order Not Allowed
+#define ORDER_REJECTION_REASON_STOP_ORDERS_NOT_ALLOWED 0x051B                                                   // Stop Orders Not Allowed
+#define ORDER_REJECTION_REASON_TRIGGER_PRICE_MUST_BE_HIGHER_THAN_LP_SELL_QUOTE 0x051C                           // Trigger Price Must Be Higher Than Lp Sell Quote
+#define ORDER_REJECTION_REASON_TRIGGER_PRICE_MUST_BE_LOWER_THAN_LP_BUY_QUOTE 0x051D                             // Trigger Price Must Be Lower Than Lp Buy Quote
+#define ORDER_REJECTION_REASON_MARKET_MAKING_VIA_MASS_QUOTE_ONLY_ON_HYBRID_MARKET 0x051E                        // Market Making Via Mass Quote Only On Hybrid Market
+#define ORDER_REJECTION_REASON_SELL_QUOTES_NOT_ALLOWED_DURING_BUY_ONLY_STATE 0x051F                             // Sell Quotes Not Allowed During Buy Only State
+#define ORDER_REJECTION_REASON_INSTRUMENT_KNOCKED_OUT 0x0520                                                    // Instrument Knocked Out
+#define ORDER_REJECTION_REASON_ONLY_ONE_SELL_ORDER_IS_ALLOWED_FOR_IPO 0x0579                                    // Only One Sell Order Is Allowed For Ipo
+#define ORDER_REJECTION_REASON_ONLY_ONE_BUY_ORDER_IS_ALLOWED_FOR_TENDER 0x057A                                  // Only One Buy Order Is Allowed For Tender
+#define ORDER_REJECTION_REASON_REQUEST_NOT_ALLOWED_FOR_BLOCK_INSTRUMENT 0x07EA                                  // Request Not Allowed For Block Instrument
+#define ORDER_REJECTION_REASON_REQUEST_NOT_ALLOWED_FOR_CROSS_INSTRUMENT 0x07EC                                  // Request Not Allowed For Cross Instrument
+#define ORDER_REJECTION_REASON_RISK_LIMIT_NOT_DEFINED 0x1B58                                                    // Risk Limit Not Defined
+#define ORDER_REJECTION_REASON_RISK_MAXIMUM_ORDER_VOLUME_EXCEEDED 0x1B59                                        // Risk Maximum Order Volume Exceeded
+#define ORDER_REJECTION_REASON_RISK_MAXIMUM_ORDER_VALUE_EXCEEDED 0x1B5A                                         // Risk Maximum Order Value Exceeded
+#define ORDER_REJECTION_REASON_RISK_ORDER_PRICE_COLLAR_EXCEEDED 0x1B5B                                          // Risk Order Price Collar Exceeded
+#define ORDER_REJECTION_REASON_DYNAMIC_ORDER_PRICE_COLLAR_NOT_DEFINED 0x1B5C                                    // Dynamic Order Price Collar Not Defined
+#define ORDER_REJECTION_REASON_STATIC_ORDER_PRICE_COLLAR_NOT_DEFINED 0x1B5D                                     // Static Order Price Collar Not Defined
+#define ORDER_REJECTION_REASON_TOTAL_TRADED_VALUE_EXCEEDED 0x1B63                                               // Total Traded Value Exceeded
+#define ORDER_REJECTION_REASON_TOTAL_TRADED_BUY_VALUE_EXCEEDED 0x1B64                                           // Total Traded Buy Value Exceeded
+#define ORDER_REJECTION_REASON_TOTAL_TRADED_SELL_VALUE_EXCEEDED 0x1B65                                          // Total Traded Sell Value Exceeded
+#define ORDER_REJECTION_REASON_TOTAL_OPEN_VALUE_EXCEEDED 0x1B66                                                 // Total Open Value Exceeded
+#define ORDER_REJECTION_REASON_TOTAL_OPEN_BUY_VALUE_EXCEEDED 0x1B67                                             // Total Open Buy Value Exceeded
+#define ORDER_REJECTION_REASON_TOTAL_OPEN_SELL_VALUE_EXCEEDED 0x1B68                                            // Total Open Sell Value Exceeded
+#define ORDER_REJECTION_REASON_TOTAL_RISK_VALUE_EXCEEDED 0x1B69                                                 // Total Risk Value Exceeded
+#define ORDER_REJECTION_REASON_TOTAL_BUY_RISK_VALUE_EXCEEDED 0x1B6A                                             // Total Buy Risk Value Exceeded
+#define ORDER_REJECTION_REASON_TOTAL_SELL_RISK_VALUE_EXCEEDED 0x1B6B                                            // Total Sell Risk Value Exceeded
+#define ORDER_REJECTION_REASON_TOTAL_NET_RISK_VALUE_EXCEEDED 0x1B6C                                             // Total Net Risk Value Exceeded
+#define ORDER_REJECTION_REASON_MAX_ORDER_COUNT_EXCEEDED 0x1B6D                                                  // Max Order Count Exceeded
+#define ORDER_REJECTION_REASON_REJECTED_DUE_TO_KILL_SWITCH_ACTIVATION 0x1B6E                                    // Rejected Due To Kill Switch Activation
+
+// Exec Type Reason: one byte code
+#define EXEC_TYPE_REASON_NA 0x01                                // Na
+#define EXEC_TYPE_REASON_CANCEL_ON_DISCONNECT 0x02              // Cancel On Disconnect
+#define EXEC_TYPE_REASON_EXPIRED 0x03                           // Expired
+#define EXEC_TYPE_REASON_TRIGGERED 0x04                         // Triggered
+#define EXEC_TYPE_REASON_CANCEL_ON_SUSPENSION 0x05              // Cancel On Suspension
+#define EXEC_TYPE_REASON_ORDER_RESTATEMENT 0x06                 // Order Restatement
+#define EXEC_TYPE_REASON_ICEBERG_ORDER_REFILL 0x07              // Iceberg Order Refill
+#define EXEC_TYPE_REASON_CANCEL_BY_STP 0x08                     // Cancel By Stp
+#define EXEC_TYPE_REASON_CANCEL_BY_CORPORATE_ACTION 0x09        // Cancel By Corporate Action
+#define EXEC_TYPE_REASON_CANCEL_BY_MASS_CANCEL 0x0A             // Cancel By Mass Cancel
+#define EXEC_TYPE_REASON_CANCEL_IOC_FOK_ORDER 0x0B              // Cancel Ioc Fok Order
+#define EXEC_TYPE_REASON_CANCEL_BY_MARKET_OPERATIONS 0x0C       // Cancel By Market Operations
+#define EXEC_TYPE_REASON_REPLACED 0x0D                          // Replaced
+#define EXEC_TYPE_REASON_FIRST_TRADE_ON_AGGRESSIVE_ORDER 0x0E   // First Trade On Aggressive Order
+#define EXEC_TYPE_REASON_REJECTED 0x0F                          // Rejected
+#define EXEC_TYPE_REASON_CANCELON_BUY_ONLY_STATE_ENTRY 0x10     // Cancelon Buy Only State Entry
+#define EXEC_TYPE_REASON_CANCELON_KNOCKED_OUT_STATE_ENTRY 0x11  // Cancelon Knocked Out State Entry
+#define EXEC_TYPE_REASON_CANCEL_BY_RISK_MANAGEMENT 0x12         // Cancel By Risk Management
+#define EXEC_TYPE_REASON_CANCEL_ON_DC_DISCONNECT 0x13           // Cancel On Dc Disconnect
+#define EXEC_TYPE_REASON_VFA_ACTIVATED 0x14                     // Vfa Activated
+#define EXEC_TYPE_REASON_HYBRID_ACTIVATED 0x15                  // Hybrid Activated
+
+// Priority Flag: one byte code
+#define PRIORITY_FLAG_LOST 0x01      // Lost
+#define PRIORITY_FLAG_RETAINED 0x02  // Retained
+
+// Mass Cancel Request Type: one byte code
+#define MASS_CANCEL_REQUEST_TYPE_CANCEL_FOR_SECURITY 0x01               // Cancel For Security
+#define MASS_CANCEL_REQUEST_TYPE_CANCEL_ALL_ORDERS 0x07                 // Cancel All Orders
+#define MASS_CANCEL_REQUEST_TYPE_CANCEL_ORDERS_FOR_MARKET_SEGMENT 0x09  // Cancel Orders For Market Segment
+
+// Target Party Role: one byte code
+#define TARGET_PARTY_ROLE_NONE 0x00                       // None
+#define TARGET_PARTY_ROLE_LIQUIDITY_PROVIDER 0x23         // Liquidity Provider
+#define TARGET_PARTY_ROLE_SENDER_LOCATION 0x36            // Sender Location
+#define TARGET_PARTY_ROLE_MARKET_MAKER 0x42               // Market Maker
+#define TARGET_PARTY_ROLE_CLIENT_ID 0x03                  // Client Id
+#define TARGET_PARTY_ROLE_EXECUTING_TRADER 0x0C           // Executing Trader
+#define TARGET_PARTY_ROLE_INVESTMENT_DECISION_MAKER 0x7A  // Investment Decision Maker
+
+// Mass Cancel Rejection Reason: 2 byte code
+#define MASS_CANCEL_REJECTION_REASON_OTHER 0x0063                                             // Other
+#define MASS_CANCEL_REJECTION_REASON_NA 0x0065                                                // Na
+#define MASS_CANCEL_REJECTION_REASON_UNKNOWN_INSTRUMENT 0x03E9                                // Unknown Instrument
+#define MASS_CANCEL_REJECTION_REASON_INVALID_EXECUTION_TRADER 0x03ED                          // Invalid Execution Trader
+#define MASS_CANCEL_REJECTION_REASON_UNKNOWN_MARKET_SEGMENT_ID 0x03F8                         // Unknown Market Segment Id
+#define MASS_CANCEL_REJECTION_REASON_UNKNOWN_CONNECTION_ID 0x03F9                             // Unknown Connection Id
+#define MASS_CANCEL_REJECTION_REASON_INSTRUMENT_FORBIDDEN 0x041D                              // Instrument Forbidden
+#define MASS_CANCEL_REJECTION_REASON_MARKET_SEGMENT_ID_FORBIDDEN 0x041E                       // Market Segment Id Forbidden
+#define MASS_CANCEL_REJECTION_REASON_OPERATION_ON_REDISTRIBUTED_INSTRUMENTS_FORBIDDEN 0x0420  // Operation On Redistributed Instruments Forbidden
+#define MASS_CANCEL_REJECTION_REASON_REQUEST_NOT_ALLOWED_ON_SPONSORED_CONNECTION 0x07E9       // Request Not Allowed On Sponsored Connection
+
+// Liquidity Indicator: one byte code
+#define LIQUIDITY_INDICATOR_BUY_ORDER_EXECUTION 0x01   // Buy Order Execution
+#define LIQUIDITY_INDICATOR_SELL_ORDER_EXECUTION 0x02  // Sell Order Execution
+#define LIQUIDITY_INDICATOR_AUCTION_EXECUTION 0x03     // Auction Execution
+#define LIQUIDITY_INDICATOR_NOT_APPLICABLE 0x04        // Not Applicable
+
+// Currency: 2 byte code
+#define CURRENCY_ALL 0x0008  // All
+#define CURRENCY_DZD 0x000C  // Dzd
+#define CURRENCY_ARS 0x0020  // Ars
+#define CURRENCY_AUD 0x0024  // Aud
+#define CURRENCY_BSD 0x002C  // Bsd
+#define CURRENCY_BHD 0x0030  // Bhd
+#define CURRENCY_BDT 0x0032  // Bdt
+#define CURRENCY_AMD 0x0033  // Amd
+#define CURRENCY_BBD 0x0034  // Bbd
+#define CURRENCY_BMD 0x003C  // Bmd
+#define CURRENCY_BTN 0x0040  // Btn
+#define CURRENCY_BOB 0x0044  // Bob
+#define CURRENCY_BWP 0x0048  // Bwp
+#define CURRENCY_BZD 0x0054  // Bzd
+#define CURRENCY_SBD 0x005A  // Sbd
+#define CURRENCY_BND 0x0060  // Bnd
+#define CURRENCY_MMK 0x0068  // Mmk
+#define CURRENCY_BIF 0x006C  // Bif
+#define CURRENCY_KHR 0x0074  // Khr
+#define CURRENCY_CAD 0x007C  // Cad
+#define CURRENCY_CVE 0x0084  // Cve
+#define CURRENCY_KYD 0x0088  // Kyd
+#define CURRENCY_LKR 0x0090  // Lkr
+#define CURRENCY_CLP 0x0098  // Clp
+#define CURRENCY_CNY 0x009C  // Cny
+#define CURRENCY_COP 0x00AA  // Cop
+#define CURRENCY_KMF 0x00AE  // Kmf
+#define CURRENCY_CRC 0x00BC  // Crc
+#define CURRENCY_HRK 0x00BF  // Hrk
+#define CURRENCY_CUP 0x00C0  // Cup
+#define CURRENCY_CZK 0x00CB  // Czk
+#define CURRENCY_DKK 0x00D0  // Dkk
+#define CURRENCY_DOP 0x00D6  // Dop
+#define CURRENCY_SVC 0x00DE  // Svc
+#define CURRENCY_ETB 0x00E6  // Etb
+#define CURRENCY_ERN 0x00E8  // Ern
+#define CURRENCY_FKP 0x00EE  // Fkp
+#define CURRENCY_FJD 0x00F2  // Fjd
+#define CURRENCY_DJF 0x0106  // Djf
+#define CURRENCY_GMD 0x010E  // Gmd
+#define CURRENCY_GIP 0x0124  // Gip
+#define CURRENCY_GTQ 0x0140  // Gtq
+#define CURRENCY_GNF 0x0144  // Gnf
+#define CURRENCY_GYD 0x0148  // Gyd
+#define CURRENCY_HTG 0x014C  // Htg
+#define CURRENCY_HNL 0x0154  // Hnl
+#define CURRENCY_HKD 0x0158  // Hkd
+#define CURRENCY_HUF 0x015C  // Huf
+#define CURRENCY_ISK 0x0160  // Isk
+#define CURRENCY_INR 0x0164  // Inr
+#define CURRENCY_IDR 0x0168  // Idr
+#define CURRENCY_IRR 0x016C  // Irr
+#define CURRENCY_IQD 0x0170  // Iqd
+#define CURRENCY_ILS 0x0178  // Ils
+#define CURRENCY_JMD 0x0184  // Jmd
+#define CURRENCY_JPY 0x0188  // Jpy
+#define CURRENCY_KZT 0x018E  // Kzt
+#define CURRENCY_JOD 0x0190  // Jod
+#define CURRENCY_KES 0x0194  // Kes
+#define CURRENCY_KPW 0x0198  // Kpw
+#define CURRENCY_KRW 0x019A  // Krw
+#define CURRENCY_KWD 0x019E  // Kwd
+#define CURRENCY_KGS 0x01A1  // Kgs
+#define CURRENCY_LAK 0x01A2  // Lak
+#define CURRENCY_LBP 0x01A6  // Lbp
+#define CURRENCY_LSL 0x01AA  // Lsl
+#define CURRENCY_LRD 0x01AE  // Lrd
+#define CURRENCY_LYD 0x01B2  // Lyd
+#define CURRENCY_MOP 0x01BE  // Mop
+#define CURRENCY_MWK 0x01C6  // Mwk
+#define CURRENCY_MYR 0x01CA  // Myr
+#define CURRENCY_MVR 0x01CE  // Mvr
+#define CURRENCY_MUR 0x01E0  // Mur
+#define CURRENCY_MXN 0x01E4  // Mxn
+#define CURRENCY_MNT 0x01F0  // Mnt
+#define CURRENCY_MDL 0x01F2  // Mdl
+#define CURRENCY_MAD 0x01F8  // Mad
+#define CURRENCY_OMR 0x0200  // Omr
+#define CURRENCY_NAD 0x0204  // Nad
+#define CURRENCY_NPR 0x020C  // Npr
+#define CURRENCY_ANG 0x0214  // Ang
+#define CURRENCY_AWG 0x0215  // Awg
+#define CURRENCY_VUV 0x0224  // Vuv
+#define CURRENCY_NZD 0x022A  // Nzd
+#define CURRENCY_NIO 0x022E  // Nio
+#define CURRENCY_NGN 0x0236  // Ngn
+#define CURRENCY_NOK 0x0242  // Nok
+#define CURRENCY_PKR 0x024A  // Pkr
+#define CURRENCY_PAB 0x024E  // Pab
+#define CURRENCY_PGK 0x0256  // Pgk
+#define CURRENCY_PYG 0x0258  // Pyg
+#define CURRENCY_PEN 0x025C  // Pen
+#define CURRENCY_PHP 0x0260  // Php
+#define CURRENCY_QAR 0x027A  // Qar
+#define CURRENCY_RUB 0x0283  // Rub
+#define CURRENCY_RWF 0x0286  // Rwf
+#define CURRENCY_SHP 0x028E  // Shp
+#define CURRENCY_SAR 0x02AA  // Sar
+#define CURRENCY_SCR 0x02B2  // Scr
+#define CURRENCY_SGD 0x02BE  // Sgd
+#define CURRENCY_VND 0x02C0  // Vnd
+#define CURRENCY_SOS 0x02C2  // Sos
+#define CURRENCY_ZAR 0x02C6  // Zar
+#define CURRENCY_SSP 0x02D8  // Ssp
+#define CURRENCY_SZL 0x02EC  // Szl
+#define CURRENCY_SEK 0x02F0  // Sek
+#define CURRENCY_CHF 0x02F4  // Chf
+#define CURRENCY_SYP 0x02F8  // Syp
+#define CURRENCY_THB 0x02FC  // Thb
+#define CURRENCY_TOP 0x0308  // Top
+#define CURRENCY_TTD 0x030C  // Ttd
+#define CURRENCY_AED 0x0310  // Aed
+#define CURRENCY_TND 0x0314  // Tnd
+#define CURRENCY_UGX 0x0320  // Ugx
+#define CURRENCY_MKD 0x0327  // Mkd
+#define CURRENCY_EGP 0x0332  // Egp
+#define CURRENCY_GBP 0x033A  // Gbp
+#define CURRENCY_TZS 0x0342  // Tzs
+#define CURRENCY_USD 0x0348  // Usd
+#define CURRENCY_UYU 0x035A  // Uyu
+#define CURRENCY_UZS 0x035C  // Uzs
+#define CURRENCY_WST 0x0372  // Wst
+#define CURRENCY_YER 0x0376  // Yer
+#define CURRENCY_TWD 0x0385  // Twd
+#define CURRENCY_SLE 0x039D  // Sle
+#define CURRENCY_VED 0x039E  // Ved
+#define CURRENCY_UYW 0x039F  // Uyw
+#define CURRENCY_VES 0x03A0  // Ves
+#define CURRENCY_MRU 0x03A1  // Mru
+#define CURRENCY_STN 0x03A2  // Stn
+#define CURRENCY_CUC 0x03A3  // Cuc
+#define CURRENCY_ZWL 0x03A4  // Zwl
+#define CURRENCY_BYN 0x03A5  // Byn
+#define CURRENCY_TMT 0x03A6  // Tmt
+#define CURRENCY_GHS 0x03A8  // Ghs
+#define CURRENCY_SDG 0x03AA  // Sdg
+#define CURRENCY_UYI 0x03AC  // Uyi
+#define CURRENCY_RSD 0x03AD  // Rsd
+#define CURRENCY_MZN 0x03AF  // Mzn
+#define CURRENCY_AZN 0x03B0  // Azn
+#define CURRENCY_RON 0x03B2  // Ron
+#define CURRENCY_CHE 0x03B3  // Che
+#define CURRENCY_CHW 0x03B4  // Chw
+#define CURRENCY_TRY 0x03B5  // Try
+#define CURRENCY_XAF 0x03B6  // Xaf
+#define CURRENCY_XCD 0x03B7  // Xcd
+#define CURRENCY_XOF 0x03B8  // Xof
+#define CURRENCY_XPF 0x03B9  // Xpf
+#define CURRENCY_XBA 0x03BB  // Xba
+#define CURRENCY_XBB 0x03BC  // Xbb
+#define CURRENCY_XBC 0x03BD  // Xbc
+#define CURRENCY_XBD 0x03BE  // Xbd
+#define CURRENCY_XAU 0x03BF  // Xau
+#define CURRENCY_XDR 0x03C0  // Xdr
+#define CURRENCY_XAG 0x03C1  // Xag
+#define CURRENCY_XPT 0x03C2  // Xpt
+#define CURRENCY_XTS 0x03C3  // Xts
+#define CURRENCY_XPD 0x03C4  // Xpd
+#define CURRENCY_XUA 0x03C5  // Xua
+#define CURRENCY_ZMW 0x03C7  // Zmw
+#define CURRENCY_SRD 0x03C8  // Srd
+#define CURRENCY_MGA 0x03C9  // Mga
+#define CURRENCY_COU 0x03CA  // Cou
+#define CURRENCY_AFN 0x03CB  // Afn
+#define CURRENCY_TJS 0x03CC  // Tjs
+#define CURRENCY_AOA 0x03CD  // Aoa
+#define CURRENCY_BGN 0x03CF  // Bgn
+#define CURRENCY_CDF 0x03D0  // Cdf
+#define CURRENCY_BAM 0x03D1  // Bam
+#define CURRENCY_EUR 0x03D2  // Eur
+#define CURRENCY_MXV 0x03D3  // Mxv
+#define CURRENCY_UAH 0x03D4  // Uah
+#define CURRENCY_GEL 0x03D5  // Gel
+#define CURRENCY_BOV 0x03D8  // Bov
+#define CURRENCY_PLN 0x03D9  // Pln
+#define CURRENCY_BRL 0x03DA  // Brl
+#define CURRENCY_CLF 0x03DE  // Clf
+#define CURRENCY_XSU 0x03E2  // Xsu
+#define CURRENCY_USN 0x03E5  // Usn
+#define CURRENCY_XXX 0x03E7  // Xxx
+
+// Mass Quote Status: one byte code
+#define MASS_QUOTE_STATUS_ACCEPTED 0x01  // Accepted
+#define MASS_QUOTE_STATUS_REJECTED 0x02  // Rejected
+
+// Mass Quote Rejection Reason: 2 byte code
+#define MASS_QUOTE_REJECTION_REASON_NA 0x0001                                                                      // Na
+#define MASS_QUOTE_REJECTION_REASON_EXCHANGE_CLOSED 0x0002                                                         // Exchange Closed
+#define MASS_QUOTE_REJECTION_REASON_OTHER 0x0063                                                                   // Other
+#define MASS_QUOTE_REJECTION_REASON_INVALID_EXECUTION_TRADER 0x03ED                                                // Invalid Execution Trader
+#define MASS_QUOTE_REJECTION_REASON_INVALID_DECISION_MAKER 0x03EE                                                  // Invalid Decision Maker
+#define MASS_QUOTE_REJECTION_REASON_INVALID_CLIENT_ID 0x03EF                                                       // Invalid Client Id
+#define MASS_QUOTE_REJECTION_REASON_INVALID_PARTY_ROLE_QUALIFIER_FOR_CLIENT_ID 0x03F0                              // Invalid Party Role Qualifier For Client Id
+#define MASS_QUOTE_REJECTION_REASON_INVALID_PARTY_ROLE_QUALIFIER_FOR_EXECUTING_TRADER 0x03F1                       // Invalid Party Role Qualifier For Executing Trader
+#define MASS_QUOTE_REJECTION_REASON_INVALID_PARTY_ROLE_QUALIFIER_FOR_INVESTMENT_DECISION_MAKER 0x03F2              // Invalid Party Role Qualifier For Investment Decision Maker
+#define MASS_QUOTE_REJECTION_REASON_MISSING_ORDER_ORIGINATION_FOR_SPONSORED_ACCESS_CONNECTION 0x041F               // Missing Order Origination For Sponsored Access Connection
+#define MASS_QUOTE_REJECTION_REASON_OPERATIONS_ON_ORDERS_AND_QUOTES_FORBIDDEN_DURING_INSTRUMENT_SUSPENSION 0x0425  // Operations On Orders And Quotes Forbidden During Instrument Suspension
+#define MASS_QUOTE_REJECTION_REASON_INVALID_PARTY_ID_FOR_CLIENT_ID 0x042E                                          // Invalid Party Id For Client Id
+#define MASS_QUOTE_REJECTION_REASON_INVALID_PARTY_ID_FOR_EXECUTING_TRADER 0x042F                                   // Invalid Party Id For Executing Trader
+#define MASS_QUOTE_REJECTION_REASON_INVALID_PARTY_ID_FOR_INVESTMENT_DECISION_MAKER 0x0430                          // Invalid Party Id For Investment Decision Maker
+#define MASS_QUOTE_REJECTION_REASON_INVALID_PARTY_ROLE_QUALIFIER_FOR_PARTY_ID 0x0433                               // Invalid Party Role Qualifier For Party Id
+#define MASS_QUOTE_REJECTION_REASON_MISSING_CLEARING_MEMBER_CODE 0x0434                                            // Missing Clearing Member Code
+#define MASS_QUOTE_REJECTION_REASON_FORBIDDEN_CLEARING_MEMBER_CODE 0x0435                                          // Forbidden Clearing Member Code
+#define MASS_QUOTE_REJECTION_REASON_INVALID_CLIENT_ID_FOR_SPONSORED_CONNECTION 0x0436                              // Invalid Client Id For Sponsored Connection
+#define MASS_QUOTE_REJECTION_REASON_FORBIDDEN_ORDER_CAPACITY_VALUE_FOR_SPONSORED_CONNECTION 0x0438                 // Forbidden Order Capacity Value For Sponsored Connection
+#define MASS_QUOTE_REJECTION_REASON_MARKET_MODEL_NOT_SUPPORTED_ON_SPONSORED_CONNECTION 0x0439                      // Market Model Not Supported On Sponsored Connection
+#define MASS_QUOTE_REJECTION_REASON_INVALID_CLEARING_MEMBER_CODE_LENGTH 0x043D                                     // Invalid Clearing Member Code Length
+#define MASS_QUOTE_REJECTION_REASON_DUPLICATE_INSTRUMENT 0x04B2                                                    // Duplicate Instrument
+#define MASS_QUOTE_REJECTION_REASON_INVALID_QUOTES_COUNT 0x04B4                                                    // Invalid Quotes Count
+#define MASS_QUOTE_REJECTION_REASON_FORBIDDEN_ORDER_CAPACITY_VALUE 0x04BA                                          // Forbidden Order Capacity Value
+#define MASS_QUOTE_REJECTION_REASON_LIQUIDITY_PROVISION_ACTIVITY_FLAG_NOT_SET_FOR_MASS_QUOTE 0x04BC                // Liquidity Provision Activity Flag Not Set For Mass Quote
+
+// Action: one byte code
+#define ACTION_CHANGE_TO_HYBRID_BUY_ONLY 0x01  // Change To Hybrid Buy Only
+#define ACTION_CHANGE_TO_KNOCK_OUT 0x02        // Change To Knock Out
+#define ACTION_REVOKE_KNOCK_OUT 0x03           // Revoke Knock Out
+
+// Command Result: one byte code
+#define COMMAND_RESULT_SUCCESS 0x01  // Success
+#define COMMAND_RESULT_FAILURE 0x02  // Failure
+
+// Rejection Code: 2 byte code
+#define REJECTION_CODE_OTHER 0x0063                                                                             // Other
+#define REJECTION_CODE_UNKNOWN_INSTRUMENT 0x03E9                                                                // Unknown Instrument
+#define REJECTION_CODE_FIRM_NOT_AUTHORIZED_FOR_MM_COMMAND 0x0518                                                // Firm Not Authorized For Mm Command
+#define REJECTION_CODE_INSTRUMENT_ALREADY_KNOCKED_OUT 0x0521                                                    // Instrument Already Knocked Out
+#define REJECTION_CODE_MM_CANNOT_REVOKE_MARKET_OPERATION_KNOCK_OUT 0x0522                                       // Mm Cannot Revoke Market Operation Knock Out
+#define REJECTION_CODE_KNOCK_OUT_OR_REVOKE_KNOCK_OUT_OPERATIONS_NOT_ALLOWED_DURING_INSTRUMENT_SU_nal715 0x0523  // Knock Out Or Revoke Knock Out Operations Not Allowed During Instrument Suspension
+#define REJECTION_CODE_REVOKE_KNOCK_OUT_OPERATIONS_NOT_ALLOWED_ONCE_BARRIER_IS_REACHED 0x0524                   // Revoke Knock Out Operations Not Allowed Once Barrier Is Reached
+#define REJECTION_CODE_MM_COMMAND_NOT_ALLOWED_FOR_SELECTED_MARKET_MODEL 0x0525                                  // Mm Command Not Allowed For Selected Market Model
+#define REJECTION_CODE_REVOKE_KNOCK_OUT_OPERATIONS_NOT_ALLOWED_FOR_ACTIVE_INSTRUMENT 0x0526                     // Revoke Knock Out Operations Not Allowed For Active Instrument
+#define REJECTION_CODE_REQUEST_NOT_ALLOWED_FOR_BLOCK_INSTRUMENT 0x07EA                                          // Request Not Allowed For Block Instrument
+#define REJECTION_CODE_REQUEST_NOT_ALLOWED_FOR_CLOB_INSTRUMENT 0x07EB                                           // Request Not Allowed For Clob Instrument
+#define REJECTION_CODE_REQUEST_NOT_ALLOWED_FOR_CROSS_INSTRUMENT 0x07EC                                          // Request Not Allowed For Cross Instrument
+#define REJECTION_CODE_EXCHANGE_CLOSED 0x0BBA                                                                   // Exchange Closed
+#define REJECTION_CODE_FIRM_NOT_AUTHORIZED_TO_QUOTE_INSTRUMENT 0x0BC1                                           // Firm Not Authorized To Quote Instrument
+#define REJECTION_CODE_COMMAND_NOT_ALLOWED_IN_CURRENT_STATE 0x0BCC                                              // Command Not Allowed In Current State
+
+// Request For Execution Reason: one byte code
+#define REQUEST_FOR_EXECUTION_REASON_PASSIVE_QUOTE 0x01     // Passive Quote
+#define REQUEST_FOR_EXECUTION_REASON_AGGRESSIVE_QUOTE 0x02  // Aggressive Quote
+
+// Update Type: one byte code
+#define UPDATE_TYPE_IPO 0x01           // Ipo
+#define UPDATE_TYPE_TENDER_OFFER 0x02  // Tender Offer
+
+// Trade Report Trans Type: one byte code
+#define TRADE_REPORT_TRANS_TYPE_NEW 0x01      // New
+#define TRADE_REPORT_TRANS_TYPE_CANCEL 0x02   // Cancel
+#define TRADE_REPORT_TRANS_TYPE_REPLACE 0x03  // Replace
+
+// Trade Report Type: one byte code
+#define TRADE_REPORT_TYPE_SUBMIT 0x01               // Submit
+#define TRADE_REPORT_TYPE_ALLEGED 0x02              // Alleged
+#define TRADE_REPORT_TYPE_ACCEPT 0x03               // Accept
+#define TRADE_REPORT_TYPE_DECLINE 0x04              // Decline
+#define TRADE_REPORT_TYPE_TRADE_REPORT_CANCEL 0x07  // Trade Report Cancel
+#define TRADE_REPORT_TYPE_TRADE_BREAK 0x08          // Trade Break
+
+// Trade Type: one byte code
+#define TRADE_TYPE_PRIVATELY_NEGOTIATED_TRADE 0x16  // Privately Negotiated Trade
+#define TRADE_TYPE_BLOCK_TRADE 0x26                 // Block Trade
+
+// Algorithmic Trade Indicator: one byte code
+#define ALGORITHMIC_TRADE_INDICATOR_NA 0x01                     // Na
+#define ALGORITHMIC_TRADE_INDICATOR_NON_ALGORITHMIC_TRADE 0x02  // Non Algorithmic Trade
+#define ALGORITHMIC_TRADE_INDICATOR_ALGORITHMIC_TRADE 0x03      // Algorithmic Trade
+
+// Exec Type: one byte code
+#define EXEC_TYPE_NA 0x01             // Na
+#define EXEC_TYPE_REJECTED 0x08       // Rejected
+#define EXEC_TYPE_EXPIRED 0x0C        // Expired
+#define EXEC_TYPE_TRADE 0x0F          // Trade
+#define EXEC_TYPE_TRADE_CORRECT 0x10  // Trade Correct
+#define EXEC_TYPE_TRADE_CANCEL 0x11   // Trade Cancel
+
+// Order Capacity: one byte code
+#define ORDER_CAPACITY_AGENCY 0x01              // Agency
+#define ORDER_CAPACITY_PRINCIPAL 0x02           // Principal
+#define ORDER_CAPACITY_RISKLESS_PRINCIPAL 0x03  // Riskless Principal
+
+// Tcr Status: one byte code
+#define TCR_STATUS_NEW 0x01        // New
+#define TCR_STATUS_ACCEPTED 0x02   // Accepted
+#define TCR_STATUS_REJECTED 0x03   // Rejected
+#define TCR_STATUS_CANCELLED 0x04  // Cancelled
+
+// Tcr Rejection Reason: 2 byte code
+#define TCR_REJECTION_REASON_NA 0x0001                                                                      // Na
+#define TCR_REJECTION_REASON_EXCHANGE_CLOSED 0x0002                                                         // Exchange Closed
+#define TCR_REJECTION_REASON_INVALID_PRICE_INCREMENT 0x0012                                                 // Invalid Price Increment
+#define TCR_REJECTION_REASON_OTHER 0x0063                                                                   // Other
+#define TCR_REJECTION_REASON_INSTRUMENT_PHASE_NO_TRADING 0x006A                                             // Instrument Phase No Trading
+#define TCR_REJECTION_REASON_UNKNOWN_INSTRUMENT 0x03E9                                                      // Unknown Instrument
+#define TCR_REJECTION_REASON_INVALID_EXECUTION_TRADER 0x03ED                                                // Invalid Execution Trader
+#define TCR_REJECTION_REASON_INVALID_DECISION_MAKER 0x03EE                                                  // Invalid Decision Maker
+#define TCR_REJECTION_REASON_INVALID_CLIENT_ID 0x03EF                                                       // Invalid Client Id
+#define TCR_REJECTION_REASON_INVALID_PARTY_ROLE_QUALIFIER_FOR_CLIENT_ID 0x03F0                              // Invalid Party Role Qualifier For Client Id
+#define TCR_REJECTION_REASON_INVALID_PARTY_ROLE_QUALIFIER_FOR_EXECUTING_TRADER 0x03F1                       // Invalid Party Role Qualifier For Executing Trader
+#define TCR_REJECTION_REASON_INVALID_PARTY_ROLE_QUALIFIER_FOR_INVESTMENT_DECISION_MAKER 0x03F2              // Invalid Party Role Qualifier For Investment Decision Maker
+#define TCR_REJECTION_REASON_ORDER_QUANTITY_MUST_BE_GREATER_THAN_MINIMUM_QUANTITY 0x0401                    // Order Quantity Must Be Greater Than Minimum Quantity
+#define TCR_REJECTION_REASON_ORDER_QUANTITY_MUST_BE_LOWER_THAN_MAXIMUM_QUANTITY 0x0402                      // Order Quantity Must Be Lower Than Maximum Quantity
+#define TCR_REJECTION_REASON_ORDER_PRICE_MUST_BE_GREATER_THAN_MINIMUM_PRICE 0x0403                          // Order Price Must Be Greater Than Minimum Price
+#define TCR_REJECTION_REASON_ORDER_PRICE_MUST_BE_LOWER_THAN_MAXIMUM_PRICE 0x0404                            // Order Price Must Be Lower Than Maximum Price
+#define TCR_REJECTION_REASON_ORDER_PRICE_MUST_BE_NONZERO 0x0405                                             // Order Price Must Be Nonzero
+#define TCR_REJECTION_REASON_ORDER_VALUE_MUST_BE_GREATER_THAN_MINIMUM_VALUE 0x0406                          // Order Value Must Be Greater Than Minimum Value
+#define TCR_REJECTION_REASON_ORDER_VALUE_MUST_BE_LOWER_THAN_MAXIMUM_VALUE 0x0407                            // Order Value Must Be Lower Than Maximum Value
+#define TCR_REJECTION_REASON_PRICE_BELOW_LOW_COLLAR 0x040D                                                  // Price Below Low Collar
+#define TCR_REJECTION_REASON_PRICE_ABOVE_HIGH_COLLAR 0x040E                                                 // Price Above High Collar
+#define TCR_REJECTION_REASON_FIRM_IS_NOT_A_MARKET_MAKER 0x041A                                              // Firm Is Not A Market Maker
+#define TCR_REJECTION_REASON_OPERATION_ON_REDISTRIBUTED_INSTRUMENTS_FORBIDDEN 0x0420                        // Operation On Redistributed Instruments Forbidden
+#define TCR_REJECTION_REASON_FIRM_NOT_AUTHORIZED_TO_BUY_AND_SELL_THE_INSTRUMENT 0x0421                      // Firm Not Authorized To Buy And Sell The Instrument
+#define TCR_REJECTION_REASON_FIRM_NOT_AUTHORIZED_TO_BUY_THE_INSTRUMENT 0x0422                               // Firm Not Authorized To Buy The Instrument
+#define TCR_REJECTION_REASON_FIRM_NOT_AUTHORIZED_TO_SELL_THE_INSTRUMENT 0x0423                              // Firm Not Authorized To Sell The Instrument
+#define TCR_REJECTION_REASON_OPERATIONS_ON_ORDERS_AND_QUOTES_FORBIDDEN_DURING_INSTRUMENT_SUSPENSION 0x0425  // Operations On Orders And Quotes Forbidden During Instrument Suspension
+#define TCR_REJECTION_REASON_INVALID_PARTY_ID_FOR_CLIENT_ID 0x042E                                          // Invalid Party Id For Client Id
+#define TCR_REJECTION_REASON_INVALID_PARTY_ID_FOR_EXECUTING_TRADER 0x042F                                   // Invalid Party Id For Executing Trader
+#define TCR_REJECTION_REASON_INVALID_PARTY_ID_FOR_INVESTMENT_DECISION_MAKER 0x0430                          // Invalid Party Id For Investment Decision Maker
+#define TCR_REJECTION_REASON_INVALID_PARTY_ROLE_QUALIFIER_FOR_PARTY_ID 0x0433                               // Invalid Party Role Qualifier For Party Id
+#define TCR_REJECTION_REASON_MISSING_CLEARING_MEMBER_CODE 0x0434                                            // Missing Clearing Member Code
+#define TCR_REJECTION_REASON_FORBIDDEN_CLEARING_MEMBER_CODE 0x0435                                          // Forbidden Clearing Member Code
+#define TCR_REJECTION_REASON_MARKET_MODEL_NOT_SUPPORTED_ON_SPONSORED_CONNECTION 0x0439                      // Market Model Not Supported On Sponsored Connection
+#define TCR_REJECTION_REASON_OPERATION_FORBIDDEN_DURING_EARLY_LATE_MONITORING 0x043C                        // Operation Forbidden During Early Late Monitoring
+#define TCR_REJECTION_REASON_INVALID_CLEARING_MEMBER_CODE_LENGTH 0x043D                                     // Invalid Clearing Member Code Length
+#define TCR_REJECTION_REASON_NOT_AUTHORIZED_TO_QUOTE_INSTRUMENT 0x04B9                                      // Not Authorized To Quote Instrument
+#define TCR_REJECTION_REASON_UNKNOWN_TRADE_REPORT 0x07D1                                                    // Unknown Trade Report
+#define TCR_REJECTION_REASON_DUPLICATE_TRADE_REPORT_ID 0x07D2                                               // Duplicate Trade Report Id
+#define TCR_REJECTION_REASON_TRADE_REPORT_TYPE_NOT_COMPATIBLE_WITH_TRADE_REPORT_TRANS_TYPE 0x07D5           // Trade Report Type Not Compatible With Trade Report Trans Type
+#define TCR_REJECTION_REASON_INVALID_EXEC_TYPE 0x07D8                                                       // Invalid Exec Type
+#define TCR_REJECTION_REASON_TRADE_REPORT_REF_ID_NOT_ALLOWED 0x07D9                                         // Trade Report Ref Id Not Allowed
+#define TCR_REJECTION_REASON_SETTLEMENT_DATE_CANNOT_BE_EARLIER_THAN_MINIMUM_SETTLEMENT_DATE 0x07DF          // Settlement Date Cannot Be Earlier Than Minimum Settlement Date
+#define TCR_REJECTION_REASON_SETTLEMENT_DATE_CANNOT_BE_LATER_THAN_MAXIMUM_SETTLEMENT_DATE 0x07E0            // Settlement Date Cannot Be Later Than Maximum Settlement Date
+#define TCR_REJECTION_REASON_SETTLEMENT_DATE_MUST_BE_A_SETTLEMENT_DAY 0x07E1                                // Settlement Date Must Be A Settlement Day
+#define TCR_REJECTION_REASON_UNKNOWN_CONTRA_FIRM 0x07E6                                                     // Unknown Contra Firm
+#define TCR_REJECTION_REASON_SENT_ATTRIBUTE_DOES_NOT_MATCH_ORIGINAL_VALUE 0x07E8                            // Sent Attribute Does Not Match Original Value
+#define TCR_REJECTION_REASON_REQUEST_NOT_ALLOWED_FOR_BLOCK_INSTRUMENT 0x07EA                                // Request Not Allowed For Block Instrument
+#define TCR_REJECTION_REASON_REQUEST_NOT_ALLOWED_FOR_CLOB_INSTRUMENT 0x07EB                                 // Request Not Allowed For Clob Instrument
+#define TCR_REJECTION_REASON_REQUEST_NOT_ALLOWED_FOR_CROSS_INSTRUMENT 0x07EC                                // Request Not Allowed For Cross Instrument
+#define TCR_REJECTION_REASON_CROSS_NOT_ALLOWED_OUTSIDE_OF_CLOB_INSTRUMENT_SPREAD 0x07EE                     // Cross Not Allowed Outside Of Clob Instrument Spread
+#define TCR_REJECTION_REASON_CROSS_PRICE_NOT_EQUAL_TO_THE_REFERENCE_PRICE 0x07EF                            // Cross Price Not Equal To The Reference Price
+#define TCR_REJECTION_REASON_CROSS_NOT_ALLOWED_DURING_CLOB_INSTRUMENT_AUCTION_OR_SUSPENSION 0x07F0          // Cross Not Allowed During Clob Instrument Auction Or Suspension
+#define TCR_REJECTION_REASON_FORBIDDEN_SECONDARY_TRADEREPORT_ID 0x07F1                                      // Forbidden Secondary Tradereport Id
+#define TCR_REJECTION_REASON_UNKNOWN_SECONDARY_TRADEREPORT_ID 0x07F2                                        // Unknown Secondary Tradereport Id
+#define TCR_REJECTION_REASON_NO_TRADE_FOR_CLOB_REFERENCE_INSTRUMENT 0x07F3                                  // No Trade For Clob Reference Instrument
+
+// ---- Types -------------------------------------------------------------------
 
 // The login message authenticates a user establishing a connection to the trading port service. The login message must be the first message sent by the client application to request the initiation of a trading port session
-entrypoint typedef struct _Login {
+typedef struct _Login {
   UINT16 version;                // bytes 0 to 1
   UINT8 token[8];                // bytes 2 to 9
   UINT16 connection_id;          // bytes 10 to 11
@@ -39,155 +695,297 @@ entrypoint typedef struct _Login {
   UINT32 last_sent_seq_num;      // bytes 16 to 19
 } Login;
 
-// ---- Login Response: 11 bytes ------------------------------------------------
-
 // The login response message. The result field describes the login status, indicating whether the login was successful or not (i.e. successful login)
-entrypoint typedef struct _LoginResponse {
+typedef struct _LoginResponse {
   UINT8 login_result;            // byte 0
   UINT32 next_expected_seq_num;  // bytes 1 to 4
   UINT32 last_replay_seq_num;    // bytes 5 to 8
   UINT16 session_id;             // bytes 9 to 10
 } LoginResponse;
 
-// ---- Connection Close: 1 byte ------------------------------------------------
-
 // The ConnectionClose message confirms the termination of a session through the trading port service
-entrypoint typedef struct _ConnectionClose {
+typedef struct _ConnectionClose {
   UINT8 connection_close_reason;  // byte 0
 } ConnectionClose;
 
-// ---- Reject: 5 bytes ---------------------------------------------------------
-
 // The reject message is sent by the trading port service when receiving an erroneous message that cannot be further processed
-entrypoint typedef struct _Reject {
+typedef struct _Reject {
   UINT32 ref_seq_num;   // bytes 0 to 3
   UINT8 reject_reason;  // byte 4
 } Reject;
 
-// ---- Test: 8 bytes -----------------------------------------------------------
-
 // The internal message for a test purpose
-entrypoint typedef struct _Test {
+typedef struct _Test {
   UINT64 target_timestamp;  // bytes 0 to 7
 } Test;
 
-// ---- Test Event: 201 bytes ---------------------------------------------------
-
 // Test event
-entrypoint typedef struct _TestEvent {
+typedef struct _TestEvent {
   UINT8 scenario_name[200];  // bytes 0 to 199
   UINT8 event_type;          // byte 200
 } TestEvent;
 
-// ---- Trading Session Status: 9 bytes -----------------------------------------
-
 // The Trading Session Status provides information on the status of a trading session
-entrypoint typedef struct _TradingSessionStatus {
+typedef struct _TradingSessionStatus {
   UINT8 market_id[4];           // bytes 0 to 3
   UINT32 date;                  // bytes 4 to 7
   UINT8 trading_session_event;  // byte 8
 } TradingSessionStatus;
 
-// ---- Client: 5 bytes ---------------------------------------------------------
-
 // MifidField
-entrypoint typedef struct _Client {
+typedef struct _Client {
   UINT32 short_code;  // bytes 0 to 3
   UINT8 qualifier;    // byte 4
 } Client;
 
-// ---- Executing Trader: 5 bytes -----------------------------------------------
-
-// MifidField
-entrypoint typedef struct _ExecutingTrader {
-  UINT32 short_code;  // bytes 0 to 3
-  UINT8 qualifier;    // byte 4
-} ExecutingTrader;
-
-// ---- Investment Decision Maker: 5 bytes --------------------------------------
-
-// MifidField
-entrypoint typedef struct _InvestmentDecisionMaker {
-  UINT32 short_code;  // bytes 0 to 3
-  UINT8 qualifier;    // byte 4
-} InvestmentDecisionMaker;
-
-// ---- Mifid Fields: 15 bytes --------------------------------------------------
-
 // MifidFields
-entrypoint typedef struct _MifidFields {
-  Client client;                                      // bytes 0 to 4
-  ExecutingTrader executing_trader;                   // bytes 5 to 9
-  InvestmentDecisionMaker investment_decision_maker;  // bytes 10 to 14
+typedef struct _MifidFields {
+  Client client;                     // bytes 0 to 4
+  Client executing_trader;           // bytes 5 to 9
+  Client investment_decision_maker;  // bytes 10 to 14
 } MifidFields;
 
-// ---- Order Mass Cancel: 39 bytes ---------------------------------------------
+// Message used to add new orders to the system
+typedef struct _OrderAdd {
+  UINT8 stp_id;                               // byte 0
+  UINT32 instrument_id;                       // bytes 1 to 4
+  UINT8 order_type;                           // byte 5
+  UINT8 time_in_force;                        // byte 6
+  UINT8 side;                                 // byte 7
+  UINT64 price;                               // bytes 8 to 15, signed, read here as unsigned
+  UINT64 trigger_price;                       // bytes 16 to 23, signed, read here as unsigned
+  UINT64 quantity;                            // bytes 24 to 31
+  UINT64 display_qty;                         // bytes 32 to 39
+  UINT8 capacity;                             // byte 40
+  UINT8 account[16];                          // bytes 41 to 56
+  UINT8 account_type;                         // byte 57
+  UINT8 liquidity_provision_activity : 1;     // byte 58
+  UINT8 direct_or_sponsored_access : 1;       // byte 58
+  UINT8 market_maker_or_specialist : 1;       // byte 58
+  UINT8 reserved_3_to_7 : 5;                  // byte 58
+  MifidFields mifid_fields;                   // bytes 59 to 73
+  UINT64 expire;                              // bytes 74 to 81
+  UINT8 memo[18];                             // bytes 82 to 99
+  UINT8 client_order_id[20];                  // bytes 100 to 119
+  UINT8 clearing_member_code[20];             // bytes 120 to 139
+  UINT8 clearing_member_clearing_identifier;  // byte 140
+  UINT8 cancel_on_connection_loss : 1;        // byte 141
+  UINT8 reserved_1_to_7 : 7;                  // byte 141
+  UINT8 fee_structure_id;                     // byte 142
+  UINT8 interested_party[8];                  // bytes 143 to 150
+} OrderAdd;
+
+// The message is a response to an OrderAdd message and includes the order execution status
+typedef struct _OrderAddResponse {
+  UINT64 seq_num : 28;                 // bytes 0 to 7
+  UINT64 bulk_seq_num : 8;             // bytes 0 to 7
+  UINT64 session_id_order_id : 14;     // bytes 0 to 7
+  UINT64 connection_id_order_id : 14;  // bytes 0 to 7
+  UINT64 public_order_id;              // bytes 8 to 15
+  UINT64 display_qty;                  // bytes 16 to 23
+  UINT64 filled;                       // bytes 24 to 31
+  UINT8 order_status;                  // byte 32
+  UINT16 order_rejection_reason;       // bytes 33 to 34
+  UINT8 exec_type_reason;              // byte 35
+  UINT8 client_order_id[20];           // bytes 36 to 55
+} OrderAddResponse;
+
+// Message used to cancel the previously submitted order
+typedef struct _OrderCancel {
+  UINT64 seq_num : 28;                 // bytes 0 to 7
+  UINT64 bulk_seq_num : 8;             // bytes 0 to 7
+  UINT64 session_id_order_id : 14;     // bytes 0 to 7
+  UINT64 connection_id_order_id : 14;  // bytes 0 to 7
+  MifidFields mifid_fields;            // bytes 8 to 22
+  UINT8 client_order_id[20];           // bytes 23 to 42
+} OrderCancel;
+
+// The message is a response to an order cancel request and contains information about its execution, in particular whether the order to cancel was found or not
+typedef struct _OrderCancelResponse {
+  UINT64 seq_num : 28;                 // bytes 0 to 7
+  UINT64 bulk_seq_num : 8;             // bytes 0 to 7
+  UINT64 session_id_order_id : 14;     // bytes 0 to 7
+  UINT64 connection_id_order_id : 14;  // bytes 0 to 7
+  UINT8 order_status;                  // byte 8
+  UINT16 order_rejection_reason;       // bytes 9 to 10
+  UINT8 exec_type_reason;              // byte 11
+  UINT8 client_order_id[20];           // bytes 12 to 31
+} OrderCancelResponse;
+
+// Message used to modify the submitted order
+typedef struct _OrderModify {
+  UINT64 seq_num : 28;                 // bytes 0 to 7
+  UINT64 bulk_seq_num : 8;             // bytes 0 to 7
+  UINT64 session_id_order_id : 14;     // bytes 0 to 7
+  UINT64 connection_id_order_id : 14;  // bytes 0 to 7
+  UINT64 price;                        // bytes 8 to 15, signed, read here as unsigned
+  UINT64 trigger_price;                // bytes 16 to 23, signed, read here as unsigned
+  UINT64 quantity;                     // bytes 24 to 31
+  UINT64 display_qty;                  // bytes 32 to 39
+  UINT64 expire;                       // bytes 40 to 47
+  MifidFields mifid_fields;            // bytes 48 to 62
+  UINT8 client_order_id[20];           // bytes 63 to 82
+} OrderModify;
+
+// The response message for an OrderModify
+typedef struct _OrderModifyResponse {
+  UINT64 seq_num : 28;                 // bytes 0 to 7
+  UINT64 bulk_seq_num : 8;             // bytes 0 to 7
+  UINT64 session_id_order_id : 14;     // bytes 0 to 7
+  UINT64 connection_id_order_id : 14;  // bytes 0 to 7
+  UINT64 filled;                       // bytes 8 to 15
+  UINT8 order_status;                  // byte 16
+  UINT8 priority_flag;                 // byte 17
+  UINT16 order_rejection_reason;       // bytes 18 to 19
+  UINT8 client_order_id[20];           // bytes 20 to 39
+} OrderModifyResponse;
 
 // Message used to cancel multiple existing orders
-entrypoint typedef struct _OrderMassCancel {
-  UINT8 mass_cancel_request_type;    // byte 0
-  UINT8 target_party_role;           // byte 1
-  UINT32 target_party_id;            // bytes 2 to 5
-  UINT32 market_segment_id;          // bytes 6 to 9
-  UINT32 instrument_id;              // bytes 10 to 13
-  ExecutingTrader executing_trader;  // bytes 14 to 18
-  UINT8 client_order_id[20];         // bytes 19 to 38
+typedef struct _OrderMassCancel {
+  UINT8 mass_cancel_request_type;  // byte 0
+  UINT8 target_party_role;         // byte 1
+  UINT32 target_party_id;          // bytes 2 to 5
+  UINT32 market_segment_id;        // bytes 6 to 9
+  UINT32 instrument_id;            // bytes 10 to 13
+  Client executing_trader;         // bytes 14 to 18
+  UINT8 client_order_id[20];       // bytes 19 to 38
 } OrderMassCancel;
 
-// ---- Bid: 16 bytes -----------------------------------------------------------
+// Response to message used to cancel multiple existing orders
+typedef struct _OrderMassCancelResponse {
+  UINT64 total_affected_orders;         // bytes 0 to 7
+  UINT8 mass_cancel_request_type;       // byte 8
+  UINT64 seq_num : 28;                  // bytes 9 to 16
+  UINT64 bulk_seq_num : 8;              // bytes 9 to 16
+  UINT64 session_id_order_id : 14;      // bytes 9 to 16
+  UINT64 connection_id_order_id : 14;   // bytes 9 to 16
+  UINT8 target_party_role;              // byte 17
+  UINT32 target_party_id;               // bytes 18 to 21
+  UINT32 market_segment_id;             // bytes 22 to 25
+  UINT16 mass_cancel_rejection_reason;  // bytes 26 to 27
+  UINT8 client_order_id[20];            // bytes 28 to 47
+} OrderMassCancelResponse;
+
+// The message used to report trades between counterparties (i.e. generated when two or more orders are matched)
+typedef struct _OrderExecute {
+  UINT32 instrument_id;                // bytes 0 to 3
+  UINT64 seq_num : 28;                 // bytes 4 to 11
+  UINT64 bulk_seq_num : 8;             // bytes 4 to 11
+  UINT64 session_id_order_id : 14;     // bytes 4 to 11
+  UINT64 connection_id_order_id : 14;  // bytes 4 to 11
+  UINT32 trade_id;                     // bytes 12 to 15
+  UINT64 price;                        // bytes 16 to 23, signed, read here as unsigned
+  UINT64 quantity;                     // bytes 24 to 31
+  UINT64 leaves_qty;                   // bytes 32 to 39
+  UINT8 liquidity_indicator;           // byte 40
+  UINT16 currency;                     // bytes 41 to 42
+  UINT8 side;                          // byte 43
+  UINT8 client_order_id[20];           // bytes 44 to 63
+} OrderExecute;
 
 // QuoteOrder
-entrypoint typedef struct _Bid {
+typedef struct _Bid {
   UINT64 price;     // bytes 0 to 7, signed, read here as unsigned
   UINT64 quantity;  // bytes 8 to 15
 } Bid;
 
-// ---- Ask: 16 bytes -----------------------------------------------------------
-
-// QuoteOrder
-entrypoint typedef struct _Ask {
-  UINT64 price;     // bytes 0 to 7, signed, read here as unsigned
-  UINT64 quantity;  // bytes 8 to 15
-} Ask;
-
-// ---- Quote: 36 bytes ---------------------------------------------------------
-
 // Quote
-entrypoint typedef struct _Quote {
+typedef struct _Quote {
   UINT32 instrument_id;  // bytes 0 to 3
   Bid bid;               // bytes 4 to 19
-  Ask ask;               // bytes 20 to 35
+  Bid ask;               // bytes 20 to 35
 } Quote;
 
-// ---- Market Maker Command: 5 bytes -------------------------------------------
+// The Array of quotes
+typedef struct _ItemsQuotesArray {
+  Quote quote_;  // bytes 0 to 35
+} ItemsQuotesArray;
+
+// Quotes
+typedef struct _Quotes {
+  UINT8 count;                                           // byte 0
+  ItemsQuotesArray items_quotes_array[:byte-size 1080];  // bytes 1 to 1080
+} Quotes;
+
+// Mass Quote
+typedef struct _MassQuote {
+  UINT8 stp_id;                               // byte 0
+  UINT8 capacity;                             // byte 1
+  UINT8 account[16];                          // bytes 2 to 17
+  UINT8 account_type;                         // byte 18
+  UINT8 liquidity_provision_activity : 1;     // byte 19
+  UINT8 direct_or_sponsored_access : 1;       // byte 19
+  UINT8 market_maker_or_specialist : 1;       // byte 19
+  UINT8 reserved_3_to_7 : 5;                  // byte 19
+  MifidFields mifid_fields;                   // bytes 20 to 34
+  UINT8 memo[18];                             // bytes 35 to 52
+  UINT8 clearing_member_code[20];             // bytes 53 to 72
+  UINT8 clearing_member_clearing_identifier;  // byte 73
+  Quotes quotes;                              // bytes 74 to 1154
+  UINT8 fee_structure_id;                     // byte 1155
+  UINT8 interested_party[8];                  // bytes 1156 to 1163
+  UINT8 quote_id[20];                         // bytes 1164 to 1183
+} MassQuote;
+
+// QuoteOrderResponse
+typedef struct _QuoteOrderResponse {
+  UINT32 instrument_id;                  // bytes 0 to 3
+  UINT64 seq_num : 28;                   // bytes 4 to 11
+  UINT64 bulk_seq_num : 8;               // bytes 4 to 11
+  UINT64 session_id_order_id : 14;       // bytes 4 to 11
+  UINT64 connection_id_order_id : 14;    // bytes 4 to 11
+  UINT64 seq_num_2 : 28;                 // bytes 12 to 19
+  UINT64 bulk_seq_num_2 : 8;             // bytes 12 to 19
+  UINT64 session_id_order_id_2 : 14;     // bytes 12 to 19
+  UINT64 connection_id_order_id_2 : 14;  // bytes 12 to 19
+  UINT8 order_status;                    // byte 20
+  UINT16 order_rejection_reason;         // bytes 21 to 22
+} QuoteOrderResponse;
+
+// An array of QuoteOrderResponse
+typedef struct _ItemsQuoteOrderResponseArray {
+  QuoteOrderResponse quote_order_response;  // bytes 0 to 22
+} ItemsQuoteOrderResponseArray;
+
+// QuoteOrderResponses
+typedef struct _Responses {
+  UINT8 count;                                                                    // byte 0
+  ItemsQuoteOrderResponseArray items_quote_order_response_array[:byte-size 690];  // bytes 1 to 690
+} Responses;
+
+// The response to a MassQuote message
+typedef struct _MassQuoteResponse {
+  UINT64 seq_num : 28;                 // bytes 0 to 7
+  UINT64 bulk_seq_num : 8;             // bytes 0 to 7
+  UINT64 session_id_order_id : 14;     // bytes 0 to 7
+  UINT64 connection_id_order_id : 14;  // bytes 0 to 7
+  Responses responses;                 // bytes 8 to 698
+  UINT8 mass_quote_status;             // byte 699
+  UINT16 mass_quote_rejection_reason;  // bytes 700 to 701
+  UINT8 fee_structure_id;              // byte 702
+} MassQuoteResponse;
 
 // Market Maker command request
-entrypoint typedef struct _MarketMakerCommand {
+typedef struct _MarketMakerCommand {
   UINT32 instrument_id;  // bytes 0 to 3
   UINT8 action;          // byte 4
 } MarketMakerCommand;
 
-// ---- Market Maker Command Response: 7 bytes ----------------------------------
-
 // The response to the Market Maker command
-entrypoint typedef struct _MarketMakerCommandResponse {
+typedef struct _MarketMakerCommandResponse {
   UINT32 ref_id;          // bytes 0 to 3
   UINT8 command_result;   // byte 4
   UINT16 rejection_code;  // bytes 5 to 6
 } MarketMakerCommandResponse;
 
-// ---- Request For Execution: 5 bytes ------------------------------------------
-
 // The information for the MM that one of the quotes has been crossed
-entrypoint typedef struct _RequestForExecution {
+typedef struct _RequestForExecution {
   UINT32 instrument_id;                // bytes 0 to 3
   UINT8 request_for_execution_reason;  // byte 4
 } RequestForExecution;
 
-// ---- Bid Offer Update: 29 bytes ----------------------------------------------
-
 // Message send during the IPO to the sell side or during the Tender Offer to the buy side
-entrypoint typedef struct _BidOfferUpdate {
+typedef struct _BidOfferUpdate {
   UINT32 instrument_id;     // bytes 0 to 3
   UINT8 update_type;        // byte 4
   UINT64 total_bid_size;    // bytes 5 to 12
@@ -196,10 +994,136 @@ entrypoint typedef struct _BidOfferUpdate {
   UINT32 offer_orders;      // bytes 25 to 28
 } BidOfferUpdate;
 
-// ---- Trade Bust: 4 bytes -----------------------------------------------------
+// TcrParty
+typedef struct _TcrParty {
+  UINT8 liquidity_provision_activity : 1;     // byte 0
+  UINT8 direct_or_sponsored_access : 1;       // byte 0
+  UINT8 market_maker_or_specialist : 1;       // byte 0
+  UINT8 reserved_3_to_7 : 5;                  // byte 0
+  MifidFields mifid_fields;                   // bytes 1 to 15
+  UINT8 clearing_member_code[20];             // bytes 16 to 35
+  UINT8 clearing_member_clearing_identifier;  // byte 36
+  UINT8 account[16];                          // bytes 37 to 52
+  UINT8 account_type;                         // byte 53
+  UINT8 order_capacity;                       // byte 54
+  UINT8 fee_structure_id;                     // byte 55
+  UINT8 interested_party[8];                  // bytes 56 to 63
+  UINT8 memo[18];                             // bytes 64 to 81
+} TcrParty;
+
+// Trade Capture Report - single side
+typedef struct _TradeCaptureReportSingle {
+  UINT32 instrument_id;                // bytes 0 to 3
+  UINT8 trade_report_id[21];           // bytes 4 to 24
+  UINT64 seq_num : 28;                 // bytes 25 to 32
+  UINT64 bulk_seq_num : 8;             // bytes 25 to 32
+  UINT64 session_id_order_id : 14;     // bytes 25 to 32
+  UINT64 connection_id_order_id : 14;  // bytes 25 to 32
+  UINT32 trade_id;                     // bytes 33 to 36
+  UINT8 trade_report_trans_type;       // byte 37
+  UINT8 trade_report_type;             // byte 38
+  UINT8 trade_type;                    // byte 39
+  UINT8 algorithmic_trade_indicator;   // byte 40
+  UINT8 exec_type;                     // byte 41
+  UINT8 trade_report_ref_id[21];       // bytes 42 to 62
+  UINT64 last_qty;                     // bytes 63 to 70
+  UINT64 last_px;                      // bytes 71 to 78, signed, read here as unsigned
+  UINT32 settlement_date;              // bytes 79 to 82
+  UINT8 side;                          // byte 83
+  UINT8 counterparty_code[16];         // bytes 84 to 99
+  TcrParty tcr_party;                  // bytes 100 to 181
+} TradeCaptureReportSingle;
+
+// Trade Capture Report - dual sided
+typedef struct _TradeCaptureReportDual {
+  UINT32 instrument_id;                // bytes 0 to 3
+  UINT8 trade_report_id[21];           // bytes 4 to 24
+  UINT64 seq_num : 28;                 // bytes 25 to 32
+  UINT64 bulk_seq_num : 8;             // bytes 25 to 32
+  UINT64 session_id_order_id : 14;     // bytes 25 to 32
+  UINT64 connection_id_order_id : 14;  // bytes 25 to 32
+  UINT32 trade_id;                     // bytes 33 to 36
+  UINT8 trade_report_trans_type;       // byte 37
+  UINT8 trade_report_type;             // byte 38
+  UINT8 trade_type;                    // byte 39
+  UINT8 algorithmic_trade_indicator;   // byte 40
+  UINT8 exec_type;                     // byte 41
+  UINT8 trade_report_ref_id[21];       // bytes 42 to 62
+  UINT64 last_qty;                     // bytes 63 to 70
+  UINT64 last_px;                      // bytes 71 to 78, signed, read here as unsigned
+  UINT32 settlement_date;              // bytes 79 to 82
+  TcrParty tcr_party_buy;              // bytes 83 to 164
+  TcrParty tcr_party_sell;             // bytes 165 to 246
+} TradeCaptureReportDual;
+
+// The message is a response to an Trade Capture Report message, containing the state of TCR execution
+typedef struct _TradeCaptureReportResponse {
+  UINT32 instrument_id;                // bytes 0 to 3
+  UINT32 trade_id;                     // bytes 4 to 7
+  UINT8 trade_report_id[21];           // bytes 8 to 28
+  UINT64 seq_num : 28;                 // bytes 29 to 36
+  UINT64 bulk_seq_num : 8;             // bytes 29 to 36
+  UINT64 session_id_order_id : 14;     // bytes 29 to 36
+  UINT64 connection_id_order_id : 14;  // bytes 29 to 36
+  UINT8 tcr_status;                    // byte 37
+  UINT16 tcr_rejection_reason;         // bytes 38 to 39
+} TradeCaptureReportResponse;
 
 // Message used to inform about cancellation of previously accepted Trade
-entrypoint typedef struct _TradeBust {
+typedef struct _TradeBust {
   UINT32 trade_id;  // bytes 0 to 3
 } TradeBust;
+
+// Branch
+casetype _Payload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x0002: Login login;
+    case 0x0003: LoginResponse login_response;
+    case 0x000B: unit logout;
+    case 0x000E: unit logout_response;
+    case 0x000C: ConnectionClose connection_close;
+    case 0x000D: unit heartbeat;
+    case 0x000F: Reject reject;
+    case 0x0022: unit gap_fill;
+    case 0x0001: Test test;
+    case 0x00FF: TestEvent test_event;
+    case 0x0023: TradingSessionStatus trading_session_status;
+    case 0x0004: OrderAdd order_add;
+    case 0x0005: OrderAddResponse order_add_response;
+    case 0x0006: OrderCancel order_cancel;
+    case 0x0007: OrderCancelResponse order_cancel_response;
+    case 0x0008: OrderModify order_modify;
+    case 0x0009: OrderModifyResponse order_modify_response;
+    case 0x001D: OrderMassCancel order_mass_cancel;
+    case 0x001E: OrderMassCancelResponse order_mass_cancel_response;
+    case 0x000A: OrderExecute order_execute;
+    case 0x0018: MassQuote mass_quote;
+    case 0x0019: MassQuoteResponse mass_quote_response;
+    case 0x0020: MarketMakerCommand market_maker_command;
+    case 0x0021: MarketMakerCommandResponse market_maker_command_response;
+    case 0x001C: RequestForExecution request_for_execution;
+    case 0x001F: BidOfferUpdate bid_offer_update;
+    case 0x0012: TradeCaptureReportSingle trade_capture_report_single;
+    case 0x0013: TradeCaptureReportDual trade_capture_report_dual;
+    case 0x0014: TradeCaptureReportResponse trade_capture_report_response;
+    case 0x0017: TradeBust trade_bust;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+typedef struct _Message {
+  UINT16 message_length { message_length >= 24 };                                                                                     // bytes 0 to 1
+  UINT16 message_type;                                                                                                                // bytes 2 to 3
+  UINT32 sequence_number;                                                                                                             // bytes 4 to 7
+  UINT64 timestamp;                                                                                                                   // bytes 8 to 15
+  UINT64 source_timestamp;                                                                                                            // bytes 16 to 23
+  Payload(message_type, (((UINT32) message_length) - 24)) payload[:byte-size-single-element-array (((UINT32) message_length) - 24)];
+} Message;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Gpw Wats Native Order Gateway Packet
+entrypoint typedef struct _Packet (UINT32 available) {
+  Message message[:byte-size available];
+} Packet;
 

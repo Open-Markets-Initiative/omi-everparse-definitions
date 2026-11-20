@@ -1,107 +1,332 @@
-// Chicago Board Options Exchange Market Data Feed
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Cboe C1Options MarketDataFeed Csm v1.4.2
 //
+// Protocol:
+//   Organization: Chicago Board Options Exchange
+//   Protocol: Market Data Feed
+//   Encoding: Csm
+//   Version: 1.4.2
+//   Date: 5/8/2018
+//   Specification: Cboe Streaming Current Market v1.4.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out C1Options_MarketDataFeed_v1_4_2.3d
 //
-// What this definition does not state, and the model does:
-// - a run counted by a field
-// - a length prefix framing what follows
-//
-// License: MIT No Attribution
+// What this definition reads more loosely than the model states:
+// - a count of entries of no fixed width, whose entries hold a counted run of their own, is not checked: the entries fill what is left of their frame
 
-// ---- Packet Header: 16 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-entrypoint typedef struct _PacketHeader {
-  UINT8 version;               // byte 0
-  UINT16BE packet_length;      // bytes 1 to 2
-  UINT64BE sending_time;       // bytes 3 to 10
-  UINT8 message_count;         // byte 11
-  UINT32BE first_msg_seq_num;  // bytes 12 to 15
-} PacketHeader;
+// Template Id: one byte code
+#define TEMPLATE_ID_SECURITY_DEFINITION_MESSAGE 0x0D              // Security Definition Message
+#define TEMPLATE_ID_CURRENT_MARKET_REFRESH_MESSAGE 0x0B           // Current Market Refresh Message
+#define TEMPLATE_ID_MARKET_DATA_REFRESH_MESSAGE 0x14              // Market Data Refresh Message
+#define TEMPLATE_ID_CURRENT_MARKET_UPDATE_MESSAGE 0x0C            // Current Market Update Message
+#define TEMPLATE_ID_RECAP_UPDATE_MESSAGE 0x15                     // Recap Update Message
+#define TEMPLATE_ID_TICKER_MESSAGE 0x0E                           // Ticker Message
+#define TEMPLATE_ID_EXPECTED_OPENING_PRICE_AND_SIZE_MESSAGE 0x0F  // Expected Opening Price And Size Message
+#define TEMPLATE_ID_INDEX_VALUE_MESSAGE 0x16                      // Index Value Message
+#define TEMPLATE_ID_SETTLEMENT_VALUE_MESSAGE 0x17                 // Settlement Value Message
+#define TEMPLATE_ID_SUMMARY_MESSAGE 0x18                          // Summary Message
+#define TEMPLATE_ID_MARKET_DATA_CONTROL_MESSAGE 0x19              // Market Data Control Message
+#define TEMPLATE_ID_HEARTBEAT_MESSAGE 0x10                        // Heartbeat Message
 
-// ---- Message Header: 8 bytes -------------------------------------------------
+// Security Exchange: one byte code
+#define SECURITY_EXCHANGE_CBOE 0x43                       // Cboe
+#define SECURITY_EXCHANGE_ONE_CHICAGO_NOT_SUPPORTED 0x4F  // One Chicago Not Supported
+#define SECURITY_EXCHANGE_CBSX_NOT_SUPPORTED 0x57         // Cbsx Not Supported
+#define SECURITY_EXCHANGE_CFECOF 0x46                     // Cfecof
+#define SECURITY_EXCHANGE_CBOE_2_OPTIONS 0x32             // Cboe 2 Options
 
-entrypoint typedef struct _MessageHeader {
-  UINT16BE message_length;  // bytes 0 to 1
-  UINT8 template_id;        // byte 2
-  UINT8 message_type;       // byte 3
-  UINT32BE msg_seq_num;     // bytes 4 to 7
-} MessageHeader;
+// Put Or Call: one byte code
+#define PUT_OR_CALL_PUT 0x00   // Put
+#define PUT_OR_CALL_CALL 0x01  // Call
 
-// ---- Strike Price: 5 bytes ---------------------------------------------------
+// Exercise Style: one byte code
+#define EXERCISE_STYLE_AMERICAN 0x00  // American
+#define EXERCISE_STYLE_EUROPEAN 0x01  // European
 
-entrypoint typedef struct _StrikePrice {
+// Leg Side: one byte code
+#define LEG_SIDE_BUY_BID 0x42   // Buy Bid
+#define LEG_SIDE_SELL_ASK 0x53  // Sell Ask
+
+// Security Trading Status: one byte code
+#define SECURITY_TRADING_STATUS_HALTED 0x02                               // Halted
+#define SECURITY_TRADING_STATUS_OPEN 0x11                                 // Open
+#define SECURITY_TRADING_STATUS_CLOSED 0x12                               // Closed
+#define SECURITY_TRADING_STATUS_PRE_OPEN 0x15                             // Pre Open
+#define SECURITY_TRADING_STATUS_OPENING_ROTATION 0x16                     // Opening Rotation
+#define SECURITY_TRADING_STATUS_FAST_MARKET 0x17                          // Fast Market
+#define SECURITY_TRADING_STATUS_STRATEGY_MARKET_IN_OPENING_ROTATION 0x18  // Strategy Market In Opening Rotation
+#define SECURITY_TRADING_STATUS_STRATEGY_MARKET_QUOTES_NON_FIRM 0x19      // Strategy Market Quotes Non Firm
+#define SECURITY_TRADING_STATUS_SUSPENDED 0x1A                            // Suspended
+
+// Md Entry Type: one byte code
+#define MD_ENTRY_TYPE_BID 0x30               // Bid
+#define MD_ENTRY_TYPE_ASK 0x31               // Ask
+#define MD_ENTRY_TYPE_TRADE 0x32             // Trade
+#define MD_ENTRY_TYPE_INDEX_VALUE 0x33       // Index Value
+#define MD_ENTRY_TYPE_OPENING_PRICE 0x34     // Opening Price
+#define MD_ENTRY_TYPE_SETTLEMENT_VALUE 0x36  // Settlement Value
+#define MD_ENTRY_TYPE_HIGH 0x37              // High
+#define MD_ENTRY_TYPE_LOW 0x38               // Low
+
+// Md Volume Type: one byte code
+#define MD_VOLUME_TYPE_TOTAL_LIMIT 0x00                       // Total Limit
+#define MD_VOLUME_TYPE_CUSTOMER_LIMIT 0x01                    // Customer Limit
+#define MD_VOLUME_TYPE_TOTAL_CONTINGENCY_ALL_OR_NONE 0x02     // Total Contingency All Or None
+#define MD_VOLUME_TYPE_CUSTOMER_CONTINGENCY_ALL_OR_NONE 0x03  // Customer Contingency All Or None
+
+// Eop Type: one byte code
+#define EOP_TYPE_UNDEFINED 0x00                 // Undefined
+#define EOP_TYPE_OPENING_PRICE 0x01             // Opening Price
+#define EOP_TYPE_NEED_MORE_SELLERS 0x02         // Need More Sellers
+#define EOP_TYPE_NEED_MORE_BUYERS 0x03          // Need More Buyers
+#define EOP_TYPE_NO_OPENING_TRADES 0x04         // No Opening Trades
+#define EOP_TYPE_MULTIPLE_OPENING_PRICES 0x05   // Multiple Opening Prices
+#define EOP_TYPE_NEED_QUOTE_TO_OPEN 0x06        // Need Quote To Open
+#define EOP_TYPE_PRICE_NOT_IN_QUOTE_RANGE 0x07  // Price Not In Quote Range
+#define EOP_TYPE_NEED_DPM_QUOTE_TO_OPEN 0x08    // Need Dpm Quote To Open
+#define EOP_TYPE_DPM_QUOTE_INVALID 0x09         // Dpm Quote Invalid
+#define EOP_TYPE_PRICE_NOT_IN_BOTR_RANGE 0x0A   // Price Not In Botr Range
+
+// Legal Market: one byte code
+#define LEGAL_MARKET_NOT_A_LEGAL_MARKET 0x00  // Not A Legal Market
+#define LEGAL_MARKET_LEGAL_MARKET 0x01        // Legal Market
+
+// Md Control Type: one byte code
+#define MD_CONTROL_TYPE_START_OF_SUMMARY 0x00     // Start Of Summary
+#define MD_CONTROL_TYPE_END_OF_SUMMARY 0x01       // End Of Summary
+#define MD_CONTROL_TYPE_START_OF_SETTLEMENT 0x02  // Start Of Settlement
+#define MD_CONTROL_TYPE_END_OF_SETTLEMENT 0x03    // End Of Settlement
+
+// ---- Types -------------------------------------------------------------------
+
+typedef struct _SecurityType {
+  UINT8 security_type_length;                                 // byte 0
+  UINT8 security_type_text[((UINT32) security_type_length)];
+} SecurityType;
+
+typedef struct _Symbol {
+  UINT8 symbol_length;                          // byte 0
+  UINT8 symbol_text[((UINT32) symbol_length)];
+} Symbol;
+
+typedef struct _TargetLocationId {
+  UINT8 target_location_id_length;                                      // byte 0
+  UINT8 target_location_id_text[((UINT32) target_location_id_length)];
+} TargetLocationId;
+
+typedef struct _StrikePrice {
   UINT8 strike_price_exponent;     // byte 0, signed, read here as unsigned
   UINT32BE strike_price_mantissa;  // bytes 1 to 4, signed, read here as unsigned
 } StrikePrice;
 
-// ---- Minimum Strike Price Fraction: 5 bytes ----------------------------------
-
-entrypoint typedef struct _MinimumStrikePriceFraction {
+typedef struct _MinimumStrikePriceFraction {
   UINT8 minimum_strike_price_fraction_exponent;     // byte 0, signed, read here as unsigned
   UINT32BE minimum_strike_price_fraction_mantissa;  // bytes 1 to 4, signed, read here as unsigned
 } MinimumStrikePriceFraction;
 
-// ---- Max Strike Price: 5 bytes -----------------------------------------------
-
-entrypoint typedef struct _MaxStrikePrice {
+typedef struct _MaxStrikePrice {
   UINT8 max_strike_price_exponent;     // byte 0, signed, read here as unsigned
   UINT32BE max_strike_price_mantissa;  // bytes 1 to 4, signed, read here as unsigned
 } MaxStrikePrice;
 
-// ---- Premium Break Point: 5 bytes --------------------------------------------
-
-entrypoint typedef struct _PremiumBreakPoint {
+typedef struct _PremiumBreakPoint {
   UINT8 premium_break_point_exponent;     // byte 0, signed, read here as unsigned
   UINT32BE premium_break_point_mantissa;  // bytes 1 to 4, signed, read here as unsigned
 } PremiumBreakPoint;
 
-// ---- Minimum Above Premium Fraction: 5 bytes ---------------------------------
-
-entrypoint typedef struct _MinimumAbovePremiumFraction {
+typedef struct _MinimumAbovePremiumFraction {
   UINT8 minimum_above_premium_fraction_exponent;     // byte 0, signed, read here as unsigned
   UINT32BE minimum_above_premium_fraction_mantissa;  // bytes 1 to 4, signed, read here as unsigned
 } MinimumAbovePremiumFraction;
 
-// ---- Minimum Below Premium Fraction: 5 bytes ---------------------------------
-
-entrypoint typedef struct _MinimumBelowPremiumFraction {
+typedef struct _MinimumBelowPremiumFraction {
   UINT8 minimum_below_premium_fraction_exponent;     // byte 0, signed, read here as unsigned
   UINT32BE minimum_below_premium_fraction_mantissa;  // bytes 1 to 4, signed, read here as unsigned
 } MinimumBelowPremiumFraction;
 
-// ---- Md Entry Px: 5 bytes ----------------------------------------------------
+typedef struct _CurrencyCode {
+  UINT8 currency_code_length;                                 // byte 0
+  UINT8 currency_code_text[((UINT32) currency_code_length)];
+} CurrencyCode;
 
-entrypoint typedef struct _MdEntryPx {
+typedef struct _UnderlyingSymbol {
+  UINT8 underlying_symbol_length;                                     // byte 0
+  UINT8 underlying_symbol_text[((UINT32) underlying_symbol_length)];
+} UnderlyingSymbol;
+
+typedef struct _UnderlyingType {
+  UINT8 underlying_type_length;                                   // byte 0
+  UINT8 underlying_type_text[((UINT32) underlying_type_length)];
+} UnderlyingType;
+
+// Security Definition Leg
+typedef struct _SecurityDefinitionLeg {
+  UINT32BE leg_ratio_qty;    // bytes 0 to 3
+  UINT32BE leg_security_id;  // bytes 4 to 7
+  UINT8 leg_side;            // byte 8
+} SecurityDefinitionLeg;
+
+// Security definitions describe an exchange s products by name and trading parameters and associates those products with a product security ID.
+typedef struct _SecurityDefinitionMessage {
+  SecurityType security_type;
+  UINT8 security_exchange;
+  Symbol symbol;
+  TargetLocationId target_location_id;
+  UINT32BE class_key;
+  UINT32BE security_id;
+  UINT64BE maturity_date;
+  UINT8 price_type;
+  StrikePrice strike_price;
+  UINT8 put_or_call;
+  MinimumStrikePriceFraction minimum_strike_price_fraction;
+  MaxStrikePrice max_strike_price;
+  PremiumBreakPoint premium_break_point;
+  MinimumAbovePremiumFraction minimum_above_premium_fraction;
+  MinimumBelowPremiumFraction minimum_below_premium_fraction;
+  UINT8 exercise_style;
+  CurrencyCode currency_code;
+  UnderlyingSymbol underlying_symbol;
+  UnderlyingType underlying_type;
+  UINT32BE contract_size;
+  UINT8 no_legs;
+  SecurityDefinitionLeg security_definition_leg[:byte-size (((UINT32) no_legs) * 9)];
+} SecurityDefinitionMessage;
+
+typedef struct _MdEntryPx {
   UINT8 md_entry_px_exponent;     // byte 0, signed, read here as unsigned
   UINT32BE md_entry_px_mantissa;  // bytes 1 to 4, signed, read here as unsigned
 } MdEntryPx;
 
-// ---- Prev Close Px: 5 bytes --------------------------------------------------
+// MDEntry
+typedef struct _MdEntry {
+  UINT8 md_entry_type;     // byte 0
+  MdEntryPx md_entry_px;   // bytes 1 to 5
+  UINT32BE md_entry_size;  // bytes 6 to 9
+  UINT8 md_volume_type;    // byte 10
+} MdEntry;
 
-entrypoint typedef struct _PrevClosePx {
+// The Current Market Refresh message contains a snapshot of the current market information for one security along with the quantities and volume types for that particular security.
+typedef struct _CurrentMarketRefreshMessage {
+  UINT32BE class_key;                                         // bytes 0 to 3
+  UINT32BE security_id;                                       // bytes 4 to 7
+  UINT8 security_trading_status;                              // byte 8
+  UINT8 price_type;                                           // byte 9
+  UINT32BE appl_seq_num;                                      // bytes 10 to 13
+  UINT8 no_entries;                                           // byte 14
+  MdEntry md_entry[:byte-size (((UINT32) no_entries) * 11)];
+} CurrentMarketRefreshMessage;
+
+typedef struct _PrevClosePx {
   UINT8 prev_close_px_exponent;     // byte 0, signed, read here as unsigned
   UINT32BE prev_close_px_mantissa;  // bytes 1 to 4, signed, read here as unsigned
 } PrevClosePx;
 
-// ---- Eop: 5 bytes ------------------------------------------------------------
+// The Market Data Refresh message contains a snapshot / refresh of the Current Market and Recap information (Last Sale, Last Sale Size, Open, High, Low, Previous Close Price) for one product.
+typedef struct _MarketDataRefreshMessage {
+  UINT32BE class_key;                                         // bytes 0 to 3
+  UINT32BE security_id;                                       // bytes 4 to 7
+  UINT8 security_trading_status;                              // byte 8
+  UINT8 price_type;                                           // byte 9
+  UINT32BE appl_seq_num;                                      // bytes 10 to 13
+  PrevClosePx prev_close_px;                                  // bytes 14 to 18
+  UINT32BE trade_volume;                                      // bytes 19 to 22
+  UINT8 no_entries;                                           // byte 23
+  MdEntry md_entry[:byte-size (((UINT32) no_entries) * 11)];
+} MarketDataRefreshMessage;
 
-entrypoint typedef struct _Eop {
+// The Current Market Update message contains real-time top of book market updates for a security.
+typedef struct _CurrentMarketUpdateMessage {
+  UINT32BE class_key;                                         // bytes 0 to 3
+  UINT32BE security_id;                                       // bytes 4 to 7
+  UINT8 security_trading_status;                              // byte 8
+  UINT8 price_type;                                           // byte 9
+  UINT8 no_entries;                                           // byte 10
+  MdEntry md_entry[:byte-size (((UINT32) no_entries) * 11)];
+} CurrentMarketUpdateMessage;
+
+// MDEntry indicating market data
+typedef struct _RecapUpdateMdEntry {
+  UINT8 md_entry_type;     // byte 0
+  MdEntryPx md_entry_px;   // bytes 1 to 5
+  UINT32BE md_entry_size;  // bytes 6 to 9
+} RecapUpdateMdEntry;
+
+// The Recap Update message contains the latest Last Sale price, Last Sale size, Total Volume, Open price, High price, Low price, and Previous close price. It is sent as a result of a trade or cancel.
+typedef struct _RecapUpdateMessage {
+  UINT32BE class_key;                                                                 // bytes 0 to 3
+  UINT32BE security_id;                                                               // bytes 4 to 7
+  UINT8 price_type;                                                                   // byte 8
+  PrevClosePx prev_close_px;                                                          // bytes 9 to 13
+  UINT32BE trade_volume;                                                              // bytes 14 to 17
+  UINT8 no_entries;                                                                   // byte 18
+  RecapUpdateMdEntry recap_update_md_entry[:byte-size (((UINT32) no_entries) * 10)];
+} RecapUpdateMessage;
+
+typedef struct _TradeCondition {
+  UINT8 trade_condition_length;                                   // byte 0
+  UINT8 trade_condition_text[((UINT32) trade_condition_length)];
+} TradeCondition;
+
+// Volume Entry for this price level.
+typedef struct _TickerMdEntry (mutable UINT32 * tally) {
+  UINT8 md_entry_type;                                                                                                                                             // byte 0
+  MdEntryPx md_entry_px;                                                                                                                                           // bytes 1 to 5
+  UINT32BE md_entry_size;                                                                                                                                          // bytes 6 to 9
+  TradeCondition trade_condition;
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} TickerMdEntry;
+
+// A Ticker message indicates that a trade or cancel has occurred.
+typedef struct _TickerMessage (UINT32 available, mutable UINT32 * tally) where (available >= 10) {
+  UINT32BE class_key;                                                                                                            // bytes 0 to 3
+  UINT32BE security_id;                                                                                                          // bytes 4 to 7
+  UINT8 price_type;                                                                                                              // byte 8
+  UINT8 no_entries;                                                                                                              // byte 9
+  unit ticker_md_entry_tally_start {:on-success *tally = 0; return true; };
+  TickerMdEntry(tally) ticker_md_entry[:byte-size (available - 10)];
+  unit ticker_md_entry_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) no_entries); };
+} TickerMessage;
+
+typedef struct _Eop {
   UINT8 eop_exponent;     // byte 0, signed, read here as unsigned
   UINT32BE eop_mantissa;  // bytes 1 to 4, signed, read here as unsigned
 } Eop;
 
-// ---- Expected Opening Price And Size Message: 19 bytes -----------------------
-
 // The EOP message contains expected opening price and size information for a security.
-entrypoint typedef struct _ExpectedOpeningPriceAndSizeMessage {
+typedef struct _ExpectedOpeningPriceAndSizeMessage {
   UINT32BE class_key;    // bytes 0 to 3
   UINT32BE security_id;  // bytes 4 to 7
   Eop eop;               // bytes 8 to 12
@@ -110,24 +335,104 @@ entrypoint typedef struct _ExpectedOpeningPriceAndSizeMessage {
   UINT8 legal_market;    // byte 18
 } ExpectedOpeningPriceAndSizeMessage;
 
-// ---- Net Chg Prev Day: 5 bytes -----------------------------------------------
+// Market data associated with the index
+typedef struct _IndexValueMdEntry {
+  UINT8 md_entry_type;    // byte 0
+  MdEntryPx md_entry_px;  // bytes 1 to 5
+} IndexValueMdEntry;
 
-entrypoint typedef struct _NetChgPrevDay {
+// Index value messages contain the values associated with a calculated index. They are transmitted when an index is calculated.
+typedef struct _IndexValueMessage {
+  Symbol symbol;
+  UINT8 no_entries;
+  IndexValueMdEntry index_value_md_entry[:byte-size (((UINT32) no_entries) * 6)];
+} IndexValueMessage;
+
+// The settlement price
+typedef struct _SettlementValueMdEntry {
+  UINT8 md_entry_type;    // byte 0
+  MdEntryPx md_entry_px;  // bytes 1 to 5
+} SettlementValueMdEntry;
+
+// Index value messages contain the values associated with a calculated index. They are transmitted when an index is calculated.
+typedef struct _SettlementValueMessage {
+  UINT32BE class_key;                                                                        // bytes 0 to 3
+  UINT32BE security_id;                                                                      // bytes 4 to 7
+  UINT8 price_type;                                                                          // byte 8
+  UINT8 no_entries;                                                                          // byte 9
+  SettlementValueMdEntry settlement_value_md_entry[:byte-size (((UINT32) no_entries) * 6)];
+} SettlementValueMessage;
+
+typedef struct _NetChgPrevDay {
   UINT8 net_chg_prev_day_exponent;     // byte 0, signed, read here as unsigned
   UINT32BE net_chg_prev_day_mantissa;  // bytes 1 to 4, signed, read here as unsigned
 } NetChgPrevDay;
 
-// ---- Underlying Px: 5 bytes --------------------------------------------------
-
-entrypoint typedef struct _UnderlyingPx {
+typedef struct _UnderlyingPx {
   UINT8 underlying_px_exponent;     // byte 0, signed, read here as unsigned
   UINT32BE underlying_px_mantissa;  // bytes 1 to 4, signed, read here as unsigned
 } UnderlyingPx;
 
-// ---- Market Data Control Message: 1 byte -------------------------------------
+// Summary market data
+typedef struct _SummaryMdEntry {
+  UINT8 md_entry_type;    // byte 0
+  MdEntryPx md_entry_px;  // bytes 1 to 5
+} SummaryMdEntry;
+
+// Summary messages contain the end of session market data for each product.
+typedef struct _SummaryMessage {
+  UINT32BE class_key;                                                       // bytes 0 to 3
+  UINT32BE security_id;                                                     // bytes 4 to 7
+  UINT8 price_type;                                                         // byte 8
+  UINT32BE trade_volume;                                                    // bytes 9 to 12
+  UINT32BE open_interest;                                                   // bytes 13 to 16
+  NetChgPrevDay net_chg_prev_day;                                           // bytes 17 to 21
+  UnderlyingPx underlying_px;                                               // bytes 22 to 26
+  UINT8 no_entries;                                                         // byte 27
+  SummaryMdEntry summary_md_entry[:byte-size (((UINT32) no_entries) * 6)];
+} SummaryMessage;
 
 // Market Data Control messages mark the start and end of the end of session Summary and the end of session Settlement data transmissions.
-entrypoint typedef struct _MarketDataControlMessage {
+typedef struct _MarketDataControlMessage {
   UINT8 md_control_type;  // byte 0
 } MarketDataControlMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available, mutable UINT32 * tally) {
+  switch (selector) {
+    case 0x0D: SecurityDefinitionMessage security_definition_message;
+    case 0x0B: CurrentMarketRefreshMessage current_market_refresh_message;
+    case 0x14: MarketDataRefreshMessage market_data_refresh_message;
+    case 0x0C: CurrentMarketUpdateMessage current_market_update_message;
+    case 0x15: RecapUpdateMessage recap_update_message;
+    case 0x0E: TickerMessage(available, tally) ticker_message;
+    case 0x0F: ExpectedOpeningPriceAndSizeMessage expected_opening_price_and_size_message;
+    case 0x16: IndexValueMessage index_value_message;
+    case 0x17: SettlementValueMessage settlement_value_message;
+    case 0x18: SummaryMessage summary_message;
+    case 0x19: MarketDataControlMessage market_data_control_message;
+    case 0x10: unit heartbeat_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16BE message_length { message_length >= 8 };                                                                                        // bytes 0 to 1
+  UINT8 template_id;                                                                                                                      // byte 2
+  UINT8 message_type;                                                                                                                     // byte 3
+  UINT32BE msg_seq_num;                                                                                                                   // bytes 4 to 7
+  Payload(template_id, (((UINT32) message_length) - 8), tally) payload[:byte-size-single-element-array (((UINT32) message_length) - 8)];
+} Message;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Csm Udp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 16) {
+  UINT8 version;                                        // byte 0
+  UINT16BE packet_length;                               // bytes 1 to 2
+  UINT64BE sending_time;                                // bytes 3 to 10
+  UINT8 message_count;                                  // byte 11
+  UINT32BE first_msg_seq_num;                           // bytes 12 to 15
+  Message(tally) message[:byte-size (available - 16)];
+} Packet;
 

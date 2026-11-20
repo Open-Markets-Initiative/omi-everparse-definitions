@@ -1,34 +1,117 @@
-// A2X Markets Real Time Market Data Feed
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: A2X Rtmdf Amd v2.5
 //
+// Protocol:
+//   Organization: A2X Markets
+//   Protocol: Real Time Market Data Feed
+//   Encoding: A2X Market Data
+//   Version: 2.5
+//   Date: 8/1/2026
+//   Specification: A2X Market Data Technical Specification v2.5.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out A2XEquities_Rtmdf_v2_5.3d
-//
-// What this definition does not state, and the model does:
-// - a run counted by a field
-// - a field read in bits
-//
-// License: MIT No Attribution
 
-// ---- Message Header: 6 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// A2X message header
-entrypoint typedef struct _MessageHeader {
-  UINT8 msg_type;    // byte 0
-  UINT8 msg_length;  // byte 1
-  UINT32 seq_no;     // bytes 2 to 5
-} MessageHeader;
+// Msg Type: one byte code
+#define MSG_TYPE_HEARTBEAT_MESSAGE 0x01            // Heartbeat Message
+#define MSG_TYPE_ORDER_ADD_MESSAGE 0x02            // Order Add Message
+#define MSG_TYPE_ORDER_CANCEL_MESSAGE 0x03         // Order Cancel Message
+#define MSG_TYPE_ORDER_MODIFY_MESSAGE 0x04         // Order Modify Message
+#define MSG_TYPE_TRADE_MESSAGE 0x05                // Trade Message
+#define MSG_TYPE_TRADE_BUST_MESSAGE 0x06           // Trade Bust Message
+#define MSG_TYPE_TICK_TABLE_DATA_MESSAGE 0x07      // Tick Table Data Message
+#define MSG_TYPE_SECURITY_DEFINITION_MESSAGE 0x08  // Security Definition Message
+#define MSG_TYPE_SECURITY_STATUS_MESSAGE 0x09      // Security Status Message
+#define MSG_TYPE_MAC_UPDATE_MESSAGE 0x10           // Mac Update Message
+#define MSG_TYPE_AOD_UPDATE_MESSAGE 0x11           // Aod Update Message
 
-// ---- Trade Message: 31 bytes -------------------------------------------------
+// Side: one byte code
+#define SIDE_BUY_ORDER 0x01   // Buy Order
+#define SIDE_SELL_ORDER 0x02  // Sell Order
+
+// Trade Type: one byte code
+#define TRADE_TYPE_VISIBLE 0x01                     // Visible
+#define TRADE_TYPE_HIDDEN_OR_RESERVE 0x02           // Hidden Or Reserve
+#define TRADE_TYPE_MARKET_AT_CLOSE_TRADE 0x03       // Market At Close Trade
+#define TRADE_TYPE_LARGE_IN_SCALE_CROSS_TRADE 0x04  // Large In Scale Cross Trade
+#define TRADE_TYPE_BENCHMARK_CROSS_TRADE 0x05       // Benchmark Cross Trade
+#define TRADE_TYPE_AUCTION_ON_DEMAND_TRADE 0x06     // Auction On Demand Trade
+
+// Trading Status: one byte code
+#define TRADING_STATUS_ACTIVE 0x01     // Active
+#define TRADING_STATUS_HALTED 0x02     // Halted
+#define TRADING_STATUS_SUSPENDED 0x03  // Suspended
+#define TRADING_STATUS_AOD_START 0x08  // Aod Start
+#define TRADING_STATUS_AOD_END 0x18    // Aod End
+
+// ---- Types -------------------------------------------------------------------
+
+// The Order Add message is published when order quantity is posted to the order book for a particular security.
+typedef struct _OrderAddMessage {
+  UINT16 security_id;                // bytes 0 to 1
+  UINT8 side;                        // byte 2
+  UINT32 quantity;                   // bytes 3 to 6
+  UINT64 price;                      // bytes 7 to 14
+  UINT32 order_ref;                  // bytes 15 to 18
+  UINT64 timestamp;                  // bytes 19 to 26
+  UINT8 unrestricted_liquidity : 1;  // byte 27
+  UINT8 unused_7 : 7;                // byte 27
+} OrderAddMessage;
+
+// The Order Cancel message is published when a visible order is removed from the book.
+typedef struct _OrderCancelMessage {
+  UINT16 security_id;                // bytes 0 to 1
+  UINT32 order_ref;                  // bytes 2 to 5
+  UINT64 timestamp;                  // bytes 6 to 13
+  UINT8 unrestricted_liquidity : 1;  // byte 14
+  UINT8 unused_7 : 7;                // byte 14
+} OrderCancelMessage;
+
+// The Order Modify message is published when a visible order is modified by the client (change of price and/or quantity).
+typedef struct _OrderModifyMessage {
+  UINT16 security_id;                // bytes 0 to 1
+  UINT32 remaining_quantity;         // bytes 2 to 5
+  UINT64 price;                      // bytes 6 to 13
+  UINT32 order_ref;                  // bytes 14 to 17
+  UINT64 timestamp;                  // bytes 18 to 25
+  UINT8 unrestricted_liquidity : 1;  // byte 26
+  UINT8 unused_7 : 7;                // byte 26
+} OrderModifyMessage;
 
 // Whenever an order trades, partially or fully, a Trade message is published.
-entrypoint typedef struct _TradeMessage {
+typedef struct _TradeMessage {
   UINT16 security_id;      // bytes 0 to 1
   UINT8 trade_type;        // byte 2
   UINT32 traded_quantity;  // bytes 3 to 6
@@ -38,10 +121,8 @@ entrypoint typedef struct _TradeMessage {
   UINT64 timestamp;        // bytes 23 to 30
 } TradeMessage;
 
-// ---- Trade Bust Message: 26 bytes --------------------------------------------
-
 // If a trade has been declared erroneous by A2X then a Trade Bust message is published.
-entrypoint typedef struct _TradeBustMessage {
+typedef struct _TradeBustMessage {
   UINT16 security_id;      // bytes 0 to 1
   UINT32 traded_quantity;  // bytes 2 to 5
   UINT64 execution_price;  // bytes 6 to 13
@@ -49,20 +130,43 @@ entrypoint typedef struct _TradeBustMessage {
   UINT64 timestamp;        // bytes 18 to 25
 } TradeBustMessage;
 
-// ---- Tick Table Data Message: 27 bytes ---------------------------------------
-
 // A series of Tick Table Data messages are published pre-market to specify the dynamic tick tables and static ticks that apply to the securities traded on A2X.
-entrypoint typedef struct _TickTableDataMessage {
+typedef struct _TickTableDataMessage {
   UINT8 tick_table_id;  // byte 0
   UINT8 name[10];       // bytes 1 to 10
   UINT64 threshold;     // bytes 11 to 18
   UINT64 tick_size;     // bytes 19 to 26
 } TickTableDataMessage;
 
-// ---- Mac Update Message: 26 bytes --------------------------------------------
+// A series of Security Definition messages are published pre-market to identify the securities traded on A2X (those relevant to the particular feed).
+typedef struct _SecurityDefinitionMessage {
+  UINT16 security_id;      // bytes 0 to 1
+  UINT8 umtf[6];           // bytes 2 to 7
+  UINT8 isin[12];          // bytes 8 to 19
+  UINT8 currency[3];       // bytes 20 to 22
+  UINT8 mic[4];            // bytes 23 to 26
+  UINT8 tick_table_id;     // byte 27
+  UINT16 mac_enabled : 1;  // bytes 28 to 29
+  UINT16 test_stock : 1;   // bytes 28 to 29
+  UINT16 illiquid : 1;     // bytes 28 to 29
+  UINT16 unused_1 : 1;     // bytes 28 to 29
+  UINT16 aod_enabled : 1;  // bytes 28 to 29
+  UINT16 unused_11 : 11;   // bytes 28 to 29
+} SecurityDefinitionMessage;
+
+// The Security Status message is published when the trading status of a security changes or when there is a change to the status of the market on A2X to which the security belongs.
+typedef struct _SecurityStatusMessage {
+  UINT16 security_id;    // bytes 0 to 1
+  UINT8 trading_status;  // byte 2
+  UINT8 trading : 1;     // byte 3
+  UINT8 mac_open : 1;    // byte 3
+  UINT8 mac_run : 1;     // byte 3
+  UINT8 unused_5 : 5;    // byte 3
+  UINT64 timestamp;      // bytes 4 to 11
+} SecurityStatusMessage;
 
 // During the MaC this message is used to publish the indicative price from the buy and sell order totals.
-entrypoint typedef struct _MacUpdateMessage {
+typedef struct _MacUpdateMessage {
   UINT16 security_id;       // bytes 0 to 1
   UINT64 indicative_price;  // bytes 2 to 9
   UINT32 closing_buy_qty;   // bytes 10 to 13
@@ -70,13 +174,48 @@ entrypoint typedef struct _MacUpdateMessage {
   UINT64 timestamp;         // bytes 18 to 25
 } MacUpdateMessage;
 
-// ---- Aod Update Message: 22 bytes --------------------------------------------
-
 // During the AoD this message is used to publish the indicative price and indicative matched volume.
-entrypoint typedef struct _AodUpdateMessage {
+typedef struct _AodUpdateMessage {
   UINT16 security_id;       // bytes 0 to 1
   UINT64 indicative_price;  // bytes 2 to 9
   UINT32 match_vol;         // bytes 10 to 13
   UINT64 timestamp;         // bytes 14 to 21
 } AodUpdateMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x01: unit heartbeat_message;
+    case 0x02: OrderAddMessage order_add_message;
+    case 0x03: OrderCancelMessage order_cancel_message;
+    case 0x04: OrderModifyMessage order_modify_message;
+    case 0x05: TradeMessage trade_message;
+    case 0x06: TradeBustMessage trade_bust_message;
+    case 0x07: TickTableDataMessage tick_table_data_message;
+    case 0x08: SecurityDefinitionMessage security_definition_message;
+    case 0x09: SecurityStatusMessage security_status_message;
+    case 0x10: MacUpdateMessage mac_update_message;
+    case 0x11: AodUpdateMessage aod_update_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// A2X Amd Message
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT8 msg_type;                                                                                                                                                  // byte 0
+  UINT8 msg_length { msg_length >= 6 };                                                                                                                            // byte 1
+  UINT32 seq_no;                                                                                                                                                   // bytes 2 to 5
+  Payload(msg_type, (((UINT32) msg_length) - 6)) payload[:byte-size-single-element-array (((UINT32) msg_length) - 6)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// A2X Udp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 1) {
+  UINT8 message_count;                                                                                                      // byte 0
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size (available - 1)];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} Packet;
 

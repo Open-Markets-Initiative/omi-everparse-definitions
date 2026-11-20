@@ -1,87 +1,242 @@
-// 24 National Exchange Members Orders
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: 24X Memo Sbe v2.0
 //
+// Protocol:
+//   Organization: 24 National Exchange
+//   Protocol: Members Orders
+//   Encoding: Simple Binary Encoding
+//   Version: 2.0
+//   Date: 9/25/2026
+//   Specification: MEMO SBE-v2.0.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ClientPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out V24XEquities_Memo_v2_0_Client.3d
-//
-// What this definition does not state, and the model does:
-// - a Reassemble rule
-// - the dispatch that chooses a message by its type
-// - a field read in bits
-// - a block whose stated length holds more than its fields
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Common Header: 3 bytes --------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Tcp Common Header
-entrypoint typedef struct _CommonHeader {
-  UINT8 message_type;       // byte 0
-  UINT16BE message_length;  // bytes 1 to 2
-} CommonHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_HEARTBEAT 0x00            // Heartbeat
+#define MESSAGE_TYPE_LOGIN_REQUEST 0x64        // Login Request
+#define MESSAGE_TYPE_REPLAY_REQUEST 0x65       // Replay Request
+#define MESSAGE_TYPE_REPLAY_ALL_REQUEST 0x66   // Replay All Request
+#define MESSAGE_TYPE_STREAM_REQUEST 0x67       // Stream Request
+#define MESSAGE_TYPE_UNSEQUENCED_MESSAGE 0x68  // Unsequenced Message
+#define MESSAGE_TYPE_LOGIN_ACCEPTED 0x01       // Login Accepted
+#define MESSAGE_TYPE_LOGIN_REJECTED 0x02       // Login Rejected
+#define MESSAGE_TYPE_START_OF_SESSION 0x03     // Start Of Session
+#define MESSAGE_TYPE_END_OF_SESSION 0x04       // End Of Session
+#define MESSAGE_TYPE_REPLAY_BEGIN 0x05         // Replay Begin
+#define MESSAGE_TYPE_REPLAY_REJECTED 0x06      // Replay Rejected
+#define MESSAGE_TYPE_REPLAY_COMPLETE 0x07      // Replay Complete
+#define MESSAGE_TYPE_STREAM_BEGIN 0x08         // Stream Begin
+#define MESSAGE_TYPE_STREAM_REJECTED 0x09      // Stream Rejected
+#define MESSAGE_TYPE_STREAM_COMPLETE 0x0A      // Stream Complete
+#define MESSAGE_TYPE_SEQUENCED_MESSAGE 0x0B    // Sequenced Message
 
-// ---- Login Request Message: 2 bytes ------------------------------------------
+// Template Id: one byte code
+#define TEMPLATE_ID_NEW_ORDER_SINGLE_MESSAGE 0x01                   // New Order Single Message
+#define TEMPLATE_ID_ORDER_CANCEL_REPLACE_REQUEST_MESSAGE 0x02       // Order Cancel Replace Request Message
+#define TEMPLATE_ID_ORDER_CANCEL_REQUEST_MESSAGE 0x03               // Order Cancel Request Message
+#define TEMPLATE_ID_MASS_CANCEL_REQUEST_MESSAGE 0x04                // Mass Cancel Request Message
+#define TEMPLATE_ID_EXECUTION_REPORT_NEW_MESSAGE 0x06               // Execution Report New Message
+#define TEMPLATE_ID_EXECUTION_REPORT_REJECTED_MESSAGE 0x07          // Execution Report Rejected Message
+#define TEMPLATE_ID_EXECUTION_REPORT_TRADE_MESSAGE 0x08             // Execution Report Trade Message
+#define TEMPLATE_ID_EXECUTION_REPORT_PENDING_CANCEL_MESSAGE 0x09    // Execution Report Pending Cancel Message
+#define TEMPLATE_ID_PENDING_MASS_CANCEL_MESSAGE 0x0A                // Pending Mass Cancel Message
+#define TEMPLATE_ID_EXECUTION_REPORT_CANCELED_MESSAGE 0x0B          // Execution Report Canceled Message
+#define TEMPLATE_ID_MASS_CANCEL_DONE_MESSAGE 0x0C                   // Mass Cancel Done Message
+#define TEMPLATE_ID_EXECUTION_REPORT_PENDING_REPLACE_MESSAGE 0x0D   // Execution Report Pending Replace Message
+#define TEMPLATE_ID_EXECUTION_REPORT_REPLACED_MESSAGE 0x0E          // Execution Report Replaced Message
+#define TEMPLATE_ID_EXECUTION_REPORT_TRADE_CORRECTION_MESSAGE 0x0F  // Execution Report Trade Correction Message
+#define TEMPLATE_ID_EXECUTION_REPORT_TRADE_BREAK_MESSAGE 0x10       // Execution Report Trade Break Message
+#define TEMPLATE_ID_EXECUTION_REPORT_RESTATEMENT_MESSAGE 0x11       // Execution Report Restatement Message
+#define TEMPLATE_ID_ORDER_CANCEL_REJECT_MESSAGE 0x12                // Order Cancel Reject Message
+#define TEMPLATE_ID_MASS_CANCEL_REJECT_MESSAGE 0x14                 // Mass Cancel Reject Message
+
+// Side: one byte code
+#define SIDE_BUY 0x31                // Buy
+#define SIDE_SELL 0x32               // Sell
+#define SIDE_SELL_SHORT 0x35         // Sell Short
+#define SIDE_SELL_SHORT_EXEMPT 0x36  // Sell Short Exempt
+
+// Ord Type: one byte code
+#define ORD_TYPE_MARKET 0x31  // Market
+#define ORD_TYPE_LIMIT 0x32   // Limit
+#define ORD_TYPE_PEGGED 0x50  // Pegged
+
+// Time In Force: one byte code
+#define TIME_IN_FORCE_DAY 0x30                  // Day
+#define TIME_IN_FORCE_AT_THE_OPEN 0x32          // At The Open
+#define TIME_IN_FORCE_IMMEDIATE_OR_CANCEL 0x33  // Immediate Or Cancel
+#define TIME_IN_FORCE_FILL_OR_KILL 0x34         // Fill Or Kill
+#define TIME_IN_FORCE_AT_THE_CLOSE 0x37         // At The Close
+#define TIME_IN_FORCE_GOOD_FOR_TIME 0x41        // Good For Time
+#define TIME_IN_FORCE_REGULAR_HOURS_ONLY 0x46   // Regular Hours Only
+
+// Order Capacity: one byte code
+#define ORDER_CAPACITY_AGENCY 0x41              // Agency
+#define ORDER_CAPACITY_PRINCIPAL 0x50           // Principal
+#define ORDER_CAPACITY_RISKLESS_PRINCIPAL 0x52  // Riskless Principal
+
+// Cust Order Capacity Optional: one byte code
+#define CUST_ORDER_CAPACITY_OPTIONAL_MEMBER_TRADING_ON_THEIR_OWN_ACCOUNT 0x01  // Member Trading On Their Own Account
+#define CUST_ORDER_CAPACITY_OPTIONAL_RETAIL_CUSTOMER 0x05                      // Retail Customer
+#define CUST_ORDER_CAPACITY_OPTIONAL_NULL_VALUE 0xFF                           // Null Value
+
+// Peg Price Type: one byte code
+#define PEG_PRICE_TYPE_MID_PRICE_PEG 0x02  // Mid Price Peg
+#define PEG_PRICE_TYPE_PRIMARY_PEG 0x05    // Primary Peg
+#define PEG_PRICE_TYPE_NULL_VALUE 0xFF     // Null Value
+
+// Display Method: one byte code
+#define DISPLAY_METHOD_INITIAL 0x31      // Initial
+#define DISPLAY_METHOD_RANDOM 0x33       // Random
+#define DISPLAY_METHOD_UNDISCLOSED 0x34  // Undisclosed
+
+// Reserve Replenish Timing: one byte code
+#define RESERVE_REPLENISH_TIMING_IMMEDIATE 0x01   // Immediate
+#define RESERVE_REPLENISH_TIMING_RANDOM 0x02      // Random
+#define RESERVE_REPLENISH_TIMING_NULL_VALUE 0xFF  // Null Value
+
+// Reprice Frequency: one byte code
+#define REPRICE_FREQUENCY_SINGLE_REPRICE 0x00      // Single Reprice
+#define REPRICE_FREQUENCY_CONTINUOUS_REPRICE 0x01  // Continuous Reprice
+#define REPRICE_FREQUENCY_NONE 0x02                // None
+#define REPRICE_FREQUENCY_NULL_VALUE 0xFF          // Null Value
+
+// Reprice Behavior: one byte code
+#define REPRICE_BEHAVIOR_REPRICE_LOCK_CANCEL_CROSS 0x01   // Reprice Lock Cancel Cross
+#define REPRICE_BEHAVIOR_REPRICE_LOCK_REPRICE_CROSS 0x02  // Reprice Lock Reprice Cross
+#define REPRICE_BEHAVIOR_NULL_VALUE 0xFF                  // Null Value
+
+// Self Trade Prevention: one byte code
+#define SELF_TRADE_PREVENTION_CANCEL_NEWEST 0x00         // Cancel Newest
+#define SELF_TRADE_PREVENTION_CANCEL_OLDEST 0x01         // Cancel Oldest
+#define SELF_TRADE_PREVENTION_DECREMENT_AND_CANCEL 0x02  // Decrement And Cancel
+#define SELF_TRADE_PREVENTION_CANCEL_BOTH 0x03           // Cancel Both
+#define SELF_TRADE_PREVENTION_CANCEL_SMALLEST 0x04       // Cancel Smallest
+#define SELF_TRADE_PREVENTION_NULL_VALUE 0xFF            // Null Value
+
+// Party Role: one byte code
+#define PARTY_ROLE_EXECUTING_FIRM 0x01  // Executing Firm
+
+// Side Optional: one byte code
+#define SIDE_OPTIONAL_BUY 0x31                // Buy
+#define SIDE_OPTIONAL_SELL 0x32               // Sell
+#define SIDE_OPTIONAL_SELL_SHORT 0x35         // Sell Short
+#define SIDE_OPTIONAL_SELL_SHORT_EXEMPT 0x36  // Sell Short Exempt
+
+// ---- Types -------------------------------------------------------------------
 
 // 24X Tcp Login message
-entrypoint typedef struct _LoginRequestMessage {
+typedef struct _LoginRequestMessage {
   UINT8 token_type;  // byte 0
   UINT8 token;       // byte 1
 } LoginRequestMessage;
 
-// ---- Replay Request Message: 20 bytes ----------------------------------------
-
 // 24X Tcp Replay Request message
-entrypoint typedef struct _ReplayRequestMessage {
+typedef struct _ReplayRequestMessage {
   UINT64BE session_id;            // bytes 0 to 7
   UINT64BE next_sequence_number;  // bytes 8 to 15
   UINT32BE count;                 // bytes 16 to 19
 } ReplayRequestMessage;
 
-// ---- Replay All Request Message: 8 bytes -------------------------------------
-
 // 24X Tcp Replay All Request message
-entrypoint typedef struct _ReplayAllRequestMessage {
+typedef struct _ReplayAllRequestMessage {
   UINT64BE session_id;  // bytes 0 to 7
 } ReplayAllRequestMessage;
 
-// ---- Stream Request Message: 16 bytes ----------------------------------------
-
 // 24X Tcp Stream Request message
-entrypoint typedef struct _StreamRequestMessage {
+typedef struct _StreamRequestMessage {
   UINT64BE session_id;            // bytes 0 to 7
   UINT64BE next_sequence_number;  // bytes 8 to 15
 } StreamRequestMessage;
 
-// ---- Sbe Header: 7 bytes -----------------------------------------------------
+// Parties
+typedef struct _PartiesGroup {
+  UINT8 party_id_new_order_single_party_id[16];  // bytes 0 to 15
+  UINT8 party_id_source;                         // byte 16
+  UINT8 party_role;                              // byte 17
+} PartiesGroup;
 
-// Sbe Header
-entrypoint typedef struct _SbeHeader {
-  UINT16BE block_length;  // bytes 0 to 1
-  UINT8 template_id;      // byte 2
-  UINT8 schema_id;        // byte 3
-  UINT16BE version;       // bytes 4 to 5
-  UINT8 num_groups;       // byte 6
-} SbeHeader;
+// Parties Block
+typedef struct _PartiesGroups {
+  UINT8 block_length_short;                                               // byte 0
+  UINT8 num_in_group;                                                     // byte 1
+  PartiesGroup parties_group[:byte-size (((UINT32) num_in_group) * 18)];
+} PartiesGroups;
 
-// ---- Repeating Group Dimensions: 2 bytes -------------------------------------
-
-// RepeatingGroupDimensions
-entrypoint typedef struct _RepeatingGroupDimensions {
-  UINT8 block_length_short;  // byte 0
-  UINT8 num_in_group;        // byte 1
-} RepeatingGroupDimensions;
-
-// ---- Order Cancel Replace Request Message: 71 bytes --------------------------
+// NewOrderSingleMessage
+typedef struct _NewOrderSingleMessage {
+  UINT8 cl_ord_id[16];                        // bytes 0 to 15
+  UINT8 symbol[6];                            // bytes 16 to 21
+  UINT8 symbol_sfx[6];                        // bytes 22 to 27
+  UINT8 side;                                 // byte 28
+  UINT32BE order_qty;                         // bytes 29 to 32
+  UINT8 ord_type;                             // byte 33
+  UINT64BE price;                             // bytes 34 to 41, signed, read here as unsigned
+  UINT8 time_in_force;                        // byte 42
+  UINT8 order_capacity;                       // byte 43
+  UINT8 cust_order_capacity_optional;         // byte 44
+  UINT16BE reserved_13 : 13;                  // bytes 45 to 46
+  UINT16BE external_routing_not_allowed : 1;  // bytes 45 to 46
+  UINT16BE intermarket_sweep : 1;             // bytes 45 to 46
+  UINT16BE participate_do_not_initiate : 1;   // bytes 45 to 46
+  UINT16BE reserved_14 : 14;                  // bytes 47 to 48
+  UINT16BE non_attested_retail : 1;           // bytes 47 to 48
+  UINT16BE late_auction : 1;                  // bytes 47 to 48
+  UINT64BE peg_offset_value;                  // bytes 49 to 56, signed, read here as unsigned
+  UINT8 peg_price_type;                       // byte 57
+  UINT64BE expire_time;                       // bytes 58 to 65
+  UINT32BE min_qty;                           // bytes 66 to 69
+  UINT32BE display_qty;                       // bytes 70 to 73
+  UINT8 display_method;                       // byte 74
+  UINT8 reserve_replenish_timing;             // byte 75
+  UINT32BE display_min_incr;                  // bytes 76 to 79
+  UINT8 locate_reqd;                          // byte 80
+  UINT8 reprice_frequency;                    // byte 81
+  UINT8 reprice_behavior;                     // byte 82
+  UINT16BE cancel_group_id;                   // bytes 83 to 84
+  UINT16BE stp_group_id;                      // bytes 85 to 86
+  UINT8 self_trade_prevention;                // byte 87
+  UINT16BE risk_group_id;                     // bytes 88 to 89
+  UINT8 link_id_optional[4];                  // bytes 90 to 93
+  UINT8 locate_broker_optional[4];            // bytes 94 to 97
+  PartiesGroups parties_groups;
+} NewOrderSingleMessage;
 
 // OrderCancelReplaceRequestMessage
-entrypoint typedef struct _OrderCancelReplaceRequestMessage {
+typedef struct _OrderCancelReplaceRequestMessage {
   UINT8 orig_cl_ord_id[16];         // bytes 0 to 15
   UINT8 cl_ord_id[16];              // bytes 16 to 31
   UINT8 symbol[6];                  // bytes 32 to 37
@@ -96,10 +251,8 @@ entrypoint typedef struct _OrderCancelReplaceRequestMessage {
   UINT8 locate_broker_optional[4];  // bytes 67 to 70
 } OrderCancelReplaceRequestMessage;
 
-// ---- Order Cancel Request Message: 52 bytes ----------------------------------
-
 // OrderCancelRequestMessage
-entrypoint typedef struct _OrderCancelRequestMessage {
+typedef struct _OrderCancelRequestMessage {
   UINT8 orig_cl_ord_id_optional[16];  // bytes 0 to 15
   UINT64BE order_id_optional;         // bytes 16 to 23
   UINT8 cl_ord_id[16];                // bytes 24 to 39
@@ -107,10 +260,8 @@ entrypoint typedef struct _OrderCancelRequestMessage {
   UINT8 symbol_sfx[6];                // bytes 46 to 51
 } OrderCancelRequestMessage;
 
-// ---- Mass Cancel Request Message: 47 bytes -----------------------------------
-
 // MassCancelRequestMessage
-entrypoint typedef struct _MassCancelRequestMessage {
+typedef struct _MassCancelRequestMessage {
   UINT8 cl_ord_id[16];         // bytes 0 to 15
   UINT8 symbol[6];             // bytes 16 to 21
   UINT8 symbol_sfx[6];         // bytes 22 to 27
@@ -119,4 +270,51 @@ entrypoint typedef struct _MassCancelRequestMessage {
   UINT64BE higher_than_price;  // bytes 37 to 44, signed, read here as unsigned
   UINT16BE cancel_group_id;    // bytes 45 to 46
 } MassCancelRequestMessage;
+
+// Memo message body sent by the firm to 24X
+casetype _ClientPayload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x01: NewOrderSingleMessage new_order_single_message;
+    case 0x02: OrderCancelReplaceRequestMessage order_cancel_replace_request_message;
+    case 0x03: OrderCancelRequestMessage order_cancel_request_message;
+    case 0x04: MassCancelRequestMessage mass_cancel_request_message;
+    default: UINT8 unknown[available];
+  }
+} ClientPayload;
+
+// Sbe message sent by the firm to 24X
+typedef struct _ClientSbeMessage (UINT32 available) where (available >= 7) {
+  UINT16BE block_length;                                                                                        // bytes 0 to 1
+  UINT8 template_id;                                                                                            // byte 2
+  UINT8 schema_id;                                                                                              // byte 3
+  UINT16BE version;                                                                                             // bytes 4 to 5
+  UINT8 num_groups;                                                                                             // byte 6
+  ClientPayload(template_id, (available - 7)) client_payload[:byte-size-single-element-array (available - 7)];
+} ClientSbeMessage;
+
+// 24X Tcp unsequenced message
+typedef struct _UnsequencedMessage (UINT32 available) {
+  ClientSbeMessage(available) client_sbe_message;
+} UnsequencedMessage;
+
+// Session message body sent by the firm to 24X, dispatched on the message type
+casetype _ClientData (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x64: LoginRequestMessage login_request_message;
+    case 0x65: ReplayRequestMessage replay_request_message;
+    case 0x66: ReplayAllRequestMessage replay_all_request_message;
+    case 0x67: StreamRequestMessage stream_request_message;
+    case 0x68: UnsequencedMessage(available) unsequenced_message;
+    default: UINT8 unknown[available];
+  }
+} ClientData;
+
+// ---- Packet: ClientPacket ----------------------------------------------------
+
+// 24X Tcp packet sent by the firm to 24X
+entrypoint typedef struct _ClientPacket {
+  UINT8 message_type;                                                                                                          // byte 0
+  UINT16BE message_length;                                                                                                     // bytes 1 to 2
+  ClientData(message_type, ((UINT32) message_length)) client_data[:byte-size-single-element-array ((UINT32) message_length)];
+} ClientPacket;
 

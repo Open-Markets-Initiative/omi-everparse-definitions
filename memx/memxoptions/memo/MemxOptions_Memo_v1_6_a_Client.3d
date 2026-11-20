@@ -1,5 +1,34 @@
-// The Members Exchange Members Orders
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Memx MemxOptions Memo Sbe v1.6.a
 //
+// Protocol:
+//   Organization: The Members Exchange
+//   Protocol: Members Orders
+//   Encoding: Simple Binary Encoding
+//   Version: 1.6.a
+//   Date: 11/13/2023
+//   Specification: MEMO for US Options - SBE-v1_6b.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
 // writes a C validator for each record below and proves, of that C, that it reads no byte
 // outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
@@ -7,6 +36,8 @@
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out MemxOptions_Memo_v1_6_a_Client.3d
 //
@@ -16,14 +47,81 @@
 // - a field read in bits
 // - a block whose stated length holds more than its fields
 // - a run counted by a field
-//
-// License: MIT No Attribution
+// - the packet as a whole, which is what is left of a frame, after a member of no fixed or computed width, at clientpacket.clientdata.unsequencedmessage.clientsbemessage.clientpayload.allocationinstructionmessage.requestedallocationsgroups
+
+// ---- Values ------------------------------------------------------------------
+
+// Message Type: one byte code
+#define MESSAGE_TYPE_HEARTBEAT 0x00            // Heartbeat
+#define MESSAGE_TYPE_LOGIN_REQUEST 0x64        // Login Request
+#define MESSAGE_TYPE_REPLAY_REQUEST 0x65       // Replay Request
+#define MESSAGE_TYPE_REPLAY_ALL_REQUEST 0x66   // Replay All Request
+#define MESSAGE_TYPE_STREAM_REQUEST 0x67       // Stream Request
+#define MESSAGE_TYPE_UNSEQUENCED_MESSAGE 0x68  // Unsequenced Message
+#define MESSAGE_TYPE_LOGIN_ACCEPTED 0x01       // Login Accepted
+#define MESSAGE_TYPE_LOGIN_REJECTED 0x02       // Login Rejected
+#define MESSAGE_TYPE_START_OF_SESSION 0x03     // Start Of Session
+#define MESSAGE_TYPE_END_OF_SESSION 0x04       // End Of Session
+#define MESSAGE_TYPE_REPLAY_BEGIN 0x05         // Replay Begin
+#define MESSAGE_TYPE_REPLAY_REJECTED 0x06      // Replay Rejected
+#define MESSAGE_TYPE_REPLAY_COMPLETE 0x07      // Replay Complete
+#define MESSAGE_TYPE_STREAM_BEGIN 0x08         // Stream Begin
+#define MESSAGE_TYPE_STREAM_REJECTED 0x09      // Stream Rejected
+#define MESSAGE_TYPE_STREAM_COMPLETE 0x0A      // Stream Complete
+#define MESSAGE_TYPE_SEQUENCED_MESSAGE 0x0B    // Sequenced Message
+
+// Template Id: one byte code
+#define TEMPLATE_ID_NEW_ORDER_SINGLE_MESSAGE 0x01                           // New Order Single Message
+#define TEMPLATE_ID_SHORT_TWO_SIDED_BULK_QUOTE_MESSAGE 0x02                 // Short Two Sided Bulk Quote Message
+#define TEMPLATE_ID_LONG_TWO_SIDED_BULK_QUOTE_MESSAGE 0x03                  // Long Two Sided Bulk Quote Message
+#define TEMPLATE_ID_SHORT_ONE_SIDED_BULK_QUOTE_MESSAGE 0x04                 // Short One Sided Bulk Quote Message
+#define TEMPLATE_ID_LONG_ONE_SIDED_BULK_QUOTE_MESSAGE 0x05                  // Long One Sided Bulk Quote Message
+#define TEMPLATE_ID_ORDER_CANCEL_REPLACE_REQUEST_MESSAGE 0x06               // Order Cancel Replace Request Message
+#define TEMPLATE_ID_ORDER_CANCEL_REQUEST_MESSAGE 0x07                       // Order Cancel Request Message
+#define TEMPLATE_ID_MASS_CANCEL_REQUEST_MESSAGE 0x08                        // Mass Cancel Request Message
+#define TEMPLATE_ID_MASS_CANCEL_CLEAR_LOCKOUT_REQUEST_MESSAGE 0x09          // Mass Cancel Clear Lockout Request Message
+#define TEMPLATE_ID_ALLOCATION_INSTRUCTION_MESSAGE 0x0A                     // Allocation Instruction Message
+#define TEMPLATE_ID_EXECUTION_REPORT_NEW_MESSAGE 0x0B                       // Execution Report New Message
+#define TEMPLATE_ID_EXECUTION_REPORT_BULK_QUOTE_PENDING_NEW_MESSAGE 0x0C    // Execution Report Bulk Quote Pending New Message
+#define TEMPLATE_ID_EXECUTION_REPORT_BULK_QUOTE_COMPONENT_NEW_MESSAGE 0x0D  // Execution Report Bulk Quote Component New Message
+#define TEMPLATE_ID_EXECUTION_REPORT_REJECTED_MESSAGE 0x0E                  // Execution Report Rejected Message
+#define TEMPLATE_ID_EXECUTION_REPORT_TRADE_MESSAGE 0x0F                     // Execution Report Trade Message
+#define TEMPLATE_ID_EXECUTION_REPORT_PENDING_CANCEL_MESSAGE 0x10            // Execution Report Pending Cancel Message
+#define TEMPLATE_ID_EXECUTION_REPORT_CANCELED_MESSAGE 0x11                  // Execution Report Canceled Message
+#define TEMPLATE_ID_EXECUTION_REPORT_PENDING_REPLACE_MESSAGE 0x12           // Execution Report Pending Replace Message
+#define TEMPLATE_ID_EXECUTION_REPORT_REPLACED_MESSAGE 0x13                  // Execution Report Replaced Message
+#define TEMPLATE_ID_EXECUTION_REPORT_TRADE_CORRECTION_MESSAGE 0x14          // Execution Report Trade Correction Message
+#define TEMPLATE_ID_EXECUTION_REPORT_TRADE_BREAK_MESSAGE 0x15               // Execution Report Trade Break Message
+#define TEMPLATE_ID_EXECUTION_REPORT_RESTATEMENT_MESSAGE 0x16               // Execution Report Restatement Message
+#define TEMPLATE_ID_PENDING_MASS_CANCEL_MESSAGE 0x17                        // Pending Mass Cancel Message
+#define TEMPLATE_ID_MASS_CANCEL_REJECT_MESSAGE 0x18                         // Mass Cancel Reject Message
+#define TEMPLATE_ID_MASS_CANCEL_DONE_MESSAGE 0x19                           // Mass Cancel Done Message
+#define TEMPLATE_ID_ORDER_CANCEL_REJECT_MESSAGE 0x1A                        // Order Cancel Reject Message
+#define TEMPLATE_ID_ALLOCATION_INSTRUCTION_ACK_MESSAGE 0x1B                 // Allocation Instruction Ack Message
+#define TEMPLATE_ID_ALLOCATION_INSTRUCTION_ALERT_MESSAGE 0x1C               // Allocation Instruction Alert Message
+#define TEMPLATE_ID_USER_NOTIFICATION_MESSAGE 0x1D                          // User Notification Message
+#define TEMPLATE_ID_MASS_CANCEL_CLEAR_LOCKOUT_REJECT_MESSAGE 0x1E           // Mass Cancel Clear Lockout Reject Message
+#define TEMPLATE_ID_MASS_CANCEL_CLEAR_LOCKOUT_DONE_MESSAGE 0x1F             // Mass Cancel Clear Lockout Done Message
+
+// Side: one byte code
+#define SIDE_BUY 0x31         // Buy
+#define SIDE_SELL 0x32        // Sell
+#define SIDE_AS_DEFINED 0x42  // As Defined
+
+// Ord Type: one byte code
+#define ORD_TYPE_MARKET 0x31  // Market
+#define ORD_TYPE_LIMIT 0x32   // Limit
+
+// Side Optional: one byte code
+#define SIDE_OPTIONAL_BUY 0x31         // Buy
+#define SIDE_OPTIONAL_SELL 0x32        // Sell
+#define SIDE_OPTIONAL_AS_DEFINED 0x42  // As Defined
 
 // ---- Common Header: 3 bytes --------------------------------------------------
 
 // Tcp Common Header
 entrypoint typedef struct _CommonHeader {
-  UINT8 message_type;       // byte 0
+  UINT8 message_type;       // byte 0, values MESSAGE_TYPE_
   UINT16BE message_length;  // bytes 1 to 2
 } CommonHeader;
 
@@ -64,7 +162,7 @@ entrypoint typedef struct _StreamRequestMessage {
 // Sbe Header
 entrypoint typedef struct _SbeHeader {
   UINT16BE block_length;  // bytes 0 to 1
-  UINT8 template_id;      // byte 2
+  UINT8 template_id;      // byte 2, values TEMPLATE_ID_
   UINT8 schema_id;        // byte 3
   UINT16BE version;       // bytes 4 to 5
   UINT8 num_groups;       // byte 6
@@ -88,9 +186,9 @@ entrypoint typedef struct _OrderCancelReplaceRequestMessage {
   UINT8 list_seq_no;           // byte 36
   UINT8 orig_cl_ord_id[20];    // bytes 37 to 56
   UINT8 security_id[8];        // bytes 57 to 64
-  UINT8 side;                  // byte 65
+  UINT8 side;                  // byte 65, values SIDE_
   UINT32BE order_qty;          // bytes 66 to 69
-  UINT8 ord_type;              // byte 70
+  UINT8 ord_type;              // byte 70, values ORD_TYPE_
   UINT64BE price_optional;     // bytes 71 to 78
 } OrderCancelReplaceRequestMessage;
 
@@ -104,7 +202,7 @@ entrypoint typedef struct _OrderCancelRequestMessage {
   UINT8 list_seq_no;                  // byte 36
   UINT8 orig_cl_ord_id_optional[20];  // bytes 37 to 56
   UINT8 security_id[8];               // bytes 57 to 64
-  UINT8 side_optional;                // byte 65
+  UINT8 side_optional;                // byte 65, values SIDE_OPTIONAL_
 } OrderCancelRequestMessage;
 
 // ---- Mass Cancel Clear Lockout Request Message: 36 bytes ---------------------

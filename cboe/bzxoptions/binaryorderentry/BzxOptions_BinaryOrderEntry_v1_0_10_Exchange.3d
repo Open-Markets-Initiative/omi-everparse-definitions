@@ -1,45 +1,268 @@
-// Chicago Board Options Exchange Binary Order Entry
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Cboe BzxOptions BinaryOrderEntry Boe3 v1.0.10
 //
+// Protocol:
+//   Organization: Chicago Board Options Exchange
+//   Protocol: Binary Order Entry
+//   Encoding: Binary Order Entry 3
+//   Version: 1.0.10
+//   Date: 1/23/2025
+//   Specification: US Options BOE3 Specification.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ExchangePacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out BzxOptions_BinaryOrderEntry_v1_0_10_Exchange.3d
-//
-// What this definition does not state, and the model does:
-// - a Reassemble rule
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Exchange Message Header: 12 bytes ---------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Message header of a packet sent by the exchange
-entrypoint typedef struct _ExchangeMessageHeader {
-  UINT16 start_of_message;       // bytes 0 to 1
-  UINT16 message_length;         // bytes 2 to 3
-  UINT16 exchange_message_type;  // bytes 4 to 5
-  UINT8 matching_unit;           // byte 6
-  UINT8 reserved_field;          // byte 7
-  UINT32 sequence_number;        // bytes 8 to 11
-} ExchangeMessageHeader;
+// Exchange Message Type: 2 byte code
+#define EXCHANGE_MESSAGE_TYPE_LOGIN_RESPONSE_MESSAGE 0x01F5                // Login Response Message
+#define EXCHANGE_MESSAGE_TYPE_REPLAY_COMPLETE_MESSAGE 0x01F6               // Replay Complete Message
+#define EXCHANGE_MESSAGE_TYPE_LOGOUT_RESPONSE_MESSAGE 0x01F7               // Logout Response Message
+#define EXCHANGE_MESSAGE_TYPE_SERVER_HEARTBEAT_MESSAGE 0x01F8              // Server Heartbeat Message
+#define EXCHANGE_MESSAGE_TYPE_ORDER_ACKNOWLEDGEMENT_MESSAGE 0x09C5         // Order Acknowledgement Message
+#define EXCHANGE_MESSAGE_TYPE_QUOTE_UPDATE_ACKNOWLEDGEMENT_MESSAGE 0x09D5  // Quote Update Acknowledgement Message
+#define EXCHANGE_MESSAGE_TYPE_ORDER_REJECTED_MESSAGE 0x09C7                // Order Rejected Message
+#define EXCHANGE_MESSAGE_TYPE_QUOTE_UPDATE_REJECTED_MESSAGE 0x09D6         // Quote Update Rejected Message
+#define EXCHANGE_MESSAGE_TYPE_ORDER_MODIFIED_MESSAGE 0x09CB                // Order Modified Message
+#define EXCHANGE_MESSAGE_TYPE_ORDER_RESTATED_MESSAGE 0x09CD                // Order Restated Message
+#define EXCHANGE_MESSAGE_TYPE_QUOTE_RESTATED_MESSAGE 0x09D9                // Quote Restated Message
+#define EXCHANGE_MESSAGE_TYPE_MODIFY_REJECTED_MESSAGE 0x09CC               // Modify Rejected Message
+#define EXCHANGE_MESSAGE_TYPE_ORDER_CANCELLED_MESSAGE 0x09D0               // Order Cancelled Message
+#define EXCHANGE_MESSAGE_TYPE_QUOTE_CANCELLED_MESSAGE 0x09D7               // Quote Cancelled Message
+#define EXCHANGE_MESSAGE_TYPE_CANCEL_REJECTED_MESSAGE 0x09D2               // Cancel Rejected Message
+#define EXCHANGE_MESSAGE_TYPE_ORDER_EXECUTION_MESSAGE 0x09D3               // Order Execution Message
+#define EXCHANGE_MESSAGE_TYPE_QUOTE_EXECUTION_MESSAGE 0x09D8               // Quote Execution Message
+#define EXCHANGE_MESSAGE_TYPE_TRADE_CANCEL_CORRECT_MESSAGE 0x09D4          // Trade Cancel Correct Message
+#define EXCHANGE_MESSAGE_TYPE_PURGE_REJECTED_MESSAGE 0x09DE                // Purge Rejected Message
+#define EXCHANGE_MESSAGE_TYPE_RESET_RISK_ACKNOWLEDGEMENT_MESSAGE 0x09DA    // Reset Risk Acknowledgement Message
+#define EXCHANGE_MESSAGE_TYPE_MASS_CANCEL_ACKNOWLEDGMENT_MESSAGE 0x09DB    // Mass Cancel Acknowledgment Message
+#define EXCHANGE_MESSAGE_TYPE_MASS_CANCEL_REJECTED_MESSAGE 0x09DC          // Mass Cancel Rejected Message
+#define EXCHANGE_MESSAGE_TYPE_PURGE_ACKNOWLEDGEMENT_MESSAGE 0x09DD         // Purge Acknowledgement Message
+#define EXCHANGE_MESSAGE_TYPE_PURGE_NOTIFICATION_MESSAGE 0x09DF            // Purge Notification Message
+#define EXCHANGE_MESSAGE_TYPE_CARRIED_RESTATEMENT_MESSAGE 0x09CE           // Carried Restatement Message
+#define EXCHANGE_MESSAGE_TYPE_DONE_FOR_DAY_MESSAGE 0x09CF                  // Done For Day Message
 
-// ---- Logout Response Message: 61 bytes ---------------------------------------
+// Login Response Status: one byte code
+#define LOGIN_RESPONSE_STATUS_ACCEPTED 0x41                    // Accepted
+#define LOGIN_RESPONSE_STATUS_SESSION_IN_USE 0x42              // Session In Use
+#define LOGIN_RESPONSE_STATUS_DISABLED 0x44                    // Disabled
+#define LOGIN_RESPONSE_STATUS_INVALID_UNIT 0x49                // Invalid Unit
+#define LOGIN_RESPONSE_STATUS_INVALID_MESSAGE 0x4D             // Invalid Message
+#define LOGIN_RESPONSE_STATUS_NOT_AUTHORIZED 0x4E              // Not Authorized
+#define LOGIN_RESPONSE_STATUS_SEQUENCE_AHEAD 0x51              // Sequence Ahead
+#define LOGIN_RESPONSE_STATUS_REPLAY_TOO_DEEP 0x52             // Replay Too Deep
+#define LOGIN_RESPONSE_STATUS_INVALID_SESSION 0x53             // Invalid Session
+#define LOGIN_RESPONSE_STATUS_INVALID_REPLAY_INSTRUCTION 0x58  // Invalid Replay Instruction
+
+// Logout Reason: one byte code
+#define LOGOUT_REASON_USER_REQUESTED 0x55      // User Requested
+#define LOGOUT_REASON_END_OF_DAY 0x45          // End Of Day
+#define LOGOUT_REASON_ADMINISTRATIVE 0x41      // Administrative
+#define LOGOUT_REASON_PROTOCOL_VIOLATION 0x21  // Protocol Violation
+
+// Side: one byte code
+#define SIDE_BUY 0x31   // Buy
+#define SIDE_SELL 0x32  // Sell
+
+// Base Liquidity Indicator: one byte code
+#define BASE_LIQUIDITY_INDICATOR_ADDED_LIQUIDITY 0x41           // Added Liquidity
+#define BASE_LIQUIDITY_INDICATOR_REMOVED_LIQUIDITY 0x52         // Removed Liquidity
+#define BASE_LIQUIDITY_INDICATOR_ROUTED_TO_ANOTHER_MARKET 0x58  // Routed To Another Market
+#define BASE_LIQUIDITY_INDICATOR_AUCTION_UNCROSSING 0x43        // Auction Uncrossing
+
+// Sub Liquidity Indicator: one byte code
+#define SUB_LIQUIDITY_INDICATOR_EXECUTION_FROM_ORDER_THAT_SET_THE_NBBO 0x53  // Execution From Order That Set The Nbbo
+#define SUB_LIQUIDITY_INDICATOR_CARRIED 0x43                                 // Carried
+#define SUB_LIQUIDITY_INDICATOR_DONE_FOR_DAY 0x44                            // Done For Day
+
+// Quote Result: one byte code
+#define QUOTE_RESULT_NEW_QUOTE 0x41                                      // New Quote
+#define QUOTE_RESULT_IOC_QUOTE_ACCEPTED 0x49                             // Ioc Quote Accepted
+#define QUOTE_RESULT_MODIFIED_LOSS_OF_PRIORITY 0x4C                      // Modified Loss Of Priority
+#define QUOTE_RESULT_MODIFIED_RETAINS_PRIORITY 0x52                      // Modified Retains Priority
+#define QUOTE_RESULT_NO_CHANGE_MATCHES_EXISTING_QUOTE 0x4E               // No Change Matches Existing Quote
+#define QUOTE_RESULT_NEW_QUOTE_BUT_MAY_REMOVE_LIQUIDITY 0x44             // New Quote But May Remove Liquidity
+#define QUOTE_RESULT_MODIFIED_BUT_MAY_REMOVE_LIQUIDITY 0x64              // Modified But May Remove Liquidity
+#define QUOTE_RESULT_USER_CANCELLED 0x55                                 // User Cancelled
+#define QUOTE_RESULT_ADMIN 0x61                                          // Admin
+#define QUOTE_RESULT_REJECTED_DOESNT_MATCH_A_KNOWN_QUOTE 0x4F            // Rejected Doesnt Match A Known Quote
+#define QUOTE_RESULT_REJECTED_CANT_POST 0x50                             // Rejected Cant Post
+#define QUOTE_RESULT_RISK_MANAGEMENT_FIRM_OR_CUSTOM_GROUP_ID_LEVEL 0x66  // Risk Management Firm Or Custom Group Id Level
+#define QUOTE_RESULT_REJECTED_SYMBOL_NOT_FOUND 0x53                      // Rejected Symbol Not Found
+#define QUOTE_RESULT_REJECTED_INVALID_PRICE 0x70                         // Rejected Invalid Price
+#define QUOTE_RESULT_INVALID_REMOVE 0x72                                 // Invalid Remove
+#define QUOTE_RESULT_RISK_MANAGEMENT_RISK_ROOT_LEVEL 0x73                // Risk Management Risk Root Level
+#define QUOTE_RESULT_REJECTED_OTHER_REASON 0x75                          // Rejected Other Reason
+#define QUOTE_RESULT_RISK_MANAGEMENT_EFID_GROUP_LEVEL 0x2B               // Risk Management Efid Group Level
+#define QUOTE_RESULT_REJECTED_CLOSING_ONLY_SERIES 0x63                   // Rejected Closing Only Series
+
+// Ord Type: one byte code
+#define ORD_TYPE_MARKET 0x31      // Market
+#define ORD_TYPE_LIMIT 0x32       // Limit
+#define ORD_TYPE_STOP 0x33        // Stop
+#define ORD_TYPE_STOP_LIMIT 0x34  // Stop Limit
+
+// Order Restatement Reason: one byte code
+#define ORDER_RESTATEMENT_REASON_RELOAD 0x4C                 // Reload
+#define ORDER_RESTATEMENT_REASON_PRICE_SLIDING_REPRICE 0x50  // Price Sliding Reprice
+#define ORDER_RESTATEMENT_REASON_LIQUIDITY_UPDATED 0x51      // Liquidity Updated
+#define ORDER_RESTATEMENT_REASON_REROUTE 0x52                // Reroute
+#define ORDER_RESTATEMENT_REASON_SHIP_AND_POST 0x53          // Ship And Post
+#define ORDER_RESTATEMENT_REASON_WASH 0x57                   // Wash
+
+// Restatement Reason: one byte code
+#define RESTATEMENT_REASON_LIQUIDITY 0x51  // Liquidity
+#define RESTATEMENT_REASON_WASH 0x57       // Wash
+
+// Multileg Reporting Type: one byte code
+#define MULTILEG_REPORTING_TYPE_SINGLE_LEG_INSTRUMENT 0x31                        // Single Leg Instrument
+#define MULTILEG_REPORTING_TYPE_INDIVIDUAL_LEG_OF_MULTI_LEG_INSTRUMENT 0x32       // Individual Leg Of Multi Leg Instrument
+#define MULTILEG_REPORTING_TYPE_ENTIRE_MULTI_LEG_INSTRUMENT_PACKAGE 0x33          // Entire Multi Leg Instrument Package
+#define MULTILEG_REPORTING_TYPE_LAST_INDIVIDUAL_LEG_OF_MULTI_LEG_INSTRUMENT 0x34  // Last Individual Leg Of Multi Leg Instrument
+
+// Sender Location Id: one byte code
+#define SENDER_LOCATION_ID_FLOOR 0x46                 // Floor
+#define SENDER_LOCATION_ID_ELECTRONIC_EXECUTION 0x20  // Electronic Execution
+
+// Ex Destination: one byte code
+#define EX_DESTINATION_NYSE_ARCA 0x41         // Nyse Arca
+#define EX_DESTINATION_NASDAQ_ISE 0x45        // Nasdaq Ise
+#define EX_DESTINATION_MIAX 0x46              // Miax
+#define EX_DESTINATION_MIAX_PEARL 0x50        // Miax Pearl
+#define EX_DESTINATION_MIAX_EMERALD 0x44      // Miax Emerald
+#define EX_DESTINATION_EDGX_OPTIONS 0x47      // Edgx Options
+#define EX_DESTINATION_C_2 0x48               // C 2
+#define EX_DESTINATION_BOX 0x4B               // Box
+#define EX_DESTINATION_MEMX 0x4D              // Memx
+#define EX_DESTINATION_NASDAQ 0x4E            // Nasdaq
+#define EX_DESTINATION_NASDAQ_BX 0x53         // Nasdaq Bx
+#define EX_DESTINATION_NYSE_AMERICAN 0x55     // Nyse American
+#define EX_DESTINATION_CBOE_OPTIONS_C_1 0x57  // Cboe Options C 1
+#define EX_DESTINATION_NASDAQ_PHLX 0x58       // Nasdaq Phlx
+#define EX_DESTINATION_BZX_OPTIONS 0x5A       // Bzx Options
+#define EX_DESTINATION_NASDAQ_GEMX 0x67       // Nasdaq Gemx
+#define EX_DESTINATION_NASDAQ_MRX 0x6D        // Nasdaq Mrx
+#define EX_DESTINATION_MIAX_SAPPHIRE 0x77     // Miax Sapphire
+
+// Put Or Call: one byte code
+#define PUT_OR_CALL_PUT 0x30   // Put
+#define PUT_OR_CALL_CALL 0x31  // Call
+
+// Capacity: one byte code
+#define CAPACITY_CUSTOMER 0x43               // Customer
+#define CAPACITY_MARKET_MAKER 0x4D           // Market Maker
+#define CAPACITY_FIRM 0x46                   // Firm
+#define CAPACITY_PROFESSIONAL_CUSTOMER 0x55  // Professional Customer
+#define CAPACITY_AWAY_MARKET_MAKER 0x4E      // Away Market Maker
+#define CAPACITY_BROKER_DEALER 0x42          // Broker Dealer
+#define CAPACITY_JOINT_BACK_OFFICE 0x4A      // Joint Back Office
+
+// Open Close: one byte code
+#define OPEN_CLOSE_OPEN 0x4F   // Open
+#define OPEN_CLOSE_CLOSE 0x43  // Close
+#define OPEN_CLOSE_NONE 0x4E   // None
+
+// Risk Reset Result: one byte code
+#define RISK_RESET_RESULT_IGNORED 0x20                                      // Ignored
+#define RISK_RESET_RESULT_REJECTED_EXCEEDS_CUSTOM_GROUP_ID_LIMIT 0x43       // Rejected Exceeds Custom Group Id Limit
+#define RISK_RESET_RESULT_REJECTED_AUTOMATIC_RISK_RESETS_ARE_DISABLED 0x44  // Rejected Automatic Risk Resets Are Disabled
+#define RISK_RESET_RESULT_REJECTED_EMPTY_RESET_RISK_FIELD 0x45              // Rejected Empty Reset Risk Field
+#define RISK_RESET_RESULT_REJECTED_EXCEEDS_FIRM_RESET_LIMIT 0x46            // Rejected Exceeds Firm Reset Limit
+#define RISK_RESET_RESULT_REJECTED_INCORRECT_DATA_CENTER 0x49               // Rejected Incorrect Data Center
+#define RISK_RESET_RESULT_REJECTED_INVALID_MATCHING_UNIT 0x4D               // Rejected Invalid Matching Unit
+#define RISK_RESET_RESULT_REJECTED_EXCEEDS_RISK_ROOT_RESET_LIMIT 0x53       // Rejected Exceeds Risk Root Reset Limit
+#define RISK_RESET_RESULT_REJECTED_INVALID_RISK_ROOT 0x55                   // Rejected Invalid Risk Root
+#define RISK_RESET_RESULT_SUCCESS 0x59                                      // Success
+#define RISK_RESET_RESULT_REJECTED_INVALID_EFID_CLEARING_FIRM 0x63          // Rejected Invalid Efid Clearing Firm
+#define RISK_RESET_RESULT_REJECTED_IN_REPLAY 0x79                           // Rejected In Replay
+
+// Mass Cancel Lockout: one byte code
+#define MASS_CANCEL_LOCKOUT_LOCKOUT 0x59     // Lockout
+#define MASS_CANCEL_LOCKOUT_NO_LOCKOUT 0x4E  // No Lockout
+
+// Exec Inst: one byte code
+#define EXEC_INST_INTERMARKET_SWEEP 0x66  // Intermarket Sweep
+
+// Time In Force: one byte code
+#define TIME_IN_FORCE_DAY 0x30            // Day
+#define TIME_IN_FORCE_GTC 0x31            // Gtc
+#define TIME_IN_FORCE_AT_THE_OPEN 0x32    // At The Open
+#define TIME_IN_FORCE_IOC 0x33            // Ioc
+#define TIME_IN_FORCE_FOK 0x34            // Fok
+#define TIME_IN_FORCE_GTD 0x36            // Gtd
+#define TIME_IN_FORCE_AT_THE_CLOSEE 0x37  // At The Closee
+
+// Display Indicator: one byte code
+#define DISPLAY_INDICATOR_DEFAULT 0x56                                                                   // Default
+#define DISPLAY_INDICATOR_DISPLAY_PRICE_SLIDING 0x53                                                     // Display Price Sliding
+#define DISPLAY_INDICATOR_DISPLAY_PRICE_SLIDING_BUT_REJECT_IF_ORDER_CROSSES_NBBO_ON_ENTRY 0x4C           // Display Price Sliding But Reject If Order Crosses Nbbo On Entry
+#define DISPLAY_INDICATOR_MULTIPLE_DISPLAY_PRICE_SLIDING 0x4D                                            // Multiple Display Price Sliding
+#define DISPLAY_INDICATOR_PRICE_ADJUST 0x50                                                              // Price Adjust
+#define DISPLAY_INDICATOR_MULTIPLE_PRICE_ADJUST 0x6D                                                     // Multiple Price Adjust
+#define DISPLAY_INDICATOR_REJECT_THE_ORDER_IF_IT_CANNOT_BE_BOOKED_AND_DISPLAYED_WITHOUT_ADJUSTMENT 0x52  // Reject The Order If It Cannot Be Booked And Displayed Without Adjustment
+#define DISPLAY_INDICATOR_NO_RESCRAPE_AT_LIMIT 0x4E                                                      // No Rescrape At Limit
+
+// Attributed Quote: one byte code
+#define ATTRIBUTED_QUOTE_DO_NOT_ATTRIBUTE_FIRM_EXECUTING_BROKER_ID_TO_THIS_ORDER 0x4E  // Do Not Attribute Firm Executing Broker Id To This Order
+#define ATTRIBUTED_QUOTE_ATTRIBUTE_FIRM_EXECUTING_BROKER_ID_TO_THIS_ORDER 0x59         // Attribute Firm Executing Broker Id To This Order
+#define ATTRIBUTED_QUOTE_ATTRIBUTE_CLIENT_ID_ONLY 0x43                                 // Attribute Client Id Only
+#define ATTRIBUTED_QUOTE_ATTRIBUTE_BOTH_CLEARING_FIRM_EFID_AND_CLIENT_ID 0x5A          // Attribute Both Clearing Firm Efid And Client Id
+
+// ---- Types -------------------------------------------------------------------
+
+// Unit Sequence
+typedef struct _UnitSequence {
+  UINT8 unit_number;       // byte 0
+  UINT32 sequence_number;  // bytes 1 to 4
+} UnitSequence;
+
+// A Login Response message is sent in response to a Login Request message
+typedef struct _LoginResponseMessage {
+  UINT8 login_response_status;                                              // byte 0
+  UINT8 login_response_text[60];                                            // bytes 1 to 60
+  UINT32 client_sequence;                                                   // bytes 61 to 64
+  UINT8 number_of_units;                                                    // byte 65
+  UnitSequence unit_sequence[:byte-size (((UINT32) number_of_units) * 5)];
+} LoginResponseMessage;
 
 // A Logout Response is usually sent in response to a Logout Request
-entrypoint typedef struct _LogoutResponseMessage {
+typedef struct _LogoutResponseMessage {
   UINT8 logout_reason;           // byte 0
   UINT8 logout_reason_text[60];  // bytes 1 to 60
 } LogoutResponseMessage;
 
-// ---- Order Acknowledgement Message: 93 bytes ---------------------------------
-
 // OrderAcknowledgementMessage
-entrypoint typedef struct _OrderAcknowledgementMessage {
+typedef struct _OrderAcknowledgementMessage {
   UINT16 in_flight;                // bytes 0 to 1
   UINT64 transaction_time;         // bytes 2 to 9
   UINT8 cl_ord_id[20];             // bytes 10 to 29
@@ -57,10 +280,25 @@ entrypoint typedef struct _OrderAcknowledgementMessage {
   UINT64 request_received_time;    // bytes 85 to 92
 } OrderAcknowledgementMessage;
 
-// ---- Order Rejected Message: 99 bytes ----------------------------------------
+typedef struct _QuoteAcknowledgement {
+  UINT64 order_id;                // bytes 0 to 7
+  UINT8 quote_result;             // byte 8
+  UINT8 sub_liquidity_indicator;  // byte 9
+  UINT8 quote_reject_sub_reason;  // byte 10
+} QuoteAcknowledgement;
+
+// Quote Update Acknowledgment messages are sent in response to a Quote Update message
+typedef struct _QuoteUpdateAcknowledgementMessage {
+  UINT16 in_flight;                                                                    // bytes 0 to 1
+  UINT64 transaction_time;                                                             // bytes 2 to 9
+  UINT8 quote_update_id[16];                                                           // bytes 10 to 25
+  UINT64 request_received_time;                                                        // bytes 26 to 33
+  UINT8 quote_cnt;                                                                     // byte 34
+  QuoteAcknowledgement quote_acknowledgement[:byte-size (((UINT32) quote_cnt) * 11)];
+} QuoteUpdateAcknowledgementMessage;
 
 // Order Rejected messages are sent in response to a New Order message which must be rejected
-entrypoint typedef struct _OrderRejectedMessage {
+typedef struct _OrderRejectedMessage {
   UINT16 in_flight;           // bytes 0 to 1
   UINT64 transaction_time;    // bytes 2 to 9
   UINT8 cl_ord_id[20];        // bytes 10 to 29
@@ -70,20 +308,16 @@ entrypoint typedef struct _OrderRejectedMessage {
   UINT8 text[60];             // bytes 39 to 98
 } OrderRejectedMessage;
 
-// ---- Quote Update Rejected Message: 27 bytes ---------------------------------
-
 // Quote Update Rejected messages are sent in response to a Quote Update message when the entire quote block is rejected by the order handler
-entrypoint typedef struct _QuoteUpdateRejectedMessage {
+typedef struct _QuoteUpdateRejectedMessage {
   UINT16 in_flight;           // bytes 0 to 1
   UINT64 transaction_time;    // bytes 2 to 9
   UINT8 quote_update_id[16];  // bytes 10 to 25
   UINT8 quote_reject_reason;  // byte 26
 } QuoteUpdateRejectedMessage;
 
-// ---- Order Modified Message: 136 bytes ---------------------------------------
-
 // Order Modified messages are sent in response to a Modify Request message to indicate that the order has been successfully modified
-entrypoint typedef struct _OrderModifiedMessage {
+typedef struct _OrderModifiedMessage {
   UINT16 in_flight;                // bytes 0 to 1
   UINT64 transaction_time;         // bytes 2 to 9
   UINT8 cl_ord_id[20];             // bytes 10 to 29
@@ -105,10 +339,8 @@ entrypoint typedef struct _OrderModifiedMessage {
   UINT64 request_received_time;    // bytes 128 to 135
 } OrderModifiedMessage;
 
-// ---- Order Restated Message: 108 bytes ---------------------------------------
-
 // Order Restated messages are sent to inform the Member that an order has been asynchronously modified
-entrypoint typedef struct _OrderRestatedMessage {
+typedef struct _OrderRestatedMessage {
   UINT16 in_flight;                // bytes 0 to 1
   UINT64 transaction_time;         // bytes 2 to 9
   UINT8 cl_ord_id[20];             // bytes 10 to 29
@@ -128,10 +360,8 @@ entrypoint typedef struct _OrderRestatedMessage {
   UINT64 last_px;                  // bytes 100 to 107, signed, read here as unsigned
 } OrderRestatedMessage;
 
-// ---- Quote Restated Message: 54 bytes ----------------------------------------
-
 // Quote Restated messages are sent to inform the Member that an order has been asynchronously modified for some reason by the Exchange
-entrypoint typedef struct _QuoteRestatedMessage {
+typedef struct _QuoteRestatedMessage {
   UINT16 in_flight;           // bytes 0 to 1
   UINT64 transaction_time;    // bytes 2 to 9
   UINT8 quote_update_id[16];  // bytes 10 to 25
@@ -143,10 +373,8 @@ entrypoint typedef struct _QuoteRestatedMessage {
   UINT8 restatement_reason;   // byte 53
 } QuoteRestatedMessage;
 
-// ---- Modify Rejected Message: 119 bytes --------------------------------------
-
 // User Modify Rejected messages are sent in response to a Modify Order message for an order which cannot be modified
-entrypoint typedef struct _ModifyRejectedMessage {
+typedef struct _ModifyRejectedMessage {
   UINT16 in_flight;            // bytes 0 to 1
   UINT64 transaction_time;     // bytes 2 to 9
   UINT8 cl_ord_id[20];         // bytes 10 to 29
@@ -157,10 +385,8 @@ entrypoint typedef struct _ModifyRejectedMessage {
   UINT8 text[60];              // bytes 59 to 118
 } ModifyRejectedMessage;
 
-// ---- Order Cancelled Message: 56 bytes ---------------------------------------
-
 // This message indicates an order has been cancelled
-entrypoint typedef struct _OrderCancelledMessage {
+typedef struct _OrderCancelledMessage {
   UINT16 in_flight;              // bytes 0 to 1
   UINT64 transaction_time;       // bytes 2 to 9
   UINT8 cl_ord_id[20];           // bytes 10 to 29
@@ -172,10 +398,8 @@ entrypoint typedef struct _OrderCancelledMessage {
   UINT64 request_received_time;  // bytes 48 to 55
 } OrderCancelledMessage;
 
-// ---- Quote Cancelled Message: 43 bytes ---------------------------------------
-
 // A Quote Cancelled message will be sent to indicate an unsolicited cancellation of a quote entered with a Quote Update message
-entrypoint typedef struct _QuoteCancelledMessage {
+typedef struct _QuoteCancelledMessage {
   UINT16 in_flight;           // bytes 0 to 1
   UINT64 transaction_time;    // bytes 2 to 9
   UINT8 quote_update_id[16];  // bytes 10 to 25
@@ -186,10 +410,8 @@ entrypoint typedef struct _QuoteCancelledMessage {
   UINT8 cancel_sub_reason;    // byte 42
 } QuoteCancelledMessage;
 
-// ---- Cancel Rejected Message: 99 bytes ---------------------------------------
-
 // A Cancel Rejected message is sent in response to a Cancel Order message to indicate that the cancellation cannot occur
-entrypoint typedef struct _CancelRejectedMessage {
+typedef struct _CancelRejectedMessage {
   UINT16 in_flight;            // bytes 0 to 1
   UINT64 transaction_time;     // bytes 2 to 9
   UINT8 cl_ord_id[20];         // bytes 10 to 29
@@ -199,10 +421,8 @@ entrypoint typedef struct _CancelRejectedMessage {
   UINT8 text[60];              // bytes 39 to 98
 } CancelRejectedMessage;
 
-// ---- Order Execution Message: 116 bytes --------------------------------------
-
 // An Order Execution message is sent for each fill on an order
-entrypoint typedef struct _OrderExecutionMessage {
+typedef struct _OrderExecutionMessage {
   UINT16 in_flight;                 // bytes 0 to 1
   UINT64 transaction_time;          // bytes 2 to 9
   UINT8 cl_ord_id[20];              // bytes 10 to 29
@@ -234,10 +454,8 @@ entrypoint typedef struct _OrderExecutionMessage {
   UINT8 equity_ex_destination;      // byte 115
 } OrderExecutionMessage;
 
-// ---- Quote Execution Message: 84 bytes ---------------------------------------
-
 // A Quote Execution message is used to indicate an execution has occurred on a resting quote
-entrypoint typedef struct _QuoteExecutionMessage {
+typedef struct _QuoteExecutionMessage {
   UINT16 in_flight;                // bytes 0 to 1
   UINT64 transaction_time;         // bytes 2 to 9
   UINT8 quote_update_id[16];       // bytes 10 to 25
@@ -258,10 +476,8 @@ entrypoint typedef struct _QuoteExecutionMessage {
   UINT32 trade_date;               // bytes 80 to 83
 } QuoteExecutionMessage;
 
-// ---- Trade Cancel Correct Message: 122 bytes ---------------------------------
-
 // Used to relay a trade which has been cancelled (busted) or corrected
-entrypoint typedef struct _TradeCancelCorrectMessage {
+typedef struct _TradeCancelCorrectMessage {
   UINT16 in_flight;                // bytes 0 to 1
   UINT64 transaction_time;         // bytes 2 to 9
   UINT8 cl_ord_id[20];             // bytes 10 to 29
@@ -288,10 +504,8 @@ entrypoint typedef struct _TradeCancelCorrectMessage {
   UINT32 cmta_number;              // bytes 118 to 121
 } TradeCancelCorrectMessage;
 
-// ---- Purge Rejected Message: 91 bytes ----------------------------------------
-
 // A Purge Rejected message is sent in response to a Purge Orders message to indicate that the mass cancellation cannot occur
-entrypoint typedef struct _PurgeRejectedMessage {
+typedef struct _PurgeRejectedMessage {
   UINT16 in_flight;           // bytes 0 to 1
   UINT64 transaction_time;    // bytes 2 to 9
   UINT8 mass_cancel_id[20];   // bytes 10 to 29
@@ -299,20 +513,16 @@ entrypoint typedef struct _PurgeRejectedMessage {
   UINT8 text[60];             // bytes 31 to 90
 } PurgeRejectedMessage;
 
-// ---- Reset Risk Acknowledgement Message: 27 bytes ----------------------------
-
 // Response to a Reset Risk message request
-entrypoint typedef struct _ResetRiskAcknowledgementMessage {
+typedef struct _ResetRiskAcknowledgementMessage {
   UINT16 in_flight;              // bytes 0 to 1
   UINT8 risk_status_id[16];      // bytes 2 to 17
   UINT8 risk_reset_result;       // byte 18
   UINT64 request_received_time;  // bytes 19 to 26
 } ResetRiskAcknowledgementMessage;
 
-// ---- Mass Cancel Acknowledgment Message: 42 bytes ----------------------------
-
 // A Mass Cancel Acknowledgment message is an unsequenced message sent when a Mass Cancel Order message requesting a mass cancellation has completed canceling all individual orders
-entrypoint typedef struct _MassCancelAcknowledgmentMessage {
+typedef struct _MassCancelAcknowledgmentMessage {
   UINT16 in_flight;              // bytes 0 to 1
   UINT64 transaction_time;       // bytes 2 to 9
   UINT8 mass_cancel_id[20];      // bytes 10 to 29
@@ -320,10 +530,8 @@ entrypoint typedef struct _MassCancelAcknowledgmentMessage {
   UINT64 request_received_time;  // bytes 34 to 41
 } MassCancelAcknowledgmentMessage;
 
-// ---- Mass Cancel Rejected Message: 91 bytes ----------------------------------
-
 // A Mass Cancel Rejected message is sent in response to a Mass Cancel message to indicate that the mass cancellation cannot occur
-entrypoint typedef struct _MassCancelRejectedMessage {
+typedef struct _MassCancelRejectedMessage {
   UINT16 in_flight;                 // bytes 0 to 1
   UINT64 transaction_time;          // bytes 2 to 9
   UINT8 mass_cancel_id[20];         // bytes 10 to 29
@@ -331,10 +539,8 @@ entrypoint typedef struct _MassCancelRejectedMessage {
   UINT8 text[60];                   // bytes 31 to 90
 } MassCancelRejectedMessage;
 
-// ---- Purge Acknowledgement Message: 43 bytes ---------------------------------
-
 // A Purge Acknowledgment message is an unsequenced message sent when a Purge Orders message requesting an order purge has completed canceling all individual orders
-entrypoint typedef struct _PurgeAcknowledgementMessage {
+typedef struct _PurgeAcknowledgementMessage {
   UINT16 in_flight;              // bytes 0 to 1
   UINT64 transaction_time;       // bytes 2 to 9
   UINT8 mass_cancel_id[20];      // bytes 10 to 29
@@ -343,10 +549,8 @@ entrypoint typedef struct _PurgeAcknowledgementMessage {
   UINT64 request_received_time;  // bytes 35 to 42
 } PurgeAcknowledgementMessage;
 
-// ---- Purge Notification Message: 46 bytes ------------------------------------
-
 // One Purge Notification message is sent for each matching unit that cancelled orders for that order entry port
-entrypoint typedef struct _PurgeNotificationMessage {
+typedef struct _PurgeNotificationMessage {
   UINT16 in_flight;              // bytes 0 to 1
   UINT64 transaction_time;       // bytes 2 to 9
   UINT8 mass_cancel_id[20];      // bytes 10 to 29
@@ -357,18 +561,14 @@ entrypoint typedef struct _PurgeNotificationMessage {
   UINT8 mass_cancel_lockout;     // byte 45
 } PurgeNotificationMessage;
 
-// ---- Prevent Match: 3 bytes --------------------------------------------------
-
-entrypoint typedef struct _PreventMatch {
+typedef struct _PreventMatch {
   UINT8 mtp_modifier;      // byte 0
   UINT8 unique_id_level;   // byte 1
   UINT8 trading_group_id;  // byte 2
 } PreventMatch;
 
-// ---- Carried Restatement Message: 240 bytes ----------------------------------
-
 // The Carried Restatement message is used to indicate the restoration of a multi-day GTC or GTD order at the start of a new business day
-entrypoint typedef struct _CarriedRestatementMessage {
+typedef struct _CarriedRestatementMessage {
   UINT16 in_flight;                  // bytes 0 to 1
   UINT64 transaction_time;           // bytes 2 to 9
   UINT8 cl_ord_id[20];               // bytes 10 to 29
@@ -423,10 +623,8 @@ entrypoint typedef struct _CarriedRestatementMessage {
   UINT8 held;                        // byte 239
 } CarriedRestatementMessage;
 
-// ---- Done For Day Message: 46 bytes ------------------------------------------
-
 // The Done For Day messages represent orders persisted during the current day session to carry over to the next session
-entrypoint typedef struct _DoneForDayMessage {
+typedef struct _DoneForDayMessage {
   UINT16 in_flight;          // bytes 0 to 1
   UINT64 transaction_time;   // bytes 2 to 9
   UINT8 cl_ord_id[20];       // bytes 10 to 29
@@ -434,4 +632,50 @@ entrypoint typedef struct _DoneForDayMessage {
   UINT8 routing_firm_id[4];  // bytes 34 to 37
   UINT8 symbol[8];           // bytes 38 to 45
 } DoneForDayMessage;
+
+// Branch
+casetype _ExchangeMessage (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x01F5: LoginResponseMessage login_response_message;
+    case 0x01F6: unit replay_complete;
+    case 0x01F7: LogoutResponseMessage logout_response_message;
+    case 0x01F8: unit server_heartbeat;
+    case 0x09C5: OrderAcknowledgementMessage order_acknowledgement_message;
+    case 0x09D5: QuoteUpdateAcknowledgementMessage quote_update_acknowledgement_message;
+    case 0x09C7: OrderRejectedMessage order_rejected_message;
+    case 0x09D6: QuoteUpdateRejectedMessage quote_update_rejected_message;
+    case 0x09CB: OrderModifiedMessage order_modified_message;
+    case 0x09CD: OrderRestatedMessage order_restated_message;
+    case 0x09D9: QuoteRestatedMessage quote_restated_message;
+    case 0x09CC: ModifyRejectedMessage modify_rejected_message;
+    case 0x09D0: OrderCancelledMessage order_cancelled_message;
+    case 0x09D7: QuoteCancelledMessage quote_cancelled_message;
+    case 0x09D2: CancelRejectedMessage cancel_rejected_message;
+    case 0x09D3: OrderExecutionMessage order_execution_message;
+    case 0x09D8: QuoteExecutionMessage quote_execution_message;
+    case 0x09D4: TradeCancelCorrectMessage trade_cancel_correct_message;
+    case 0x09DE: PurgeRejectedMessage purge_rejected_message;
+    case 0x09DA: ResetRiskAcknowledgementMessage reset_risk_acknowledgement_message;
+    case 0x09DB: MassCancelAcknowledgmentMessage mass_cancel_acknowledgment_message;
+    case 0x09DC: MassCancelRejectedMessage mass_cancel_rejected_message;
+    case 0x09DD: PurgeAcknowledgementMessage purge_acknowledgement_message;
+    case 0x09DF: PurgeNotificationMessage purge_notification_message;
+    case 0x09CE: CarriedRestatementMessage carried_restatement_message;
+    case 0x09CF: DoneForDayMessage done_for_day_message;
+    default: UINT8 unknown[available];
+  }
+} ExchangeMessage;
+
+// ---- Packet: ExchangePacket --------------------------------------------------
+
+// Binary Order Entry Tcp Packet sent by the exchange
+entrypoint typedef struct _ExchangePacket (UINT32 available) where (available >= 12) {
+  UINT16 start_of_message;                                                                                                      // bytes 0 to 1
+  UINT16 message_length;                                                                                                        // bytes 2 to 3
+  UINT16 exchange_message_type;                                                                                                 // bytes 4 to 5
+  UINT8 matching_unit;                                                                                                          // byte 6
+  UINT8 reserved_field;                                                                                                         // byte 7
+  UINT32 sequence_number;                                                                                                       // bytes 8 to 11
+  ExchangeMessage(exchange_message_type, (available - 12)) exchange_message[:byte-size-single-element-array (available - 12)];
+} ExchangePacket;
 

@@ -1,50 +1,111 @@
-// AsiaNext Market Data Snapshot
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: AsiaNext AsiaNextDerivatives Snapshot Amd v1.3
 //
+// Protocol:
+//   Organization: AsiaNext
+//   Protocol: Market Data Snapshot
+//   Encoding: Aquis Market Data Protocol
+//   Version: 1.3
+//   Date: 11/6/2026
+//   Specification: AsiaNext-Market-Data-Technical-Specification-v1.3.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out AsiaNextDerivatives_Snapshot_v1_3.3d
-//
-// What this definition does not state, and the model does:
-// - a run counted by a field
-// - a field read in bits
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 1 byte ---------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Aquis udp packet header
-entrypoint typedef struct _PacketHeader {
-  UINT8 message_count;  // byte 0
-} PacketHeader;
+// Msg Type: one byte code
+#define MSG_TYPE_SNAPSHOT_START_MESSAGE 0x0A               // Snapshot Start Message
+#define MSG_TYPE_BOOK_STATUS_MESSAGE 0x0B                  // Book Status Message
+#define MSG_TYPE_BOOK_ENTRY_MESSAGE 0x0C                   // Book Entry Message
+#define MSG_TYPE_TICK_TABLE_DATA_MESSAGE 0x07              // Tick Table Data Message
+#define MSG_TYPE_SECURITY_DEFINITION_MESSAGE 0x08          // Security Definition Message
+#define MSG_TYPE_SECURITY_DEFINITION_FUTURES_MESSAGE 0x1E  // Security Definition Futures Message
+#define MSG_TYPE_SECURITY_DEFINITION_OPTIONS_MESSAGE 0x20  // Security Definition Options Message
+#define MSG_TYPE_SECURITY_STATUS_MESSAGE 0x09              // Security Status Message
+#define MSG_TYPE_SEQUENCE_NUMBER_RESET_MESSAGE 0x1D        // Sequence Number Reset Message
 
-// ---- Message Header: 6 bytes -------------------------------------------------
+// Trading Status: one byte code
+#define TRADING_STATUS_ACTIVE 0x01     // Active
+#define TRADING_STATUS_HALTED 0x02     // Halted
+#define TRADING_STATUS_SUSPENDED 0x03  // Suspended
 
-// Aquis market data message header
-entrypoint typedef struct _MessageHeader {
-  UINT8 msg_type;    // byte 0
-  UINT8 msg_length;  // byte 1
-  UINT32 seq_no;     // bytes 2 to 5
-} MessageHeader;
+// Side: one byte code
+#define SIDE_BUY_ORDER 0x01   // Buy Order
+#define SIDE_SELL_ORDER 0x02  // Sell Order
 
-// ---- Snapshot Start Message: 16 bytes ----------------------------------------
+// Settlement Type: one byte code
+#define SETTLEMENT_TYPE_CASH 0x01      // Cash
+#define SETTLEMENT_TYPE_PHYSICAL 0x02  // Physical
+
+// Option Type: one byte code
+#define OPTION_TYPE_CALL 0x01  // Call
+#define OPTION_TYPE_PUT 0x02   // Put
+
+// Exercise Style: one byte code
+#define EXERCISE_STYLE_AMERICAN 0x01  // American
+#define EXERCISE_STYLE_EUROPEAN 0x02  // European
+#define EXERCISE_STYLE_ASIAN 0x03     // Asian
+#define EXERCISE_STYLE_BERMUDAN 0x04  // Bermudan
+
+// Trading Phase: one byte code
+#define TRADING_PHASE_CONTINUOUS_TRADING 0x01  // Continuous Trading
+
+// ---- Types -------------------------------------------------------------------
 
 // A Snapshot Start message is published as the first message in a snapshot to identify the sequence number in the continuous stream that this snapshot relates to.
-entrypoint typedef struct _SnapshotStartMessage {
+typedef struct _SnapshotStartMessage {
   UINT32 stream_seq_no;   // bytes 0 to 3
   UINT32 security_count;  // bytes 4 to 7
   UINT64 timestamp;       // bytes 8 to 15
 } SnapshotStartMessage;
 
-// ---- Book Entry Message: 29 bytes --------------------------------------------
+// A Book Status message is published to report the trading and market status of each security and the number of open orders on the order book for the security at the time of the snapshot.
+typedef struct _BookStatusMessage {
+  UINT32 security_id;       // bytes 0 to 3
+  UINT8 trading_status;     // byte 4
+  UINT8 trading : 1;        // byte 5
+  UINT8 mac_open : 1;       // byte 5
+  UINT8 mac_run : 1;        // byte 5
+  UINT8 unused_5 : 5;       // byte 5
+  UINT16 entries;           // bytes 6 to 7
+  UINT64 closing_buy_qty;   // bytes 8 to 15
+  UINT64 closing_sell_qty;  // bytes 16 to 23
+  UINT64 indicative_price;  // bytes 24 to 31
+} BookStatusMessage;
 
 // An appropriate number of Book Entry messages is published after each Book Status message to provide details of each order and allow the book to be built.
-entrypoint typedef struct _BookEntryMessage {
+typedef struct _BookEntryMessage {
   UINT32 security_id;  // bytes 0 to 3
   UINT8 side;          // byte 4
   UINT64 quantity;     // bytes 5 to 12
@@ -52,36 +113,144 @@ entrypoint typedef struct _BookEntryMessage {
   UINT64 order_ref;    // bytes 21 to 28
 } BookEntryMessage;
 
-// ---- Tick Table Data Message: 27 bytes ---------------------------------------
-
 // A series of Tick Table Data messages are published to specify the dynamic tick tables and static ticks that apply to the securities traded on AsiaNext.
-entrypoint typedef struct _TickTableDataMessage {
+typedef struct _TickTableDataMessage {
   UINT8 tick_table_id;  // byte 0
   UINT8 name[10];       // bytes 1 to 10
   UINT64 threshold;     // bytes 11 to 18
   UINT64 tick_size;     // bytes 19 to 26
 } TickTableDataMessage;
 
-// ---- Lot Size Composite: 9 bytes ---------------------------------------------
-
 // Lot size scaled at runtime by lotSizeDecimal
-entrypoint typedef struct _LotSizeComposite {
+typedef struct _LotSizeComposite {
   UINT64 lot_size;         // bytes 0 to 7
   UINT8 lot_size_decimal;  // byte 8
 } LotSizeComposite;
 
-// ---- Contract Size Composite: 9 bytes ----------------------------------------
+// Security Definition messages are published to identify the securities traded on AsiaNext.
+typedef struct _SecurityDefinitionMessage {
+  UINT32 security_id;                   // bytes 0 to 3
+  UINT8 umtf[6];                        // bytes 4 to 9
+  UINT8 isin[12];                       // bytes 10 to 21
+  UINT8 currency[3];                    // bytes 22 to 24
+  UINT8 mic[4];                         // bytes 25 to 28
+  UINT8 tick_table_id;                  // byte 29
+  UINT16 mac_enabled : 1;               // bytes 30 to 31
+  UINT16 test_stock : 1;                // bytes 30 to 31
+  UINT16 illiquid : 1;                  // bytes 30 to 31
+  UINT16 live : 1;                      // bytes 30 to 31
+  UINT16 aod_enabled : 1;               // bytes 30 to 31
+  UINT16 unused_11 : 11;                // bytes 30 to 31
+  UINT8 exchange_symbol[20];            // bytes 32 to 51
+  LotSizeComposite lot_size_composite;  // bytes 52 to 60
+} SecurityDefinitionMessage;
 
 // Contract size scaled at runtime by contractSizeDecimals
-entrypoint typedef struct _ContractSizeComposite {
+typedef struct _ContractSizeComposite {
   UINT64 contract_size;          // bytes 0 to 7
   UINT8 contract_size_decimals;  // byte 8
 } ContractSizeComposite;
 
-// ---- Sequence Number Reset Message: 4 bytes ----------------------------------
+// Security Definition messages are published to identify the Futures securities traded on AsiaNext.
+typedef struct _SecurityDefinitionFuturesMessage {
+  UINT32 security_id;                             // bytes 0 to 3
+  UINT8 umtf[6];                                  // bytes 4 to 9
+  UINT8 isin[12];                                 // bytes 10 to 21
+  UINT8 currency[3];                              // bytes 22 to 24
+  UINT8 mic[4];                                   // bytes 25 to 28
+  UINT8 tick_table_id;                            // byte 29
+  UINT16 mac_enabled : 1;                         // bytes 30 to 31
+  UINT16 test_stock : 1;                          // bytes 30 to 31
+  UINT16 illiquid : 1;                            // bytes 30 to 31
+  UINT16 live : 1;                                // bytes 30 to 31
+  UINT16 unused_1 : 1;                            // bytes 30 to 31
+  UINT16 underlying_flag : 1;                     // bytes 30 to 31
+  UINT16 rfq_only : 1;                            // bytes 30 to 31
+  UINT16 unused_9 : 9;                            // bytes 30 to 31
+  UINT8 exchange_symbol[20];                      // bytes 32 to 51
+  LotSizeComposite lot_size_composite;            // bytes 52 to 60
+  UINT64 maturity_date;                           // bytes 61 to 68
+  UINT8 settlement_type;                          // byte 69
+  ContractSizeComposite contract_size_composite;  // bytes 70 to 78
+  UINT8 underlying[20];                           // bytes 79 to 98
+} SecurityDefinitionFuturesMessage;
+
+// Security Definition messages are published to identify the Option securities traded on AsiaNext.
+typedef struct _SecurityDefinitionOptionsMessage {
+  UINT32 security_id;                             // bytes 0 to 3
+  UINT8 umtf[6];                                  // bytes 4 to 9
+  UINT8 isin[12];                                 // bytes 10 to 21
+  UINT8 currency[3];                              // bytes 22 to 24
+  UINT8 mic[4];                                   // bytes 25 to 28
+  UINT8 tick_table_id;                            // byte 29
+  UINT16 unused_1 : 1;                            // bytes 30 to 31
+  UINT16 test_stock : 1;                          // bytes 30 to 31
+  UINT16 illiquid : 1;                            // bytes 30 to 31
+  UINT16 live : 1;                                // bytes 30 to 31
+  UINT16 second_unused_1 : 1;                     // bytes 30 to 31
+  UINT16 underlying_flag : 1;                     // bytes 30 to 31
+  UINT16 rfq_only : 1;                            // bytes 30 to 31
+  UINT16 unused_9 : 9;                            // bytes 30 to 31
+  UINT8 exchange_symbol[20];                      // bytes 32 to 51
+  LotSizeComposite lot_size_composite;            // bytes 52 to 60
+  UINT64 maturity_date;                           // bytes 61 to 68
+  UINT8 settlement_type;                          // byte 69
+  ContractSizeComposite contract_size_composite;  // bytes 70 to 78
+  UINT8 underlying[20];                           // bytes 79 to 98
+  UINT8 option_type;                              // byte 99
+  UINT8 exercise_style;                           // byte 100
+  UINT64 strike_price;                            // bytes 101 to 108
+} SecurityDefinitionOptionsMessage;
+
+// The Security Status message is published when the trading status of a security changes or when there is a change to the status of the market on AsiaNext to which the security belongs.
+typedef struct _SecurityStatusMessage {
+  UINT32 security_id;    // bytes 0 to 3
+  UINT8 trading_status;  // byte 4
+  UINT8 trading : 1;     // byte 5
+  UINT8 mac_open : 1;    // byte 5
+  UINT8 mac_run : 1;     // byte 5
+  UINT8 unused_5 : 5;    // byte 5
+  UINT64 timestamp;      // bytes 6 to 13
+  UINT8 trading_phase;   // byte 14
+} SecurityStatusMessage;
 
 // The Sequence Number Reset is published when AsiaNext initiates a seqNo reset.
-entrypoint typedef struct _SequenceNumberResetMessage {
+typedef struct _SequenceNumberResetMessage {
   UINT32 next_seq_no;  // bytes 0 to 3
 } SequenceNumberResetMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x0A: SnapshotStartMessage snapshot_start_message;
+    case 0x0B: BookStatusMessage book_status_message;
+    case 0x0C: BookEntryMessage book_entry_message;
+    case 0x07: TickTableDataMessage tick_table_data_message;
+    case 0x08: SecurityDefinitionMessage security_definition_message;
+    case 0x1E: SecurityDefinitionFuturesMessage security_definition_futures_message;
+    case 0x20: SecurityDefinitionOptionsMessage security_definition_options_message;
+    case 0x09: SecurityStatusMessage security_status_message;
+    case 0x1D: SequenceNumberResetMessage sequence_number_reset_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// Aquis Amd Message
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT8 msg_type;                                                                                                                                                  // byte 0
+  UINT8 msg_length { msg_length >= 6 };                                                                                                                            // byte 1
+  UINT32 seq_no;                                                                                                                                                   // bytes 2 to 5
+  Payload(msg_type, (((UINT32) msg_length) - 6)) payload[:byte-size-single-element-array (((UINT32) msg_length) - 6)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Aquis Udp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 1) {
+  UINT8 message_count;                                                                                                      // byte 0
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size (available - 1)];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} Packet;
 

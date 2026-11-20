@@ -1,325 +1,548 @@
-// National Association of Securities Dealers Automated Quotations (Nasdaq) Nordic Ouch 5 Order Entry
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nasdaq NordicEquities OrderEntry Ouch v5.02.6
 //
+// Protocol:
+//   Organization: National Association of Securities Dealers Automated Quotations (Nasdaq)
+//   Protocol: Nordic Ouch 5 Order Entry
+//   Encoding: Ouch
+//   Version: 5.02.6
+//   Date: 11/12/2025
+//   Specification: OUCH5-for-Nasdaq-Nordic-5.02.6.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ServerPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out NordicEquities_OrderEntry_v5_02_6_Server.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a length prefix framing what follows
-// - a field read in bits
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Server Packet Header: 3 bytes -------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Packet header of a packet sent by the server
-entrypoint typedef struct _ServerPacketHeader {
-  UINT16BE packet_length;    // bytes 0 to 1
-  UINT8 server_packet_type;  // byte 2
-} ServerPacketHeader;
+// Server Packet Type: one byte code
+#define SERVER_PACKET_TYPE_DEBUG_PACKET 0x2B             // Debug Packet
+#define SERVER_PACKET_TYPE_LOGIN_ACCEPTED_PACKET 0x41    // Login Accepted Packet
+#define SERVER_PACKET_TYPE_LOGIN_REJECTED_PACKET 0x4A    // Login Rejected Packet
+#define SERVER_PACKET_TYPE_SEQUENCED_DATA_PACKET 0x53    // Sequenced Data Packet
+#define SERVER_PACKET_TYPE_SERVER_HEARTBEAT_PACKET 0x48  // Server Heartbeat Packet
+#define SERVER_PACKET_TYPE_END_OF_SESSION_PACKET 0x5A    // End Of Session Packet
 
-// ---- Login Accepted Packet: 30 bytes -----------------------------------------
+// Reject Reason Code: one byte code
+#define REJECT_REASON_CODE_NOT_AUTHORIZED 0x41         // Not Authorized
+#define REJECT_REASON_CODE_SESSION_NOT_AVAILABLE 0x53  // Session Not Available
+
+// Sequenced Message Type: one byte code
+#define SEQUENCED_MESSAGE_TYPE_SYSTEM_EVENT_MESSAGE 0x53                  // System Event Message
+#define SEQUENCED_MESSAGE_TYPE_ORDER_ACCEPTED_MESSAGE 0x41                // Order Accepted Message
+#define SEQUENCED_MESSAGE_TYPE_ORDER_REPLACED_MESSAGE 0x55                // Order Replaced Message
+#define SEQUENCED_MESSAGE_TYPE_CANCELLED_ORDER_MESSAGE 0x43               // Cancelled Order Message
+#define SEQUENCED_MESSAGE_TYPE_CANCEL_PENDING_MESSAGE 0x50                // Cancel Pending Message
+#define SEQUENCED_MESSAGE_TYPE_REPLACE_PENDING_MESSAGE 0x4E               // Replace Pending Message
+#define SEQUENCED_MESSAGE_TYPE_EXECUTED_ORDER_MESSAGE 0x45                // Executed Order Message
+#define SEQUENCED_MESSAGE_TYPE_BROKEN_TRADE_MESSAGE 0x42                  // Broken Trade Message
+#define SEQUENCED_MESSAGE_TYPE_REJECTED_ORDER_MESSAGE 0x4A                // Rejected Order Message
+#define SEQUENCED_MESSAGE_TYPE_CANCEL_REJECTED_MESSAGE 0x49               // Cancel Rejected Message
+#define SEQUENCED_MESSAGE_TYPE_ORDER_RESTATED_MESSAGE 0x54                // Order Restated Message
+#define SEQUENCED_MESSAGE_TYPE_MMO_REFRESH_REQUEST_MESSAGE 0x57           // Mmo Refresh Request Message
+#define SEQUENCED_MESSAGE_TYPE_ACCOUNT_QUERY_RESPONSE_MESSAGE 0x51        // Account Query Response Message
+#define SEQUENCED_MESSAGE_TYPE_GTC_CANCELLED_MESSAGE 0x47                 // Gtc Cancelled Message
+#define SEQUENCED_MESSAGE_TYPE_RESPONSE_TO_MMI_NOTIFICATION_MESSAGE 0x52  // Response To Mmi Notification Message
+#define SEQUENCED_MESSAGE_TYPE_PENDING_ORDER_MESSAGE 0x4D                 // Pending Order Message
+#define SEQUENCED_MESSAGE_TYPE_STREAM_STATUS_MESSAGE 0x44                 // Stream Status Message
+
+// Event Code: one byte code
+#define EVENT_CODE_START_OF_DAY 0x53  // Start Of Day
+#define EVENT_CODE_END_OF_DAY 0x45    // End Of Day
+
+// Buy Sell Indicator: one byte code
+#define BUY_SELL_INDICATOR_BUY_ORDER 0x42   // Buy Order
+#define BUY_SELL_INDICATOR_SELL_ORDER 0x53  // Sell Order
+
+// Capacity: one byte code
+#define CAPACITY_CLIENT 0x31                        // Client
+#define CAPACITY_OWN_ACCOUNT 0x32                   // Own Account
+#define CAPACITY_MARKET_MAKER 0x33                  // Market Maker
+#define CAPACITY_ISSUER_HOLDING 0x34                // Issuer Holding
+#define CAPACITY_ISSUE_PRICE_STABILIZING 0x36       // Issue Price Stabilizing
+#define CAPACITY_RISKLESS_PRINCIPAL 0x37            // Riskless Principal
+#define CAPACITY_ISSUER_HOLDING_DEAL 0x38           // Issuer Holding Deal
+#define CAPACITY_ISSUE_PRICE_STABILIZING_DEAL 0x39  // Issue Price Stabilizing Deal
+
+// Algo Indicator: one byte code
+#define ALGO_INDICATOR_NO_ALGO 0x2D  // No Algo
+#define ALGO_INDICATOR_ALGO 0x48     // Algo
+
+// Clearing Account Type Value: one byte code
+#define CLEARING_ACCOUNT_TYPE_VALUE_CUSTOMER_CLIENT 0x31  // Customer Client
+#define CLEARING_ACCOUNT_TYPE_VALUE_FIRM_HOUSE 0x32       // Firm House
+
+// Cross Type Value: one byte code
+#define CROSS_TYPE_VALUE_CLOSING_CROSS 0x43             // Closing Cross
+#define CROSS_TYPE_VALUE_OPENING_CROSS 0x4F             // Opening Cross
+#define CROSS_TYPE_VALUE_SCHEDULED_INTRADAY_CROSS 0x49  // Scheduled Intraday Cross
+#define CROSS_TYPE_VALUE_HALT_CROSS 0x48                // Halt Cross
+#define CROSS_TYPE_VALUE_AUCTION_ON_DEMAND 0x41         // Auction On Demand
+
+// Dea Indicator Value: one byte code
+#define DEA_INDICATOR_VALUE_ORDER_RECEIVED_FROM_A_CUSTOMER 0x31                                    // Order Received From A Customer
+#define DEA_INDICATOR_VALUE_ORDER_RECEIVED_FROM_WITHIN_THE_FIRM 0x32                               // Order Received From Within The Firm
+#define DEA_INDICATOR_VALUE_ORDER_RECEIVED_FROM_ANOTHER_BROKER_DEALER 0x33                         // Order Received From Another Broker Dealer
+#define DEA_INDICATOR_VALUE_ORDER_RECEIVED_FROM_A_CUSTOMER_OR_ORIGINATED_WITH_THE_FIRM 0x34        // Order Received From A Customer Or Originated With The Firm
+#define DEA_INDICATOR_VALUE_ORDER_RECEIVED_FROM_A_DIRECT_ACCESS_OR_SPONSORED_ACCESS_CUSTOMER 0x35  // Order Received From A Direct Access Or Sponsored Access Customer
+
+// Display Value: one byte code
+#define DISPLAY_VALUE_DISPLAY 0x59            // Display
+#define DISPLAY_VALUE_NON_DISPLAY 0x4E        // Non Display
+#define DISPLAY_VALUE_AUCTION_ON_DEMAND 0x41  // Auction On Demand
+#define DISPLAY_VALUE_NORDIC_MID 0x4D         // Nordic Mid
+#define DISPLAY_VALUE_PURE_STREAM 0x53        // Pure Stream
+
+// Liquidity Provision Indicator Value: one byte code
+#define LIQUIDITY_PROVISION_INDICATOR_VALUE_NO_LIQUIDITY_PROVISION 0x4E  // No Liquidity Provision
+#define LIQUIDITY_PROVISION_INDICATOR_VALUE_LIQUIDITY_PROVISION 0x59     // Liquidity Provision
+
+// Peg Type Value: one byte code
+#define PEG_TYPE_VALUE_MIDPOINT 0x4D  // Midpoint
+#define PEG_TYPE_VALUE_MARKET 0x50    // Market
+#define PEG_TYPE_VALUE_PRIMARY 0x52   // Primary
+
+// Stp Action Value: one byte code
+#define STP_ACTION_VALUE_CANCEL_PASSIVE_ORDER 0x31           // Cancel Passive Order
+#define STP_ACTION_VALUE_CANCEL_AGGRESSIVE_ORDER 0x32        // Cancel Aggressive Order
+#define STP_ACTION_VALUE_CANCEL_BOTH_ORDERS 0x33             // Cancel Both Orders
+#define STP_ACTION_VALUE_CREATE_A_TRANSFER_TRANSACTION 0x34  // Create A Transfer Transaction
+
+// Stp Level Value: one byte code
+#define STP_LEVEL_VALUE_MPID_AND_TRADER 0x31         // Mpid And Trader
+#define STP_LEVEL_VALUE_MPID 0x32                    // Mpid
+#define STP_LEVEL_VALUE_SPECIFIED_TRADER_GROUP 0x33  // Specified Trader Group
+
+// Time In Force Value: one byte code
+#define TIME_IN_FORCE_VALUE_DAY 0x30                      // Day
+#define TIME_IN_FORCE_VALUE_GTC_GOOD_TILL_CANCELLED 0x31  // Gtc Good Till Cancelled
+#define TIME_IN_FORCE_VALUE_IOC_IMMEDIATE_OR_CANCEL 0x33  // Ioc Immediate Or Cancel
+#define TIME_IN_FORCE_VALUE_GTT_GOOD_TILL_TIME 0x36       // Gtt Good Till Time
+#define TIME_IN_FORCE_VALUE_GFA_GOOD_FOR_AUCTION 0x42     // Gfa Good For Auction
+
+// Trading At Closing Price Value: one byte code
+#define TRADING_AT_CLOSING_PRICE_VALUE_PARTICIPATE_IN_TRADING_AT_CLOSING_PRICE 0x59         // Participate In Trading At Closing Price
+#define TRADING_AT_CLOSING_PRICE_VALUE_DO_NOT_PARTICIPATE_IN_TRADING_AT_CLOSING_PRICE 0x4E  // Do Not Participate In Trading At Closing Price
+
+// Order Condition Value: one byte code
+#define ORDER_CONDITION_VALUE_MARKET_MAKER_ORDER 0x57          // Market Maker Order
+#define ORDER_CONDITION_VALUE_MARKET_MAKER_ORDER_REFRESH 0x55  // Market Maker Order Refresh
+#define ORDER_CONDITION_VALUE_TOP_OF_BOOK 0x50                 // Top Of Book
+#define ORDER_CONDITION_VALUE_DARK_LIT_SWEEP 0x51              // Dark Lit Sweep
+#define ORDER_CONDITION_VALUE_TRADE_NOW 0x54                   // Trade Now
+
+// Customer Order Capacity Value: one byte code
+#define CUSTOMER_ORDER_CAPACITY_VALUE_RETAIL_CUSTOMER 0x35  // Retail Customer
+
+// Target Strategy Value: one byte code
+#define TARGET_STRATEGY_VALUE_RATE_5_TO_15_PERCENT 0x30    // Rate 5 To 15 Percent
+#define TARGET_STRATEGY_VALUE_RATE_5_TO_30_PERCENT 0x31    // Rate 5 To 30 Percent
+#define TARGET_STRATEGY_VALUE_RATE_10_TO_200_PERCENT 0x35  // Rate 10 To 200 Percent
+#define TARGET_STRATEGY_VALUE_CUSTOM 0x43                  // Custom
+
+// Conditional Type Value: one byte code
+#define CONDITIONAL_TYPE_VALUE_CONDITIONAL_ORDER 0x43  // Conditional Order
+#define CONDITIONAL_TYPE_VALUE_FIRM_UP_ORDER 0x46      // Firm Up Order
+
+// Cancel Reason: one byte code
+#define CANCEL_REASON_USER_REQUESTED_CANCEL 0x55      // User Requested Cancel
+#define CANCEL_REASON_IMMEDIATE_OR_CANCEL_ORDER 0x49  // Immediate Or Cancel Order
+#define CANCEL_REASON_TIMEOUT 0x54                    // Timeout
+#define CANCEL_REASON_SUPERVISORY 0x53                // Supervisory
+#define CANCEL_REASON_SELF_MATCH_PREVENTION 0x51      // Self Match Prevention
+#define CANCEL_REASON_HIDDEN_PEG_NOT_LIS 0x4C         // Hidden Peg Not Lis
+#define CANCEL_REASON_BAD_QUOTE 0x4E                  // Bad Quote
+#define CANCEL_REASON_STATE_MANAGEMENT 0x52           // State Management
+
+// Cancel Pending Reason: one byte code
+#define CANCEL_PENDING_REASON_CANCEL_PENDING_COMPLETION_OF_AUCTION_ON_DEMAND 0x41  // Cancel Pending Completion Of Auction On Demand
+
+// Trading Mode: one byte code
+#define TRADING_MODE_OPENING_AUCTION 0x4F             // Opening Auction
+#define TRADING_MODE_SCHEDULED_INTRADAY_AUCTION 0x49  // Scheduled Intraday Auction
+#define TRADING_MODE_UNSCHEDULED_AUCTION 0x55         // Unscheduled Auction
+#define TRADING_MODE_CONTINUOUS_TRADING 0x32          // Continuous Trading
+#define TRADING_MODE_AT_MARKET_CLOSE_TRADING 0x33     // At Market Close Trading
+#define TRADING_MODE_ON_DEMAND_AUCTION 0x50           // On Demand Auction
+
+// Transaction Category: one byte code
+#define TRANSACTION_CATEGORY_DARK_TRADE 0x44  // Dark Trade
+#define TRANSACTION_CATEGORY_NONE_APPLY 0x2D  // None Apply
+
+// Transaction Type Algo Indicator: one byte code
+#define TRANSACTION_TYPE_ALGO_INDICATOR_ALGORITHMIC_TRADE 0x48     // Algorithmic Trade
+#define TRANSACTION_TYPE_ALGO_INDICATOR_NO_ALGORITHMIC_TRADE 0x2D  // No Algorithmic Trade
+
+// Broken Trade Reason: one byte code
+#define BROKEN_TRADE_REASON_ERRONEOUS 0x45    // Erroneous
+#define BROKEN_TRADE_REASON_CONSENT 0x43      // Consent
+#define BROKEN_TRADE_REASON_SUPERVISORY 0x53  // Supervisory
+
+// Restate Reason: one byte code
+#define RESTATE_REASON_REFRESH_OF_DISPLAY 0x52         // Refresh Of Display
+#define RESTATE_REASON_UPDATE_OF_DISPLAYED_PRICE 0x50  // Update Of Displayed Price
+
+// Pending Order Reason: one byte code
+#define PENDING_ORDER_REASON_SYSTEM_PROCESSING 0x53  // System Processing
+
+// Status: one byte code
+#define STATUS_STREAM_ON 0x4F   // Stream On
+#define STATUS_STREAM_OFF 0x58  // Stream Off
+
+// ---- Types -------------------------------------------------------------------
+
+// Debug packets are intended to provide human readable text that may aid in debugging problems
+typedef struct _DebugPacket (UINT16 packet_length) where (packet_length >= 1) {
+  UINT8 debug_text[(((UINT32) packet_length) - 1)];
+} DebugPacket;
 
 // The SoupBinTCP server sends a Login Accepted Packet in response to receiving a valid Login Request from the client
-entrypoint typedef struct _LoginAcceptedPacket {
+typedef struct _LoginAcceptedPacket {
   UINT8 accepted_session[10];          // bytes 0 to 9
   UINT8 accepted_sequence_number[20];  // bytes 10 to 29
 } LoginAcceptedPacket;
 
-// ---- Login Rejected Packet: 1 byte -------------------------------------------
-
 // The SoupBinTCP server sends this packet in response to an invalid Login Request Packet from the client
-entrypoint typedef struct _LoginRejectedPacket {
+typedef struct _LoginRejectedPacket {
   UINT8 reject_reason_code;  // byte 0
 } LoginRejectedPacket;
 
-// ---- System Event Message: 9 bytes -------------------------------------------
-
 // Signals an event affecting the entire Nasdaq Nordic system
-entrypoint typedef struct _SystemEventMessage {
+typedef struct _SystemEventMessage {
   UINT64BE timestamp;  // bytes 0 to 7
   UINT8 event_code;    // byte 8
 } SystemEventMessage;
 
-// ---- Clearing Account: 12 bytes ----------------------------------------------
-
 // Clearing Account
-entrypoint typedef struct _ClearingAccount {
+typedef struct _ClearingAccount {
   UINT8 clearing_account_value[12];  // bytes 0 to 11
 } ClearingAccount;
 
-// ---- Clearing Account Type: 1 byte -------------------------------------------
-
 // Clearing Account Type
-entrypoint typedef struct _ClearingAccountType {
+typedef struct _ClearingAccountType {
   UINT8 clearing_account_type_value;  // byte 0
 } ClearingAccountType;
 
-// ---- Clearing Firm: 4 bytes --------------------------------------------------
-
 // Clearing Firm
-entrypoint typedef struct _ClearingFirm {
+typedef struct _ClearingFirm {
   UINT8 clearing_firm_value[4];  // bytes 0 to 3
 } ClearingFirm;
 
-// ---- Client Reference: 15 bytes ----------------------------------------------
-
 // Client Reference
-entrypoint typedef struct _ClientReference {
+typedef struct _ClientReference {
   UINT8 client_reference_value[15];  // bytes 0 to 14
 } ClientReference;
 
-// ---- Cross Type: 1 byte ------------------------------------------------------
-
 // Cross Type
-entrypoint typedef struct _CrossType {
+typedef struct _CrossType {
   UINT8 cross_type_value;  // byte 0
 } CrossType;
 
-// ---- Dea Indicator: 1 byte ---------------------------------------------------
-
 // DEA Indicator
-entrypoint typedef struct _DeaIndicator {
+typedef struct _DeaIndicator {
   UINT8 dea_indicator_value;  // byte 0
 } DeaIndicator;
 
-// ---- Display: 1 byte ---------------------------------------------------------
-
 // Display
-entrypoint typedef struct _Display {
+typedef struct _Display {
   UINT8 display_value;  // byte 0
 } Display;
 
-// ---- Display Price: 4 bytes --------------------------------------------------
-
 // Display Price
-entrypoint typedef struct _DisplayPrice {
+typedef struct _DisplayPrice {
   UINT32BE display_price_value;  // bytes 0 to 3
 } DisplayPrice;
 
-// ---- Display Quantity: 4 bytes -----------------------------------------------
-
 // Display Quantity
-entrypoint typedef struct _DisplayQuantity {
+typedef struct _DisplayQuantity {
   UINT32BE display_quantity_value;  // bytes 0 to 3
 } DisplayQuantity;
 
-// ---- Expire Time: 2 bytes ----------------------------------------------------
-
 // Expire Time
-entrypoint typedef struct _ExpireTime {
+typedef struct _ExpireTime {
   UINT16BE expire_time_value;  // bytes 0 to 1
 } ExpireTime;
 
-// ---- Firm: 4 bytes -----------------------------------------------------------
-
 // Firm
-entrypoint typedef struct _Firm {
+typedef struct _Firm {
   UINT8 firm_value[4];  // bytes 0 to 3
 } Firm;
 
-// ---- Liquidity Provision Indicator: 1 byte -----------------------------------
-
 // Liquidity Provision Indicator
-entrypoint typedef struct _LiquidityProvisionIndicator {
+typedef struct _LiquidityProvisionIndicator {
   UINT8 liquidity_provision_indicator_value;  // byte 0
 } LiquidityProvisionIndicator;
 
-// ---- Max Floor: 4 bytes ------------------------------------------------------
-
 // Max Floor
-entrypoint typedef struct _MaxFloor {
+typedef struct _MaxFloor {
   UINT32BE max_floor_value;  // bytes 0 to 3
 } MaxFloor;
 
-// ---- Minimum Quantity: 4 bytes -----------------------------------------------
-
 // Minimum Quantity
-entrypoint typedef struct _MinimumQuantity {
+typedef struct _MinimumQuantity {
   UINT32BE minimum_quantity_value;  // bytes 0 to 3
 } MinimumQuantity;
 
-// ---- Order Reference: 10 bytes -----------------------------------------------
-
 // Order Reference
-entrypoint typedef struct _OrderReference {
+typedef struct _OrderReference {
   UINT8 order_reference_value[10];  // bytes 0 to 9
 } OrderReference;
 
-// ---- Original Order Entry Date: 4 bytes --------------------------------------
-
 // Original Order Entry Date
-entrypoint typedef struct _OriginalOrderEntryDate {
+typedef struct _OriginalOrderEntryDate {
   UINT32BE original_order_entry_date_value;  // bytes 0 to 3
 } OriginalOrderEntryDate;
 
-// ---- Original Order Reference Number: 8 bytes --------------------------------
-
 // Original Order Reference Number
-entrypoint typedef struct _OriginalOrderReferenceNumber {
+typedef struct _OriginalOrderReferenceNumber {
   UINT64BE original_order_reference_number_value;  // bytes 0 to 7
 } OriginalOrderReferenceNumber;
 
-// ---- Peg Difference: 4 bytes -------------------------------------------------
-
 // Peg Difference
-entrypoint typedef struct _PegDifference {
+typedef struct _PegDifference {
   UINT32BE peg_difference_value;  // bytes 0 to 3, signed, read here as unsigned
 } PegDifference;
 
-// ---- Peg Type: 1 byte --------------------------------------------------------
-
 // Peg Type
-entrypoint typedef struct _PegType {
+typedef struct _PegType {
   UINT8 peg_type_value;  // byte 0
 } PegType;
 
-// ---- Random Reserve: 4 bytes -------------------------------------------------
-
 // Random Reserve
-entrypoint typedef struct _RandomReserve {
+typedef struct _RandomReserve {
   UINT32BE random_reserve_value;  // bytes 0 to 3
 } RandomReserve;
 
-// ---- Secondary Order Reference Number: 8 bytes -------------------------------
-
 // Secondary Order Reference Number
-entrypoint typedef struct _SecondaryOrderReferenceNumber {
+typedef struct _SecondaryOrderReferenceNumber {
   UINT64BE secondary_order_reference_number_value;  // bytes 0 to 7
 } SecondaryOrderReferenceNumber;
 
-// ---- Stp Action: 1 byte ------------------------------------------------------
-
 // STP Action
-entrypoint typedef struct _StpAction {
+typedef struct _StpAction {
   UINT8 stp_action_value;  // byte 0
 } StpAction;
 
-// ---- Stp Level: 1 byte -------------------------------------------------------
-
 // STP Level
-entrypoint typedef struct _StpLevel {
+typedef struct _StpLevel {
   UINT8 stp_level_value;  // byte 0
 } StpLevel;
 
-// ---- Stp Trader Group: 2 bytes -----------------------------------------------
-
 // STP Trader Group
-entrypoint typedef struct _StpTraderGroup {
+typedef struct _StpTraderGroup {
   UINT8 stp_trader_group_value[2];  // bytes 0 to 1
 } StpTraderGroup;
 
-// ---- Time In Force: 1 byte ---------------------------------------------------
-
 // Time in Force
-entrypoint typedef struct _TimeInForce {
+typedef struct _TimeInForce {
   UINT8 time_in_force_value;  // byte 0
 } TimeInForce;
 
-// ---- Trading At Closing Price: 1 byte ----------------------------------------
-
 // Trading at Closing price
-entrypoint typedef struct _TradingAtClosingPrice {
+typedef struct _TradingAtClosingPrice {
   UINT8 trading_at_closing_price_value;  // byte 0
 } TradingAtClosingPrice;
 
-// ---- Order Condition: 1 byte -------------------------------------------------
-
 // Order Condition
-entrypoint typedef struct _OrderCondition {
+typedef struct _OrderCondition {
   UINT8 order_condition_value;  // byte 0
 } OrderCondition;
 
-// ---- Cumulative Quantity: 4 bytes --------------------------------------------
-
 // Cumulative Quantity
-entrypoint typedef struct _CumulativeQuantity {
+typedef struct _CumulativeQuantity {
   UINT32BE cumulative_quantity_value;  // bytes 0 to 3
 } CumulativeQuantity;
 
-// ---- Customer Order Capacity: 1 byte -----------------------------------------
-
 // Customer Order Capacity
-entrypoint typedef struct _CustomerOrderCapacity {
+typedef struct _CustomerOrderCapacity {
   UINT8 customer_order_capacity_value;  // byte 0
 } CustomerOrderCapacity;
 
-// ---- Target Strategy: 1 byte -------------------------------------------------
-
 // Target Strategy
-entrypoint typedef struct _TargetStrategy {
+typedef struct _TargetStrategy {
   UINT8 target_strategy_value;  // byte 0
 } TargetStrategy;
 
-// ---- Min Rate: 2 bytes -------------------------------------------------------
-
 // Min Rate
-entrypoint typedef struct _MinRate {
+typedef struct _MinRate {
   UINT16BE min_rate_value;  // bytes 0 to 1
 } MinRate;
 
-// ---- Max Rate: 2 bytes -------------------------------------------------------
-
 // Max Rate
-entrypoint typedef struct _MaxRate {
+typedef struct _MaxRate {
   UINT16BE max_rate_value;  // bytes 0 to 1
 } MaxRate;
 
-// ---- Conditional Type: 1 byte ------------------------------------------------
-
 // Conditional Type
-entrypoint typedef struct _ConditionalType {
+typedef struct _ConditionalType {
   UINT8 conditional_type_value;  // byte 0
 } ConditionalType;
 
-// ---- Firm Up Id: 4 bytes -----------------------------------------------------
-
 // Firm-Up ID
-entrypoint typedef struct _FirmUpId {
+typedef struct _FirmUpId {
   UINT32BE firm_up_id_value;  // bytes 0 to 3
 } FirmUpId;
 
-// ---- Cancelled Order Message: 17 bytes ---------------------------------------
+// Branch
+casetype _ValuePayload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x01: ClearingAccount clearing_account;
+    case 0x02: ClearingAccountType clearing_account_type;
+    case 0x03: ClearingFirm clearing_firm;
+    case 0x04: ClientReference client_reference;
+    case 0x05: CrossType cross_type;
+    case 0x06: DeaIndicator dea_indicator;
+    case 0x07: Display display;
+    case 0x08: DisplayPrice display_price;
+    case 0x09: DisplayQuantity display_quantity;
+    case 0x0A: ExpireTime expire_time;
+    case 0x0B: Firm firm;
+    case 0x0C: LiquidityProvisionIndicator liquidity_provision_indicator;
+    case 0x0D: MaxFloor max_floor;
+    case 0x0E: MinimumQuantity minimum_quantity;
+    case 0x0F: OrderReference order_reference;
+    case 0x10: OriginalOrderEntryDate original_order_entry_date;
+    case 0x11: OriginalOrderReferenceNumber original_order_reference_number;
+    case 0x12: PegDifference peg_difference;
+    case 0x13: PegType peg_type;
+    case 0x14: RandomReserve random_reserve;
+    case 0x15: SecondaryOrderReferenceNumber secondary_order_reference_number;
+    case 0x16: StpAction stp_action;
+    case 0x17: StpLevel stp_level;
+    case 0x18: StpTraderGroup stp_trader_group;
+    case 0x19: TimeInForce time_in_force;
+    case 0x1A: TradingAtClosingPrice trading_at_closing_price;
+    case 0x1B: OrderCondition order_condition;
+    case 0x1C: CumulativeQuantity cumulative_quantity;
+    case 0x1D: CustomerOrderCapacity customer_order_capacity;
+    case 0x1E: TargetStrategy target_strategy;
+    case 0x1F: MinRate min_rate;
+    case 0x20: MaxRate max_rate;
+    case 0x21: ConditionalType conditional_type;
+    case 0x22: FirmUpId firm_up_id;
+    default: UINT8 unknown[available];
+  }
+} ValuePayload;
+
+// Additional appendage tag value
+typedef struct _TagValue {
+  UINT8 length { length >= 1 };                                                                                                   // byte 0
+  UINT8 tag;                                                                                                                      // byte 1
+  ValuePayload(tag, ((((UINT32) length) + 1) - 2)) value_payload[:byte-size-single-element-array ((((UINT32) length) + 1) - 2)];
+} TagValue;
+
+// Acknowledges receipt and acceptance of a valid Enter Order
+typedef struct _OrderAcceptedMessage {
+  UINT64BE timestamp;                                          // bytes 0 to 7
+  UINT32BE user_ref_num;                                       // bytes 8 to 11
+  UINT32BE price;                                              // bytes 12 to 15
+  UINT64BE order_reference_number;                             // bytes 16 to 23
+  UINT8 buy_sell_indicator;                                    // byte 24
+  UINT32BE order_book;                                         // bytes 25 to 28
+  UINT32BE quantity;                                           // bytes 29 to 32
+  UINT8 user[6];                                               // bytes 33 to 38
+  UINT32BE execution_within_firm;                              // bytes 39 to 42
+  UINT32BE investment_decision_within_firm_short_code;         // bytes 43 to 46
+  UINT32BE client_identifier;                                  // bytes 47 to 50
+  UINT8BE reserved_78 : 2;                                     // byte 51
+  UINT8BE execution_decision_within_firm : 2;                  // byte 51
+  UINT8BE investment_decision_within_firm : 2;                 // byte 51
+  UINT8BE client_identification : 2;                           // byte 51
+  UINT8 capacity;                                              // byte 52
+  UINT8 algo_indicator;                                        // byte 53
+  UINT16BE appendage_length;                                   // bytes 54 to 55
+  TagValue tag_value[:byte-size ((UINT32) appendage_length)];
+} OrderAcceptedMessage;
+
+// Confirms that an order has been replaced
+typedef struct _OrderReplacedMessage {
+  UINT64BE timestamp;                                          // bytes 0 to 7
+  UINT32BE orig_user_ref_num;                                  // bytes 8 to 11
+  UINT32BE new_user_ref_num;                                   // bytes 12 to 15
+  UINT32BE price;                                              // bytes 16 to 19
+  UINT64BE order_reference_number;                             // bytes 20 to 27
+  UINT8 buy_sell_indicator;                                    // byte 28
+  UINT32BE order_book;                                         // bytes 29 to 32
+  UINT32BE quantity;                                           // bytes 33 to 36
+  UINT8 user[6];                                               // bytes 37 to 42
+  UINT16BE appendage_length;                                   // bytes 43 to 44
+  TagValue tag_value[:byte-size ((UINT32) appendage_length)];
+} OrderReplacedMessage;
 
 // An order has been reduced or cancelled
-entrypoint typedef struct _CancelledOrderMessage {
+typedef struct _CancelledOrderMessage {
   UINT64BE timestamp;           // bytes 0 to 7
   UINT32BE user_ref_num;        // bytes 8 to 11
   UINT32BE decrement_quantity;  // bytes 12 to 15
   UINT8 cancel_reason;          // byte 16
 } CancelledOrderMessage;
 
-// ---- Cancel Pending Message: 13 bytes ----------------------------------------
-
 // A cancel request cannot be applied immediately
-entrypoint typedef struct _CancelPendingMessage {
+typedef struct _CancelPendingMessage {
   UINT64BE timestamp;           // bytes 0 to 7
   UINT32BE user_ref_num;        // bytes 8 to 11
   UINT8 cancel_pending_reason;  // byte 12
 } CancelPendingMessage;
 
-// ---- Replace Pending Message: 17 bytes ---------------------------------------
-
 // A replace request cannot be applied immediately
-entrypoint typedef struct _ReplacePendingMessage {
+typedef struct _ReplacePendingMessage {
   UINT64BE timestamp;            // bytes 0 to 7
   UINT32BE orig_user_ref_num;    // bytes 8 to 11
   UINT32BE user_ref_num;         // bytes 12 to 15
   UINT8 replace_pending_reason;  // byte 16
 } ReplacePendingMessage;
 
-// ---- Broken Trade Message: 20 bytes ------------------------------------------
+// An order has been executed in whole or in part
+typedef struct _ExecutedOrderMessage {
+  UINT64BE timestamp;                     // bytes 0 to 7
+  UINT32BE user_ref_num;                  // bytes 8 to 11
+  UINT32BE executed_quantity;             // bytes 12 to 15
+  UINT32BE execution_price;               // bytes 16 to 19
+  UINT8 liquidity_flag;                   // byte 20
+  UINT32BE match_number;                  // bytes 21 to 24
+  UINT8 contra_firm[4];                   // bytes 25 to 28
+  UINT8 trading_mode;                     // byte 29
+  UINT8 transaction_category;             // byte 30
+  UINT8 transaction_type_algo_indicator;  // byte 31
+  UINT8BE liquidity_self_trade : 1;       // byte 32
+  UINT8BE liquidity_top_of_book : 1;      // byte 32
+  UINT8BE liquidity_internalized : 1;     // byte 32
+  UINT8BE liquidity_indicator : 2;        // byte 32
+  UINT8BE reserved_13 : 3;                // byte 32
+  UINT8 last_market;                      // byte 33
+} ExecutedOrderMessage;
 
 // An execution has been broken and cannot be reinstated
-entrypoint typedef struct _BrokenTradeMessage {
+typedef struct _BrokenTradeMessage {
   UINT64BE timestamp;                     // bytes 0 to 7
   UINT32BE user_ref_num;                  // bytes 8 to 11
   UINT32BE match_number;                  // bytes 12 to 15
@@ -329,56 +552,53 @@ entrypoint typedef struct _BrokenTradeMessage {
   UINT8 transaction_type_algo_indicator;  // byte 19
 } BrokenTradeMessage;
 
-// ---- Rejected Order Message: 14 bytes ----------------------------------------
-
 // An order has been rejected
-entrypoint typedef struct _RejectedOrderMessage {
+typedef struct _RejectedOrderMessage {
   UINT64BE timestamp;              // bytes 0 to 7
   UINT32BE user_ref_num;           // bytes 8 to 11
   UINT16BE rejected_order_reason;  // bytes 12 to 13
 } RejectedOrderMessage;
 
-// ---- Cancel Rejected Message: 14 bytes ---------------------------------------
-
 // A cancel request has been rejected
-entrypoint typedef struct _CancelRejectedMessage {
+typedef struct _CancelRejectedMessage {
   UINT64BE timestamp;               // bytes 0 to 7
   UINT32BE user_ref_num;            // bytes 8 to 11
   UINT16BE cancel_rejected_reason;  // bytes 12 to 13
 } CancelRejectedMessage;
 
-// ---- Mmo Refresh Request Message: 17 bytes -----------------------------------
+// An order has been restated by the system
+typedef struct _OrderRestatedMessage {
+  UINT64BE timestamp;                                          // bytes 0 to 7
+  UINT32BE user_ref_num;                                       // bytes 8 to 11
+  UINT8 restate_reason;                                        // byte 12
+  UINT16BE appendage_length;                                   // bytes 13 to 14
+  TagValue tag_value[:byte-size ((UINT32) appendage_length)];
+} OrderRestatedMessage;
 
 // Requests a market maker order refresh
-entrypoint typedef struct _MmoRefreshRequestMessage {
+typedef struct _MmoRefreshRequestMessage {
   UINT64BE timestamp;        // bytes 0 to 7
   Firm firm;                 // bytes 8 to 11
   UINT32BE order_book;       // bytes 12 to 15
   UINT8 mmo_refresh_reason;  // byte 16
 } MmoRefreshRequestMessage;
 
-// ---- Account Query Response Message: 12 bytes --------------------------------
-
 // Indicates the next available UserRefNum
-entrypoint typedef struct _AccountQueryResponseMessage {
+typedef struct _AccountQueryResponseMessage {
   UINT64BE timestamp;          // bytes 0 to 7
   UINT32BE next_user_ref_num;  // bytes 8 to 11
 } AccountQueryResponseMessage;
 
-// ---- Gtc Cancelled Message: 22 bytes -----------------------------------------
-
 // A Gtc order could not be restated in the morning
-entrypoint typedef struct _GtcCancelledMessage {
+typedef struct _GtcCancelledMessage {
   UINT64BE timestamp;                                            // bytes 0 to 7
   OriginalOrderEntryDate original_order_entry_date;              // bytes 8 to 11
   OriginalOrderReferenceNumber original_order_reference_number;  // bytes 12 to 19
   UINT16BE reason;                                               // bytes 20 to 21
 } GtcCancelledMessage;
 
-// ---- Response To Mmi Notification Message: 29 bytes --------------------------
-
 // Response to a market making instruction notification
-entrypoint typedef struct _ResponseToMmiNotificationMessage {
+typedef struct _ResponseToMmiNotificationMessage {
   UINT64BE timestamp;        // bytes 0 to 7
   UINT32BE user_ref_num;     // bytes 8 to 11
   UINT32BE order_book;       // bytes 12 to 15
@@ -389,22 +609,75 @@ entrypoint typedef struct _ResponseToMmiNotificationMessage {
   UINT8 instruction_status;  // byte 28
 } ResponseToMmiNotificationMessage;
 
-// ---- Pending Order Message: 13 bytes -----------------------------------------
-
 // An order is pending while the system processes it
-entrypoint typedef struct _PendingOrderMessage {
+typedef struct _PendingOrderMessage {
   UINT64BE timestamp;          // bytes 0 to 7
   UINT32BE user_ref_num;       // bytes 8 to 11
   UINT8 pending_order_reason;  // byte 12
 } PendingOrderMessage;
 
-// ---- Stream Status Message: 15 bytes -----------------------------------------
-
 // Sent whenever an indication of interest changes its streaming
-entrypoint typedef struct _StreamStatusMessage {
+typedef struct _StreamStatusMessage {
   UINT64BE timestamp;     // bytes 0 to 7
   UINT32BE user_ref_num;  // bytes 8 to 11
   UINT16BE cum_rate;      // bytes 12 to 13
   UINT8 status;           // byte 14
 } StreamStatusMessage;
+
+// The sequenced (server to client) message carried by the packet, opaque bytes unless an application source dispatches it
+casetype _SequencedMessage (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x53: SystemEventMessage system_event_message;
+    case 0x41: OrderAcceptedMessage order_accepted_message;
+    case 0x55: OrderReplacedMessage order_replaced_message;
+    case 0x43: CancelledOrderMessage cancelled_order_message;
+    case 0x50: CancelPendingMessage cancel_pending_message;
+    case 0x4E: ReplacePendingMessage replace_pending_message;
+    case 0x45: ExecutedOrderMessage executed_order_message;
+    case 0x42: BrokenTradeMessage broken_trade_message;
+    case 0x4A: RejectedOrderMessage rejected_order_message;
+    case 0x49: CancelRejectedMessage cancel_rejected_message;
+    case 0x54: OrderRestatedMessage order_restated_message;
+    case 0x57: MmoRefreshRequestMessage mmo_refresh_request_message;
+    case 0x51: AccountQueryResponseMessage account_query_response_message;
+    case 0x47: GtcCancelledMessage gtc_cancelled_message;
+    case 0x52: ResponseToMmiNotificationMessage response_to_mmi_notification_message;
+    case 0x4D: PendingOrderMessage pending_order_message;
+    case 0x44: StreamStatusMessage stream_status_message;
+    default: UINT8 unknown[available];
+  }
+} SequencedMessage;
+
+// The Sequenced Data Packets act as an envelope to carry the actual sequenced data messages that are transferred from the server to the client. Each Sequenced Data Packet carries one message from the higher-lever protocol
+typedef struct _SequencedDataPacket (UINT16 packet_length) where (packet_length >= 2) {
+  UINT8 sequenced_message_type;                                                                                                                                // byte 0
+  SequencedMessage(sequenced_message_type, (((UINT32) packet_length) - 2)) sequenced_message[:byte-size-single-element-array (((UINT32) packet_length) - 2)];
+} SequencedDataPacket;
+
+// Branch
+casetype _ServerPayload (UINT8 selector, UINT32 length, UINT16 packet_length, UINT32 available) {
+  switch (selector) {
+    case 0x2B: DebugPacket(packet_length) debug_packet;
+    case 0x41: LoginAcceptedPacket login_accepted_packet;
+    case 0x4A: LoginRejectedPacket login_rejected_packet;
+    case 0x53: SequencedDataPacket(packet_length) sequenced_data_packet[:byte-size-single-element-array length];
+    case 0x48: unit server_heartbeat;
+    case 0x5A: unit end_of_session;
+    default: UINT8 unknown[available];
+  }
+} ServerPayload;
+
+// Soup Bin Tcp Packet sent by the server
+typedef struct _ServerSoupBinTcpPacket {
+  UINT16BE packet_length { packet_length >= 1 };                                                                                                                                                                // bytes 0 to 1
+  UINT8 server_packet_type;                                                                                                                                                                                     // byte 2
+  ServerPayload(server_packet_type, (((UINT32) packet_length) - 1), packet_length, ((((UINT32) packet_length) + 2) - 3)) server_payload[:byte-size-single-element-array ((((UINT32) packet_length) + 2) - 3)];
+} ServerSoupBinTcpPacket;
+
+// ---- Packet: ServerPacket ----------------------------------------------------
+
+// SoupBinTCP Packet sent by the server
+entrypoint typedef struct _ServerPacket (UINT32 available) {
+  ServerSoupBinTcpPacket server_soup_bin_tcp_packet[:byte-size available];
+} ServerPacket;
 

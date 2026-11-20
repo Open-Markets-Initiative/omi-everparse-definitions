@@ -1,45 +1,289 @@
-// Qatar Stock Exchange Qse Cash Market Data
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Qse QseCash MarketData Xdp v2.6
 //
+// Protocol:
+//   Organization: Qatar Stock Exchange
+//   Protocol: Qse Cash Market Data
+//   Encoding: Exchange Data Publisher
+//   Version: 2.6
+//   Date: 03/01/2010
+//   Specification: XDP for UTP Cash Version 2.6.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out QseCash_MarketData_v2_6.3d
-//
-// What this definition does not state, and the model does:
-// - a field filling what is left of what holds it
-// - a run filling what frames it
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 16 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// All messages contain a common packet header, so that a client implements line level protocol processing once and then develops parsing algorithms only for its choice of message
-entrypoint typedef struct _PacketHeader {
-  UINT16BE packet_length;           // bytes 0 to 1
-  UINT16BE packet_type;             // bytes 2 to 3
-  UINT32BE packet_sequence_number;  // bytes 4 to 7
-  UINT32BE send_time;               // bytes 8 to 11
-  UINT16BE service_id;              // bytes 12 to 13
-  UINT8 delivery_flag;              // byte 14
-  UINT8 number_msg_entries;         // byte 15
-} PacketHeader;
+// Packet Type: 2 byte code
+#define PACKET_TYPE_GENERIC_QUOTES 0x03E2                // Generic Quotes
+#define PACKET_TYPE_GENERIC_MARKET_INFORMATION 0x03E3    // Generic Market Information
+#define PACKET_TYPE_GENERIC_INDICES 0x03E4               // Generic Indices
+#define PACKET_TYPE_GENERIC_TRADES 0x03E6                // Generic Trades
+#define PACKET_TYPE_GENERIC_ORDERBOOK 0x00E6             // Generic Orderbook
+#define PACKET_TYPE_REFRESH_COMBINED_PACKET_TYPE 0x03E7  // Refresh Combined Packet Type
 
-// ---- Message Header: 4 bytes -------------------------------------------------
+// Delivery Flag: one byte code
+#define DELIVERY_FLAG_REAL_TIME_MESSAGE_UNCOMPRESSED 0x00       // Real Time Message Uncompressed
+#define DELIVERY_FLAG_RETRANSMISSION_MESSAGE_UNCOMPRESSED 0x02  // Retransmission Message Uncompressed
+#define DELIVERY_FLAG_REFRESH_MESSAGE_ZLIB_COMPRESSED 0x11      // Refresh Message Zlib Compressed
 
-entrypoint typedef struct _MessageHeader {
-  UINT16BE message_size;  // bytes 0 to 1
-  UINT16BE message_type;  // bytes 2 to 3
-} MessageHeader;
+// Message Type: 2 byte code
+#define MESSAGE_TYPE_STOCK_STATE_CHANGE_MESSAGE 0x01F9                  // Stock State Change Message
+#define MESSAGE_TYPE_CLASS_STATE_CHANGE_MESSAGE 0x0204                  // Class State Change Message
+#define MESSAGE_TYPE_MAIL_MESSAGE 0x020B                                // Mail Message
+#define MESSAGE_TYPE_INDICATIVE_MATCHING_PRICE_MESSAGE 0x0212           // Indicative Matching Price Message
+#define MESSAGE_TYPE_COLLARS_MESSAGE 0x0219                             // Collars Message
+#define MESSAGE_TYPE_SESSION_TIMETABLE_MESSAGE 0x021B                   // Session Timetable Message
+#define MESSAGE_TYPE_GLOBAL_MARKET_ACTIVITY_SUMMARY_MESSAGE 0x0221      // Global Market Activity Summary Message
+#define MESSAGE_TYPE_START_REFERENTIAL_MESSAGE 0x0226                   // Start Referential Message
+#define MESSAGE_TYPE_END_REFERENTIAL_MESSAGE 0x0227                     // End Referential Message
+#define MESSAGE_TYPE_REFERENTIAL_MESSAGE 0x022B                         // Referential Message
+#define MESSAGE_TYPE_TRADE_CREATION_MESSAGE 0x00DC                      // Trade Creation Message
+#define MESSAGE_TYPE_TRADE_CANCELLATION_MESSAGE 0x00DD                  // Trade Cancellation Message
+#define MESSAGE_TYPE_TRADE_FULL_INFORMATION_MESSAGE 0x00F0              // Trade Full Information Message
+#define MESSAGE_TYPE_PRICE_UPDATE_MESSAGE 0x00F1                        // Price Update Message
+#define MESSAGE_TYPE_AUCTION_SUMMARY_MESSAGE 0x00F5                     // Auction Summary Message
+#define MESSAGE_TYPE_VWAP_CLOSING_PRICE_MESSAGE 0x00F7                  // Vwap Closing Price Message
+#define MESSAGE_TYPE_QUOTES_MESSAGE 0x008C                              // Quotes Message
+#define MESSAGE_TYPE_ORDER_UPDATE_MARKET_SHEET_MESSAGE 0x00E6           // Order Update Market Sheet Message
+#define MESSAGE_TYPE_ORDERBOOK_RETRANSMISSION_DELIMITER_MESSAGE 0x00E7  // Orderbook Retransmission Delimiter Message
+#define MESSAGE_TYPE_REAL_TIME_INDEX_MESSAGE 0x021E                     // Real Time Index Message
+#define MESSAGE_TYPE_INDEX_SUMMARY_MESSAGE 0x021F                       // Index Summary Message
+#define MESSAGE_TYPE_INDEX_COMPOSITION_MESSAGE 0x0220                   // Index Composition Message
+#define MESSAGE_TYPE_START_REFRESH_MESSAGE 0x0244                       // Start Refresh Message
+#define MESSAGE_TYPE_END_REFRESH_MESSAGE 0x0245                         // End Refresh Message
 
-// ---- Stock State Change Message: 48 bytes ------------------------------------
+// Order Entry Rejection: one byte code
+#define ORDER_ENTRY_REJECTION_NOT_APPLICABLE 0x30         // Not Applicable
+#define ORDER_ENTRY_REJECTION_ORDER_ENTRY_ALLOWED 0x4E    // Order Entry Allowed
+#define ORDER_ENTRY_REJECTION_ORDER_ENTRY_FORBIDDEN 0x59  // Order Entry Forbidden
+
+// Instrument State: one byte code
+#define INSTRUMENT_STATE_NOT_APPLICABLE 0x30  // Not Applicable
+#define INSTRUMENT_STATE_AUCTION 0x41         // Auction
+#define INSTRUMENT_STATE_HALTED 0x48          // Halted
+#define INSTRUMENT_STATE_CLOSED 0x43          // Closed
+
+// Instrument Trading Status: one byte code
+#define INSTRUMENT_TRADING_STATUS_SUSPENDED 0x53  // Suspended
+
+// Halt Reason: one byte code
+#define HALT_REASON_NOT_APPLICABLE 0x30                       // Not Applicable
+#define HALT_REASON_HALTED_NO_LIQUIDITY_PROVIDER 0x52         // Halted No Liquidity Provider
+#define HALT_REASON_OPENING_PRICE_OUTSIDE_COLLARS 0x43        // Opening Price Outside Collars
+#define HALT_REASON_MANUEL_HALTING_BY_MARKET_OPERATIONS 0x4D  // Manuel Halting By Market Operations
+
+// Action Affecting State: one byte code
+#define ACTION_AFFECTING_STATE_NOT_APPLICABLE 0x30                                                // Not Applicable
+#define ACTION_AFFECTING_STATE_TRADING_ON_THE_INSTRUMENT_AT_THE_OPENING_SENT_BEFORE_O 0x43        // Trading On The Instrument At The Opening Sent Before O
+#define ACTION_AFFECTING_STATE_CANCELLED_PROGRAMMED_OPENING 0x44                                  // Cancelled Programmed Opening
+#define ACTION_AFFECTING_STATE_INSTRUMENT_MANUALLY_HALTED_BY_MARKET_OPERATIONS 0x4D               // Instrument Manually Halted By Market Operations
+#define ACTION_AFFECTING_STATE_INSTRUMENT_IS_BEING_INITIALIZED_BEGINNING_OF_THE_TRADING_DAY 0x4E  // Instrument Is Being Initialized Beginning Of The Trading Day
+#define ACTION_AFFECTING_STATE_INSTRUMENT_OPENED 0x4F                                             // Instrument Opened
+#define ACTION_AFFECTING_STATE_DEFERRED_PROGRAMMED_OPENING 0x50                                   // Deferred Programmed Opening
+#define ACTION_AFFECTING_STATE_AUTOMATIC_HALTING_AT_THE_CLASS_AUCTION 0x52                        // Automatic Halting At The Class Auction
+
+// Instrument State Tcs: one byte code
+#define INSTRUMENT_STATE_TCS_NOT_APPLICABLE 0x30            // Not Applicable
+#define INSTRUMENT_STATE_TCS_INSTRUMENT_IS_FORBIDDEN 0x53   // Instrument Is Forbidden
+#define INSTRUMENT_STATE_TCS_INSTRUMENT_IS_AUTHORIZED 0x41  // Instrument Is Authorized
+
+// Period Side: one byte code
+#define PERIOD_SIDE_NOT_APPLICABLE 0x30     // Not Applicable
+#define PERIOD_SIDE_BID_ONLY_PERIOD 0x41    // Bid Only Period
+#define PERIOD_SIDE_OFFER_ONLY_PERIOD 0x56  // Offer Only Period
+
+// Instrument Group State: one byte code
+#define INSTRUMENT_GROUP_STATE_PRE_OPENING 0x50                    // Pre Opening
+#define INSTRUMENT_GROUP_STATE_BEGINNING_OF_DAY_CONSULTATION 0x43  // Beginning Of Day Consultation
+#define INSTRUMENT_GROUP_STATE_OPENING 0x4F                        // Opening
+#define INSTRUMENT_GROUP_STATE_MARKET_SESSION 0x53                 // Market Session
+#define INSTRUMENT_GROUP_STATE_TRADING_AT_LAST 0x52                // Trading At Last
+#define INSTRUMENT_GROUP_STATE_SURVEILLANCE_INTERVENTION 0x4E      // Surveillance Intervention
+#define INSTRUMENT_GROUP_STATE_END_OF_DAY_INQUIRY 0x46             // End Of Day Inquiry
+#define INSTRUMENT_GROUP_STATE_INTERRUPTED 0x5A                    // Interrupted
+#define INSTRUMENT_GROUP_STATE_FORBIDDEN 0x49                      // Forbidden
+
+// Session Type: one byte code
+#define SESSION_TYPE_EARLY 0x45         // Early
+#define SESSION_TYPE_CORE_SESSION 0x43  // Core Session
+#define SESSION_TYPE_LATE 0x4C          // Late
+
+// Priority Indicator: one byte code
+#define PRIORITY_INDICATOR_URGENT_MESSAGE 0x4F      // Urgent Message
+#define PRIORITY_INDICATOR_NON_URGENT_MESSAGE 0x4E  // Non Urgent Message
+
+// Type Of Message: one byte code
+#define TYPE_OF_MESSAGE_MARKET_INFORMATION_CONTENTS 0x42       // Market Information Contents
+#define TYPE_OF_MESSAGE_TECHNICAL_INFORMATION 0x54             // Technical Information
+#define TYPE_OF_MESSAGE_MARKET_AND_TECHNICAL_INFORMATION 0x52  // Market And Technical Information
+
+// Collar Type: one byte code
+#define COLLAR_TYPE_DYNAMIC_COLLARS 0x44    // Dynamic Collars
+#define COLLAR_TYPE_STATIC_THRESHOLDS 0x53  // Static Thresholds
+
+// Period Indicator: one byte code
+#define PERIOD_INDICATOR_MORNING_EFFECTIVE_FOR_THE_CURRENT_DAY 0x4D       // Morning Effective For The Current Day
+#define PERIOD_INDICATOR_EVENING_EFFECTIVE_FOR_THE_NEXT_TRADING_DAY 0x45  // Evening Effective For The Next Trading Day
+
+// Instrument Category: one byte code
+#define INSTRUMENT_CATEGORY_STOCK 0x41                    // Stock
+#define INSTRUMENT_CATEGORY_BOND 0x4F                     // Bond
+#define INSTRUMENT_CATEGORY_WARRANT_AND_CERTIFICATE 0x57  // Warrant And Certificate
+#define INSTRUMENT_CATEGORY_TRACKER 0x54                  // Tracker
+#define INSTRUMENT_CATEGORY_MISCELLANEOUS 0x44            // Miscellaneous
+
+// Type Of Derivatives: one byte code
+#define TYPE_OF_DERIVATIVES_INAV_INDICATIVE_NET_ASSET_VALUE_FOR_ETF_EXCHANGE_TRADED 0x31  // Inav Indicative Net Asset Value For Etf Exchange Traded
+#define TYPE_OF_DERIVATIVES_SUPPORTS_SHORT_TERMS_OPTIONS 0x34                             // Supports Short Terms Options
+#define TYPE_OF_DERIVATIVES_SUPPORTS_LONG_TERM_OPTIONS 0x36                               // Supports Long Term Options
+#define TYPE_OF_DERIVATIVES_NO 0x39                                                       // No
+
+// Repo Indicator: one byte code
+#define REPO_INDICATOR_INSTRUMENT_NEITHER_ELIGIBLE_FOR_THE_SRD_NOR_ELIGIBLE_FOR_THE_LOAN 0x30    // Instrument Neither Eligible For The Srd Nor Eligible For The Loan
+#define REPO_INDICATOR_INSTRUMENT_ELIGIBLE_FOR_THE_SRD_AND_FOR_THE_LOAN_AND_LENDING 0x31         // Instrument Eligible For The Srd And For The Loan And Lending
+#define REPO_INDICATOR_INSTRUMENT_ELIGIBLE_FOR_THE_SRD_BUT_NOT_FOR_THE_LOAN_AND_LENDING 0x32     // Instrument Eligible For The Srd But Not For The Loan And Lending
+#define REPO_INDICATOR_INSTRUMENT_ELIGIBLE_FOR_THE_LOAN_AND_LENDING_MARKET_BUT_NOT_FOR_THE 0x33  // Instrument Eligible For The Loan And Lending Market But Not For The
+#define REPO_INDICATOR_NON_SIGNIFICANT 0x38                                                      // Non Significant
+
+// Type Of Unit Exp: one byte code
+#define TYPE_OF_UNIT_EXP_IN_UNITS 0x01                                    // In Units
+#define TYPE_OF_UNIT_EXP_AS_A_OF_NOMINAL 0x02                             // As A Of Nominal
+#define TYPE_OF_UNIT_EXP_AS_A_OF_NOMINAL_INCLUDING_ACCRUED_INTEREST 0x03  // As A Of Nominal Including Accrued Interest
+#define TYPE_OF_UNIT_EXP_IN_KILOGRAMS 0x08                                // In Kilograms
+#define TYPE_OF_UNIT_EXP_IN_OUNCES 0x09                                   // In Ounces
+
+// Market Indicator: one byte code
+#define MARKET_INDICATOR_NOT_USED 0x00     // Not Used
+#define MARKET_INDICATOR_CASH 0x01         // Cash
+#define MARKET_INDICATOR_NOT_DEFINED 0x09  // Not Defined
+
+// Tax Code: one byte code
+#define TAX_CODE_NOT_ELIGIBLE_TO_PEA 0x00  // Not Eligible To Pea
+#define TAX_CODE_ELIGIBLE_TO_PEA 0x03      // Eligible To Pea
+#define TAX_CODE_NOT_PROVIDED 0x09         // Not Provided
+
+// Algo: one byte code
+#define ALGO_FIFO 0x46         // Fifo
+#define ALGO_FIFO_ORIGIN 0x4F  // Fifo Origin
+
+// Small Trade Indicator: one byte code
+#define SMALL_TRADE_INDICATOR_NOT_A_SMALL_TRADE 0x31  // Not A Small Trade
+#define SMALL_TRADE_INDICATOR_SMALL_TRADE 0x32        // Small Trade
+
+// Trad Cond 2: one byte code
+#define TRAD_COND_2_NOT_LAST_OF_A_SERIES_OF_TRADES_AT_THE_SAME_PRICE 0x30  // Not Last Of A Series Of Trades At The Same Price
+#define TRAD_COND_2_LAST_OF_A_SERIES_OF_TRADE_AT_THE_SAME_PRICE 0x31       // Last Of A Series Of Trade At The Same Price
+
+// Trad Cond 3: one byte code
+#define TRAD_COND_3_TRADE_DOES_NOT_STEM_FROM_A_CROSS_ORDER 0x30  // Trade Does Not Stem From A Cross Order
+#define TRAD_COND_3_TRADE_STEMS_FROM_A_CROSS_ORDER 0x31          // Trade Stems From A Cross Order
+#define TRAD_COND_3_VALUATION_TRADE 0x34                         // Valuation Trade
+
+// Trade Origin: one byte code
+#define TRADE_ORIGIN_ORDERS_FROM_THE_BOOK 0x42  // Orders From The Book
+#define TRADE_ORIGIN_BLOCK_TRADE 0x4F           // Block Trade
+
+// Opening Trade Indicator: one byte code
+#define OPENING_TRADE_INDICATOR_OPENING 0x4F       // Opening
+#define OPENING_TRADE_INDICATOR_CORE_SESSION 0x53  // Core Session
+
+// Tick Direction: one byte code
+#define TICK_DIRECTION_POSITIVE 0x2B                                    // Positive
+#define TICK_DIRECTION_NEGATIVE 0x2D                                    // Negative
+#define TICK_DIRECTION_NO_VARIATION_OR_DATA_FIELD_NOT_SIGNIFICANT 0x30  // No Variation Or Data Field Not Significant
+
+// Type Of Price: 2 byte code
+#define TYPE_OF_PRICE_TRADE_CANCELLATION 0x0000                     // Trade Cancellation
+#define TYPE_OF_PRICE_ASK_PRICE 0x0002                              // Ask Price
+#define TYPE_OF_PRICE_BID_PRICE 0x0003                              // Bid Price
+#define TYPE_OF_PRICE_FIRST_TRADED_PRICE_ONE_QUOTATION_ONLY 0x0004  // First Traded Price One Quotation Only
+#define TYPE_OF_PRICE_MARKET_IMBALANCE_ASK_PRICE 0x0005             // Market Imbalance Ask Price
+#define TYPE_OF_PRICE_MARKET_IMBALANCE_BID_PRICE 0x0006             // Market Imbalance Bid Price
+#define TYPE_OF_PRICE_CHANGE_OF_FIRST_PRICE 0x001E                  // Change Of First Price
+#define TYPE_OF_PRICE_NEW_HIGH_PRICE 0x001F                         // New High Price
+#define TYPE_OF_PRICE_NEW_LOW_PRICE 0x0020                          // New Low Price
+#define TYPE_OF_PRICE_NEW_LAST_PRICE 0x0021                         // New Last Price
+#define TYPE_OF_PRICE_NEW_PREVIOUS_DAYS_CLOSING_PRICE 0x0022        // New Previous Days Closing Price
+#define TYPE_OF_PRICE_WARRANT_OPENING_INDICATIVE_VALUE 0x0029       // Warrant Opening Indicative Value
+#define TYPE_OF_PRICE_WARRANT_CLOSING_INDICATIVE_VALUE 0x002A       // Warrant Closing Indicative Value
+#define TYPE_OF_PRICE_INDICATIVE_PRICE 0x0033                       // Indicative Price
+
+// Type Of Last Price: 2 byte code
+#define TYPE_OF_LAST_PRICE_FIRST_TRADED_PRICE 0x0004                       // First Traded Price
+#define TYPE_OF_LAST_PRICE_N_TRADED_PRICE_RESUME_AFTER_RESERVATION 0x0007  // N Traded Price Resume After Reservation
+
+// Instrument Valuation Price: one byte code
+#define INSTRUMENT_VALUATION_PRICE_NOT_A_VALUATION_PRICE 0x30  // Not A Valuation Price
+#define INSTRUMENT_VALUATION_PRICE_VALUATION_PRICE 0x31        // Valuation Price
+
+// Type Of Ask Price: one byte code
+#define TYPE_OF_ASK_PRICE_LIMIT_ORDER 0x00                // Limit Order
+#define TYPE_OF_ASK_PRICE_MARKET_ORDER 0x01               // Market Order
+#define TYPE_OF_ASK_PRICE_AT_OPENING_ORDER_NSC_ONLY 0x02  // At Opening Order Nsc Only
+
+// Type Of Bid Price: one byte code
+#define TYPE_OF_BID_PRICE_LIMIT_ORDER 0x00                // Limit Order
+#define TYPE_OF_BID_PRICE_MARKET_ORDER 0x01               // Market Order
+#define TYPE_OF_BID_PRICE_AT_OPENING_ORDER_NSC_ONLY 0x02  // At Opening Order Nsc Only
+
+// Quote Condition: one byte code
+#define QUOTE_CONDITION_NO_LIQUIDITY_PROVIDER_LP 0x30  // No Liquidity Provider Lp
+#define QUOTE_CONDITION_LP_ONLY_ON_ASK_SIDE 0x31       // Lp Only On Ask Side
+#define QUOTE_CONDITION_LP_ONLY_ON_BID_SIDE 0x32       // Lp Only On Bid Side
+#define QUOTE_CONDITION_LP_ON_ASK_AND_BID_SIDES 0x33   // Lp On Ask And Bid Sides
+
+// Order Type: one byte code
+#define ORDER_TYPE_MARKET_ORDER 0x31           // Market Order
+#define ORDER_TYPE_LIMIT_ORDER 0x32            // Limit Order
+#define ORDER_TYPE_MARKET_TO_LIMIT_ORDER 0x4B  // Market To Limit Order
+#define ORDER_TYPE_PEG_ORDER 0x50              // Peg Order
+
+// Action Type: one byte code
+#define ACTION_TYPE_NEW_ORDER 0x41                                                          // New Order
+#define ACTION_TYPE_DELETION_OF_ORDER_IDENTIFIED_BY_ORDER_ID 0x44                           // Deletion Of Order Identified By Order Id
+#define ACTION_TYPE_DELETION_OF_ORDER_IDENTIFIED_BY_ORDER_ID_AND_ALL_PRECEDING_ORDERS 0x50  // Deletion Of Order Identified By Order Id And All Preceding Orders
+#define ACTION_TYPE_DELETION_OF_ALL_ORDERS_FOR_THE_GIVEN_INSTRUMENT_DEPENDING_ON_THE 0x46   // Deletion Of All Orders For The Given Instrument Depending On The
+#define ACTION_TYPE_RETRANSMISSION_OF_ALL_ORDERS_FOR_THE_GIVEN_INSTRUMENT 0x59              // Retransmission Of All Orders For The Given Instrument
+
+// Rebroadcast Indicator: one byte code
+#define REBROADCAST_INDICATOR_CURRENT_DAY 0x30   // Current Day
+#define REBROADCAST_INDICATOR_PREVIOUS_DAY 0x31  // Previous Day
+
+// ---- Types -------------------------------------------------------------------
 
 // A Stock State Change message is generated by the trading engines to announce a change in the state of an instrument.
-entrypoint typedef struct _StockStateChangeMessage {
+typedef struct _StockStateChangeMessage {
   UINT32BE symbol_index;            // bytes 0 to 3
   UINT32BE source_seq_num;          // bytes 4 to 7
   UINT32BE source_time;             // bytes 8 to 11
@@ -59,10 +303,8 @@ entrypoint typedef struct _StockStateChangeMessage {
   UINT8 filler_binary_int_1;        // byte 47
 } StockStateChangeMessage;
 
-// ---- Class State Change Message: 24 bytes ------------------------------------
-
 // A Class State Change message announces a change in the trading market phase of a class or instrument group, which instruments belonging to it inherit.
-entrypoint typedef struct _ClassStateChangeMessage {
+typedef struct _ClassStateChangeMessage {
   UINT32BE source_seq_num;          // bytes 0 to 3
   UINT32BE source_time;             // bytes 4 to 7
   UINT32BE system_id;               // bytes 8 to 11
@@ -74,10 +316,8 @@ entrypoint typedef struct _ClassStateChangeMessage {
   UINT8 class_state[4];             // bytes 20 to 23
 } ClassStateChangeMessage;
 
-// ---- Mail Message: 964 bytes -------------------------------------------------
-
 // A Mail message carries a free text notice broadcast to market participants.
-entrypoint typedef struct _MailMessage {
+typedef struct _MailMessage {
   UINT32BE source_seq_num;          // bytes 0 to 3
   UINT32BE source_time;             // bytes 4 to 7
   UINT32BE system_id;               // bytes 8 to 11
@@ -95,15 +335,13 @@ entrypoint typedef struct _MailMessage {
   UINT8 filler_ascii_str_2[2];      // bytes 962 to 963
 } MailMessage;
 
-// ---- Indicative Matching Price Message: 32 bytes -----------------------------
-
 // An Indicative Matching Price message gives the price at which the instrument would open, were the opening to occur at this moment.
-entrypoint typedef struct _IndicativeMatchingPriceMessage {
+typedef struct _IndicativeMatchingPriceMessage {
   UINT32BE symbol_index;            // bytes 0 to 3
   UINT32BE source_seq_num;          // bytes 4 to 7
   UINT32BE source_time;             // bytes 8 to 11
   UINT32BE im_price;                // bytes 12 to 15
-  UINT32BE variation;               // bytes 16 to 19
+  UINT32BE variation;               // bytes 16 to 19, signed, read here as unsigned
   UINT32BE system_id;               // bytes 20 to 23
   UINT16BE source_time_micro_secs;  // bytes 24 to 25
   UINT8 price_scale_code;           // byte 26
@@ -111,10 +349,8 @@ entrypoint typedef struct _IndicativeMatchingPriceMessage {
   UINT32BE im_volume;               // bytes 28 to 31
 } IndicativeMatchingPriceMessage;
 
-// ---- Collars Message: 32 bytes -----------------------------------------------
-
 // A Collars message gives the upper and lower price thresholds beyond which an instrument is reserved.
-entrypoint typedef struct _CollarsMessage {
+typedef struct _CollarsMessage {
   UINT32BE symbol_index;            // bytes 0 to 3
   UINT32BE source_seq_num;          // bytes 4 to 7
   UINT32BE source_time;             // bytes 8 to 11
@@ -128,10 +364,8 @@ entrypoint typedef struct _CollarsMessage {
   UINT8 filler_ascii_str_3[3];      // bytes 29 to 31
 } CollarsMessage;
 
-// ---- Session Timetable Message: 80 bytes -------------------------------------
-
 // A Session Timetable message gives the timetable of the trading session for a group of instruments.
-entrypoint typedef struct _SessionTimetableMessage {
+typedef struct _SessionTimetableMessage {
   UINT32BE source_seq_num;          // bytes 0 to 3
   UINT32BE source_time;             // bytes 4 to 7
   UINT32BE system_id;               // bytes 8 to 11
@@ -151,10 +385,8 @@ entrypoint typedef struct _SessionTimetableMessage {
   UINT8 filler_ascii_str_2[2];      // bytes 78 to 79
 } SessionTimetableMessage;
 
-// ---- Global Market Activity Summary Message: 30 bytes ------------------------
-
 // A Global Market Activity Summary message provides an overall summary of the global market activity. This message is used only at Qatar Exchange.
-entrypoint typedef struct _GlobalMarketActivitySummaryMessage {
+typedef struct _GlobalMarketActivitySummaryMessage {
   UINT32BE source_seq_num;          // bytes 0 to 3
   UINT32BE source_time;             // bytes 4 to 7
   UINT32BE system_id;               // bytes 8 to 11
@@ -166,26 +398,20 @@ entrypoint typedef struct _GlobalMarketActivitySummaryMessage {
   UINT8 filler_ascii_str_3[3];      // bytes 27 to 29
 } GlobalMarketActivitySummaryMessage;
 
-// ---- Start Referential Message: 4 bytes --------------------------------------
-
 // A Start Referential message marks the beginning of the broadcast of the reference data.
-entrypoint typedef struct _StartReferentialMessage {
+typedef struct _StartReferentialMessage {
   UINT8 indicator;              // byte 0
   UINT8 filler_ascii_str_3[3];  // bytes 1 to 3
 } StartReferentialMessage;
 
-// ---- End Referential Message: 4 bytes ----------------------------------------
-
 // An End Referential message marks the end of the broadcast of the reference data.
-entrypoint typedef struct _EndReferentialMessage {
+typedef struct _EndReferentialMessage {
   UINT8 indicator;              // byte 0
   UINT8 filler_ascii_str_3[3];  // bytes 1 to 3
 } EndReferentialMessage;
 
-// ---- Referential Message: 492 bytes ------------------------------------------
-
 // A Referential message carries the characteristics of an instrument, including its standard identifiers, trading parameters and reference prices.
-entrypoint typedef struct _ReferentialMessage {
+typedef struct _ReferentialMessage {
   UINT32BE symbol_index;                     // bytes 0 to 3
   UINT32BE source_seq_num;                   // bytes 4 to 7
   UINT32BE source_time;                      // bytes 8 to 11
@@ -263,10 +489,8 @@ entrypoint typedef struct _ReferentialMessage {
   UINT8 filler_binary_int_12[12];            // bytes 480 to 491
 } ReferentialMessage;
 
-// ---- Trade Creation Message: 40 bytes ----------------------------------------
-
 // A Trade Creation message announces a trade that has just been created in the trading engine.
-entrypoint typedef struct _TradeCreationMessage {
+typedef struct _TradeCreationMessage {
   UINT32BE symbol_index;            // bytes 0 to 3
   UINT32BE source_time;             // bytes 4 to 7
   UINT32BE trade_id_number;         // bytes 8 to 11
@@ -284,10 +508,8 @@ entrypoint typedef struct _TradeCreationMessage {
   UINT8 price_scale_code;           // byte 39
 } TradeCreationMessage;
 
-// ---- Trade Cancellation Message: 24 bytes ------------------------------------
-
 // A Trade Cancellation message announces the cancellation of a trade previously published.
-entrypoint typedef struct _TradeCancellationMessage {
+typedef struct _TradeCancellationMessage {
   UINT32BE symbol_index;              // bytes 0 to 3
   UINT32BE source_time;               // bytes 4 to 7
   UINT32BE source_seq_num;            // bytes 8 to 11
@@ -297,10 +519,8 @@ entrypoint typedef struct _TradeCancellationMessage {
   UINT8 filler_binary_int_2[2];       // bytes 22 to 23
 } TradeCancellationMessage;
 
-// ---- Trade Full Information Message: 60 bytes --------------------------------
-
 // A Trade Full Information message carries a trade along with the cumulated statistics of the instrument for the trading day.
-entrypoint typedef struct _TradeFullInformationMessage {
+typedef struct _TradeFullInformationMessage {
   UINT32BE symbol_index;            // bytes 0 to 3
   UINT32BE source_time;             // bytes 4 to 7
   UINT32BE trade_id_number;         // bytes 8 to 11
@@ -311,7 +531,7 @@ entrypoint typedef struct _TradeFullInformationMessage {
   UINT32BE cumulative_quantity;     // bytes 28 to 31
   UINT32BE highest_price;           // bytes 32 to 35
   UINT32BE lowest_price;            // bytes 36 to 39
-  UINT32BE variation_last_price;    // bytes 40 to 43
+  UINT32BE variation_last_price;    // bytes 40 to 43, signed, read here as unsigned
   UINT32BE system_id;               // bytes 44 to 47
   UINT16BE source_time_micro_secs;  // bytes 48 to 49
   UINT8 filler_binary_int_2[2];     // bytes 50 to 51
@@ -325,17 +545,15 @@ entrypoint typedef struct _TradeFullInformationMessage {
   UINT8 price_scale_code;           // byte 59
 } TradeFullInformationMessage;
 
-// ---- Price Update Message: 40 bytes ------------------------------------------
-
 // A Price Update message updates the statistics of an instrument without carrying a new trade.
-entrypoint typedef struct _PriceUpdateMessage {
+typedef struct _PriceUpdateMessage {
   UINT32BE symbol_index;            // bytes 0 to 3
   UINT32BE source_time;             // bytes 4 to 7
   UINT32BE source_seq_num;          // bytes 8 to 11
   UINT32BE price;                   // bytes 12 to 15
   UINT32BE highest_price;           // bytes 16 to 19
   UINT32BE lowest_price;            // bytes 20 to 23
-  UINT32BE variation_last_price;    // bytes 24 to 27
+  UINT32BE variation_last_price;    // bytes 24 to 27, signed, read here as unsigned
   UINT32BE system_id;               // bytes 28 to 31
   UINT16BE source_time_micro_secs;  // bytes 32 to 33
   UINT16BE type_of_price;           // bytes 34 to 35
@@ -344,10 +562,8 @@ entrypoint typedef struct _PriceUpdateMessage {
   UINT8 variation_scale_code;       // byte 39
 } PriceUpdateMessage;
 
-// ---- Auction Summary Message: 48 bytes ---------------------------------------
-
 // An Auction Summary message summarises the trades resulting from an auction.
-entrypoint typedef struct _AuctionSummaryMessage {
+typedef struct _AuctionSummaryMessage {
   UINT32BE symbol_index;             // bytes 0 to 3
   UINT32BE source_time;              // bytes 4 to 7
   UINT32BE source_seq_num;           // bytes 8 to 11
@@ -356,7 +572,7 @@ entrypoint typedef struct _AuctionSummaryMessage {
   UINT32BE highest_price;            // bytes 20 to 23
   UINT32BE lowest_price;             // bytes 24 to 27
   UINT32BE cumulative_quantity;      // bytes 28 to 31
-  UINT32BE variation;                // bytes 32 to 35
+  UINT32BE variation;                // bytes 32 to 35, signed, read here as unsigned
   UINT32BE system_id;                // bytes 36 to 39
   UINT16BE source_time_micro_secs;   // bytes 40 to 41
   UINT16BE type_of_last_price;       // bytes 42 to 43
@@ -366,10 +582,8 @@ entrypoint typedef struct _AuctionSummaryMessage {
   UINT8 variation_scale_code;        // byte 47
 } AuctionSummaryMessage;
 
-// ---- Vwap Closing Price Message: 44 bytes ------------------------------------
-
 // A VWAP - Closing Price message contains the real time Volume-Weighted Average Price for an instrument together with the current closing price. This message is used exclusively at Qatar Exchange.
-entrypoint typedef struct _VwapClosingPriceMessage {
+typedef struct _VwapClosingPriceMessage {
   UINT32BE symbol_index;            // bytes 0 to 3
   UINT32BE source_time;             // bytes 4 to 7
   UINT32BE source_seq_num;          // bytes 8 to 11
@@ -385,10 +599,8 @@ entrypoint typedef struct _VwapClosingPriceMessage {
   UINT8 filler_ascii_str_3[3];      // bytes 41 to 43
 } VwapClosingPriceMessage;
 
-// ---- Quotes Message: 48 bytes ------------------------------------------------
-
 // A Quotes message carries the best limits of the order book for an instrument.
-entrypoint typedef struct _QuotesMessage {
+typedef struct _QuotesMessage {
   UINT32BE symbol_index;            // bytes 0 to 3
   UINT32BE source_seq_num;          // bytes 4 to 7
   UINT32BE source_time;             // bytes 8 to 11
@@ -409,10 +621,8 @@ entrypoint typedef struct _QuotesMessage {
   UINT8 filler_ascii_str_1;         // byte 47
 } QuotesMessage;
 
-// ---- Order Update Market Sheet Message: 60 bytes -----------------------------
-
 // An Order Update message carries a single order of the market sheet, so that the order book of an instrument may be rebuilt and maintained.
-entrypoint typedef struct _OrderUpdateMarketSheetMessage {
+typedef struct _OrderUpdateMarketSheetMessage {
   UINT32BE symbol_index;               // bytes 0 to 3
   UINT32BE source_time;                // bytes 4 to 7
   UINT32BE source_seq_num;             // bytes 8 to 11
@@ -436,10 +646,8 @@ entrypoint typedef struct _OrderUpdateMarketSheetMessage {
   UINT8 filler_binary_int_1;           // byte 59
 } OrderUpdateMarketSheetMessage;
 
-// ---- Orderbook Retransmission Delimiter Message: 12 bytes --------------------
-
 // An Orderbook Retransmission Delimiter message delimits the retransmission of a market sheet, so that the order book is cleaned before the orders that follow are applied.
-entrypoint typedef struct _OrderbookRetransmissionDelimiterMessage {
+typedef struct _OrderbookRetransmissionDelimiterMessage {
   UINT32BE source_time;            // bytes 0 to 3
   UINT32BE source_seq_num;         // bytes 4 to 7
   UINT8 trading_engine_id[2];      // bytes 8 to 9
@@ -447,14 +655,12 @@ entrypoint typedef struct _OrderbookRetransmissionDelimiterMessage {
   UINT8 retransmission_indicator;  // byte 11
 } OrderbookRetransmissionDelimiterMessage;
 
-// ---- Real Time Index Message: 48 bytes ---------------------------------------
-
 // A Real Time Index message carries the current level of an index.
-entrypoint typedef struct _RealTimeIndexMessage {
+typedef struct _RealTimeIndexMessage {
   UINT32BE symbol_index;                        // bytes 0 to 3
   UINT32BE source_time;                         // bytes 4 to 7
   UINT32BE index_level;                         // bytes 8 to 11
-  UINT32BE forerunner_level;                    // bytes 12 to 15
+  UINT32BE forerunner_level;                    // bytes 12 to 15, signed, read here as unsigned
   UINT32BE session_high;                        // bytes 16 to 19
   UINT32BE session_low;                         // bytes 20 to 23
   UINT32BE percentage_of_capitalization;        // bytes 24 to 27
@@ -471,10 +677,8 @@ entrypoint typedef struct _RealTimeIndexMessage {
   UINT8 filler_ascii_str_2[2];                  // bytes 46 to 47
 } RealTimeIndexMessage;
 
-// ---- Index Summary Message: 88 bytes -----------------------------------------
-
 // An Index Summary message gives the summary of an index for the trading day.
-entrypoint typedef struct _IndexSummaryMessage {
+typedef struct _IndexSummaryMessage {
   UINT32BE symbol_index;                 // bytes 0 to 3
   UINT32BE source_time;                  // bytes 4 to 7
   UINT32BE preliminary_opening_level;    // bytes 8 to 11
@@ -485,7 +689,7 @@ entrypoint typedef struct _IndexSummaryMessage {
   UINT32BE opening_reference_time;       // bytes 28 to 31
   UINT32BE closing_reference_level;      // bytes 32 to 35
   UINT32BE closing_reference_time;       // bytes 36 to 39
-  UINT32BE percent_variation_prev_clos;  // bytes 40 to 43
+  UINT32BE percent_variation_prev_clos;  // bytes 40 to 43, signed, read here as unsigned
   UINT32BE high_level;                   // bytes 44 to 47
   UINT32BE high_time;                    // bytes 48 to 51
   UINT32BE low_level;                    // bytes 52 to 55
@@ -502,10 +706,8 @@ entrypoint typedef struct _IndexSummaryMessage {
   UINT8 filler_ascii_str_3[3];           // bytes 85 to 87
 } IndexSummaryMessage;
 
-// ---- Index Composition Message: 48 bytes -------------------------------------
-
 // An Index Composition message transmits one instrument making up an index, its weight and its adjustment coefficient.
-entrypoint typedef struct _IndexCompositionMessage {
+typedef struct _IndexCompositionMessage {
   UINT32BE symbol_index;                 // bytes 0 to 3
   UINT32BE source_time;                  // bytes 4 to 7
   UINT32BE instrument_weight;            // bytes 8 to 11
@@ -521,17 +723,72 @@ entrypoint typedef struct _IndexCompositionMessage {
   UINT8 level_scale_code;                // byte 47
 } IndexCompositionMessage;
 
-// ---- Start Refresh Message: 4 bytes ------------------------------------------
-
 // A refresh cycle begins with a Start Refresh message on the multicast channels.
-entrypoint typedef struct _StartRefreshMessage {
+typedef struct _StartRefreshMessage {
   UINT32BE last_seq_num;  // bytes 0 to 3
 } StartRefreshMessage;
 
-// ---- End Refresh Message: 4 bytes --------------------------------------------
-
 // A refresh cycle ends with an End Refresh message on the multicast channels.
-entrypoint typedef struct _EndRefreshMessage {
+typedef struct _EndRefreshMessage {
   UINT32BE last_seq_num;  // bytes 0 to 3
 } EndRefreshMessage;
+
+// Branch
+casetype _Payload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x01F9: StockStateChangeMessage stock_state_change_message;
+    case 0x0204: ClassStateChangeMessage class_state_change_message;
+    case 0x020B: MailMessage mail_message;
+    case 0x0212: IndicativeMatchingPriceMessage indicative_matching_price_message;
+    case 0x0219: CollarsMessage collars_message;
+    case 0x021B: SessionTimetableMessage session_timetable_message;
+    case 0x0221: GlobalMarketActivitySummaryMessage global_market_activity_summary_message;
+    case 0x0226: StartReferentialMessage start_referential_message;
+    case 0x0227: EndReferentialMessage end_referential_message;
+    case 0x022B: ReferentialMessage referential_message;
+    case 0x00DC: TradeCreationMessage trade_creation_message;
+    case 0x00DD: TradeCancellationMessage trade_cancellation_message;
+    case 0x00F0: TradeFullInformationMessage trade_full_information_message;
+    case 0x00F1: PriceUpdateMessage price_update_message;
+    case 0x00F5: AuctionSummaryMessage auction_summary_message;
+    case 0x00F7: VwapClosingPriceMessage vwap_closing_price_message;
+    case 0x008C: QuotesMessage quotes_message;
+    case 0x00E6: OrderUpdateMarketSheetMessage order_update_market_sheet_message;
+    case 0x00E7: OrderbookRetransmissionDelimiterMessage orderbook_retransmission_delimiter_message;
+    case 0x021E: RealTimeIndexMessage real_time_index_message;
+    case 0x021F: IndexSummaryMessage index_summary_message;
+    case 0x0220: IndexCompositionMessage index_composition_message;
+    case 0x0244: StartRefreshMessage start_refresh_message;
+    case 0x0245: EndRefreshMessage end_refresh_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16BE message_size { message_size >= 2 };                                                                                                                     // bytes 0 to 1
+  UINT16BE message_type;                                                                                                                                           // bytes 2 to 3
+  Payload(message_type, ((((UINT32) message_size) + 2) - 4)) payload[:byte-size-single-element-array ((((UINT32) message_size) + 2) - 4)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// The packet's message area: the messages it counts, or one ZliB block holding them
+typedef struct _MessageBuffer (UINT8 number_msg_entries, UINT32 available, mutable UINT32 * tally) {
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size available];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) number_msg_entries); };
+} MessageBuffer;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Qse Xdp Udp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 16) {
+  UINT16BE packet_length;                                                                                                       // bytes 0 to 1
+  UINT16BE packet_type;                                                                                                         // bytes 2 to 3
+  UINT32BE packet_sequence_number;                                                                                              // bytes 4 to 7
+  UINT32BE send_time;                                                                                                           // bytes 8 to 11
+  UINT16BE service_id;                                                                                                          // bytes 12 to 13
+  UINT8 delivery_flag;                                                                                                          // byte 14
+  UINT8 number_msg_entries;                                                                                                     // byte 15
+  MessageBuffer(number_msg_entries, (available - 16), tally) message_buffer[:byte-size-single-element-array (available - 16)];
+} Packet;
 

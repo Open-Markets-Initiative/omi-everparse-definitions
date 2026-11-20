@@ -1,44 +1,112 @@
-// Chicago Board Options Exchange Streaming Market Index
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Cboe C1Options Index Csm v1.3.3
 //
+// Protocol:
+//   Organization: Chicago Board Options Exchange
+//   Protocol: Streaming Market Index
+//   Encoding: Csm
+//   Version: 1.3.3
+//   Date: 02/06/2018
+//   Specification: Cboe Streaming Index v1.3.3.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out C1Options_Index_v1_3_3.3d
-//
-// What this definition does not state, and the model does:
-// - a run counted by a field
-// - a length prefix framing what follows
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 16 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-entrypoint typedef struct _PacketHeader {
-  UINT8 version;               // byte 0
-  UINT16BE packet_length;      // bytes 1 to 2
-  UINT64BE sending_time;       // bytes 3 to 10
-  UINT8 message_count;         // byte 11
-  UINT32BE first_msg_seq_num;  // bytes 12 to 15
-} PacketHeader;
+// Template Id: one byte code
+#define TEMPLATE_ID_INDEX_VALUE_MESSAGE 0x16  // Index Value Message
+#define TEMPLATE_ID_HEARTBEAT_MESSAGE 0x10    // Heartbeat Message
 
-// ---- Message Header: 8 bytes -------------------------------------------------
+// Md Entry Type: one byte code
+#define MD_ENTRY_TYPE_BID 0x30          // Bid
+#define MD_ENTRY_TYPE_ASK 0x31          // Ask
+#define MD_ENTRY_TYPE_INDEX_VALUE 0x33  // Index Value
 
-entrypoint typedef struct _MessageHeader {
-  UINT16BE message_length;  // bytes 0 to 1
-  UINT8 template_id;        // byte 2
-  UINT8 message_type;       // byte 3
-  UINT32BE msg_seq_num;     // bytes 4 to 7
-} MessageHeader;
+// ---- Types -------------------------------------------------------------------
 
-// ---- Md Entry Px: 5 bytes ----------------------------------------------------
+typedef struct _Symbol {
+  UINT8 symbol_length;                          // byte 0
+  UINT8 symbol_text[((UINT32) symbol_length)];
+} Symbol;
 
-entrypoint typedef struct _MdEntryPx {
+typedef struct _MdEntryPx {
   UINT8 md_entry_px_exponent;     // byte 0, signed, read here as unsigned
   UINT32BE md_entry_px_mantissa;  // bytes 1 to 4, signed, read here as unsigned
 } MdEntryPx;
+
+// The Following Fields Repeat NoMDEntries times
+typedef struct _MdEntries {
+  UINT8 md_entry_type;    // byte 0
+  MdEntryPx md_entry_px;  // bytes 1 to 5
+} MdEntries;
+
+// Index value messages contain the values associated with a calculated index. They are transmitted when an index is calculated.
+typedef struct _IndexValueMessage {
+  Symbol symbol;
+  UINT8 no_md_entries;
+  MdEntries md_entries[:byte-size (((UINT32) no_md_entries) * 6)];
+} IndexValueMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x16: IndexValueMessage index_value_message;
+    case 0x10: unit heartbeat_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16BE message_length { message_length >= 8 };                                                                                                                 // bytes 0 to 1
+  UINT8 template_id;                                                                                                                                               // byte 2
+  UINT8 message_type;                                                                                                                                              // byte 3
+  UINT32BE msg_seq_num;                                                                                                                                            // bytes 4 to 7
+  Payload(template_id, (((UINT32) message_length) - 8)) payload[:byte-size-single-element-array (((UINT32) message_length) - 8)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Csm Udp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 16) {
+  UINT8 version;                                                                                                            // byte 0
+  UINT16BE packet_length;                                                                                                   // bytes 1 to 2
+  UINT64BE sending_time;                                                                                                    // bytes 3 to 10
+  UINT8 message_count;                                                                                                      // byte 11
+  UINT32BE first_msg_seq_num;                                                                                               // bytes 12 to 15
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size (available - 16)];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} Packet;
 

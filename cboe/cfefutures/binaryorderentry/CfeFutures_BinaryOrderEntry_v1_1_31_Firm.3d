@@ -1,45 +1,181 @@
-// Chicago Board Options Exchange Futures Binary Order Entry
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Cboe CfeFutures BinaryOrderEntry Boe3 v1.1.31
 //
+// Protocol:
+//   Organization: Chicago Board Options Exchange
+//   Protocol: Futures Binary Order Entry
+//   Encoding: Binary Order Entry 3
+//   Version: 1.1.31
+//   Date: 1/14/2026
+//   Specification: CBOE_FUTURES_EXCHANGE_BOE3_SPECIFICATION.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, FirmPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out CfeFutures_BinaryOrderEntry_v1_1_31_Firm.3d
-//
-// What this definition does not state, and the model does:
-// - a Reassemble rule
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Firm Message Header: 12 bytes -------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Message header of a packet sent by the firm
-entrypoint typedef struct _FirmMessageHeader {
-  UINT16 start_of_message;   // bytes 0 to 1
-  UINT16 message_length;     // bytes 2 to 3
-  UINT16 firm_message_type;  // bytes 4 to 5
-  UINT8 matching_unit;       // byte 6
-  UINT8 reserved_field;      // byte 7
-  UINT32 sequence_number;    // bytes 8 to 11
-} FirmMessageHeader;
+// Firm Message Type: 2 byte code
+#define FIRM_MESSAGE_TYPE_LOGIN_REQUEST_MESSAGE 0x0001          // Login Request Message
+#define FIRM_MESSAGE_TYPE_LOGOUT_REQUEST_MESSAGE 0x0002         // Logout Request Message
+#define FIRM_MESSAGE_TYPE_CLIENT_HEARTBEAT_MESSAGE 0x0003       // Client Heartbeat Message
+#define FIRM_MESSAGE_TYPE_NEW_ORDER 0x03F0                      // New Order
+#define FIRM_MESSAGE_TYPE_NEW_ORDER_OPTION 0x03F1               // New Order Option
+#define FIRM_MESSAGE_TYPE_MODIFY_ORDER 0x03EA                   // Modify Order
+#define FIRM_MESSAGE_TYPE_CANCEL_ORDER 0x03EB                   // Cancel Order
+#define FIRM_MESSAGE_TYPE_MASS_CANCEL_ORDER 0x03EC              // Mass Cancel Order
+#define FIRM_MESSAGE_TYPE_PURGE_ORDERS 0x03ED                   // Purge Orders
+#define FIRM_MESSAGE_TYPE_QUOTE_UPDATE 0x03EE                   // Quote Update
+#define FIRM_MESSAGE_TYPE_QUOTE_UPDATE_OPTION 0x03F2            // Quote Update Option
+#define FIRM_MESSAGE_TYPE_RESET_RISK 0x03EF                     // Reset Risk
+#define FIRM_MESSAGE_TYPE_NEW_COMPLEX_INSTRUMENT_OPTION 0x03F3  // New Complex Instrument Option
 
-// ---- Prevent Match: 3 bytes --------------------------------------------------
+// Replay Unspecified Unit: one byte code
+#define REPLAY_UNSPECIFIED_UNIT_FAIL_IF_UNIT_NOT_SPECIFIED 0x46             // Fail If Unit Not Specified
+#define REPLAY_UNSPECIFIED_UNIT_REPLAY_ANY_UNSPECIFIED_UNIT_FROM_ZERO 0x52  // Replay Any Unspecified Unit From Zero
+#define REPLAY_UNSPECIFIED_UNIT_SKIP_REPLAY_OF_UNSPECIFIED_UNITS 0x53       // Skip Replay Of Unspecified Units
 
-entrypoint typedef struct _PreventMatch {
+// Side: one byte code
+#define SIDE_BUY 0x31   // Buy
+#define SIDE_SELL 0x32  // Sell
+
+// Ord Type: one byte code
+#define ORD_TYPE_MARKET 0x31      // Market
+#define ORD_TYPE_LIMIT 0x32       // Limit
+#define ORD_TYPE_STOP_LIMIT 0x34  // Stop Limit
+
+// Time In Force: one byte code
+#define TIME_IN_FORCE_DAY 0x30  // Day
+#define TIME_IN_FORCE_GTC 0x31  // Gtc
+#define TIME_IN_FORCE_IOC 0x33  // Ioc
+#define TIME_IN_FORCE_FOK 0x34  // Fok
+#define TIME_IN_FORCE_GTD 0x36  // Gtd
+
+// Capacity: one byte code
+#define CAPACITY_CUSTOMER 0x43  // Customer
+#define CAPACITY_FIRM 0x46      // Firm
+
+// Mtp Modifier: one byte code
+#define MTP_MODIFIER_CANCEL_NEWEST 0x4E  // Cancel Newest
+#define MTP_MODIFIER_CANCEL_OLDEST 0x4F  // Cancel Oldest
+#define MTP_MODIFIER_CANCEL_BOTH 0x42    // Cancel Both
+
+// Unique Id Level: one byte code
+#define UNIQUE_ID_LEVEL_NONE 0x4E  // None
+#define UNIQUE_ID_LEVEL_TPH 0x46   // Tph
+#define UNIQUE_ID_LEVEL_EFID 0x4D  // Efid
+
+// Open Close: one byte code
+#define OPEN_CLOSE_OPEN 0x4F   // Open
+#define OPEN_CLOSE_CLOSE 0x43  // Close
+#define OPEN_CLOSE_NONE 0x4E   // None
+
+// Cti Code: one byte code
+#define CTI_CODE_CTI_1 0x31  // Cti 1
+#define CTI_CODE_CTI_2 0x32  // Cti 2
+#define CTI_CODE_CTI_3 0x33  // Cti 3
+#define CTI_CODE_CTI_4 0x34  // Cti 4
+
+// Manual Order Indicator: one byte code
+#define MANUAL_ORDER_INDICATOR_MANUAL 0x59     // Manual
+#define MANUAL_ORDER_INDICATOR_AUTOMATED 0x4E  // Automated
+
+// Cust Order Handling Inst: one byte code
+#define CUST_ORDER_HANDLING_INST_DESK 0x57                                                                       // Desk
+#define CUST_ORDER_HANDLING_INST_ELECTRONIC 0x59                                                                 // Electronic
+#define CUST_ORDER_HANDLING_INST_VENDOR_PROVIDED_PLATFORM_BILLED_BY_EXECUTING_BROKER 0x43                        // Vendor-provided platform, billed by Executing Broker
+#define CUST_ORDER_HANDLING_INST_SPONSORED_ACCESS_VIA_EXCHANGE_A_P_I_OR_F_I_X_PROVIDED_BY_EXECUTING_BROKER 0x47  // Sponsored Access via Exchange API or FIX, provided by executing broker
+#define CUST_ORDER_HANDLING_INST_PREMIUM_ALGORITHMIC_TRADING_PROVIDER_BILLED_BY_EXECUTING_BROKER 0x48            // Premium algorithmic trading provider, billed by executing broker
+#define CUST_ORDER_HANDLING_INST_OTHER 0x44                                                                      // Other
+
+// Cancel Orig On Reject: one byte code
+#define CANCEL_ORIG_ON_REJECT_LEAVE_ORIGINAL_ORDER_ALONE 0x4E                   // Leave Original Order Alone
+#define CANCEL_ORIG_ON_REJECT_CANCEL_ORIGINAL_ORDER_IF_MODIFICATION_FAILS 0x59  // Cancel Original Order If Modification Fails
+
+// Clearing Firm Filter: one byte code
+#define CLEARING_FIRM_FILTER_NO_FILTERING_BY_CLEARING_FIRM 0x41           // No Filtering By Clearing Firm
+#define CLEARING_FIRM_FILTER_SPECIFIED_CLEARING_FIRM_OPTIONAL_FIELD 0x46  // Specified Clearing Firm Optional Field
+
+// Acknowledgement Style: one byte code
+#define ACKNOWLEDGEMENT_STYLE_ORDER_CANCELLED_MESSAGES_ARE_SENT_FOR_EACH_CANCELLED_ORDER 0x4D                        // Order Cancelled Messages Are Sent For Each Cancelled Order
+#define ACKNOWLEDGEMENT_STYLE_A_SINGLE_MASS_CANCEL_ACKNOWLEDGEMENT_MESSAGE_IS_SENT 0x53                              // A Single Mass Cancel Acknowledgement Message Is Sent
+#define ACKNOWLEDGEMENT_STYLE_BOTH_INDIVIDUAL_ORDER_CANCELLED_AND_MASS_CANCEL_ACKNOWLEDGEMENT_MESSAGES__ezc3on 0x42  // Both Individual Order Cancelled And Mass Cancel Acknowledgement Messages Will Be Sent
+
+// Lockout Instruction: one byte code
+#define LOCKOUT_INSTRUCTION_NO_LOCKOUT 0x4E                                       // No Lockout
+#define LOCKOUT_INSTRUCTION_LOCKOUT_UNTIL_CORRESPONDING_RESET_RISK_RECEIVED 0x4C  // Lockout Until Corresponding Reset Risk Received
+
+// Instrument Type Filter: one byte code
+#define INSTRUMENT_TYPE_FILTER_BOTH_SIMPLE_AND_COMPLEX_ORDERS 0x42  // Both Simple And Complex Orders
+#define INSTRUMENT_TYPE_FILTER_SIMPLE_ORDERS_ONLY 0x53              // Simple Orders Only
+#define INSTRUMENT_TYPE_FILTER_SPREAD_ORDERS_ONLY 0x43              // Spread Orders Only
+
+// Gtc Order Filter: one byte code
+#define GTC_ORDER_FILTER_CANCEL_GTC_AND_GTD_ORDERS 0x43    // Cancel Gtc And Gtd Orders
+#define GTC_ORDER_FILTER_PRESERVE_GTC_AND_GTD_ORDERS 0x50  // Preserve Gtc And Gtd Orders
+
+// Size Modifier: one byte code
+#define SIZE_MODIFIER_REDUCED_SIZE 0x52  // Reduced Size
+
+// Leg Side: one byte code
+#define LEG_SIDE_BUY 0x31   // Buy
+#define LEG_SIDE_SELL 0x32  // Sell
+
+// ---- Types -------------------------------------------------------------------
+
+// Unit Sequence
+typedef struct _UnitSequence {
+  UINT8 unit_number;       // byte 0
+  UINT32 sequence_number;  // bytes 1 to 4
+} UnitSequence;
+
+// A Login Request message must be sent as the first message upon connection
+typedef struct _LoginRequestMessage {
+  UINT8 session_id[4];                                                      // bytes 0 to 3
+  UINT8 session_sub_id[4];                                                  // bytes 4 to 7
+  UINT8 password[10];                                                       // bytes 8 to 17
+  UINT8 replay_unspecified_unit;                                            // byte 18
+  UINT8 number_of_units;                                                    // byte 19
+  UnitSequence unit_sequence[:byte-size (((UINT32) number_of_units) * 5)];
+} LoginRequestMessage;
+
+typedef struct _PreventMatch {
   UINT8 mtp_modifier;      // byte 0
   UINT8 unique_id_level;   // byte 1
   UINT8 trading_group_id;  // byte 2
 } PreventMatch;
 
-// ---- New Order: 131 bytes ----------------------------------------------------
-
 // New order futures message
-entrypoint typedef struct _NewOrder {
+typedef struct _NewOrder {
   UINT8 cl_ord_id[20];             // bytes 0 to 19
   UINT8 side;                      // byte 20
   UINT32 order_qty;                // bytes 21 to 24
@@ -67,10 +203,37 @@ entrypoint typedef struct _NewOrder {
   UINT8 country_code[2];           // bytes 129 to 130
 } NewOrder;
 
-// ---- Modify Order: 92 bytes --------------------------------------------------
+// New order option on futures message
+typedef struct _NewOrderOption {
+  UINT8 cl_ord_id[20];                                  // bytes 0 to 19
+  UINT8 side;                                           // byte 20
+  UINT32 order_qty;                                     // bytes 21 to 24
+  UINT8 clearing_firm[4];                               // bytes 25 to 28
+  UINT8 clearing_account[4];                            // bytes 29 to 32
+  UINT64 price;                                         // bytes 33 to 40, signed, read here as unsigned
+  UINT8 ord_type;                                       // byte 41
+  UINT8 time_in_force;                                  // byte 42
+  UINT8 symbol[8];                                      // bytes 43 to 50
+  UINT8 security_desc[16];                              // bytes 51 to 66
+  UINT8 capacity;                                       // byte 67
+  UINT8 account[16];                                    // bytes 68 to 83
+  PreventMatch prevent_match;                           // bytes 84 to 86
+  UINT64 expire_time;                                   // bytes 87 to 94
+  UINT8 open_close;                                     // byte 95
+  UINT32 cmta_number;                                   // bytes 96 to 99
+  UINT16 custom_group_id;                               // bytes 100 to 101
+  UINT8 cti_code;                                       // byte 102
+  UINT8 manual_order_indicator;                         // byte 103
+  UINT8 oeo_id[18];                                     // bytes 104 to 121
+  UINT8 frequent_trader_id[6];                          // bytes 122 to 127
+  UINT8 cust_order_handling_inst;                       // byte 128
+  UINT8 country_code[2];                                // bytes 129 to 130
+  UINT8 leg_cnt;                                        // byte 131
+  UINT8 leg_position_effect[(((UINT32) leg_cnt) * 1)];
+} NewOrderOption;
 
 // Request to modify an order
-entrypoint typedef struct _ModifyOrder {
+typedef struct _ModifyOrder {
   UINT8 cl_ord_id[20];             // bytes 0 to 19
   UINT8 orig_cl_ord_id[20];        // bytes 20 to 39
   UINT8 clearing_firm[4];          // bytes 40 to 43
@@ -85,19 +248,15 @@ entrypoint typedef struct _ModifyOrder {
   UINT8 cust_order_handling_inst;  // byte 91
 } ModifyOrder;
 
-// ---- Cancel Order: 43 bytes --------------------------------------------------
-
 // Request to cancel a single order or quote
-entrypoint typedef struct _CancelOrder {
+typedef struct _CancelOrder {
   UINT8 orig_cl_ord_id[20];      // bytes 0 to 19
   UINT8 clearing_firm[4];        // bytes 20 to 23
   UINT8 manual_order_indicator;  // byte 24
   UINT8 oeo_id[18];              // bytes 25 to 42
 } CancelOrder;
 
-// ---- Mass Cancel Inst: 16 bytes ----------------------------------------------
-
-entrypoint typedef struct _MassCancelInst {
+typedef struct _MassCancelInst {
   UINT8 clearing_firm_filter;     // byte 0
   UINT8 acknowledgement_style;    // byte 1
   UINT8 lockout_instruction;      // byte 2
@@ -106,10 +265,8 @@ entrypoint typedef struct _MassCancelInst {
   UINT8 instruction_details[11];  // bytes 5 to 15
 } MassCancelInst;
 
-// ---- Mass Cancel Order: 65 bytes ---------------------------------------------
-
 // A Mass Cancel Order message is a request to cancel a group of orders or quotes
-entrypoint typedef struct _MassCancelOrder {
+typedef struct _MassCancelOrder {
   UINT8 mass_cancel_id[20];         // bytes 0 to 19
   UINT8 clearing_firm[4];           // bytes 20 to 23
   UINT8 product_name[6];            // bytes 24 to 29
@@ -118,10 +275,8 @@ entrypoint typedef struct _MassCancelOrder {
   UINT8 oeo_id[18];                 // bytes 47 to 64
 } MassCancelOrder;
 
-// ---- Purge Orders: 68 bytes --------------------------------------------------
-
 // Request to cancel a group of orders or quotes across all the TPH's sessions for that port s matching unit
-entrypoint typedef struct _PurgeOrders {
+typedef struct _PurgeOrders {
   UINT8 mass_cancel_id[20];         // bytes 0 to 19
   UINT8 clearing_firm[4];           // bytes 20 to 23
   UINT8 product_name[6];            // bytes 24 to 29
@@ -132,14 +287,101 @@ entrypoint typedef struct _PurgeOrders {
   UINT16 custom_group_id;           // bytes 66 to 67
 } PurgeOrders;
 
-// ---- Reset Risk: 36 bytes ----------------------------------------------------
+typedef struct _QuoteUpdateGroup {
+  UINT8 quote_symbol[6];  // bytes 0 to 5
+  UINT8 side;             // byte 6
+  UINT8 open_close;       // byte 7
+  UINT64 price;           // bytes 8 to 15, signed, read here as unsigned
+  UINT32 order_qty;       // bytes 16 to 19
+} QuoteUpdateGroup;
+
+// Request to enter or update one or more quotes
+typedef struct _QuoteUpdate {
+  UINT8 quote_update_id[16];                                                    // bytes 0 to 15
+  UINT8 clearing_firm[4];                                                       // bytes 16 to 19
+  UINT8 clearing_account[4];                                                    // bytes 20 to 23
+  UINT32 cmta_number;                                                           // bytes 24 to 27
+  UINT8 account[16];                                                            // bytes 28 to 43
+  UINT16 custom_group_id;                                                       // bytes 44 to 45
+  UINT8 capacity;                                                               // byte 46
+  UINT8 cti_code;                                                               // byte 47
+  UINT8 manual_order_indicator;                                                 // byte 48
+  UINT8 oeo_id[18];                                                             // bytes 49 to 66
+  UINT8 size_modifier;                                                          // byte 67
+  UINT8 quote_cnt;                                                              // byte 68
+  QuoteUpdateGroup quote_update_group[:byte-size (((UINT32) quote_cnt) * 20)];
+} QuoteUpdate;
+
+// Request to enter or update one or more option quotes
+typedef struct _QuoteUpdateOption {
+  UINT8 quote_update_id[16];                                                           // bytes 0 to 15
+  UINT8 clearing_firm[4];                                                              // bytes 16 to 19
+  UINT8 clearing_account[4];                                                           // bytes 20 to 23
+  UINT32 cmta_number;                                                                  // bytes 24 to 27
+  UINT8 account[16];                                                                   // bytes 28 to 43
+  UINT16 custom_group_id;                                                              // bytes 44 to 45
+  UINT8 capacity;                                                                      // byte 46
+  UINT8 cti_code;                                                                      // byte 47
+  UINT8 manual_order_indicator;                                                        // byte 48
+  UINT8 oeo_id[18];                                                                    // bytes 49 to 66
+  UINT8 size_modifier;                                                                 // byte 67
+  UINT8 quote_cnt;                                                                     // byte 68
+  QuoteUpdateGroup quote_update_option_group[:byte-size (((UINT32) quote_cnt) * 20)];
+} QuoteUpdateOption;
 
 // Reset or release Firm/EFID, Product, or Custom Group Id level lockout conditions resulting from risk profile trips or self-imposed lockouts issued viaMass Cancel Order or Purge Orders messages
-entrypoint typedef struct _ResetRisk {
+typedef struct _ResetRisk {
   UINT8 risk_status_id[16];  // bytes 0 to 15
   UINT8 risk_reset[8];       // bytes 16 to 23
   UINT8 clearing_firm[4];    // bytes 24 to 27
   UINT8 product_name[6];     // bytes 28 to 33
   UINT16 custom_group_id;    // bytes 34 to 35
 } ResetRisk;
+
+typedef struct _OptionLeg {
+  UINT8 leg_symbol[8];   // bytes 0 to 7
+  UINT32 leg_ratio_qty;  // bytes 8 to 11
+  UINT8 leg_side;        // byte 12
+} OptionLeg;
+
+// A New Complex Instrument message is used to request that the system create a complex strategy
+typedef struct _NewComplexInstrumentOption {
+  UINT8 cl_ord_id[20];                                         // bytes 0 to 19
+  UINT8 clearing_firm[4];                                      // bytes 20 to 23
+  UINT8 leg_cnt;                                               // byte 24
+  OptionLeg option_leg[:byte-size (((UINT32) leg_cnt) * 13)];
+} NewComplexInstrumentOption;
+
+// Branch
+casetype _FirmMessage (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x0001: LoginRequestMessage login_request_message;
+    case 0x0002: unit logout_request;
+    case 0x0003: unit client_heartbeat;
+    case 0x03F0: NewOrder new_order;
+    case 0x03F1: NewOrderOption new_order_option;
+    case 0x03EA: ModifyOrder modify_order;
+    case 0x03EB: CancelOrder cancel_order;
+    case 0x03EC: MassCancelOrder mass_cancel_order;
+    case 0x03ED: PurgeOrders purge_orders;
+    case 0x03EE: QuoteUpdate quote_update;
+    case 0x03F2: QuoteUpdateOption quote_update_option;
+    case 0x03EF: ResetRisk reset_risk;
+    case 0x03F3: NewComplexInstrumentOption new_complex_instrument_option;
+    default: UINT8 unknown[available];
+  }
+} FirmMessage;
+
+// ---- Packet: FirmPacket ------------------------------------------------------
+
+// Binary Order Entry Tcp Packet sent by the firm
+entrypoint typedef struct _FirmPacket (UINT32 available) where (available >= 12) {
+  UINT16 start_of_message;                                                                                          // bytes 0 to 1
+  UINT16 message_length;                                                                                            // bytes 2 to 3
+  UINT16 firm_message_type;                                                                                         // bytes 4 to 5
+  UINT8 matching_unit;                                                                                              // byte 6
+  UINT8 reserved_field;                                                                                             // byte 7
+  UINT32 sequence_number;                                                                                           // bytes 8 to 11
+  FirmMessage(firm_message_type, (available - 12)) firm_message[:byte-size-single-element-array (available - 12)];
+} FirmPacket;
 

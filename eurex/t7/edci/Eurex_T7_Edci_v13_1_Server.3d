@@ -1,33 +1,220 @@
-// Eurex Exchange Extended Derivatives Clearing Interface
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Eurex T7 Edci Fbe v13.1
 //
+// Protocol:
+//   Organization: Eurex Exchange
+//   Protocol: Extended Derivatives Clearing Interface
+//   Encoding: Flat Binary Encoding
+//   Version: 13.1
+//   Date: 3/6/2025
+//   Specification: T7_R.13.1_Enhanced_Drop_Copy_Interface_-_Derivatives_Message_Reference_Version_1.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ServerPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out Eurex_T7_Edci_v13_1_Server.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a length prefix framing what follows
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Message Header: 6 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Eurex T7 Edci message header
-entrypoint typedef struct _MessageHeader {
-  UINT32 body_len;     // bytes 0 to 3
-  UINT16 template_id;  // bytes 4 to 5
-} MessageHeader;
+// Template Id: 2 byte code
+#define TEMPLATE_ID_DELETE_ORDER_BROADCAST 0x2A96       // Delete Order Broadcast
+#define TEMPLATE_ID_FORCED_LOGOUT_NOTIFICATION 0x271C   // Forced Logout Notification
+#define TEMPLATE_ID_HEARTBEAT 0x271B                    // Heartbeat
+#define TEMPLATE_ID_HEARTBEAT_NOTIFICATION 0x2727       // Heartbeat Notification
+#define TEMPLATE_ID_LOGON_REQUEST 0x2710                // Logon Request
+#define TEMPLATE_ID_LOGON_RESPONSE 0x2711               // Logon Response
+#define TEMPLATE_ID_LOGOUT_REQUEST 0x2712               // Logout Request
+#define TEMPLATE_ID_LOGOUT_RESPONSE 0x2713              // Logout Response
+#define TEMPLATE_ID_ORDER_EXEC_REPORT_BROADCAST 0x2A95  // Order Exec Report Broadcast
+#define TEMPLATE_ID_PARTITION_LIST_NOTIFICATION 0x2735  // Partition List Notification
+#define TEMPLATE_ID_REJECT 0x271A                       // Reject
+#define TEMPLATE_ID_SESSION_LIST_NOTIFICATION 0x2734    // Session List Notification
+#define TEMPLATE_ID_SESSION_STATUS_BROADCAST 0x2A97     // Session Status Broadcast
 
-// ---- Rbc Header Comp: 16 bytes -----------------------------------------------
+// Appl Id: one byte code
+#define APPL_ID_ORDER_DROP_COPY 0x0C  // Order Drop Copy
 
-entrypoint typedef struct _RbcHeaderComp {
+// Last Fragment: one byte code
+#define LAST_FRAGMENT_NOT_LAST_MESSAGE 0x00  // Not Last Message
+#define LAST_FRAGMENT_LAST_MESSAGE 0x01      // Last Message
+
+// Ord Status: one byte code
+#define ORD_STATUS_NEW 0x30              // New
+#define ORD_STATUS_PARTIALLYFILLED 0x31  // Partiallyfilled
+#define ORD_STATUS_FILLED 0x32           // Filled
+#define ORD_STATUS_CANCELED 0x34         // Canceled
+#define ORD_STATUS_PENDING_CANCEL 0x36   // Pending Cancel
+#define ORD_STATUS_SUSPENDED 0x39        // Suspended
+
+// Exec Type: one byte code
+#define EXEC_TYPE_NEW 0x30              // New
+#define EXEC_TYPE_CANCELED 0x34         // Canceled
+#define EXEC_TYPE_REPLACED 0x35         // Replaced
+#define EXEC_TYPE_PENDING_CANCELE 0x36  // Pending Cancele
+#define EXEC_TYPE_SUSPENDED 0x39        // Suspended
+#define EXEC_TYPE_RESTATED 0x44         // Restated
+#define EXEC_TYPE_TRIGGERED 0x4C        // Triggered
+#define EXEC_TYPE_TRADE 0x46            // Trade
+
+// Market Id: 2 byte code
+#define MARKET_ID_XEUR 0x0001  // Xeur
+#define MARKET_ID_XEEE 0x0002  // Xeee
+
+// Trad Ses Mode: one byte code
+#define TRAD_SES_MODE_TESTING 0x01            // Testing
+#define TRAD_SES_MODE_SIMULATED 0x02          // Simulated
+#define TRAD_SES_MODE_PRODUCTION 0x03         // Production
+#define TRAD_SES_MODE_ACCEPTANCE 0x04         // Acceptance
+#define TRAD_SES_MODE_DISASTER_RECOVERY 0x05  // Disaster Recovery
+
+// Product Complex: one byte code
+#define PRODUCT_COMPLEX_SIMPLEINSTRUMENT 0x01               // Simpleinstrument
+#define PRODUCT_COMPLEX_STANDARDOPTIONSTRATEGY 0x02         // Standardoptionstrategy
+#define PRODUCT_COMPLEX_NONSTANDARDOPTIONSTRATEGY 0x03      // Nonstandardoptionstrategy
+#define PRODUCT_COMPLEX_VOLATILITYSTRATEGY 0x04             // Volatilitystrategy
+#define PRODUCT_COMPLEX_FUTURES_SPREAD 0x05                 // Futures Spread
+#define PRODUCT_COMPLEX_INTERPRODUCTSPREAD 0x06             // Interproductspread
+#define PRODUCT_COMPLEX_STANDARDFUTURESTRATEGY 0x07         // Standardfuturestrategy
+#define PRODUCT_COMPLEX_PACKANDBUNDLE 0x08                  // Packandbundle
+#define PRODUCT_COMPLEX_STRIP 0x09                          // Strip
+#define PRODUCT_COMPLEX_NONSTANDARDVOLATILITYSTRATEGY 0x0D  // Nonstandardvolatilitystrategy
+#define PRODUCT_COMPLEX_TOTALRETURNFUTURESTRATEGY 0x0E      // Totalreturnfuturestrategy
+
+// Side: one byte code
+#define SIDE_BUY 0x01   // Buy
+#define SIDE_SELL 0x02  // Sell
+
+// Ord Type: one byte code
+#define ORD_TYPE_MARKET 0x01      // Market
+#define ORD_TYPE_LIMIT 0x02       // Limit
+#define ORD_TYPE_STOP 0x03        // Stop
+#define ORD_TYPE_STOP_LIMIT 0x04  // Stop Limit
+
+// Match Type: one byte code
+#define MATCH_TYPE_AUTOMATCHINCOMING 0x04            // Automatchincoming
+#define MATCH_TYPE_CROSS_AUCTION 0x05                // Cross Auction
+#define MATCH_TYPE_CALL_AUCTION 0x07                 // Call Auction
+#define MATCH_TYPE_AUTOMATCHRESTING 0x0B             // Automatchresting
+#define MATCH_TYPE_LIQUIDITY_IMPROVEMENT_CROSS 0x0D  // Liquidity Improvement Cross
+
+// Trading Capacity: one byte code
+#define TRADING_CAPACITY_CUSTOMER 0x01      // Customer
+#define TRADING_CAPACITY_PRINCIPAL 0x05     // Principal
+#define TRADING_CAPACITY_MARKET_MAKER 0x06  // Market Maker
+
+// Time In Force: one byte code
+#define TIME_IN_FORCE_DAY 0x00  // Day
+#define TIME_IN_FORCE_GTC 0x01  // Gtc
+#define TIME_IN_FORCE_IOC 0x03  // Ioc
+#define TIME_IN_FORCE_FOK 0x04  // Fok
+#define TIME_IN_FORCE_GTD 0x06  // Gtd
+
+// Exec Inst: one byte code
+#define EXEC_INST_H 0x01    // H
+#define EXEC_INST_Q 0x02    // Q
+#define EXEC_INST_HQ 0x03   // Hq
+#define EXEC_INST_H_6 0x05  // H 6
+#define EXEC_INST_Q_6 0x06  // Q 6
+
+// Triggered: one byte code
+#define TRIGGERED_NOTTRIGGERED 0x00    // Nottriggered
+#define TRIGGERED_TRIGGERED_STOP 0x01  // Triggered Stop
+#define TRIGGERED_TRIGGERED_OCO 0x02   // Triggered Oco
+
+// Trading Session Sub Id: one byte code
+#define TRADING_SESSION_SUB_ID_OPENINGAUCTION 0x02  // Openingauction
+#define TRADING_SESSION_SUB_ID_CLOSINGAUCTION 0x04  // Closingauction
+#define TRADING_SESSION_SUB_ID_ANY_AUCTION 0x08     // Any Auction
+
+// Appl Seq Indicator: one byte code
+#define APPL_SEQ_INDICATOR_NO_RECOVERY_REQUIRED 0x00  // No Recovery Required
+#define APPL_SEQ_INDICATOR_RECOVERY_REQUIRED 0x01     // Recovery Required
+
+// Party Id Investment Decision Maker Qualifier: one byte code
+#define PARTY_ID_INVESTMENT_DECISION_MAKER_QUALIFIER_ALGO 0x16   // Algo
+#define PARTY_ID_INVESTMENT_DECISION_MAKER_QUALIFIER_HUMAN 0x18  // Human
+
+// Executing Trader Qualifier: one byte code
+#define EXECUTING_TRADER_QUALIFIER_ALGO 0x16   // Algo
+#define EXECUTING_TRADER_QUALIFIER_HUMAN 0x18  // Human
+
+// Crossed Indicator: one byte code
+#define CROSSED_INDICATOR_NOCROSSING 0x00     // Nocrossing
+#define CROSSED_INDICATOR_CROSSREJECTED 0x01  // Crossrejected
+
+// Cust Order Handling Inst: one byte code
+#define CUST_ORDER_HANDLING_INST_W 0x57  // W
+#define CUST_ORDER_HANDLING_INST_Y 0x59  // Y
+#define CUST_ORDER_HANDLING_INST_C 0x43  // C
+#define CUST_ORDER_HANDLING_INST_G 0x47  // G
+#define CUST_ORDER_HANDLING_INST_H 0x48  // H
+#define CUST_ORDER_HANDLING_INST_D 0x44  // D
+
+// Session Reject Reason: 4 byte code
+#define SESSION_REJECT_REASON_REQUIRED_TAG_MISSING 0x00000001                      // Required Tag Missing
+#define SESSION_REJECT_REASON_VALUEISINCORRECT 0x00000005                          // Valueisincorrect
+#define SESSION_REJECT_REASON_DECRYPTIONPROBLEM 0x00000007                         // Decryptionproblem
+#define SESSION_REJECT_REASON_INVALID_MSG_ID 0x0000000B                            // Invalid Msg Id
+#define SESSION_REJECT_REASON_INCORRECT_NUM_IN_GROUPCOUNT 0x00000010               // Incorrect Num In Groupcount
+#define SESSION_REJECT_REASON_OTHER 0x00000063                                     // Other
+#define SESSION_REJECT_REASON_EXPOSURE_LIMIT_EXCEEDED 0x00000065                   // Exposure Limit Exceeded
+#define SESSION_REJECT_REASON_SERVICE_NOT_AVAILABLE 0x00000067                     // Service Not Available
+#define SESSION_REJECT_REASON_OUTBOUNDCONVERSIONERROR 0x00000069                   // Outboundconversionerror
+#define SESSION_REJECT_REASON_HEARTBEAT_VIOLATION 0x00000098                       // Heartbeat Violation
+#define SESSION_REJECT_REASON_INTERNALTECHNICALERROR 0x000000C8                    // Internaltechnicalerror
+#define SESSION_REJECT_REASON_VALIDATION_ERROR 0x000000D2                          // Validation Error
+#define SESSION_REJECT_REASON_SESSION_LOGIN_LIMIT_REACHED 0x000000D9               // Session Login Limit Reached
+#define SESSION_REJECT_REASON_OUTSTANDING_LOGINS_BU_LIMIT_REACHED 0x000000E2       // Outstanding Logins Bu Limit Reached
+#define SESSION_REJECT_REASON_OUTSTANDING_LOGINS_SESSION_LIMIT_REACHED 0x000000E3  // Outstanding Logins Session Limit Reached
+
+// Session Status: one byte code
+#define SESSION_STATUS_ACTIVE 0x00  // Active
+#define SESSION_STATUS_LOGOUT 0x04  // Logout
+
+// Session Mode: one byte code
+#define SESSION_MODE_ETIHF 0x01  // Etihf
+#define SESSION_MODE_ETILF 0x02  // Etilf
+#define SESSION_MODE_GUI 0x03    // Gui
+#define SESSION_MODE_FIXLF 0x04  // Fixlf
+
+// Trad Ses Event: one byte code
+#define TRAD_SES_EVENT_ENDOF_RESTATEMENT 0x67       // Endof Restatement
+#define TRAD_SES_EVENT_ENDOF_DAY_SERVICE 0x68       // Endof Day Service
+#define TRAD_SES_EVENT_ENDOF_ORDERBOOKSYNCH 0x6B    // Endof Orderbooksynch
+#define TRAD_SES_EVENT_STARTOF_ORDERBOOKSYNCH 0x6C  // Startof Orderbooksynch
+#define TRAD_SES_EVENT_ORDERBOOKRESET 0x6D          // Orderbookreset
+
+// ---- Types -------------------------------------------------------------------
+
+typedef struct _RbcHeaderComp {
   UINT64 sending_time;             // bytes 0 to 7
   UINT32 party_id_executing_unit;  // bytes 8 to 11
   UINT16 partition_id;             // bytes 12 to 13
@@ -35,19 +222,202 @@ entrypoint typedef struct _RbcHeaderComp {
   UINT8 last_fragment;             // byte 15
 } RbcHeaderComp;
 
-// ---- Notif Header Comp: 8 bytes ----------------------------------------------
+typedef struct _AffectedOrdGrpComp {
+  UINT64 affected_order_id;               // bytes 0 to 7
+  UINT64 affected_cl_ord_id;              // bytes 8 to 15
+  UINT64 affected_orig_cl_ord_id;         // bytes 16 to 23
+  UINT64 security_id;                     // bytes 24 to 31, signed, read here as unsigned
+  UINT32 party_id_session_id;             // bytes 32 to 35
+  UINT32 party_id_executing_trader;       // bytes 36 to 39
+  UINT8 ord_status;                       // byte 40
+  UINT8 exec_type;                        // byte 41
+  UINT8 affected_fix_cl_ord_id[20];       // bytes 42 to 61
+  UINT8 affected_fix_orig_cl_ord_id[20];  // bytes 62 to 81
+  UINT8 pad6[6];                          // bytes 82 to 87
+} AffectedOrdGrpComp;
 
-entrypoint typedef struct _NotifHeaderComp {
+typedef struct _DeleteOrderBroadcast {
+  UINT8 pad2[2];                                                                              // bytes 0 to 1
+  RbcHeaderComp rbc_header_comp;                                                              // bytes 2 to 17
+  UINT64 exec_id;                                                                             // bytes 18 to 25
+  UINT32 market_segment_id;                                                                   // bytes 26 to 29, signed, read here as unsigned
+  UINT16 no_affected_orders;                                                                  // bytes 30 to 31
+  UINT8 pad2v2[2];                                                                            // bytes 32 to 33
+  AffectedOrdGrpComp affected_ord_grp_comp[:byte-size (((UINT32) no_affected_orders) * 88)];
+} DeleteOrderBroadcast;
+
+typedef struct _NotifHeaderComp {
   UINT64 sending_time;  // bytes 0 to 7
 } NotifHeaderComp;
 
-// ---- Response Header Comp: 24 bytes ------------------------------------------
+typedef struct _ForcedLogoutNotification (UINT32 available) where (available >= 12) {
+  UINT8 pad2[2];                                                          // bytes 0 to 1
+  NotifHeaderComp notif_header_comp;                                      // bytes 2 to 9
+  UINT16 var_text_len { ((UINT32) var_text_len) <= (available - 12) };    // bytes 10 to 11
+  UINT8 var_text[((UINT32) var_text_len)];
+  UINT8 alignment_padding[((available - 12) - ((UINT32) var_text_len))];
+} ForcedLogoutNotification;
 
-entrypoint typedef struct _ResponseHeaderComp {
+typedef struct _HeartbeatNotification {
+  UINT8 pad2[2];                      // bytes 0 to 1
+  NotifHeaderComp notif_header_comp;  // bytes 2 to 9
+} HeartbeatNotification;
+
+typedef struct _ResponseHeaderComp {
   UINT64 request_time;  // bytes 0 to 7
   UINT64 sending_time;  // bytes 8 to 15
   UINT32 msg_seq_num;   // bytes 16 to 19
   UINT8 last_fragment;  // byte 20
   UINT8 pad3[3];        // bytes 21 to 23
 } ResponseHeaderComp;
+
+typedef struct _LogonResponse {
+  UINT8 pad2[2];                            // bytes 0 to 1
+  ResponseHeaderComp response_header_comp;  // bytes 2 to 25
+  UINT32 heart_bt_int;                      // bytes 26 to 29
+  UINT32 session_instance_id;               // bytes 30 to 33
+  UINT16 market_id;                         // bytes 34 to 35
+  UINT8 trad_ses_mode;                      // byte 36
+  UINT8 default_cstm_appl_ver_id[30];       // bytes 37 to 66
+  UINT8 default_cstm_appl_ver_sub_id[5];    // bytes 67 to 71
+  UINT8 pad2v2[2];                          // bytes 72 to 73
+} LogonResponse;
+
+typedef struct _LogoutResponse {
+  UINT8 pad2[2];                            // bytes 0 to 1
+  ResponseHeaderComp response_header_comp;  // bytes 2 to 25
+} LogoutResponse;
+
+typedef struct _FillsGrpComp {
+  UINT64 fill_px;        // bytes 0 to 7, signed, read here as unsigned
+  UINT64 fill_qty;       // bytes 8 to 15, signed, read here as unsigned
+  UINT32 fill_match_id;  // bytes 16 to 19
+  UINT32 fill_exec_id;   // bytes 20 to 23, signed, read here as unsigned
+} FillsGrpComp;
+
+typedef struct _OrderExecReportBroadcast {
+  UINT8 pad2[2];                                                       // bytes 0 to 1
+  RbcHeaderComp rbc_header_comp;                                       // bytes 2 to 17
+  UINT64 order_id;                                                     // bytes 18 to 25
+  UINT64 cl_ord_id;                                                    // bytes 26 to 33
+  UINT64 orig_cl_ord_id;                                               // bytes 34 to 41
+  UINT64 security_id;                                                  // bytes 42 to 49, signed, read here as unsigned
+  UINT64 exec_id;                                                      // bytes 50 to 57
+  UINT64 price;                                                        // bytes 58 to 65, signed, read here as unsigned
+  UINT64 stop_px;                                                      // bytes 66 to 73, signed, read here as unsigned
+  UINT64 leaves_qty;                                                   // bytes 74 to 81, signed, read here as unsigned
+  UINT64 cum_qty;                                                      // bytes 82 to 89, signed, read here as unsigned
+  UINT64 cxl_qty;                                                      // bytes 90 to 97, signed, read here as unsigned
+  UINT64 order_qty;                                                    // bytes 98 to 105, signed, read here as unsigned
+  UINT64 party_id_client_id;                                           // bytes 106 to 113
+  UINT64 party_id_investment_decision_maker;                           // bytes 114 to 121
+  UINT64 executing_trader;                                             // bytes 122 to 129
+  UINT32 market_segment_id;                                            // bytes 130 to 133, signed, read here as unsigned
+  UINT32 expire_date;                                                  // bytes 134 to 137
+  UINT32 party_id_session_id;                                          // bytes 138 to 141
+  UINT32 party_id_executing_trader;                                    // bytes 142 to 145
+  UINT8 product_complex;                                               // byte 146
+  UINT8 ord_status;                                                    // byte 147
+  UINT8 exec_type;                                                     // byte 148
+  UINT8 side;                                                          // byte 149
+  UINT8 ord_type;                                                      // byte 150
+  UINT8 match_type;                                                    // byte 151
+  UINT8 trading_capacity;                                              // byte 152
+  UINT8 time_in_force;                                                 // byte 153
+  UINT8 exec_inst;                                                     // byte 154
+  UINT8 triggered;                                                     // byte 155
+  UINT8 trading_session_sub_id;                                        // byte 156
+  UINT8 appl_seq_indicator;                                            // byte 157
+  UINT8 party_id_investment_decision_maker_qualifier;                  // byte 158
+  UINT8 executing_trader_qualifier;                                    // byte 159
+  UINT8 no_fills;                                                      // byte 160
+  UINT8 crossed_indicator;                                             // byte 161
+  UINT8 cust_order_handling_inst;                                      // byte 162
+  UINT8 free_text_1[12];                                               // bytes 163 to 174
+  UINT8 free_text_2[12];                                               // bytes 175 to 186
+  UINT8 free_text_3[12];                                               // bytes 187 to 198
+  UINT8 fix_cl_ord_id[20];                                             // bytes 199 to 218
+  UINT8 fix_orig_cl_ord_id[20];                                        // bytes 219 to 238
+  UINT8 party_end_client_identification[20];                           // bytes 239 to 258
+  UINT8 pad7[7];                                                       // bytes 259 to 265
+  FillsGrpComp fills_grp_comp[:byte-size (((UINT32) no_fills) * 24)];
+} OrderExecReportBroadcast;
+
+typedef struct _PartitionGrpComp {
+  UINT16 partition_id;  // bytes 0 to 1
+  UINT8 pad6[6];        // bytes 2 to 7
+} PartitionGrpComp;
+
+typedef struct _PartitionListNotification {
+  UINT8 pad2[2];                                                                   // bytes 0 to 1
+  NotifHeaderComp notif_header_comp;                                               // bytes 2 to 9
+  UINT8 no_partitions;                                                             // byte 10
+  UINT8 pad7[7];                                                                   // bytes 11 to 17
+  PartitionGrpComp partition_grp_comp[:byte-size (((UINT32) no_partitions) * 8)];
+} PartitionListNotification;
+
+typedef struct _Reject (UINT32 available) where (available >= 33) {
+  UINT8 pad2[2];                                                          // bytes 0 to 1
+  ResponseHeaderComp response_header_comp;                                // bytes 2 to 25
+  UINT32 session_reject_reason;                                           // bytes 26 to 29
+  UINT16 var_text_len { ((UINT32) var_text_len) <= (available - 33) };    // bytes 30 to 31
+  UINT8 session_status;                                                   // byte 32
+  UINT8 var_text[((UINT32) var_text_len)];
+  UINT8 alignment_padding[((available - 33) - ((UINT32) var_text_len))];
+} Reject;
+
+typedef struct _SessionsGrpComp {
+  UINT32 party_id_session_id;     // bytes 0 to 3
+  UINT8 session_mode;             // byte 4
+  UINT8 party_executing_firm[5];  // bytes 5 to 9
+  UINT8 pad6[6];                  // bytes 10 to 15
+} SessionsGrpComp;
+
+typedef struct _SessionListNotification {
+  UINT8 pad2[2];                                                                // bytes 0 to 1
+  NotifHeaderComp notif_header_comp;                                            // bytes 2 to 9
+  UINT16 no_sessions;                                                           // bytes 10 to 11
+  UINT8 pad6[6];                                                                // bytes 12 to 17
+  SessionsGrpComp sessions_grp_comp[:byte-size (((UINT32) no_sessions) * 16)];
+} SessionListNotification;
+
+typedef struct _SessionStatusBroadcast {
+  UINT8 pad2[2];                  // bytes 0 to 1
+  RbcHeaderComp rbc_header_comp;  // bytes 2 to 17
+  UINT32 trade_date;              // bytes 18 to 21
+  UINT32 market_segment_id;       // bytes 22 to 25, signed, read here as unsigned
+  UINT8 trad_ses_event;           // byte 26
+  UINT8 pad7[7];                  // bytes 27 to 33
+} SessionStatusBroadcast;
+
+// Eurex T7 Edci message body sent by Eurex to the participant
+casetype _ServerPayload (UINT16 selector, UINT32 length, UINT32 length_2, UINT32 length_3, UINT32 length_4, UINT32 length_5, UINT32 length_6, UINT32 length_7, UINT32 length_8, UINT32 length_9, UINT32 length_10, UINT32 available) {
+  switch (selector) {
+    case 0x2A96: DeleteOrderBroadcast delete_order_broadcast[:byte-size-single-element-array length];
+    case 0x271C: ForcedLogoutNotification(length_2) forced_logout_notification[:byte-size-single-element-array length_2];
+    case 0x2727: HeartbeatNotification heartbeat_notification[:byte-size-single-element-array length_3];
+    case 0x2711: LogonResponse logon_response[:byte-size-single-element-array length_4];
+    case 0x2713: LogoutResponse logout_response[:byte-size-single-element-array length_5];
+    case 0x2A95: OrderExecReportBroadcast order_exec_report_broadcast[:byte-size-single-element-array length_6];
+    case 0x2735: PartitionListNotification partition_list_notification[:byte-size-single-element-array length_7];
+    case 0x271A: Reject(length_8) reject[:byte-size-single-element-array length_8];
+    case 0x2734: SessionListNotification session_list_notification[:byte-size-single-element-array length_9];
+    case 0x2A97: SessionStatusBroadcast session_status_broadcast[:byte-size-single-element-array length_10];
+    default: UINT8 unknown[available];
+  }
+} ServerPayload;
+
+// Eurex T7 Edci Message sent by Eurex to the participant
+typedef struct _ServerMessage {
+  UINT32 body_len { body_len >= 6 };                                                                                                                                                                                                                                          // bytes 0 to 3
+  UINT16 template_id;                                                                                                                                                                                                                                                         // bytes 4 to 5
+  ServerPayload(template_id, (body_len - 6), (body_len - 6), (body_len - 6), (body_len - 6), (body_len - 6), (body_len - 6), (body_len - 6), (body_len - 6), (body_len - 6), (body_len - 6), (body_len - 6)) server_payload[:byte-size-single-element-array (body_len - 6)];
+} ServerMessage;
+
+// ---- Packet: ServerPacket ----------------------------------------------------
+
+// T7 Tcp Message Block sent by Eurex to the participant
+entrypoint typedef struct _ServerPacket (UINT32 available) {
+  ServerMessage server_message[:byte-size available];
+} ServerPacket;
 

@@ -1,48 +1,128 @@
-// Japan Exchange Group Genium Inet
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Jpx OseDerivatives GeniumInet Ouch v5.0
 //
+// Protocol:
+//   Organization: Japan Exchange Group
+//   Protocol: Genium Inet
+//   Encoding: Ouch
+//   Version: 5.0
+//   Date: 9/16/2020
+//   Specification: OUCH_ProtSpec_OSE_va2656.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ServerPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out OseDerivatives_GeniumInet_v5_0_Server.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a length prefix framing what follows
-//
-// License: MIT No Attribution
 
-// ---- Server Packet Header: 3 bytes -------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Packet header of a packet sent by the server
-entrypoint typedef struct _ServerPacketHeader {
-  UINT16BE packet_length;    // bytes 0 to 1
-  UINT8 server_packet_type;  // byte 2
-} ServerPacketHeader;
+// Server Packet Type: one byte code
+#define SERVER_PACKET_TYPE_DEBUG_PACKET 0x2B             // Debug Packet
+#define SERVER_PACKET_TYPE_LOGIN_ACCEPTED_PACKET 0x41    // Login Accepted Packet
+#define SERVER_PACKET_TYPE_LOGIN_REJECTED_PACKET 0x4A    // Login Rejected Packet
+#define SERVER_PACKET_TYPE_SEQUENCED_DATA_PACKET 0x53    // Sequenced Data Packet
+#define SERVER_PACKET_TYPE_SERVER_HEARTBEAT_PACKET 0x48  // Server Heartbeat Packet
+#define SERVER_PACKET_TYPE_END_OF_SESSION_PACKET 0x5A    // End Of Session Packet
 
-// ---- Login Accepted Packet: 30 bytes -----------------------------------------
+// Reject Reason Code: one byte code
+#define REJECT_REASON_CODE_NOT_AUTHORIZED 0x41         // Not Authorized
+#define REJECT_REASON_CODE_SESSION_NOT_AVAILABLE 0x53  // Session Not Available
+
+// Sequenced Message Type: one byte code
+#define SEQUENCED_MESSAGE_TYPE_ORDER_ACCEPTED 0x41        // Order Accepted
+#define SEQUENCED_MESSAGE_TYPE_MASS_CANCEL_ACCEPTED 0x4D  // Mass Cancel Accepted
+#define SEQUENCED_MESSAGE_TYPE_ORDER_REJECTED 0x4A        // Order Rejected
+#define SEQUENCED_MESSAGE_TYPE_ORDER_REPLACED 0x55        // Order Replaced
+#define SEQUENCED_MESSAGE_TYPE_ORDER_CANCELED 0x43        // Order Canceled
+#define SEQUENCED_MESSAGE_TYPE_ORDER_EXECUTED 0x45        // Order Executed
+
+// Side: one byte code
+#define SIDE_BUY 0x42   // Buy
+#define SIDE_SELL 0x53  // Sell
+
+// Time In Force: one byte code
+#define TIME_IN_FORCE_DAY 0x00                  // Day
+#define TIME_IN_FORCE_IMMEDIATE_OR_CANCEL 0x03  // Immediate Or Cancel
+#define TIME_IN_FORCE_FILL_OR_KILL 0x04         // Fill Or Kill
+
+// Open Close: one byte code
+#define OPEN_CLOSE_NO_CHANGE 0x00        // No Change
+#define OPEN_CLOSE_OPEN 0x01             // Open
+#define OPEN_CLOSE_CLOSE_NET 0x02        // Close Net
+#define OPEN_CLOSE_MANDATORY_CLOSE 0x03  // Mandatory Close
+#define OPEN_CLOSE_DEFAULT 0x04          // Default
+
+// Order State: one byte code
+#define ORDER_STATE_ON_BOOK 0x01      // On Book
+#define ORDER_STATE_NOT_ON_BOOK 0x02  // Not On Book
+
+// Cancel Reason: one byte code
+#define CANCEL_REASON_CANCELED_BY_USER 0x01                        // Canceled By User
+#define CANCEL_REASON_ORDER_INACTIVATED 0x04                       // Order Inactivated
+#define CANCEL_REASON_CANCELED_BY_SYSTEM 0x09                      // Canceled By System
+#define CANCEL_REASON_CANCELED_BY_PROXY 0x0A                       // Canceled By Proxy
+#define CANCEL_REASON_CANCELED_BY_SYSTEM_LIMIT_CHANGE 0x0F         // Canceled By System Limit Change
+#define CANCEL_REASON_DELETED_BY_TIME_VALIDITY_EXPIRATION 0x13     // Deleted By Time Validity Expiration
+#define CANCEL_REASON_CANCELED_DUE_TO_ISS 0x14                     // Canceled Due To Iss
+#define CANCEL_REASON_INACTIVATED_DUE_TO_ISS 0x15                  // Inactivated Due To Iss
+#define CANCEL_REASON_CANCELED_AFTER_AUCTION 0x22                  // Canceled After Auction
+#define CANCEL_REASON_CANCELED_BY_SYSTEM_DELTA_PROTECTION 0x29     // Canceled By System Delta Protection
+#define CANCEL_REASON_CANCELED_BY_SYSTEM_QUANTITY_PROTECTION 0x2A  // Canceled By System Quantity Protection
+#define CANCEL_REASON_SELF_TRADE_PREVENTION 0x2B                   // Self Trade Prevention
+
+// Deal Source: one byte code
+#define DEAL_SOURCE_SYSTEM_MATCHED 0x01       // System Matched
+#define DEAL_SOURCE_COMBINATION_MATCHED 0x07  // Combination Matched
+#define DEAL_SOURCE_AUCTION_END_DEAL 0x14     // Auction End Deal
+
+// ---- Types -------------------------------------------------------------------
+
+// Debug packets are intended to provide human readable text that may aid in debugging problems
+typedef struct _DebugPacket (UINT16 packet_length) where (packet_length >= 1) {
+  UINT8 debug_text[(((UINT32) packet_length) - 1)];
+} DebugPacket;
 
 // The SoupBinTCP server sends a Login Accepted Packet in response to receiving a valid Login Request from the client
-entrypoint typedef struct _LoginAcceptedPacket {
+typedef struct _LoginAcceptedPacket {
   UINT8 accepted_session[10];          // bytes 0 to 9
   UINT8 accepted_sequence_number[20];  // bytes 10 to 29
 } LoginAcceptedPacket;
 
-// ---- Login Rejected Packet: 1 byte -------------------------------------------
-
 // The SoupBinTCP server sends this packet in response to an invalid Login Request Packet from the client
-entrypoint typedef struct _LoginRejectedPacket {
+typedef struct _LoginRejectedPacket {
   UINT8 reject_reason_code;  // byte 0
 } LoginRejectedPacket;
 
-// ---- Order Accepted: 113 bytes -----------------------------------------------
-
 // Acknowledges the receipt and acceptance of a valid Enter Order Message
-entrypoint typedef struct _OrderAccepted {
+typedef struct _OrderAccepted {
   UINT64BE timestamp_nanoseconds;  // bytes 0 to 7
   UINT8 order_token[14];           // bytes 8 to 21
   UINT32BE order_book_id;          // bytes 22 to 25, signed, read here as unsigned
@@ -58,28 +138,22 @@ entrypoint typedef struct _OrderAccepted {
   UINT8 exchange_info[32];         // bytes 81 to 112
 } OrderAccepted;
 
-// ---- Mass Cancel Accepted: 26 bytes ------------------------------------------
-
 // System notification indicating acceptance of a mass cancel request.
-entrypoint typedef struct _MassCancelAccepted {
+typedef struct _MassCancelAccepted {
   UINT64BE timestamp_nanoseconds;  // bytes 0 to 7
   UINT8 order_token[14];           // bytes 8 to 21
   UINT32BE status;                 // bytes 22 to 25
 } MassCancelAccepted;
 
-// ---- Order Rejected: 26 bytes ------------------------------------------------
-
 // System notification indicating that an order has been rejected.
-entrypoint typedef struct _OrderRejected {
+typedef struct _OrderRejected {
   UINT64BE timestamp_nanoseconds;  // bytes 0 to 7
   UINT8 order_token[14];           // bytes 8 to 21
   UINT32BE reject_code;            // bytes 22 to 25, signed, read here as unsigned
 } OrderRejected;
 
-// ---- Order Replaced: 127 bytes -----------------------------------------------
-
 // System notification indicating that an order has been successfully replaced.
-entrypoint typedef struct _OrderReplaced {
+typedef struct _OrderReplaced {
   UINT64BE timestamp_nanoseconds;     // bytes 0 to 7
   UINT8 replacement_order_token[14];  // bytes 8 to 21
   UINT8 previous_order_token[14];     // bytes 22 to 35
@@ -96,10 +170,8 @@ entrypoint typedef struct _OrderReplaced {
   UINT8 exchange_info[32];            // bytes 95 to 126
 } OrderReplaced;
 
-// ---- Order Canceled: 36 bytes ------------------------------------------------
-
 // System notification indicating that an order has been canceled.
-entrypoint typedef struct _OrderCanceled {
+typedef struct _OrderCanceled {
   UINT64BE timestamp_nanoseconds;  // bytes 0 to 7
   UINT8 order_token[14];           // bytes 8 to 21
   UINT32BE order_book_id;          // bytes 22 to 25, signed, read here as unsigned
@@ -108,10 +180,8 @@ entrypoint typedef struct _OrderCanceled {
   UINT8 cancel_reason;             // byte 35
 } OrderCanceled;
 
-// ---- Order Executed: 51 bytes ------------------------------------------------
-
 // System notification indicating that an order (or order leg) has been executed.
-entrypoint typedef struct _OrderExecuted {
+typedef struct _OrderExecuted {
   UINT64BE timestamp_nanoseconds;  // bytes 0 to 7
   UINT8 order_token[14];           // bytes 8 to 21
   UINT32BE order_book_id;          // bytes 22 to 25, signed, read here as unsigned
@@ -121,4 +191,50 @@ entrypoint typedef struct _OrderExecuted {
   UINT32BE combo_group_id;         // bytes 46 to 49
   UINT8 deal_source;               // byte 50
 } OrderExecuted;
+
+// The sequenced (server to client) message carried by the packet, opaque bytes unless an application source dispatches it
+casetype _SequencedMessage (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x41: OrderAccepted order_accepted;
+    case 0x4D: MassCancelAccepted mass_cancel_accepted;
+    case 0x4A: OrderRejected order_rejected;
+    case 0x55: OrderReplaced order_replaced;
+    case 0x43: OrderCanceled order_canceled;
+    case 0x45: OrderExecuted order_executed;
+    default: UINT8 unknown[available];
+  }
+} SequencedMessage;
+
+// The Sequenced Data Packets act as an envelope to carry the actual sequenced data messages that are transferred from the server to the client. Each Sequenced Data Packet carries one message from the higher-lever protocol
+typedef struct _SequencedDataPacket (UINT16 packet_length) where (packet_length >= 2) {
+  UINT8 sequenced_message_type;                                                                                                                                // byte 0
+  SequencedMessage(sequenced_message_type, (((UINT32) packet_length) - 2)) sequenced_message[:byte-size-single-element-array (((UINT32) packet_length) - 2)];
+} SequencedDataPacket;
+
+// Branch
+casetype _ServerPayload (UINT8 selector, UINT32 length, UINT16 packet_length, UINT32 available) {
+  switch (selector) {
+    case 0x2B: DebugPacket(packet_length) debug_packet;
+    case 0x41: LoginAcceptedPacket login_accepted_packet;
+    case 0x4A: LoginRejectedPacket login_rejected_packet;
+    case 0x53: SequencedDataPacket(packet_length) sequenced_data_packet[:byte-size-single-element-array length];
+    case 0x48: unit server_heartbeat;
+    case 0x5A: unit end_of_session;
+    default: UINT8 unknown[available];
+  }
+} ServerPayload;
+
+// Soup Bin Tcp Packet sent by the server
+typedef struct _ServerSoupBinTcpPacket {
+  UINT16BE packet_length { packet_length >= 1 };                                                                                                                                                                // bytes 0 to 1
+  UINT8 server_packet_type;                                                                                                                                                                                     // byte 2
+  ServerPayload(server_packet_type, (((UINT32) packet_length) - 1), packet_length, ((((UINT32) packet_length) + 2) - 3)) server_payload[:byte-size-single-element-array ((((UINT32) packet_length) + 2) - 3)];
+} ServerSoupBinTcpPacket;
+
+// ---- Packet: ServerPacket ----------------------------------------------------
+
+// SoupBinTCP Packet sent by the server
+entrypoint typedef struct _ServerPacket (UINT32 available) {
+  ServerSoupBinTcpPacket server_soup_bin_tcp_packet[:byte-size available];
+} ServerPacket;
 

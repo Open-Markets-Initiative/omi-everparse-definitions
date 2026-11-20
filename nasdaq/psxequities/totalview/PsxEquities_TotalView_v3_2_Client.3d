@@ -1,35 +1,95 @@
-// National Association of Securities Dealers Automated Quotations (Nasdaq) TotalView Itch
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nasdaq PsxEquities TotalView Glimpse v3.2
 //
+// Protocol:
+//   Organization: National Association of Securities Dealers Automated Quotations (Nasdaq)
+//   Protocol: TotalView Itch
+//   Encoding: Glimpse
+//   Version: 3.2
+//   Date: 01/08/2013
+//   Specification: PSXGLIMPSE-V3_2.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ClientFrame, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out PsxEquities_TotalView_v3_2_Client.3d
 //
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a field filling what is left of what holds it
-//
-// License: MIT No Attribution
+// What this definition reads more loosely than the model states:
+// - the stream is a run of frames each ending at a byte 10: the caller splits it there and validates each frame, that byte included
 
-// ---- Client Packet Header: 1 byte --------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// SoupTcp Packet Header sent by the client
-entrypoint typedef struct _ClientPacketHeader {
-  UINT8 client_packet_type;  // byte 0
-} ClientPacketHeader;
+// Client Packet Type: one byte code
+#define CLIENT_PACKET_TYPE_DEBUG_PACKET 0x2B             // Debug Packet
+#define CLIENT_PACKET_TYPE_LOGIN_REQUEST_PACKET 0x4C     // Login Request Packet
+#define CLIENT_PACKET_TYPE_UNSEQUENCED_DATA_PACKET 0x55  // Unsequenced Data Packet
+#define CLIENT_PACKET_TYPE_CLIENT_HEARTBEAT_PACKET 0x52  // Client Heartbeat Packet
+#define CLIENT_PACKET_TYPE_LOGOUT_REQUEST_PACKET 0x4F    // Logout Request Packet
 
-// ---- Login Request Packet: 46 bytes ------------------------------------------
+// ---- Types -------------------------------------------------------------------
+
+// Debug packets are intended to provide human readable text that may aid in debugging problems.
+typedef struct _DebugPacket (UINT32 available) where (available >= 1) {
+  UINT8 text[(available - 1)];
+} DebugPacket;
 
 // The SoupTcp client must send a Login Request Packet immediately upon establishing a new TCP/IP socket connection to the server.
-entrypoint typedef struct _LoginRequestPacket {
+typedef struct _LoginRequestPacket {
   UINT8 username[6];                    // bytes 0 to 5
   UINT8 password[10];                   // bytes 6 to 15
   UINT8 requested_session[10];          // bytes 16 to 25
   UINT8 requested_sequence_number[20];  // bytes 26 to 45
 } LoginRequestPacket;
+
+// The Unsequenced Data Packets act as an envelope to carry the actual data messages that are transferred from the client to the server. These messages are not sequenced and may be lost in the event of a socket failure.
+typedef struct _UnsequencedDataPacket (UINT32 available) where (available >= 1) {
+  UINT8 unsequenced_message[(available - 1)];
+} UnsequencedDataPacket;
+
+// Branch
+casetype _ClientPayload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x2B: DebugPacket(available) debug_packet;
+    case 0x4C: LoginRequestPacket login_request_packet;
+    case 0x55: UnsequencedDataPacket(available) unsequenced_data_packet;
+    default: UINT8 unknown[available];
+  }
+} ClientPayload;
+
+// ---- Packet: ClientFrame -----------------------------------------------------
+
+// One SoupTcp packet sent by the client, closed by a line feed
+entrypoint typedef struct _ClientFrame (UINT32 available) where (available >= 2) {
+  UINT8 client_packet_type;                                                                                            // byte 0
+  ClientPayload(client_packet_type, (available - 2)) client_payload[:byte-size-single-element-array (available - 2)];
+  UINT8 soup_lf { soup_lf == 10 };
+} ClientFrame;
 

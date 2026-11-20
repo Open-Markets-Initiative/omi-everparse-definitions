@@ -1,61 +1,210 @@
-// OTC Markets Group OTC Retransmission
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: OtcMarkets LinkNqb Retransmission Link v1.18
 //
+// Protocol:
+//   Organization: OTC Markets Group
+//   Protocol: OTC Retransmission
+//   Encoding: Otc Link
+//   Version: 1.18
+//   Date: 5/1/2026
+//   Specification: OTC-Link-NQB-MD-Specification.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out LinkNqb_Retransmission_v1_18.3d
-//
-// What this definition does not state, and the model does:
-// - a Reassemble rule
-// - a length prefix framing what follows
-// - a field read in bits
-//
-// License: MIT No Attribution
 
-// ---- Message Header: 3 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// MoonAts Tcp Message Header
-entrypoint typedef struct _MessageHeader {
-  UINT16BE message_size;  // bytes 0 to 1
-  UINT8 message_type;     // byte 2
-} MessageHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_START_OF_SPIN_MESSAGE 0x0B               // Start Of Spin Message
+#define MESSAGE_TYPE_END_OF_SPIN_MESSAGE 0x0C                 // End Of Spin Message
+#define MESSAGE_TYPE_TRADING_SESSION_MESSAGE 0x14             // Trading Session Message
+#define MESSAGE_TYPE_SECURITY_MESSAGE 0x09                    // Security Message
+#define MESSAGE_TYPE_ORDER_ADD_MESSAGE 0x15                   // Order Add Message
+#define MESSAGE_TYPE_ORDER_UPDATE_MESSAGE 0x16                // Order Update Message
+#define MESSAGE_TYPE_ORDER_DELETE_MESSAGE 0x17                // Order Delete Message
+#define MESSAGE_TYPE_ORDER_EXECUTION_MESSAGE 0x18             // Order Execution Message
+#define MESSAGE_TYPE_ORDER_EXECUTION_WITH_PRICE_MESSAGE 0x19  // Order Execution With Price Message
+#define MESSAGE_TYPE_TRADE_MESSAGE 0x1A                       // Trade Message
+#define MESSAGE_TYPE_TOP_OF_BOOK_MESSAGE 0x1B                 // Top Of Book Message
+#define MESSAGE_TYPE_IMBALANCE_MESSAGE 0x1C                   // Imbalance Message
+#define MESSAGE_TYPE_SYSTEM_RECOVERY_EVENT_MESSAGE 0x4A       // System Recovery Event Message
+#define MESSAGE_TYPE_LOGIN_REQUEST_MESSAGE 0x6C               // Login Request Message
+#define MESSAGE_TYPE_LOGIN_RESPONSE_MESSAGE 0x61              // Login Response Message
+#define MESSAGE_TYPE_RETRANSMISSION_REQUEST_MESSAGE 0x72      // Retransmission Request Message
+#define MESSAGE_TYPE_RETRANSMISSION_RESPONSE_MESSAGE 0x62     // Retransmission Response Message
+#define MESSAGE_TYPE_SPIN_REQUEST_MESSAGE 0x73                // Spin Request Message
+#define MESSAGE_TYPE_SPIN_RESPONSE_MESSAGE 0x63               // Spin Response Message
+#define MESSAGE_TYPE_ENHANCED_SPIN_REQUEST_MESSAGE 0x74       // Enhanced Spin Request Message
+#define MESSAGE_TYPE_ENHANCED_SPIN_RESPONSE_MESSAGE 0x64      // Enhanced Spin Response Message
+#define MESSAGE_TYPE_HEARTBEAT_MESSAGE 0x68                   // Heartbeat Message
 
-// ---- Start Of Spin Message: 13 bytes -----------------------------------------
+// Spin Type: one byte code
+#define SPIN_TYPE_REFERENCE 0x01  // Reference
+
+// Trading Session: one byte code
+#define TRADING_SESSION_ORDER_ACCEPTANCE 0x01  // Order Acceptance
+#define TRADING_SESSION_PRE_MARKET_OPEN 0x02   // Pre Market Open
+#define TRADING_SESSION_MARKET_OPEN 0x03       // Market Open
+#define TRADING_SESSION_AFTER_HOURS 0x04       // After Hours
+#define TRADING_SESSION_MARKET_CLOSE 0x05      // Market Close
+
+// Security Action: one byte code
+#define SECURITY_ACTION_UPDATE 0x01  // Update
+#define SECURITY_ACTION_ADD 0x02     // Add
+#define SECURITY_ACTION_DELETE 0x03  // Delete
+#define SECURITY_ACTION_SPIN 0x04    // Spin
+
+// Asset Class: one byte code
+#define ASSET_CLASS_EQUITY 0x01        // Equity
+#define ASSET_CLASS_FIXED_INCOME 0x02  // Fixed Income
+
+// Tier: one byte code
+#define TIER_NO_TIER 0x00              // No Tier
+#define TIER_OTCQX_US 0x02             // Otcqx Us
+#define TIER_OTCQX_INTERNATIONAL 0x06  // Otcqx International
+#define TIER_OTCQB 0x0A                // Otcqb
+#define TIER_OTCID 0x14                // Otcid
+#define TIER_PINK_LIMITED 0x15         // Pink Limited
+#define TIER_GREY_MARKET 0x1E          // Grey Market
+#define TIER_EXPERT_MARKET 0x28        // Expert Market
+#define TIER_OTC_BONDS 0x32            // Otc Bonds
+
+// Reporting Status: one byte code
+#define REPORTING_STATUS_ALTERNATIVE_REPORTING_STANDARD 0x41    // Alternative Reporting Standard
+#define REPORTING_STATUS_BANK_THRIFT 0x42                       // Bank Thrift
+#define REPORTING_STATUS_SEC_REPORTING 0x46                     // Sec Reporting
+#define REPORTING_STATUS_INTERNATIONAL_REPORTING 0x47           // International Reporting
+#define REPORTING_STATUS_INSURANCE_COMPANY 0x49                 // Insurance Company
+#define REPORTING_STATUS_NO_REPORTING 0x4E                      // No Reporting
+#define REPORTING_STATUS_OTHER_REPORTING_STANDARD 0x4F          // Other Reporting Standard
+#define REPORTING_STATUS_FINRA_REPORTING 0x52                   // Finra Reporting
+#define REPORTING_STATUS_SEC_REPORTING_INVESTMENT_COMPANY 0x56  // Sec Reporting Investment Company
+#define REPORTING_STATUS_SEC_REPORTING_REG_A 0x57               // Sec Reporting Reg A
+
+// Security Status: one byte code
+#define SECURITY_STATUS_ACTIVE 0x41             // Active
+#define SECURITY_STATUS_QUOTE_ONLY 0x51         // Quote Only
+#define SECURITY_STATUS_SUSPENDED 0x53          // Suspended
+#define SECURITY_STATUS_HALTED 0x48             // Halted
+#define SECURITY_STATUS_INTERNAL_HALT 0x49      // Internal Halt
+#define SECURITY_STATUS_REVOKED 0x52            // Revoked
+#define SECURITY_STATUS_DELETED 0x44            // Deleted
+#define SECURITY_STATUS_REMOVED_FROM_IDQS 0x58  // Removed From Idqs
+
+// Side Indicator: one byte code
+#define SIDE_INDICATOR_BUY_ORDER 0x42   // Buy Order
+#define SIDE_INDICATOR_SELL_ORDER 0x53  // Sell Order
+
+// Unsolicited: one byte code
+#define UNSOLICITED_UNSOLICITED 0x59      // Unsolicited
+#define UNSOLICITED_NOT_UNSOLICITED 0x4E  // Not Unsolicited
+
+// Current Inside Imbalance Side: one byte code
+#define CURRENT_INSIDE_IMBALANCE_SIDE_BUY_SIDE 0x42              // Buy Side
+#define CURRENT_INSIDE_IMBALANCE_SIDE_SELL_SIDE 0x53             // Sell Side
+#define CURRENT_INSIDE_IMBALANCE_SIDE_NO_IMBALANCE 0x4E          // No Imbalance
+#define CURRENT_INSIDE_IMBALANCE_SIDE_NO_MARKETABLE_ORDERS 0x4F  // No Marketable Orders
+
+// Moc Shares Unmatched: one byte code
+#define MOC_SHARES_UNMATCHED_BUY_MOC_NOT_MATCHED 0x42   // Buy Moc Not Matched
+#define MOC_SHARES_UNMATCHED_SELL_MOC_NOT_MATCHED 0x53  // Sell Moc Not Matched
+#define MOC_SHARES_UNMATCHED_NO_MOC_UNMATCHED 0x4F      // No Moc Unmatched
+
+// Recovery Type: one byte code
+#define RECOVERY_TYPE_SCHEDULING_START 0x53  // Scheduling Start
+#define RECOVERY_TYPE_RECOVERY_BEGINS 0x42   // Recovery Begins
+
+// Login Status: one byte code
+#define LOGIN_STATUS_ACCEPTED 0x59  // Accepted
+
+// Retran Via Tcp: one byte code
+#define RETRAN_VIA_TCP_SAME_TCP_CHANNEL 0x59  // Same Tcp Channel
+
+// Retransmission Status: one byte code
+#define RETRANSMISSION_STATUS_WILL_FOLLOW 0x59      // Will Follow
+#define RETRANSMISSION_STATUS_REQUEST_IGNORED 0x4E  // Request Ignored
+
+// Spin Status: one byte code
+#define SPIN_STATUS_START_OF_SPIN 0x53  // Start Of Spin
+#define SPIN_STATUS_END_OF_SPIN 0x45    // End Of Spin
+
+// Enhanced Spin Status: one byte code
+#define ENHANCED_SPIN_STATUS_START_OF_SPIN 0x53  // Start Of Spin
+#define ENHANCED_SPIN_STATUS_END_OF_SPIN 0x45    // End Of Spin
+
+// ---- Types -------------------------------------------------------------------
 
 // Appears within the TCP spin response cycle (between Spin Response 'S' and 'E') and also on the UDP multicast feeds at the daily spin-out. Indicates the beginning of a spin message cycle.
-entrypoint typedef struct _StartOfSpinMessage {
+typedef struct _StartOfSpinMessage {
   UINT8 spin_type;                 // byte 0
   UINT64BE spin_start_time_milli;  // bytes 1 to 8
   UINT32BE spin_last_seq_num;      // bytes 9 to 12
 } StartOfSpinMessage;
 
-// ---- End Of Spin Message: 17 bytes -------------------------------------------
-
 // Appears within the TCP spin response cycle (between Spin Response 'S' and 'E') and also on the UDP multicast feeds at the daily spin-out. Indicates the end of a spin message cycle.
-entrypoint typedef struct _EndOfSpinMessage {
+typedef struct _EndOfSpinMessage {
   UINT8 spin_type;               // byte 0
   UINT32BE spin_msg_ct;          // bytes 1 to 4
   UINT64BE spin_end_time_milli;  // bytes 5 to 12
   UINT32BE spin_last_seq_num;    // bytes 13 to 16
 } EndOfSpinMessage;
 
-// ---- Trading Session Message: 9 bytes ----------------------------------------
-
 // Appears in the TCP spin response payload (and on all UDP channels). Sent at the start of each NQB IDQS trading session: Order Acceptance at 6 AM, Pre-Market Open at 8 AM, Market Open at 9:30 AM, After Hours at 4 PM, Market Close at 5 PM.
-entrypoint typedef struct _TradingSessionMessage {
+typedef struct _TradingSessionMessage {
   UINT64BE session_time;  // bytes 0 to 7
   UINT8 trading_session;  // byte 8
 } TradingSessionMessage;
 
-// ---- Order Add Message: 52 bytes ---------------------------------------------
+// Appears in the TCP spin response payload (and on all UDP channels). Provides basic security attribute information for all OTC equity securities.
+typedef struct _SecurityMessage {
+  UINT8 symbol[14];                    // bytes 0 to 13
+  UINT64BE last_update_milli;          // bytes 14 to 21
+  UINT8 security_action;               // byte 22
+  UINT8 asset_class;                   // byte 23
+  UINT32BE security_id;                // bytes 24 to 27
+  UINT16BE reserved_11 : 11;           // bytes 28 to 29
+  UINT16BE closing_cross_auction : 1;  // bytes 28 to 29
+  UINT16BE unsolicited_only_flag : 1;  // bytes 28 to 29
+  UINT16BE qib_only_144_a : 1;         // bytes 28 to 29
+  UINT16BE caveat_flag : 1;            // bytes 28 to 29
+  UINT16BE piggyback_flag : 1;         // bytes 28 to 29
+  UINT8 tier;                          // byte 30
+  UINT8 reporting_status;              // byte 31
+  UINT8 security_status;               // byte 32
+} SecurityMessage;
 
 // Appears in the TCP spin response payload during DOB replay. Indicates a new order added to the book.
-entrypoint typedef struct _OrderAddMessage {
+typedef struct _OrderAddMessage {
   UINT32BE time;         // bytes 0 to 3
   UINT8 order_id[14];    // bytes 4 to 17
   UINT8 side_indicator;  // byte 18
@@ -67,10 +216,8 @@ entrypoint typedef struct _OrderAddMessage {
   UINT16BE order_flags;  // bytes 50 to 51
 } OrderAddMessage;
 
-// ---- Order Update Message: 32 bytes ------------------------------------------
-
 // Appears in the TCP spin response payload during DOB replay. Indicates an existing order has been modified.
-entrypoint typedef struct _OrderUpdateMessage {
+typedef struct _OrderUpdateMessage {
   UINT32BE time;         // bytes 0 to 3
   UINT8 order_id[14];    // bytes 4 to 17
   UINT32BE quantity;     // bytes 18 to 21
@@ -78,18 +225,14 @@ entrypoint typedef struct _OrderUpdateMessage {
   UINT16BE order_flags;  // bytes 30 to 31
 } OrderUpdateMessage;
 
-// ---- Order Delete Message: 18 bytes ------------------------------------------
-
 // Appears in the TCP spin response payload during DOB replay. Indicates an existing order has been deleted from the book.
-entrypoint typedef struct _OrderDeleteMessage {
+typedef struct _OrderDeleteMessage {
   UINT32BE time;       // bytes 0 to 3
   UINT8 order_id[14];  // bytes 4 to 17
 } OrderDeleteMessage;
 
-// ---- Order Execution Message: 34 bytes ---------------------------------------
-
 // Appears in the TCP spin response payload during DOB replay. Published when all or some of the displayed quantity of a previously published order executes at the published price.
-entrypoint typedef struct _OrderExecutionMessage {
+typedef struct _OrderExecutionMessage {
   UINT32BE time;                // bytes 0 to 3
   UINT8 order_id[14];           // bytes 4 to 17
   UINT32BE executed_quantity;   // bytes 18 to 21
@@ -97,10 +240,8 @@ entrypoint typedef struct _OrderExecutionMessage {
   UINT64BE execution_id;        // bytes 26 to 33
 } OrderExecutionMessage;
 
-// ---- Order Execution With Price Message: 42 bytes ----------------------------
-
 // Appears in the TCP spin response payload during DOB replay. Published when all or some of the displayed quantity of a previously published order executes at a price different than the published price.
-entrypoint typedef struct _OrderExecutionWithPriceMessage {
+typedef struct _OrderExecutionWithPriceMessage {
   UINT32BE time;                // bytes 0 to 3
   UINT8 order_id[14];           // bytes 4 to 17
   UINT32BE executed_quantity;   // bytes 18 to 21
@@ -109,10 +250,8 @@ entrypoint typedef struct _OrderExecutionWithPriceMessage {
   UINT64BE price;               // bytes 34 to 41
 } OrderExecutionWithPriceMessage;
 
-// ---- Trade Message: 47 bytes -------------------------------------------------
-
 // Appears in the TCP spin response payload during DOB replay. Published when non-displayed quantity of a previously published reserve order executes or when an order executes that is less than Min Quote Size and does not currently have an active Order Add message.
-entrypoint typedef struct _TradeMessage {
+typedef struct _TradeMessage {
   UINT32BE time;                    // bytes 0 to 3
   UINT8 side_indicator;             // byte 4
   UINT32BE quantity;                // bytes 5 to 8
@@ -122,10 +261,8 @@ entrypoint typedef struct _TradeMessage {
   UINT64BE reserved_binary_long_8;  // bytes 39 to 46
 } TradeMessage;
 
-// ---- Top Of Book Message: 43 bytes -------------------------------------------
-
 // Appears in the TCP spin response payload during TOB replay. Provides best bid and offer aggregated top-of-book.
-entrypoint typedef struct _TopOfBookMessage {
+typedef struct _TopOfBookMessage {
   UINT32BE time;        // bytes 0 to 3
   UINT8 symbol[14];     // bytes 4 to 17
   UINT64BE ask_price;   // bytes 18 to 25
@@ -135,10 +272,8 @@ entrypoint typedef struct _TopOfBookMessage {
   UINT8 unsolicited;    // byte 42
 } TopOfBookMessage;
 
-// ---- Imbalance Message: 52 bytes ---------------------------------------------
-
 // Appears in the TCP spin response payload.
-entrypoint typedef struct _ImbalanceMessage {
+typedef struct _ImbalanceMessage {
   UINT32BE time;                               // bytes 0 to 3
   UINT8 symbol[14];                            // bytes 4 to 17
   UINT32BE current_inside_paired_shares;       // bytes 18 to 21
@@ -150,85 +285,108 @@ entrypoint typedef struct _ImbalanceMessage {
   UINT8 moc_shares_unmatched;                  // byte 51
 } ImbalanceMessage;
 
-// ---- System Recovery Event Message: 17 bytes ---------------------------------
-
 // System Recovery event. The first event (type 'S') instructs clients to prepare and reset caches; clients must clean all cached state. A second event (type 'B') indicates recovery begins, after which the system performs a spin for all symbols and open orders.
-entrypoint typedef struct _SystemRecoveryEventMessage {
+typedef struct _SystemRecoveryEventMessage {
   UINT32BE deprecated;            // bytes 0 to 3
   UINT8 recovery_type;            // byte 4
   UINT32BE next_sequence_number;  // bytes 5 to 8
   UINT64BE recovery_start_time;   // bytes 9 to 16
 } SystemRecoveryEventMessage;
 
-// ---- Login Request Message: 32 bytes -----------------------------------------
-
 // l (lowercase L). Logon message is the first message required to send to the server once a connection is established. At minimum, the firm and user id should be provided.
-entrypoint typedef struct _LoginRequestMessage {
+typedef struct _LoginRequestMessage {
   UINT8 user_id[16];   // bytes 0 to 15
   UINT8 password[16];  // bytes 16 to 31
 } LoginRequestMessage;
 
-// ---- Login Response Message: 17 bytes ----------------------------------------
-
 // a . The Login Response Message is sent to a client's response to a TCP/IP Login Message. The status field is used to reflect an accepted login or the reason the session was not accepted. If login fails, the TCP/IP connection will be dropped.
-entrypoint typedef struct _LoginResponseMessage {
+typedef struct _LoginResponseMessage {
   UINT8 user_id[16];   // bytes 0 to 15
   UINT8 login_status;  // byte 16
 } LoginResponseMessage;
 
-// ---- Retransmission Request Message: 9 bytes ---------------------------------
-
 // r . Request retransmission of a range of messages.
-entrypoint typedef struct _RetransmissionRequestMessage {
+typedef struct _RetransmissionRequestMessage {
   UINT32BE start_sequence;      // bytes 0 to 3
   UINT32BE number_of_messages;  // bytes 4 to 7
   UINT8 retran_via_tcp;         // byte 8
 } RetransmissionRequestMessage;
 
-// ---- Retransmission Response Message: 9 bytes --------------------------------
-
 // b . Response to a Retransmission Request. The replay server sends a heartbeat message every second. If the server replay response to a request takes too much time, then it is up to the client to either wait for a few heartbeats, or arbitrary time, then disconnect and send another replay request.
-entrypoint typedef struct _RetransmissionResponseMessage {
+typedef struct _RetransmissionResponseMessage {
   UINT32BE start_sequence;      // bytes 0 to 3
   UINT32BE number_of_messages;  // bytes 4 to 7
   UINT8 retransmission_status;  // byte 8
 } RetransmissionResponseMessage;
 
-// ---- Spin Request Message: 4 bytes -------------------------------------------
-
 // s . Request a refresh spin of state from the server.
-entrypoint typedef struct _SpinRequestMessage {
+typedef struct _SpinRequestMessage {
   UINT32BE client_identifier;  // bytes 0 to 3
 } SpinRequestMessage;
 
-// ---- Spin Response Message: 5 bytes ------------------------------------------
-
 // c . The server will send a Spin Response ( c ) with status Start of Spin ( S ). It will then transmit Trading Session, Security, Orders or TOB, etc., followed by another Spin Response ( c ) with status End of Spin ( E ). Ignore any Heartbeat messages. Spin messages are always returned to the same TCP socket from where they originated.
-entrypoint typedef struct _SpinResponseMessage {
+typedef struct _SpinResponseMessage {
   UINT32BE client_identifier;  // bytes 0 to 3
   UINT8 spin_status;           // byte 4
 } SpinResponseMessage;
 
-// ---- Enhanced Spin Request Message: 4 bytes ----------------------------------
-
 // t . Request an enhanced spin which includes a last-sequence-number marker for syncing real time data.
-entrypoint typedef struct _EnhancedSpinRequestMessage {
+typedef struct _EnhancedSpinRequestMessage {
   UINT32BE client_identifier;  // bytes 0 to 3
 } EnhancedSpinRequestMessage;
 
-// ---- Enhanced Spin Response Message: 9 bytes ---------------------------------
-
 // d . The server will send an Enhanced Spin Response ( d ) with status Start of Spin ( S ). It will then transmit Trading Session, Security, Orders or TOB, etc., followed by another Enhanced Spin Response ( d ) with status End of Spin ( E ). Ignore any Heartbeat messages. Spin messages are always returned to the same TCP socket from where they originated.
-entrypoint typedef struct _EnhancedSpinResponseMessage {
+typedef struct _EnhancedSpinResponseMessage {
   UINT32BE client_identifier;  // bytes 0 to 3
   UINT8 enhanced_spin_status;  // byte 4
   UINT32BE last_seq_num;       // bytes 5 to 8
 } EnhancedSpinResponseMessage;
 
-// ---- Heartbeat Message: 4 bytes ----------------------------------------------
-
 // h . After login successful, FI will send a client a heartbeat once every 60 seconds. If there is no heartbeat from client for more than 5 minutes, system will disconnect.
-entrypoint typedef struct _HeartbeatMessage {
+typedef struct _HeartbeatMessage {
   UINT32BE client_identifier;  // bytes 0 to 3
 } HeartbeatMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x0B: StartOfSpinMessage start_of_spin_message;
+    case 0x0C: EndOfSpinMessage end_of_spin_message;
+    case 0x14: TradingSessionMessage trading_session_message;
+    case 0x09: SecurityMessage security_message;
+    case 0x15: OrderAddMessage order_add_message;
+    case 0x16: OrderUpdateMessage order_update_message;
+    case 0x17: OrderDeleteMessage order_delete_message;
+    case 0x18: OrderExecutionMessage order_execution_message;
+    case 0x19: OrderExecutionWithPriceMessage order_execution_with_price_message;
+    case 0x1A: TradeMessage trade_message;
+    case 0x1B: TopOfBookMessage top_of_book_message;
+    case 0x1C: ImbalanceMessage imbalance_message;
+    case 0x4A: SystemRecoveryEventMessage system_recovery_event_message;
+    case 0x6C: LoginRequestMessage login_request_message;
+    case 0x61: LoginResponseMessage login_response_message;
+    case 0x72: RetransmissionRequestMessage retransmission_request_message;
+    case 0x62: RetransmissionResponseMessage retransmission_response_message;
+    case 0x73: SpinRequestMessage spin_request_message;
+    case 0x63: SpinResponseMessage spin_response_message;
+    case 0x74: EnhancedSpinRequestMessage enhanced_spin_request_message;
+    case 0x64: EnhancedSpinResponseMessage enhanced_spin_response_message;
+    case 0x68: HeartbeatMessage heartbeat_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// MoonAts Tcp Recovery Message
+typedef struct _Message {
+  UINT16BE message_size { message_size >= 3 };                                                                                  // bytes 0 to 1
+  UINT8 message_type;                                                                                                           // byte 2
+  Payload(message_type, (((UINT32) message_size) - 3)) payload[:byte-size-single-element-array (((UINT32) message_size) - 3)];
+} Message;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// MoonAts Tcp Recovery Packet
+entrypoint typedef struct _Packet (UINT32 available) {
+  Message message[:byte-size available];
+} Packet;
 

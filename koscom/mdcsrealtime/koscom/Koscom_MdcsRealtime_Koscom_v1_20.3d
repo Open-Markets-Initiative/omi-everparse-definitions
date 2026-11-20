@@ -1,24 +1,84 @@
-// Koscom Co., Ltd. MDCS Realtime Koscom
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Koscom MdcsRealtime Koscom Exture v1.20
 //
+// Protocol:
+//   Organization: Koscom Co., Ltd.
+//   Protocol: MDCS Realtime Koscom
+//   Encoding: Exture
+//   Version: 1.20
+//   Date: 5/26/2022
+//   Specification: 8. (Revised) KOSCOM DATA SPEC-UDP Realtime_v1.20.xlsm
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out Koscom_MdcsRealtime_Koscom_v1_20.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-//
-// License: MIT No Attribution
 
-// ---- K Otc Issue Closing Message: 35 bytes -----------------------------------
+// ---- Values ------------------------------------------------------------------
+
+// Quotation Category: one byte code
+#define QUOTATION_CATEGORY_WEIGHTED_AVERAGE_PRICE 0x30  // Weighted Average Price
+#define QUOTATION_CATEGORY_QUOTATION 0x31               // Quotation
+#define QUOTATION_CATEGORY_NO_TRADE 0x32                // No Trade
+
+// End Keyword: one byte code
+#define END_KEYWORD_END_OF_MESSAGE 0xFF  // End Of Message
+
+// Type: one byte code
+#define TYPE_TRADING_HALT 0x31             // Trading Halt
+#define TYPE_LIFT_AFTER_TRADING_HALT 0x32  // Lift After Trading Halt
+
+// Process Type: one byte code
+#define PROCESS_TYPE_NORMAL 0x31        // Normal
+#define PROCESS_TYPE_CORRECTION 0x32    // Correction
+#define PROCESS_TYPE_CANCELLATION 0x33  // Cancellation
+
+// Bidask Type: one byte code
+#define BIDASK_TYPE_ASK 0x31  // Ask
+#define BIDASK_TYPE_BID 0x32  // Bid
+
+// Compared To Previous Day Type: one byte code
+#define COMPARED_TO_PREVIOUS_DAY_TYPE_UP 0x2B          // Up
+#define COMPARED_TO_PREVIOUS_DAY_TYPE_STEADINESS 0x20  // Steadiness
+#define COMPARED_TO_PREVIOUS_DAY_TYPE_DOWN 0x2D        // Down
+
+// Sign: one byte code
+#define SIGN_ASCENDED 0x2B    // Ascended
+#define SIGN_STEADINESS 0x20  // Steadiness
+#define SIGN_DECLINED 0x2D    // Declined
+
+// ---- Types -------------------------------------------------------------------
 
 // K-OTC Issue Closing. Reports closing price and the quotation category per ISIN.
-entrypoint typedef struct _KOtcIssueClosingMessage {
+typedef struct _KOtcIssueClosingMessage {
   UINT8 isin[12];            // bytes 0 to 11
   UINT8 data_seq_number[8];  // bytes 12 to 19
   UINT8 closing_price[9];    // bytes 20 to 28
@@ -27,10 +87,8 @@ entrypoint typedef struct _KOtcIssueClosingMessage {
   UINT8 end_keyword;         // byte 34
 } KOtcIssueClosingMessage;
 
-// ---- K Otc Market Operation Message: 25 bytes --------------------------------
-
 // K-OTC Market Operation. Trading halt / lift-after-halt events with reason code.
-entrypoint typedef struct _KOtcMarketOperationMessage {
+typedef struct _KOtcMarketOperationMessage {
   UINT8 isin[12];            // bytes 0 to 11
   UINT8 data_seq_number[8];  // bytes 12 to 19
   UINT8 type_;               // byte 20
@@ -39,10 +97,8 @@ entrypoint typedef struct _KOtcMarketOperationMessage {
   UINT8 end_keyword;         // byte 24
 } KOtcMarketOperationMessage;
 
-// ---- K Otc Market Action Message: 95 bytes -----------------------------------
-
 // K-OTC Market Action. Basis price and upper/lower limit price changes.
-entrypoint typedef struct _KOtcMarketActionMessage {
+typedef struct _KOtcMarketActionMessage {
   UINT8 isin_nullable[12];                   // bytes 0 to 11
   UINT8 data_type[2];                        // bytes 12 to 13
   UINT8 change_date[8];                      // bytes 14 to 21
@@ -57,10 +113,8 @@ entrypoint typedef struct _KOtcMarketActionMessage {
   UINT8 end_keyword;                         // byte 94
 } KOtcMarketActionMessage;
 
-// ---- K Otc Quote Message: 195 bytes ------------------------------------------
-
 // K-OTC Quote. Bid/ask quote with remaining quantity at the best price.
-entrypoint typedef struct _KOtcQuoteMessage {
+typedef struct _KOtcQuoteMessage {
   UINT8 isin[12];                                                // bytes 0 to 11
   UINT8 data_seq_number[8];                                      // bytes 12 to 19
   UINT8 process_type;                                            // byte 20
@@ -85,10 +139,8 @@ entrypoint typedef struct _KOtcQuoteMessage {
   UINT8 end_keyword;                                             // byte 194
 } KOtcQuoteMessage;
 
-// ---- K Otc Order Filled Message: 245 bytes -----------------------------------
-
 // K-OTC Order Filled. Trade prints with running totals, high/low, weighted average price, and previous-day comparison.
-entrypoint typedef struct _KOtcOrderFilledMessage {
+typedef struct _KOtcOrderFilledMessage {
   UINT8 isin[12];                                             // bytes 0 to 11
   UINT8 data_seq_number[8];                                   // bytes 12 to 19
   UINT8 trading_number[6];                                    // bytes 20 to 25
@@ -116,10 +168,8 @@ entrypoint typedef struct _KOtcOrderFilledMessage {
   UINT8 end_keyword;                                          // byte 244
 } KOtcOrderFilledMessage;
 
-// ---- Otc Bond Traded Info Message: 105 bytes ---------------------------------
-
 // OTC Bond Traded Information. Reports today's or prior-day trading history with volume, pretax unit price, yield, settlement date, and FX category.
-entrypoint typedef struct _OtcBondTradedInfoMessage {
+typedef struct _OtcBondTradedInfoMessage {
   UINT8 isin[12];                         // bytes 0 to 11
   UINT8 subcategory[2];                   // bytes 12 to 13
   UINT8 trading_date[8];                  // bytes 14 to 21
@@ -139,10 +189,8 @@ entrypoint typedef struct _OtcBondTradedInfoMessage {
   UINT8 end_keyword;                      // byte 104
 } OtcBondTradedInfoMessage;
 
-// ---- Otc Bond Trades Per Institution Message: 105 bytes ----------------------
-
 // OTC Bond trade aggregates per institution. Reports bid and ask yields and trading volumes/values per institution code and bond type.
-entrypoint typedef struct _OtcBondTradesPerInstitutionMessage {
+typedef struct _OtcBondTradesPerInstitutionMessage {
   UINT8 data_process_category;               // byte 0
   UINT8 date[8];                             // bytes 1 to 8
   UINT8 institution_code[4];                 // bytes 9 to 12
@@ -157,10 +205,8 @@ entrypoint typedef struct _OtcBondTradesPerInstitutionMessage {
   UINT8 end_keyword;                         // byte 104
 } OtcBondTradesPerInstitutionMessage;
 
-// ---- Otc Bond Types Per Investor Message: 135 bytes --------------------------
-
 // OTC Bond trade aggregates per investor category. Bid/ask yields and trading volumes/values per ISIN and investor category.
-entrypoint typedef struct _OtcBondTypesPerInvestorMessage {
+typedef struct _OtcBondTypesPerInvestorMessage {
   UINT8 isin[12];                         // bytes 0 to 11
   UINT8 sequence_number[8];               // bytes 12 to 19
   UINT8 trading_date[8];                  // bytes 20 to 27
@@ -175,10 +221,8 @@ entrypoint typedef struct _OtcBondTypesPerInvestorMessage {
   UINT8 end_keyword;                      // byte 134
 } OtcBondTypesPerInvestorMessage;
 
-// ---- K Bond Message: 145 bytes -----------------------------------------------
-
 // K-BOND dissemination. Quotes and trades with profit rate or price, contract category, settlement date, and replacement order details.
-entrypoint typedef struct _KBondMessage {
+typedef struct _KBondMessage {
   UINT8 isin[12];                         // bytes 0 to 11
   UINT8 data_small_category[2];           // bytes 12 to 13
   UINT8 data_source_type;                 // byte 14
@@ -201,10 +245,8 @@ entrypoint typedef struct _KBondMessage {
   UINT8 end_keyword;                      // byte 144
 } KBondMessage;
 
-// ---- Mkf Index Message: 72 bytes ---------------------------------------------
-
 // MKF Index real-time message. Reports current index value, sign and magnitude of change against the previous day, and accumulated trading volume and value for one MKF index identifier.
-entrypoint typedef struct _MkfIndexMessage {
+typedef struct _MkfIndexMessage {
   UINT8 index_id[6];              // bytes 0 to 5
   UINT8 isin[12];                 // bytes 6 to 17
   UINT8 time[6];                  // bytes 18 to 23
@@ -217,10 +259,8 @@ entrypoint typedef struct _MkfIndexMessage {
   UINT8 end_keyword;              // byte 71
 } MkfIndexMessage;
 
-// ---- Mkf Index Jpy Message: 72 bytes -----------------------------------------
-
 // MKF Index real-time message with the Japanese Yen exchange rate reflected. Identical field layout to the Mkf Index Message.
-entrypoint typedef struct _MkfIndexJpyMessage {
+typedef struct _MkfIndexJpyMessage {
   UINT8 index_id[6];              // bytes 0 to 5
   UINT8 isin[12];                 // bytes 6 to 17
   UINT8 time[6];                  // bytes 18 to 23
@@ -233,10 +273,8 @@ entrypoint typedef struct _MkfIndexJpyMessage {
   UINT8 end_keyword;              // byte 71
 } MkfIndexJpyMessage;
 
-// ---- Wisefn Index Message: 72 bytes ------------------------------------------
-
 // WISEfn equity index real-time message. Identical field layout to the Mkf Index Message.
-entrypoint typedef struct _WisefnIndexMessage {
+typedef struct _WisefnIndexMessage {
   UINT8 index_id[6];              // bytes 0 to 5
   UINT8 isin[12];                 // bytes 6 to 17
   UINT8 time[6];                  // bytes 18 to 23
@@ -249,10 +287,8 @@ entrypoint typedef struct _WisefnIndexMessage {
   UINT8 end_keyword;              // byte 71
 } WisefnIndexMessage;
 
-// ---- Kis Index Message: 72 bytes ---------------------------------------------
-
 // KIS equity index real-time message. Identical field layout to the Mkf Index Message.
-entrypoint typedef struct _KisIndexMessage {
+typedef struct _KisIndexMessage {
   UINT8 index_id[6];              // bytes 0 to 5
   UINT8 isin[12];                 // bytes 6 to 17
   UINT8 time[6];                  // bytes 18 to 23
@@ -265,10 +301,8 @@ entrypoint typedef struct _KisIndexMessage {
   UINT8 end_keyword;              // byte 71
 } KisIndexMessage;
 
-// ---- Mkf Bond Index Message: 109 bytes ---------------------------------------
-
 // MKF Bond Index real-time message. Carries total profit / clean price / market price / call and zero re-investment indices, futures basis price, duration, convexity, and YTM for one bond index identifier.
-entrypoint typedef struct _MkfBondIndexMessage {
+typedef struct _MkfBondIndexMessage {
   UINT8 filler_4[4];                   // bytes 0 to 3
   UINT8 index_id[6];                   // bytes 4 to 9
   UINT8 standard_date[8];              // bytes 10 to 17
@@ -287,10 +321,8 @@ entrypoint typedef struct _MkfBondIndexMessage {
   UINT8 end_keyword;                   // byte 108
 } MkfBondIndexMessage;
 
-// ---- Kis Bond Index Message: 109 bytes ---------------------------------------
-
 // KIS Bond Index real-time message. Identical field layout to the Mkf Bond Index Message.
-entrypoint typedef struct _KisBondIndexMessage {
+typedef struct _KisBondIndexMessage {
   UINT8 filler_4[4];                   // bytes 0 to 3
   UINT8 index_id[6];                   // bytes 4 to 9
   UINT8 standard_date[8];              // bytes 10 to 17
@@ -309,10 +341,8 @@ entrypoint typedef struct _KisBondIndexMessage {
   UINT8 end_keyword;                   // byte 108
 } KisBondIndexMessage;
 
-// ---- Kebi Bond Index Message: 109 bytes --------------------------------------
-
 // KEBI Bond Index real-time message. Identical field layout to the Mkf Bond Index Message.
-entrypoint typedef struct _KebiBondIndexMessage {
+typedef struct _KebiBondIndexMessage {
   UINT8 filler_4[4];                   // bytes 0 to 3
   UINT8 index_id[6];                   // bytes 4 to 9
   UINT8 standard_date[8];              // bytes 10 to 17
@@ -331,10 +361,8 @@ entrypoint typedef struct _KebiBondIndexMessage {
   UINT8 end_keyword;                   // byte 108
 } KebiBondIndexMessage;
 
-// ---- Kabi Bond Index Message: 109 bytes --------------------------------------
-
 // KABI Bond Index real-time message. Same field layout as the Mkf Bond Index Message; KABI uses standard 100 rather than 10,000 for the various indices.
-entrypoint typedef struct _KabiBondIndexMessage {
+typedef struct _KabiBondIndexMessage {
   UINT8 filler_4[4];                      // bytes 0 to 3
   UINT8 index_id[6];                      // bytes 4 to 9
   UINT8 standard_date[8];                 // bytes 10 to 17
@@ -353,10 +381,8 @@ entrypoint typedef struct _KabiBondIndexMessage {
   UINT8 end_keyword;                      // byte 108
 } KabiBondIndexMessage;
 
-// ---- Nicepni Bond Index Message: 109 bytes -----------------------------------
-
 // NicePNI Bond Index real-time message. Identical field layout to the Mkf Bond Index Message.
-entrypoint typedef struct _NicepniBondIndexMessage {
+typedef struct _NicepniBondIndexMessage {
   UINT8 filler_4[4];                   // bytes 0 to 3
   UINT8 index_id[6];                   // bytes 4 to 9
   UINT8 standard_date[8];              // bytes 10 to 17
@@ -375,10 +401,8 @@ entrypoint typedef struct _NicepniBondIndexMessage {
   UINT8 end_keyword;                   // byte 108
 } NicepniBondIndexMessage;
 
-// ---- Domestic Etf Inav Message: 65 bytes -------------------------------------
-
 // Domestic ETF intraday NAV (1-second interval). Carries previous-day and during-market/final NAV per ETF ISIN.
-entrypoint typedef struct _DomesticEtfInavMessage {
+typedef struct _DomesticEtfInavMessage {
   UINT8 isin[12];                   // bytes 0 to 11
   UINT8 time[6];                    // bytes 12 to 17
   UINT8 previous_nav[9];            // bytes 18 to 26
@@ -387,10 +411,8 @@ entrypoint typedef struct _DomesticEtfInavMessage {
   UINT8 end_keyword;                // byte 64
 } DomesticEtfInavMessage;
 
-// ---- Domestic Etf Estimated Inav Message: 45 bytes ---------------------------
-
 // Domestic ETF Estimated iNAV. Carries previous-day and during-market/final estimated NAV.
-entrypoint typedef struct _DomesticEtfEstimatedInavMessage {
+typedef struct _DomesticEtfEstimatedInavMessage {
   UINT8 isin[12];                          // bytes 0 to 11
   UINT8 time[6];                           // bytes 12 to 17
   UINT8 previous_nav[9];                   // bytes 18 to 26
@@ -399,10 +421,8 @@ entrypoint typedef struct _DomesticEtfEstimatedInavMessage {
   UINT8 end_keyword;                       // byte 44
 } DomesticEtfEstimatedInavMessage;
 
-// ---- Global Etf Inav Message: 65 bytes ---------------------------------------
-
 // Global ETF intraday NAV per ETF ISIN.
-entrypoint typedef struct _GlobalEtfInavMessage {
+typedef struct _GlobalEtfInavMessage {
   UINT8 isin[12];                   // bytes 0 to 11
   UINT8 time[6];                    // bytes 12 to 17
   UINT8 previous_nav[9];            // bytes 18 to 26
@@ -411,10 +431,8 @@ entrypoint typedef struct _GlobalEtfInavMessage {
   UINT8 end_keyword;                // byte 64
 } GlobalEtfInavMessage;
 
-// ---- Etf Tracking Error Message: 55 bytes ------------------------------------
-
 // ETF tracking error and signed disparate ratio per ETF.
-entrypoint typedef struct _EtfTrackingErrorMessage {
+typedef struct _EtfTrackingErrorMessage {
   UINT8 isin[12];              // bytes 0 to 11
   UINT8 seq_number[8];         // bytes 12 to 19
   UINT8 date[8];               // bytes 20 to 27
@@ -425,10 +443,8 @@ entrypoint typedef struct _EtfTrackingErrorMessage {
   UINT8 end_keyword;           // byte 54
 } EtfTrackingErrorMessage;
 
-// ---- Global Etf Tracking Error Message: 55 bytes -----------------------------
-
 // Global ETF tracking error and signed disparate ratio.
-entrypoint typedef struct _GlobalEtfTrackingErrorMessage {
+typedef struct _GlobalEtfTrackingErrorMessage {
   UINT8 isin[12];              // bytes 0 to 11
   UINT8 seq_number[8];         // bytes 12 to 19
   UINT8 date[8];               // bytes 20 to 27
@@ -439,10 +455,8 @@ entrypoint typedef struct _GlobalEtfTrackingErrorMessage {
   UINT8 end_keyword;           // byte 54
 } GlobalEtfTrackingErrorMessage;
 
-// ---- Etp Pdf Message: 155 bytes ----------------------------------------------
-
 // ETP Portfolio Deposit File. One record per composition issue: unit share, market type, issue name, par value, appraised value, profit distribution basis date.
-entrypoint typedef struct _EtpPdfMessage {
+typedef struct _EtpPdfMessage {
   UINT8 isin[12];                                                                            // bytes 0 to 11
   UINT8 data_seq_number[8];                                                                  // bytes 12 to 19
   UINT8 date[8];                                                                             // bytes 20 to 27
@@ -459,10 +473,8 @@ entrypoint typedef struct _EtpPdfMessage {
   UINT8 end_keyword;                                                                         // byte 154
 } EtpPdfMessage;
 
-// ---- Etp Operator Information Message: 125 bytes -----------------------------
-
 // ETP/BDC operator information. Office consignment company, operator code, and abbreviated names in Korean and English.
-entrypoint typedef struct _EtpOperatorInformationMessage {
+typedef struct _EtpOperatorInformationMessage {
   UINT8 isin[12];                                            // bytes 0 to 11
   UINT8 seq_number[8];                                       // bytes 12 to 19
   UINT8 office_consignment_companys_registration_number[3];  // bytes 20 to 22
@@ -473,10 +485,8 @@ entrypoint typedef struct _EtpOperatorInformationMessage {
   UINT8 end_keyword;                                         // byte 124
 } EtpOperatorInformationMessage;
 
-// ---- Etp Transfer Agent Batch Message: 245 bytes -----------------------------
-
 // ETP/BDC transfer agent batch data.
-entrypoint typedef struct _EtpTransferAgentBatchMessage {
+typedef struct _EtpTransferAgentBatchMessage {
   UINT8 isin[12];                                                                     // bytes 0 to 11
   UINT8 data_seq_number[8];                                                           // bytes 12 to 19
   UINT8 filler_10[10];                                                                // bytes 20 to 29
@@ -499,10 +509,8 @@ entrypoint typedef struct _EtpTransferAgentBatchMessage {
   UINT8 end_keyword;                                                                  // byte 244
 } EtpTransferAgentBatchMessage;
 
-// ---- Etf Risk Appraisement Message: 195 bytes --------------------------------
-
 // Synthetic ETF risk appraisement daily trading data.
-entrypoint typedef struct _EtfRiskAppraisementMessage {
+typedef struct _EtfRiskAppraisementMessage {
   UINT8 isin[12];                                            // bytes 0 to 11
   UINT8 data_seq_number[8];                                  // bytes 12 to 19
   UINT8 date[8];                                             // bytes 20 to 27
@@ -519,10 +527,8 @@ entrypoint typedef struct _EtfRiskAppraisementMessage {
   UINT8 end_keyword;                                         // byte 194
 } EtfRiskAppraisementMessage;
 
-// ---- Synthetic Etf Constituents Message: 195 bytes ---------------------------
-
 // Synthetic ETF basic index composition constituents.
-entrypoint typedef struct _SyntheticEtfConstituentsMessage {
+typedef struct _SyntheticEtfConstituentsMessage {
   UINT8 isin[12];                                            // bytes 0 to 11
   UINT8 data_seq_number[8];                                  // bytes 12 to 19
   UINT8 date[8];                                             // bytes 20 to 27
@@ -535,10 +541,8 @@ entrypoint typedef struct _SyntheticEtfConstituentsMessage {
   UINT8 end_keyword;                                         // byte 194
 } SyntheticEtfConstituentsMessage;
 
-// ---- Elw Investment Indicator Sensitivity Message: 105 bytes -----------------
-
 // ELW Investment Indicator Sensitivity. Theoretical warrant price plus signed Delta/Gamma/Theta/Vega/Rho sensitivities, intrinsic volatility, and prerequisite cost.
-entrypoint typedef struct _ElwInvestmentIndicatorSensitivityMessage {
+typedef struct _ElwInvestmentIndicatorSensitivityMessage {
   UINT8 isin[12];                       // bytes 0 to 11
   UINT8 time[6];                        // bytes 12 to 17
   UINT8 theoretical_warrant_price[10];  // bytes 18 to 27
@@ -558,10 +562,8 @@ entrypoint typedef struct _ElwInvestmentIndicatorSensitivityMessage {
   UINT8 end_keyword;                    // byte 104
 } ElwInvestmentIndicatorSensitivityMessage;
 
-// ---- Etn Iiv Message: 65 bytes -----------------------------------------------
-
 // ETN intraday indicative value. Previous-day and during-market/final iIV per ETN.
-entrypoint typedef struct _EtnIivMessage {
+typedef struct _EtnIivMessage {
   UINT8 isin[12];                         // bytes 0 to 11
   UINT8 hours[6];                         // bytes 12 to 17
   UINT8 previous_days_iv[9];              // bytes 18 to 26
@@ -570,10 +572,8 @@ entrypoint typedef struct _EtnIivMessage {
   UINT8 end_keyword;                      // byte 64
 } EtnIivMessage;
 
-// ---- Etn Disparate Ratio Message: 95 bytes -----------------------------------
-
 // ETN signed disparate ratio per ETN.
-entrypoint typedef struct _EtnDisparateRatioMessage {
+typedef struct _EtnDisparateRatioMessage {
   UINT8 isin[12];              // bytes 0 to 11
   UINT8 seq_number[8];         // bytes 12 to 19
   UINT8 date[8];               // bytes 20 to 27
@@ -583,14 +583,64 @@ entrypoint typedef struct _EtnDisparateRatioMessage {
   UINT8 end_keyword;           // byte 94
 } EtnDisparateRatioMessage;
 
-// ---- Loan Transaction Available Quantity Message: 45 bytes -------------------
-
 // Loan transaction available quantity public disclosure. Reports the available stock lending quantity for one issue (ISIN) in shares.
-entrypoint typedef struct _LoanTransactionAvailableQuantityMessage {
+typedef struct _LoanTransactionAvailableQuantityMessage {
   UINT8 issue_code[12];                  // bytes 0 to 11
   UINT8 business_code[3];                // bytes 12 to 14
   UINT8 available_lending_quantity[10];  // bytes 15 to 24
   UINT8 filler_19[19];                   // bytes 25 to 43
   UINT8 end_keyword;                     // byte 44
 } LoanTransactionAvailableQuantityMessage;
+
+// Branch
+casetype _Payload (UINT64 selector, UINT32 available) {
+  switch (selector) {
+    case 0x4136303133: KOtcIssueClosingMessage k_otc_issue_closing_message;
+    case 0x4137303133: KOtcMarketOperationMessage k_otc_market_operation_message;
+    case 0x4735303133: KOtcMarketActionMessage k_otc_market_action_message;
+    case 0x4132303133: KOtcQuoteMessage k_otc_quote_message;
+    case 0x4133303133: KOtcOrderFilledMessage k_otc_order_filled_message;
+    case 0x4A36303737: OtcBondTradedInfoMessage otc_bond_traded_info_message;
+    case 0x4A37303737: OtcBondTradesPerInstitutionMessage otc_bond_trades_per_institution_message;
+    case 0x4331303737: OtcBondTypesPerInvestorMessage otc_bond_types_per_investor_message;
+    case 0x4C39303737: KBondMessage k_bond_message;
+    case 0x4532303030: MkfIndexMessage mkf_index_message;
+    case 0x4F39303030: MkfIndexJpyMessage mkf_index_jpy_message;
+    case 0x5033303030: WisefnIndexMessage wisefn_index_message;
+    case 0x4250303030: KisIndexMessage kis_index_message;
+    case 0x4B30303030: MkfBondIndexMessage mkf_bond_index_message;
+    case 0x4C36303030: KisBondIndexMessage kis_bond_index_message;
+    case 0x4B36303030: KebiBondIndexMessage kebi_bond_index_message;
+    case 0x5136303030: KabiBondIndexMessage kabi_bond_index_message;
+    case 0x4345303030: NicepniBondIndexMessage nicepni_bond_index_message;
+    case 0x4256303353: DomesticEtfInavMessage domestic_etf_inav_message;
+    case 0x4257303353: DomesticEtfEstimatedInavMessage domestic_etf_estimated_inav_message;
+    case 0x4C35303353: GlobalEtfInavMessage global_etf_inav_message;
+    case 0x5036303353: EtfTrackingErrorMessage etf_tracking_error_message;
+    case 0x5037303353: GlobalEtfTrackingErrorMessage global_etf_tracking_error_message;
+    case 0x4638303353: EtpPdfMessage etp_pdf_message;
+    case 0x4D38303353: EtpOperatorInformationMessage etp_operator_information_message;
+    case 0x4D38303553: EtpOperatorInformationMessage etp_operator_information_message_2;
+    case 0x4D38303151: EtpOperatorInformationMessage etp_operator_information_message_3;
+    case 0x4E38303353: EtpTransferAgentBatchMessage etp_transfer_agent_batch_message;
+    case 0x4E38303553: EtpTransferAgentBatchMessage etp_transfer_agent_batch_message_2;
+    case 0x4E38303151: EtpTransferAgentBatchMessage etp_transfer_agent_batch_message_3;
+    case 0x5134303353: EtfRiskAppraisementMessage etf_risk_appraisement_message;
+    case 0x5135303353: SyntheticEtfConstituentsMessage synthetic_etf_constituents_message;
+    case 0x4337303253: ElwInvestmentIndicatorSensitivityMessage elw_investment_indicator_sensitivity_message;
+    case 0x5333303453: EtnIivMessage etn_iiv_message;
+    case 0x5834303453: EtnDisparateRatioMessage etn_disparate_ratio_message;
+    case 0x4343303030: LoanTransactionAvailableQuantityMessage loan_transaction_available_quantity_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Koscom MDCS Exture Udp Packet
+entrypoint typedef struct _Packet (UINT32 available) where (available >= 5) {
+  UINT32BE tr_code_0;                                                                                                                       // bytes 0 to 3, the first 4 of 5 characters a choice is made on
+  UINT8 tr_code_1;                                                                                                                          // byte 4
+  Payload(((((UINT64) tr_code_0) << 8) | ((UINT64) tr_code_1)), (available - 5)) payload[:byte-size-single-element-array (available - 5)];
+} Packet;
 

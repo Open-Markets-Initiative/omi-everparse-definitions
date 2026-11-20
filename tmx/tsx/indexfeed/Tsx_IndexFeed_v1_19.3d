@@ -1,37 +1,66 @@
-// TMX Group Index Feed
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Tmx Tsx IndexFeed Qrtmd v1.19
 //
+// Protocol:
+//   Organization: TMX Group
+//   Protocol: Index Feed
+//   Encoding: Quantum Real Time Market Data
+//   Version: 1.19
+//   Date: 10/12/2021
+//   Specification: QRTMD TX1.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out Tsx_IndexFeed_v1_19.3d
-//
-// What this definition does not state, and the model does:
-// - the dispatch that chooses a message by its type
-//
-// License: MIT No Attribution
 
-// ---- Message Header: 22 bytes ------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Twenty two byte ascii header carried on every Qrtmd message
-entrypoint typedef struct _MessageHeader {
-  UINT8 message_length[4];          // bytes 0 to 3
-  UINT8 sequence_number[9];         // bytes 4 to 12
-  UINT8 service_identifier[3];      // bytes 13 to 15
-  UINT8 retransmission_identifier;  // byte 16
-  UINT8 continuation_identifier;    // byte 17
-  UINT8 message_type[2];            // bytes 18 to 19
-  UINT8 exchange_identifier[2];     // bytes 20 to 21
-} MessageHeader;
+// Retransmission Identifier: one byte code
+#define RETRANSMISSION_IDENTIFIER_NORMAL_TRANSMISSION 0x30  // Normal Transmission
 
-// ---- S And P Tsx Official Index Level Message: 122 bytes ---------------------
+// Continuation Identifier: one byte code
+#define CONTINUATION_IDENTIFIER_STAND_ALONE_MESSAGE 0x30  // Stand Alone Message
+
+// Message Type: 2 byte code
+#define MESSAGE_TYPE_S_AND_P_TSX_OFFICIAL_INDEX_LEVEL_MESSAGE 0x4B20  // S And P Tsx Official Index Level Message
+#define MESSAGE_TYPE_BEGINNING_OF_INDEX_SUMMARY_MESSAGE 0x5041        // Beginning Of Index Summary Message
+
+// Markers: one byte code
+#define MARKERS_CLOSE 0x43  // Close
+
+// ---- Types -------------------------------------------------------------------
 
 // Level of an index as of the time of the calculation.
-entrypoint typedef struct _SAndPTsxOfficialIndexLevelMessage {
+typedef struct _SAndPTsxOfficialIndexLevelMessage {
   UINT8 time[6];                   // bytes 0 to 5
   UINT8 index_id[4];               // bytes 6 to 9
   UINT8 last_level[8];             // bytes 10 to 17
@@ -50,4 +79,29 @@ entrypoint typedef struct _SAndPTsxOfficialIndexLevelMessage {
   UINT8 bid_price[7];              // bytes 108 to 114
   UINT8 ask_price[7];              // bytes 115 to 121
 } SAndPTsxOfficialIndexLevelMessage;
+
+// Branch
+casetype _MessageBody (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x4B20: SAndPTsxOfficialIndexLevelMessage s_and_p_tsx_official_index_level_message;
+    case 0x5041: unit beginning_of_index_summary_message;
+    default: UINT8 unknown[available];
+  }
+} MessageBody;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Qrtmd Udp Packet
+entrypoint typedef struct _Packet (UINT32 available) where (available >= 24) {
+  UINT8 qrtmd_stx;                                                                                             // byte 0
+  UINT8 message_length[4];                                                                                     // bytes 1 to 4
+  UINT8 sequence_number[9];                                                                                    // bytes 5 to 13
+  UINT8 service_identifier[3];                                                                                 // bytes 14 to 16
+  UINT8 retransmission_identifier;                                                                             // byte 17
+  UINT8 continuation_identifier;                                                                               // byte 18
+  UINT16BE message_type;                                                                                       // bytes 19 to 20
+  UINT8 exchange_identifier[2];                                                                                // bytes 21 to 22
+  MessageBody(message_type, (available - 24)) message_body[:byte-size-single-element-array (available - 24)];
+  UINT8 qrtmd_etx;
+} Packet;
 

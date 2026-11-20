@@ -1,5 +1,34 @@
-// Aquis Exchange Aquis Trading Protocol
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Aquis TradingProtocol Atp v2.10.3
 //
+// Protocol:
+//   Organization: Aquis Exchange
+//   Protocol: Aquis Trading Protocol
+//   Encoding: Aquis Trading Protocol
+//   Version: 2.10.3
+//   Date: 10/3/2022
+//   Specification: Aquis ATP Technical Specification v2.10.3.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
 // writes a C validator for each record below and proves, of that C, that it reads no byte
 // outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
@@ -7,6 +36,8 @@
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out AquisEquities_TradingProtocol_v2_10_3.3d
 //
@@ -14,15 +45,53 @@
 // - a run filling what frames it
 // - a field read in bits
 // - the dispatch that chooses a message by its type
-//
-// License: MIT No Attribution
+// - the packet as a whole, which is a union whose readings take different widths, at packet.message.payload.orderaddresponsemessage.orderaddresponsestatus
+
+// ---- Values ------------------------------------------------------------------
+
+// Msg Type: one byte code
+#define MSG_TYPE_LOGIN_MESSAGE 0x01                   // Login Message
+#define MSG_TYPE_LOGIN_RESPONSE_MESSAGE 0x02          // Login Response Message
+#define MSG_TYPE_HEARTBEAT 0x00                       // Heartbeat
+#define MSG_TYPE_LOGOUT_REQUEST_MESSAGE 0x03          // Logout Request Message
+#define MSG_TYPE_LOGOUT_MESSAGE 0x04                  // Logout Message
+#define MSG_TYPE_ORDER_ADD_MESSAGE 0x05               // Order Add Message
+#define MSG_TYPE_ORDER_ADD_EXTENDED_MESSAGE 0x15      // Order Add Extended Message
+#define MSG_TYPE_ORDER_CANCEL_MESSAGE 0x07            // Order Cancel Message
+#define MSG_TYPE_ORDER_MODIFY_MESSAGE 0x09            // Order Modify Message
+#define MSG_TYPE_ORDER_MODIFY_EXTENDED_MESSAGE 0x16   // Order Modify Extended Message
+#define MSG_TYPE_ORDER_ADD_RESPONSE_MESSAGE 0x06      // Order Add Response Message
+#define MSG_TYPE_ORDER_CANCEL_RESPONSE_MESSAGE 0x08   // Order Cancel Response Message
+#define MSG_TYPE_ORDER_MODIFY_RESPONSE_MESSAGE 0x0A   // Order Modify Response Message
+#define MSG_TYPE_ICEBERG_ORDER_REFRESH_MESSAGE 0x17   // Iceberg Order Refresh Message
+#define MSG_TYPE_TRADE_CAPTURE_MESSAGE 0x11           // Trade Capture Message
+#define MSG_TYPE_TRADE_CAPTURE_RESPONSE_MESSAGE 0x12  // Trade Capture Response Message
+#define MSG_TYPE_TRADE_MESSAGE 0x0B                   // Trade Message
+#define MSG_TYPE_TRADE_BUST_MESSAGE 0x0C              // Trade Bust Message
+
+// Result Code: one byte code
+#define RESULT_CODE_SUCCESSFUL_LOGIN 0x00        // Successful Login
+#define RESULT_CODE_ALREADY_LOGGED_IN 0x01       // Already Logged In
+#define RESULT_CODE_SEQUENCE_NUMBER_ERROR 0x02   // Sequence Number Error
+#define RESULT_CODE_UNSUPPORTED_PROTOCOL 0x03    // Unsupported Protocol
+#define RESULT_CODE_FAILED_AUTHENTICATION 0x04   // Failed Authentication
+#define RESULT_CODE_UNKNOWN_SOURCE_NETWORK 0x05  // Unknown Source Network
+
+// Logout Reason Code: one byte code
+#define LOGOUT_REASON_CODE_USER_REQUESTED 0x00         // User Requested
+#define LOGOUT_REASON_CODE_ADMIN 0x01                  // Admin
+#define LOGOUT_REASON_CODE_DISCONNECT 0x02             // Disconnect
+#define LOGOUT_REASON_CODE_END_OF_DAY 0x03             // End Of Day
+#define LOGOUT_REASON_CODE_INACTIVITY_TIMEOUT 0x04     // Inactivity Timeout
+#define LOGOUT_REASON_CODE_PROTOCOL_ERROR 0x05         // Protocol Error
+#define LOGOUT_REASON_CODE_SEQUENCE_NUMBER_ERROR 0x06  // Sequence Number Error
 
 // ---- Message Header: 7 bytes -------------------------------------------------
 
 // Aquis Atp message header
 entrypoint typedef struct _MessageHeader {
   UINT16 msg_length;  // bytes 0 to 1
-  UINT8 msg_type;     // byte 2
+  UINT8 msg_type;     // byte 2, values MSG_TYPE_
   UINT32 msg_seq_no;  // bytes 3 to 6
 } MessageHeader;
 
@@ -41,7 +110,7 @@ entrypoint typedef struct _LoginMessage {
 
 // The Login Response message is sent by Aquis to acknowledge a Login request, and either accept or reject it.
 entrypoint typedef struct _LoginResponseMessage {
-  UINT8 result_code;     // byte 0
+  UINT8 result_code;     // byte 0, values RESULT_CODE_
   UINT32 client_seq_no;  // bytes 1 to 4
 } LoginResponseMessage;
 
@@ -49,7 +118,7 @@ entrypoint typedef struct _LoginResponseMessage {
 
 // The Logout message is usually sent as a response to the Logout Request. However it may also be sent by Aquis in case of a low sequence number or other protocol violation, or for other reasons. The TCP/IP connection is closed immediately after this message has been sent.
 entrypoint typedef struct _LogoutMessage {
-  UINT8 logout_reason_code;  // byte 0
+  UINT8 logout_reason_code;  // byte 0, values LOGOUT_REASON_CODE_
   UINT8 reason_text[32];     // bytes 1 to 32
 } LogoutMessage;
 

@@ -1,103 +1,184 @@
-// The Members Exchange Risk Control
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Memx MemxOptions RiskControl Sbe v1.6
 //
+// Protocol:
+//   Organization: The Members Exchange
+//   Protocol: Risk Control
+//   Encoding: Simple Binary Encoding
+//   Version: 1.6
+//   Date: 11/15/23
+//   Specification: Risk Control for US Options SBE-v1_6.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ClientPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out MemxOptions_RiskControl_v1_6_Client.3d
-//
-// What this definition does not state, and the model does:
-// - a Reassemble rule
-// - the dispatch that chooses a message by its type
-// - a block whose stated length holds more than its fields
-//
-// License: MIT No Attribution
 
-// ---- Common Header: 3 bytes --------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Tcp Common Header
-entrypoint typedef struct _CommonHeader {
-  UINT8 message_type;       // byte 0
-  UINT16BE message_length;  // bytes 1 to 2
-} CommonHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_HEARTBEAT 0x00            // Heartbeat
+#define MESSAGE_TYPE_LOGIN_REQUEST 0x64        // Login Request
+#define MESSAGE_TYPE_REPLAY_REQUEST 0x65       // Replay Request
+#define MESSAGE_TYPE_REPLAY_ALL_REQUEST 0x66   // Replay All Request
+#define MESSAGE_TYPE_STREAM_REQUEST 0x67       // Stream Request
+#define MESSAGE_TYPE_UNSEQUENCED_MESSAGE 0x68  // Unsequenced Message
+#define MESSAGE_TYPE_LOGIN_ACCEPTED 0x01       // Login Accepted
+#define MESSAGE_TYPE_LOGIN_REJECTED 0x02       // Login Rejected
+#define MESSAGE_TYPE_START_OF_SESSION 0x03     // Start Of Session
+#define MESSAGE_TYPE_END_OF_SESSION 0x04       // End Of Session
+#define MESSAGE_TYPE_REPLAY_BEGIN 0x05         // Replay Begin
+#define MESSAGE_TYPE_REPLAY_REJECTED 0x06      // Replay Rejected
+#define MESSAGE_TYPE_REPLAY_COMPLETE 0x07      // Replay Complete
+#define MESSAGE_TYPE_STREAM_BEGIN 0x08         // Stream Begin
+#define MESSAGE_TYPE_STREAM_REJECTED 0x09      // Stream Rejected
+#define MESSAGE_TYPE_STREAM_COMPLETE 0x0A      // Stream Complete
+#define MESSAGE_TYPE_SEQUENCED_MESSAGE 0x0B    // Sequenced Message
 
-// ---- Login Request Message: 2 bytes ------------------------------------------
+// Template Id: one byte code
+#define TEMPLATE_ID_RISK_SETTINGS_QUERY_MESSAGE 0x01                                     // Risk Settings Query Message
+#define TEMPLATE_ID_ACTIVE_RISK_THRESHOLD_CHANGE_REQ_MESSAGE 0x02                        // Active Risk Threshold Change Req Message
+#define TEMPLATE_ID_ACTIVE_RISK_ACKNOWLEDGEMENT_REQ_MESSAGE 0x03                         // Active Risk Acknowledgement Req Message
+#define TEMPLATE_ID_CP_VOLUME_THRESHOLD_CHANGE_REQ_MESSAGE 0x04                          // Cp Volume Threshold Change Req Message
+#define TEMPLATE_ID_CP_EXECUTED_NOTIONAL_THRESHOLD_CHANGE_REQ_MESSAGE 0x05               // Cp Executed Notional Threshold Change Req Message
+#define TEMPLATE_ID_CP_TOTAL_EXECUTIONS_THRESHOLD_CHANGE_REQ_MESSAGE 0x06                // Cp Total Executions Threshold Change Req Message
+#define TEMPLATE_ID_CP_PERCENT_OUTSTANDING_CONTRACTS_THRESHOLD_CHANGE_REQ_MESSAGE 0x07   // Cp Percent Outstanding Contracts Threshold Change Req Message
+#define TEMPLATE_ID_CP_BREACH_COUNT_THRESHOLD_CHANGE_REQ_MESSAGE 0x08                    // Cp Breach Count Threshold Change Req Message
+#define TEMPLATE_ID_MANUAL_CP_BREACH_TRIGGER_REQ_MESSAGE 0x09                            // Manual Cp Breach Trigger Req Message
+#define TEMPLATE_ID_CP_CLEAR_BREACH_REQ_MESSAGE 0x0A                                     // Cp Clear Breach Req Message
+#define TEMPLATE_ID_SINGLE_ORDER_ALLOW_ISO_ORDERS_CHANGE_REQ_MESSAGE 0x0B                // Single Order Allow Iso Orders Change Req Message
+#define TEMPLATE_ID_SINGLE_ORDER_ALLOW_ORDERS_IN_CROSSED_MARKET_CHANGE_REQ_MESSAGE 0x0C  // Single Order Allow Orders In Crossed Market Change Req Message
+#define TEMPLATE_ID_SINGLE_ORDER_MAX_NOTIONAL_CHANGE_REQ_MESSAGE 0x0D                    // Single Order Max Notional Change Req Message
+#define TEMPLATE_ID_SINGLE_ORDER_MAX_CONTRACTS_CHANGE_REQ_MESSAGE 0x0E                   // Single Order Max Contracts Change Req Message
+#define TEMPLATE_ID_CP_GROSS_NOTIONAL_THRESHOLD_CHANGE_REQ_MESSAGE 0x12                  // Cp Gross Notional Threshold Change Req Message
+#define TEMPLATE_ID_CP_MARKET_ORDER_GROSS_NOTIONAL_THRESHOLD_CHANGE_REQ_MESSAGE 0x13     // Cp Market Order Gross Notional Threshold Change Req Message
+#define TEMPLATE_ID_CP_NET_NOTIONAL_THRESHOLD_CHANGE_REQ_MESSAGE 0x14                    // Cp Net Notional Threshold Change Req Message
+#define TEMPLATE_ID_CP_MARKET_ORDER_NET_NOTIONAL_THRESHOLD_CHANGE_REQ_MESSAGE 0x15       // Cp Market Order Net Notional Threshold Change Req Message
+#define TEMPLATE_ID_CP_DUPLICATE_ORDER_THRESHOLD_CHANGE_REQ_MESSAGE 0x16                 // Cp Duplicate Order Threshold Change Req Message
+#define TEMPLATE_ID_CP_ORDER_RATE_THRESHOLD_CHANGE_REQ_MESSAGE 0x17                      // Cp Order Rate Threshold Change Req Message
+#define TEMPLATE_ID_ACTIVE_RISK_THRESHOLD_STATE_MESSAGE 0x1E                             // Active Risk Threshold State Message
+#define TEMPLATE_ID_ACTIVE_RISK_THRESHOLD_CHANGE_REJ_MESSAGE 0x1F                        // Active Risk Threshold Change Rej Message
+#define TEMPLATE_ID_ACTIVE_RISK_ACKNOWLEDGED_MESSAGE 0x20                                // Active Risk Acknowledged Message
+#define TEMPLATE_ID_ACTIVE_RISK_ACKNOWLEDGE_REJ_MESSAGE 0x21                             // Active Risk Acknowledge Rej Message
+#define TEMPLATE_ID_ACTIVE_RISK_QUANTITY_UPDATE_NOTIFICATION_MESSAGE 0x22                // Active Risk Quantity Update Notification Message
+#define TEMPLATE_ID_CP_VOLUME_THRESHOLD_STATE_MESSAGE 0x23                               // Cp Volume Threshold State Message
+#define TEMPLATE_ID_CP_EXECUTED_NOTIONAL_THRESHOLD_STATE_MESSAGE 0x24                    // Cp Executed Notional Threshold State Message
+#define TEMPLATE_ID_CP_TOTAL_EXECUTIONS_THRESHOLD_STATE_MESSAGE 0x25                     // Cp Total Executions Threshold State Message
+#define TEMPLATE_ID_CP_PERCENT_OUTSTANDING_CONTRACTS_THRESHOLD_STATE_MESSAGE 0x26        // Cp Percent Outstanding Contracts Threshold State Message
+#define TEMPLATE_ID_CP_BREACH_COUNT_THRESHOLD_STATE_MESSAGE 0x27                         // Cp Breach Count Threshold State Message
+#define TEMPLATE_ID_MANUAL_CP_BREACH_TRIGGER_PENDING_MESSAGE 0x28                        // Manual Cp Breach Trigger Pending Message
+#define TEMPLATE_ID_MANUAL_CP_BREACH_TRIGGER_DONE_MESSAGE 0x29                           // Manual Cp Breach Trigger Done Message
+#define TEMPLATE_ID_RISK_THRESHOLD_UPDATE_REJ_MESSAGE 0x2A                               // Risk Threshold Update Rej Message
+#define TEMPLATE_ID_PASSIVE_RISK_THRESHOLD_NOTIFICATION_MESSAGE 0x2B                     // Passive Risk Threshold Notification Message
+#define TEMPLATE_ID_SINGLE_ORDER_ALLOW_ISO_ORDERS_STATE_MESSAGE 0x2C                     // Single Order Allow Iso Orders State Message
+#define TEMPLATE_ID_SINGLE_ORDER_ALLOW_ORDERS_IN_CROSSED_MARKET_STATE_MESSAGE 0x2D       // Single Order Allow Orders In Crossed Market State Message
+#define TEMPLATE_ID_SINGLE_ORDER_MAX_NOTIONAL_THRESHOLD_STATE_MESSAGE 0x2E               // Single Order Max Notional Threshold State Message
+#define TEMPLATE_ID_SINGLE_ORDER_MAX_CONTRACTS_THRESHOLD_STATE_MESSAGE 0x2F              // Single Order Max Contracts Threshold State Message
+#define TEMPLATE_ID_RISK_SETTINGS_QUERY_DONE_MESSAGE 0x30                                // Risk Settings Query Done Message
+#define TEMPLATE_ID_RISK_SETTINGS_QUERY_REJ_MESSAGE 0x31                                 // Risk Settings Query Rej Message
+#define TEMPLATE_ID_MANUAL_CP_BREACH_TRIGGER_REJ_MESSAGE 0x32                            // Manual Cp Breach Trigger Rej Message
+#define TEMPLATE_ID_BREACH_CLEAR_REJ_MESSAGE 0x33                                        // Breach Clear Rej Message
+#define TEMPLATE_ID_BREACH_CLEARED_MESSAGE 0x34                                          // Breach Cleared Message
+#define TEMPLATE_ID_CP_GROSS_NOTIONAL_THRESHOLD_STATE_MESSAGE 0x3C                       // Cp Gross Notional Threshold State Message
+#define TEMPLATE_ID_CP_MARKET_ORDER_GROSS_NOTIONAL_THRESHOLD_STATE_MESSAGE 0x3D          // Cp Market Order Gross Notional Threshold State Message
+#define TEMPLATE_ID_CP_NET_NOTIONAL_THRESHOLD_STATE_MESSAGE 0x3E                         // Cp Net Notional Threshold State Message
+#define TEMPLATE_ID_CP_MARKET_ORDER_NET_NOTIONAL_THRESHOLD_STATE_MESSAGE 0x3F            // Cp Market Order Net Notional Threshold State Message
+#define TEMPLATE_ID_CP_DUPLICATE_ORDER_THRESHOLD_STATE_MESSAGE 0x40                      // Cp Duplicate Order Threshold State Message
+#define TEMPLATE_ID_CP_ORDER_RATE_THRESHOLD_STATE_MESSAGE 0x41                           // Cp Order Rate Threshold State Message
+
+// Send Cancels: one byte code
+#define SEND_CANCELS_FALSE 0x00  // False
+#define SEND_CANCELS_TRUE 0x01   // True
+
+// Allow Iso Orders: one byte code
+#define ALLOW_ISO_ORDERS_FALSE 0x00  // False
+#define ALLOW_ISO_ORDERS_TRUE 0x01   // True
+
+// Allow Orders: one byte code
+#define ALLOW_ORDERS_FALSE 0x00  // False
+#define ALLOW_ORDERS_TRUE 0x01   // True
+
+// Use Order Price In Dup Check Optional: one byte code
+#define USE_ORDER_PRICE_IN_DUP_CHECK_OPTIONAL_FALSE 0x00  // False
+#define USE_ORDER_PRICE_IN_DUP_CHECK_OPTIONAL_TRUE 0x01   // True
+
+// ---- Types -------------------------------------------------------------------
 
 // Memx Tcp Login message
-entrypoint typedef struct _LoginRequestMessage {
+typedef struct _LoginRequestMessage {
   UINT8 token_type;  // byte 0
   UINT8 token;       // byte 1
 } LoginRequestMessage;
 
-// ---- Replay Request Message: 20 bytes ----------------------------------------
-
 // Memx Tcp Replay Request message
-entrypoint typedef struct _ReplayRequestMessage {
+typedef struct _ReplayRequestMessage {
   UINT64BE session_id;            // bytes 0 to 7
   UINT64BE next_sequence_number;  // bytes 8 to 15
   UINT32BE count;                 // bytes 16 to 19
 } ReplayRequestMessage;
 
-// ---- Replay All Request Message: 8 bytes -------------------------------------
-
 // Memx Tcp Replay All Request message
-entrypoint typedef struct _ReplayAllRequestMessage {
+typedef struct _ReplayAllRequestMessage {
   UINT64BE session_id;  // bytes 0 to 7
 } ReplayAllRequestMessage;
 
-// ---- Stream Request Message: 16 bytes ----------------------------------------
-
 // Memx Tcp Stream Request message
-entrypoint typedef struct _StreamRequestMessage {
+typedef struct _StreamRequestMessage {
   UINT64BE session_id;            // bytes 0 to 7
   UINT64BE next_sequence_number;  // bytes 8 to 15
 } StreamRequestMessage;
 
-// ---- Sbe Header: 6 bytes -----------------------------------------------------
-
-// Sbe Header
-entrypoint typedef struct _SbeHeader {
-  UINT16BE block_length;  // bytes 0 to 1
-  UINT8 template_id;      // byte 2
-  UINT8 schema_id;        // byte 3
-  UINT16BE version;       // bytes 4 to 5
-} SbeHeader;
-
-// ---- Risk Settings Query Message: 20 bytes -----------------------------------
-
 // RiskSettingsQueryMessage
-entrypoint typedef struct _RiskSettingsQueryMessage {
+typedef struct _RiskSettingsQueryMessage {
   UINT8 cl_ord_id[20];  // bytes 0 to 19
 } RiskSettingsQueryMessage;
 
-// ---- Active Risk Threshold Change Req Message: 34 bytes ----------------------
-
 // ActiveRiskThresholdChangeReqMessage
-entrypoint typedef struct _ActiveRiskThresholdChangeReqMessage {
+typedef struct _ActiveRiskThresholdChangeReqMessage {
   UINT8 cl_ord_id[20];          // bytes 0 to 19
   UINT8 underlier_optional[6];  // bytes 20 to 25
   UINT8 efid_optional[4];       // bytes 26 to 29
   UINT32BE threshold_quantity;  // bytes 30 to 33
 } ActiveRiskThresholdChangeReqMessage;
 
-// ---- Active Risk Acknowledgement Req Message: 34 bytes -----------------------
-
 // ActiveRiskAcknowledgementReqMessage
-entrypoint typedef struct _ActiveRiskAcknowledgementReqMessage {
+typedef struct _ActiveRiskAcknowledgementReqMessage {
   UINT8 cl_ord_id[20];  // bytes 0 to 19
   UINT8 underlier[6];   // bytes 20 to 25
   UINT8 efid[4];        // bytes 26 to 29
   UINT32BE quantity;    // bytes 30 to 33
 } ActiveRiskAcknowledgementReqMessage;
 
-// ---- Cp Volume Threshold Change Req Message: 44 bytes ------------------------
-
 // CPVolumeThresholdChangeReqMessage
-entrypoint typedef struct _CpVolumeThresholdChangeReqMessage {
+typedef struct _CpVolumeThresholdChangeReqMessage {
   UINT8 cl_ord_id[20];               // bytes 0 to 19
   UINT8 underlier_optional[6];       // bytes 20 to 25
   UINT8 efid_optional[4];            // bytes 26 to 29
@@ -106,10 +187,8 @@ entrypoint typedef struct _CpVolumeThresholdChangeReqMessage {
   UINT32BE period_in_milli_seconds;  // bytes 40 to 43
 } CpVolumeThresholdChangeReqMessage;
 
-// ---- Cp Executed Notional Threshold Change Req Message: 44 bytes -------------
-
 // CPExecutedNotionalThresholdChangeReqMessage
-entrypoint typedef struct _CpExecutedNotionalThresholdChangeReqMessage {
+typedef struct _CpExecutedNotionalThresholdChangeReqMessage {
   UINT8 cl_ord_id[20];               // bytes 0 to 19
   UINT8 underlier_optional[6];       // bytes 20 to 25
   UINT8 efid_optional[4];            // bytes 26 to 29
@@ -118,10 +197,8 @@ entrypoint typedef struct _CpExecutedNotionalThresholdChangeReqMessage {
   UINT32BE period_in_milli_seconds;  // bytes 40 to 43
 } CpExecutedNotionalThresholdChangeReqMessage;
 
-// ---- Cp Total Executions Threshold Change Req Message: 40 bytes --------------
-
 // CPTotalExecutionsThresholdChangeReqMessage
-entrypoint typedef struct _CpTotalExecutionsThresholdChangeReqMessage {
+typedef struct _CpTotalExecutionsThresholdChangeReqMessage {
   UINT8 cl_ord_id[20];               // bytes 0 to 19
   UINT8 underlier_optional[6];       // bytes 20 to 25
   UINT8 efid_optional[4];            // bytes 26 to 29
@@ -130,10 +207,8 @@ entrypoint typedef struct _CpTotalExecutionsThresholdChangeReqMessage {
   UINT32BE period_in_milli_seconds;  // bytes 36 to 39
 } CpTotalExecutionsThresholdChangeReqMessage;
 
-// ---- Cp Percent Outstanding Contracts Threshold Change Req Message: 38 bytes ----
-
 // CPPercentOutstandingContractsThresholdChangeReqMessage
-entrypoint typedef struct _CpPercentOutstandingContractsThresholdChangeReqMessage {
+typedef struct _CpPercentOutstandingContractsThresholdChangeReqMessage {
   UINT8 cl_ord_id[20];               // bytes 0 to 19
   UINT8 underlier_optional[6];       // bytes 20 to 25
   UINT8 efid_optional[4];            // bytes 26 to 29
@@ -141,10 +216,8 @@ entrypoint typedef struct _CpPercentOutstandingContractsThresholdChangeReqMessag
   UINT32BE period_in_milli_seconds;  // bytes 34 to 37
 } CpPercentOutstandingContractsThresholdChangeReqMessage;
 
-// ---- Cp Breach Count Threshold Change Req Message: 40 bytes ------------------
-
 // CPBreachCountThresholdChangeReqMessage
-entrypoint typedef struct _CpBreachCountThresholdChangeReqMessage {
+typedef struct _CpBreachCountThresholdChangeReqMessage {
   UINT8 cl_ord_id[20];               // bytes 0 to 19
   UINT8 underlier_optional[6];       // bytes 20 to 25
   UINT8 efid_optional[4];            // bytes 26 to 29
@@ -153,10 +226,8 @@ entrypoint typedef struct _CpBreachCountThresholdChangeReqMessage {
   UINT32BE period_in_milli_seconds;  // bytes 36 to 39
 } CpBreachCountThresholdChangeReqMessage;
 
-// ---- Manual Cp Breach Trigger Req Message: 33 bytes --------------------------
-
 // ManualCPBreachTriggerReqMessage
-entrypoint typedef struct _ManualCpBreachTriggerReqMessage {
+typedef struct _ManualCpBreachTriggerReqMessage {
   UINT8 cl_ord_id[20];          // bytes 0 to 19
   UINT8 underlier_optional[6];  // bytes 20 to 25
   UINT8 efid_optional[4];       // bytes 26 to 29
@@ -164,18 +235,14 @@ entrypoint typedef struct _ManualCpBreachTriggerReqMessage {
   UINT8 send_cancels;           // byte 32
 } ManualCpBreachTriggerReqMessage;
 
-// ---- Cp Clear Breach Req Message: 28 bytes -----------------------------------
-
 // CPClearBreachReqMessage
-entrypoint typedef struct _CpClearBreachReqMessage {
+typedef struct _CpClearBreachReqMessage {
   UINT8 cl_ord_id[20];          // bytes 0 to 19
   UINT64BE breach_id_optional;  // bytes 20 to 27
 } CpClearBreachReqMessage;
 
-// ---- Single Order Allow Iso Orders Change Req Message: 33 bytes --------------
-
 // SingleOrderAllowISOOrdersChangeReqMessage
-entrypoint typedef struct _SingleOrderAllowIsoOrdersChangeReqMessage {
+typedef struct _SingleOrderAllowIsoOrdersChangeReqMessage {
   UINT8 cl_ord_id[20];          // bytes 0 to 19
   UINT8 underlier_optional[6];  // bytes 20 to 25
   UINT8 efid_optional[4];       // bytes 26 to 29
@@ -183,10 +250,8 @@ entrypoint typedef struct _SingleOrderAllowIsoOrdersChangeReqMessage {
   UINT8 allow_iso_orders;       // byte 32
 } SingleOrderAllowIsoOrdersChangeReqMessage;
 
-// ---- Single Order Allow Orders In Crossed Market Change Req Message: 33 bytes ----
-
 // SingleOrderAllowOrdersInCrossedMarketChangeReqMessage
-entrypoint typedef struct _SingleOrderAllowOrdersInCrossedMarketChangeReqMessage {
+typedef struct _SingleOrderAllowOrdersInCrossedMarketChangeReqMessage {
   UINT8 cl_ord_id[20];          // bytes 0 to 19
   UINT8 underlier_optional[6];  // bytes 20 to 25
   UINT8 efid_optional[4];       // bytes 26 to 29
@@ -194,10 +259,8 @@ entrypoint typedef struct _SingleOrderAllowOrdersInCrossedMarketChangeReqMessage
   UINT8 allow_orders;           // byte 32
 } SingleOrderAllowOrdersInCrossedMarketChangeReqMessage;
 
-// ---- Single Order Max Notional Change Req Message: 40 bytes ------------------
-
 // SingleOrderMaxNotionalChangeReqMessage
-entrypoint typedef struct _SingleOrderMaxNotionalChangeReqMessage {
+typedef struct _SingleOrderMaxNotionalChangeReqMessage {
   UINT8 cl_ord_id[20];               // bytes 0 to 19
   UINT8 underlier_optional[6];       // bytes 20 to 25
   UINT8 efid_optional[4];            // bytes 26 to 29
@@ -205,10 +268,8 @@ entrypoint typedef struct _SingleOrderMaxNotionalChangeReqMessage {
   UINT64BE max_notional_in_dollars;  // bytes 32 to 39
 } SingleOrderMaxNotionalChangeReqMessage;
 
-// ---- Single Order Max Contracts Change Req Message: 36 bytes -----------------
-
 // SingleOrderMaxContractsChangeReqMessage
-entrypoint typedef struct _SingleOrderMaxContractsChangeReqMessage {
+typedef struct _SingleOrderMaxContractsChangeReqMessage {
   UINT8 cl_ord_id[20];          // bytes 0 to 19
   UINT8 underlier_optional[6];  // bytes 20 to 25
   UINT8 efid_optional[4];       // bytes 26 to 29
@@ -216,10 +277,8 @@ entrypoint typedef struct _SingleOrderMaxContractsChangeReqMessage {
   UINT32BE max_contracts;       // bytes 32 to 35
 } SingleOrderMaxContractsChangeReqMessage;
 
-// ---- Cp Gross Notional Threshold Change Req Message: 40 bytes ----------------
-
 // CPGrossNotionalThresholdChangeReqMessage
-entrypoint typedef struct _CpGrossNotionalThresholdChangeReqMessage {
+typedef struct _CpGrossNotionalThresholdChangeReqMessage {
   UINT8 cl_ord_id[20];          // bytes 0 to 19
   UINT8 underlier_optional[6];  // bytes 20 to 25
   UINT8 efid_optional[4];       // bytes 26 to 29
@@ -227,10 +286,8 @@ entrypoint typedef struct _CpGrossNotionalThresholdChangeReqMessage {
   UINT64BE price_in_dollars;    // bytes 32 to 39
 } CpGrossNotionalThresholdChangeReqMessage;
 
-// ---- Cp Market Order Gross Notional Threshold Change Req Message: 40 bytes ----
-
 // CPMarketOrderGrossNotionalThresholdChangeReqMessage
-entrypoint typedef struct _CpMarketOrderGrossNotionalThresholdChangeReqMessage {
+typedef struct _CpMarketOrderGrossNotionalThresholdChangeReqMessage {
   UINT8 cl_ord_id[20];          // bytes 0 to 19
   UINT8 underlier_optional[6];  // bytes 20 to 25
   UINT8 efid_optional[4];       // bytes 26 to 29
@@ -238,10 +295,8 @@ entrypoint typedef struct _CpMarketOrderGrossNotionalThresholdChangeReqMessage {
   UINT64BE price_in_dollars;    // bytes 32 to 39
 } CpMarketOrderGrossNotionalThresholdChangeReqMessage;
 
-// ---- Cp Net Notional Threshold Change Req Message: 40 bytes ------------------
-
 // CPNetNotionalThresholdChangeReqMessage
-entrypoint typedef struct _CpNetNotionalThresholdChangeReqMessage {
+typedef struct _CpNetNotionalThresholdChangeReqMessage {
   UINT8 cl_ord_id[20];          // bytes 0 to 19
   UINT8 underlier_optional[6];  // bytes 20 to 25
   UINT8 efid_optional[4];       // bytes 26 to 29
@@ -249,10 +304,8 @@ entrypoint typedef struct _CpNetNotionalThresholdChangeReqMessage {
   UINT64BE price_in_dollars;    // bytes 32 to 39
 } CpNetNotionalThresholdChangeReqMessage;
 
-// ---- Cp Market Order Net Notional Threshold Change Req Message: 40 bytes -----
-
 // CPMarketOrderNetNotionalThresholdChangeReqMessage
-entrypoint typedef struct _CpMarketOrderNetNotionalThresholdChangeReqMessage {
+typedef struct _CpMarketOrderNetNotionalThresholdChangeReqMessage {
   UINT8 cl_ord_id[20];          // bytes 0 to 19
   UINT8 underlier_optional[6];  // bytes 20 to 25
   UINT8 efid_optional[4];       // bytes 26 to 29
@@ -260,10 +313,8 @@ entrypoint typedef struct _CpMarketOrderNetNotionalThresholdChangeReqMessage {
   UINT64BE price_in_dollars;    // bytes 32 to 39
 } CpMarketOrderNetNotionalThresholdChangeReqMessage;
 
-// ---- Cp Duplicate Order Threshold Change Req Message: 41 bytes ---------------
-
 // CPDuplicateOrderThresholdChangeReqMessage
-entrypoint typedef struct _CpDuplicateOrderThresholdChangeReqMessage {
+typedef struct _CpDuplicateOrderThresholdChangeReqMessage {
   UINT8 cl_ord_id[20];                          // bytes 0 to 19
   UINT8 underlier_optional[6];                  // bytes 20 to 25
   UINT8 efid_optional[4];                       // bytes 26 to 29
@@ -273,10 +324,8 @@ entrypoint typedef struct _CpDuplicateOrderThresholdChangeReqMessage {
   UINT32BE period_in_milli_seconds;             // bytes 37 to 40
 } CpDuplicateOrderThresholdChangeReqMessage;
 
-// ---- Cp Order Rate Threshold Change Req Message: 40 bytes --------------------
-
 // CPOrderRateThresholdChangeReqMessage
-entrypoint typedef struct _CpOrderRateThresholdChangeReqMessage {
+typedef struct _CpOrderRateThresholdChangeReqMessage {
   UINT8 cl_ord_id[20];               // bytes 0 to 19
   UINT8 underlier_optional[6];       // bytes 20 to 25
   UINT8 efid_optional[4];            // bytes 26 to 29
@@ -284,4 +333,66 @@ entrypoint typedef struct _CpOrderRateThresholdChangeReqMessage {
   UINT32BE max_order_msgs;           // bytes 32 to 35
   UINT32BE period_in_milli_seconds;  // bytes 36 to 39
 } CpOrderRateThresholdChangeReqMessage;
+
+// Message body sent by the firm to Memx
+casetype _ClientPayload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x01: RiskSettingsQueryMessage risk_settings_query_message;
+    case 0x02: ActiveRiskThresholdChangeReqMessage active_risk_threshold_change_req_message;
+    case 0x03: ActiveRiskAcknowledgementReqMessage active_risk_acknowledgement_req_message;
+    case 0x04: CpVolumeThresholdChangeReqMessage cp_volume_threshold_change_req_message;
+    case 0x05: CpExecutedNotionalThresholdChangeReqMessage cp_executed_notional_threshold_change_req_message;
+    case 0x06: CpTotalExecutionsThresholdChangeReqMessage cp_total_executions_threshold_change_req_message;
+    case 0x07: CpPercentOutstandingContractsThresholdChangeReqMessage cp_percent_outstanding_contracts_threshold_change_req_message;
+    case 0x08: CpBreachCountThresholdChangeReqMessage cp_breach_count_threshold_change_req_message;
+    case 0x09: ManualCpBreachTriggerReqMessage manual_cp_breach_trigger_req_message;
+    case 0x0A: CpClearBreachReqMessage cp_clear_breach_req_message;
+    case 0x0B: SingleOrderAllowIsoOrdersChangeReqMessage single_order_allow_iso_orders_change_req_message;
+    case 0x0C: SingleOrderAllowOrdersInCrossedMarketChangeReqMessage single_order_allow_orders_in_crossed_market_change_req_message;
+    case 0x0D: SingleOrderMaxNotionalChangeReqMessage single_order_max_notional_change_req_message;
+    case 0x0E: SingleOrderMaxContractsChangeReqMessage single_order_max_contracts_change_req_message;
+    case 0x12: CpGrossNotionalThresholdChangeReqMessage cp_gross_notional_threshold_change_req_message;
+    case 0x13: CpMarketOrderGrossNotionalThresholdChangeReqMessage cp_market_order_gross_notional_threshold_change_req_message;
+    case 0x14: CpNetNotionalThresholdChangeReqMessage cp_net_notional_threshold_change_req_message;
+    case 0x15: CpMarketOrderNetNotionalThresholdChangeReqMessage cp_market_order_net_notional_threshold_change_req_message;
+    case 0x16: CpDuplicateOrderThresholdChangeReqMessage cp_duplicate_order_threshold_change_req_message;
+    case 0x17: CpOrderRateThresholdChangeReqMessage cp_order_rate_threshold_change_req_message;
+    default: UINT8 unknown[available];
+  }
+} ClientPayload;
+
+// Sbe message sent by the firm to Memx
+typedef struct _ClientSbeMessage (UINT32 available) where (available >= 6) {
+  UINT16BE block_length;                                                                                        // bytes 0 to 1
+  UINT8 template_id;                                                                                            // byte 2
+  UINT8 schema_id;                                                                                              // byte 3
+  UINT16BE version;                                                                                             // bytes 4 to 5
+  ClientPayload(template_id, (available - 6)) client_payload[:byte-size-single-element-array (available - 6)];
+} ClientSbeMessage;
+
+// Memx Tcp unsequenced message
+typedef struct _UnsequencedMessage (UINT32 available) {
+  ClientSbeMessage(available) client_sbe_message;
+} UnsequencedMessage;
+
+// Session message body sent by the firm to Memx, dispatched on the message type
+casetype _ClientData (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x64: LoginRequestMessage login_request_message;
+    case 0x65: ReplayRequestMessage replay_request_message;
+    case 0x66: ReplayAllRequestMessage replay_all_request_message;
+    case 0x67: StreamRequestMessage stream_request_message;
+    case 0x68: UnsequencedMessage(available) unsequenced_message;
+    default: UINT8 unknown[available];
+  }
+} ClientData;
+
+// ---- Packet: ClientPacket ----------------------------------------------------
+
+// Memx Tcp packet sent by the firm to Memx
+entrypoint typedef struct _ClientPacket {
+  UINT8 message_type;                                                                                                          // byte 0
+  UINT16BE message_length;                                                                                                     // bytes 1 to 2
+  ClientData(message_type, ((UINT32) message_length)) client_data[:byte-size-single-element-array ((UINT32) message_length)];
+} ClientPacket;
 

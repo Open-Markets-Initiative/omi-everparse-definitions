@@ -1,94 +1,176 @@
-// London Stock Exchange Level 2 Incremental Replay
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Lseg TradeEcho Level2IncrementalReplay Gtp v26.1.2
 //
+// Protocol:
+//   Organization: London Stock Exchange
+//   Protocol: Level 2 Incremental Replay
+//   Encoding: Group Ticker Plant
+//   Version: 26.1.2
+//   Date: 01/27/2026
+//   Specification: gtp-002-technical-guide-tradecho-pre-trade-si-quote-issue-26-1-2_0.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out TradeEcho_Level2IncrementalReplay_v26_1_2.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a run counted by a field
-// - a field read in bits
-//
-// License: MIT No Attribution
 
-// ---- Unit Header: 8 bytes ----------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Gtp Tcp Unit Header
-entrypoint typedef struct _UnitHeader {
-  UINT16 length;            // bytes 0 to 1
-  UINT8 message_count;      // byte 2
-  UINT8 market_data_group;  // byte 3
-  UINT32 sequence_number;   // bytes 4 to 7
-} UnitHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_LOGIN_REQUEST_MESSAGE 0x01                 // Login Request Message
+#define MESSAGE_TYPE_REPLAY_REQUEST_MESSAGE 0x03                // Replay Request Message
+#define MESSAGE_TYPE_LOGIN_RESPONSE_MESSAGE 0x02                // Login Response Message
+#define MESSAGE_TYPE_REPLAY_RESPONSE_MESSAGE 0x04               // Replay Response Message
+#define MESSAGE_TYPE_REPLAY_AND_RECOVERY_COMPLETE_MESSAGE 0x83  // Replay And Recovery Complete Message
+#define MESSAGE_TYPE_SYSTEM_EVENT_MESSAGE 0x53                  // System Event Message
+#define MESSAGE_TYPE_INSTRUMENT_DIRECTORY_MESSAGE 0x70          // Instrument Directory Message
+#define MESSAGE_TYPE_INSTRUMENT_STATUS_MESSAGE 0x48             // Instrument Status Message
+#define MESSAGE_TYPE_DELETE_ORDER_MESSAGE 0x44                  // Delete Order Message
+#define MESSAGE_TYPE_ORDER_BOOK_CLEAR_MESSAGE 0x79              // Order Book Clear Message
+#define MESSAGE_TYPE_SI_QUOTE_MESSAGE 0x47                      // Si Quote Message
 
-// ---- Message Header: 3 bytes -------------------------------------------------
+// Login Status: one byte code
+#define LOGIN_STATUS_LOGIN_ACCEPTED 0x41                     // Login Accepted
+#define LOGIN_STATUS_COMP_ID_INACTIVE_OR_SUSPENDED 0x61      // Comp Id Inactive Or Suspended
+#define LOGIN_STATUS_LOGIN_LIMIT_REACHED 0x62                // Login Limit Reached
+#define LOGIN_STATUS_SERVICE_UNAVAILABLE 0x63                // Service Unavailable
+#define LOGIN_STATUS_MAXIMUM_CONNECTIONS_LIMIT_REACHED 0x64  // Maximum Connections Limit Reached
+#define LOGIN_STATUS_FAILED_OTHER 0x65                       // Failed Other
+#define LOGIN_STATUS_INVALID_COMP_ID_OR_IP_ADDRESS 0x66      // Invalid Comp Id Or Ip Address
 
-// Gtp Tcp Message Header
-entrypoint typedef struct _MessageHeader {
-  UINT16 message_length;  // bytes 0 to 1
-  UINT8 message_type;     // byte 2
-} MessageHeader;
+// Replay Status: one byte code
+#define REPLAY_STATUS_REQUEST_ACCEPTED 0x41          // Request Accepted
+#define REPLAY_STATUS_REQUEST_LIMIT_REACHED 0x44     // Request Limit Reached
+#define REPLAY_STATUS_OUT_OF_RANGE 0x4F              // Out Of Range
+#define REPLAY_STATUS_REPLAY_UNAVAILABLE 0x55        // Replay Unavailable
+#define REPLAY_STATUS_CONCURRENT_LIMIT_REACHED 0x63  // Concurrent Limit Reached
+#define REPLAY_STATUS_FAILED_OTHER 0x65              // Failed Other
 
-// ---- Login Request Message: 8 bytes ------------------------------------------
+// Trading Status: one byte code
+#define TRADING_STATUS_INACTIVE 0x31         // Inactive
+#define TRADING_STATUS_SUSPENDED 0x32        // Suspended
+#define TRADING_STATUS_ACTIVE 0x33           // Active
+#define TRADING_STATUS_REGULATORY_HALT 0x50  // Regulatory Halt
+
+// Event Code: one byte code
+#define EVENT_CODE_START_OF_DAY 0x4F        // Start Of Day
+#define EVENT_CODE_START_OF_OPEN 0x54       // Start Of Open
+#define EVENT_CODE_START_OF_PRE_CLOSE 0x50  // Start Of Pre Close
+#define EVENT_CODE_END_OF_DAY 0x43          // End Of Day
+
+// Source Venue: 2 byte code
+#define SOURCE_VENUE_TRAD_ECHO 0x000B  // Trad Echo
+
+// Session Change Reason: one byte code
+#define SESSION_CHANGE_REASON_SCHEDULED_TRANSITION 0x00  // Scheduled Transition
+
+// Order Book Type: one byte code
+#define ORDER_BOOK_TYPE_SI_QUOTE_BOOK 0x01  // Si Quote Book
+
+// Side: one byte code
+#define SIDE_BUY_ORDER 0x42   // Buy Order
+#define SIDE_SELL_ORDER 0x53  // Sell Order
+
+// Order Type: one byte code
+#define ORDER_TYPE_SI_QUOTE 0x00  // Si Quote
+
+// ---- Types -------------------------------------------------------------------
 
 // Used by the client to log in to the replay or recovery channel
-entrypoint typedef struct _LoginRequestMessage {
+typedef struct _LoginRequestMessage {
   UINT8 username[8];  // bytes 0 to 7
 } LoginRequestMessage;
 
-// ---- Replay Request Message: 12 bytes ----------------------------------------
-
 // Used by the client to request a retransmission of messages on the replay channel
-entrypoint typedef struct _ReplayRequestMessage {
+typedef struct _ReplayRequestMessage {
   UINT32 first_message;  // bytes 0 to 3
   UINT32 count;          // bytes 4 to 7
   UINT32 request_id;     // bytes 8 to 11
 } ReplayRequestMessage;
 
-// ---- Login Response Message: 1 byte ------------------------------------------
-
 // Used by the server to accept or reject a login request to the replay or recovery channel
-entrypoint typedef struct _LoginResponseMessage {
+typedef struct _LoginResponseMessage {
   UINT8 login_status;  // byte 0
 } LoginResponseMessage;
 
-// ---- Replay Response Message: 13 bytes ---------------------------------------
-
 // Used by the server to respond to a retransmission request on the replay channel
-entrypoint typedef struct _ReplayResponseMessage {
+typedef struct _ReplayResponseMessage {
   UINT32 first_message;  // bytes 0 to 3
   UINT32 count;          // bytes 4 to 7
   UINT8 replay_status;   // byte 8
   UINT32 request_id;     // bytes 9 to 12
 } ReplayResponseMessage;
 
-// ---- Replay And Recovery Complete Message: 5 bytes ---------------------------
-
 // Used by the server to indicate the successful completion of servicing a message replay or a recovery request
-entrypoint typedef struct _ReplayAndRecoveryCompleteMessage {
+typedef struct _ReplayAndRecoveryCompleteMessage {
   UINT32 request_id;     // bytes 0 to 3
   UINT8 trading_status;  // byte 4
 } ReplayAndRecoveryCompleteMessage;
 
-// ---- System Event Message: 11 bytes ------------------------------------------
-
 // Broadcast at the start and end of day on TRADEcho. Customers should consider the SI Quote book to be empty following receipt of this message; no explicit Order Book Clear or delete order messages will be sent
-entrypoint typedef struct _SystemEventMessage {
+typedef struct _SystemEventMessage {
   UINT64 timestamp;     // bytes 0 to 7
   UINT8 event_code;     // byte 8
   UINT16 source_venue;  // bytes 9 to 10
 } SystemEventMessage;
 
-// ---- Instrument Status Message: 27 bytes -------------------------------------
+// Used to disseminate a limited set of data for all configured instrument types on the real-time channels
+typedef struct _InstrumentDirectoryMessage {
+  UINT64 timestamp;                           // bytes 0 to 7
+  UINT64 instrument;                          // bytes 8 to 15
+  UINT8 isin[12];                             // bytes 16 to 27
+  UINT8 unused_1 : 1;                         // byte 28
+  UINT8 si_quote_book : 1;                    // byte 28
+  UINT8 unused_6 : 6;                         // byte 28
+  UINT16 source_venue;                        // bytes 29 to 30
+  UINT8 venue_instrument_id[11];              // bytes 31 to 41
+  UINT8 tick_id[2];                           // bytes 42 to 43
+  UINT64 price_band_tolerances;               // bytes 44 to 51, signed, read here as unsigned
+  UINT64 dynamic_circuit_breaker_tolerances;  // bytes 52 to 59, signed, read here as unsigned
+  UINT64 static_circuit_breaker_tolerances;   // bytes 60 to 67, signed, read here as unsigned
+  UINT8 segment[6];                           // bytes 68 to 73
+  UINT8 reserved_12[12];                      // bytes 74 to 85
+  UINT8 security_exchange[11];                // bytes 86 to 96
+  UINT8 currency[3];                          // bytes 97 to 99
+  UINT8 reserved_1;                           // byte 100
+  UINT8 reserved_4[4];                        // bytes 101 to 104
+  UINT64 average_daily_turnover_adt;          // bytes 105 to 112, signed, read here as unsigned
+  UINT8 reserved_8[8];                        // bytes 113 to 120
+  UINT8 second_reserved_1;                    // byte 121
+  UINT8 second_reserved_8[8];                 // bytes 122 to 129
+  UINT8 third_reserved_8[8];                  // bytes 130 to 137
+} InstrumentDirectoryMessage;
 
 // Used to communicate status of an instrument. Instrument status messages are disseminated prior to system event start of day message
-entrypoint typedef struct _InstrumentStatusMessage {
+typedef struct _InstrumentStatusMessage {
   UINT64 timestamp;             // bytes 0 to 7
   UINT64 instrument;            // bytes 8 to 15
   UINT16 source_venue;          // bytes 16 to 17
@@ -98,10 +180,8 @@ entrypoint typedef struct _InstrumentStatusMessage {
   UINT8 order_book_type;        // byte 26
 } InstrumentStatusMessage;
 
-// ---- Delete Order Message: 52 bytes ------------------------------------------
-
 // Sent to instruct recipients to delete a quote
-entrypoint typedef struct _DeleteOrderMessage {
+typedef struct _DeleteOrderMessage {
   UINT64 timestamp;          // bytes 0 to 7
   UINT64 order_id;           // bytes 8 to 15
   UINT64 instrument;         // bytes 16 to 23
@@ -113,20 +193,16 @@ entrypoint typedef struct _DeleteOrderMessage {
   UINT64 internal_id;        // bytes 44 to 51
 } DeleteOrderMessage;
 
-// ---- Order Book Clear Message: 19 bytes --------------------------------------
-
 // Sent to instruct recipients to remove all quotes from the book for the specified instrument
-entrypoint typedef struct _OrderBookClearMessage {
+typedef struct _OrderBookClearMessage {
   UINT64 timestamp;       // bytes 0 to 7
   UINT16 source_venue;    // bytes 8 to 9
   UINT64 instrument;      // bytes 10 to 17
   UINT8 order_book_type;  // byte 18
 } OrderBookClearMessage;
 
-// ---- Si Quote Message: 81 bytes ----------------------------------------------
-
 // Publishing Systematic Internaliser (SI) Quotes
-entrypoint typedef struct _SiQuoteMessage {
+typedef struct _SiQuoteMessage {
   UINT64 timestamp;               // bytes 0 to 7
   UINT64 order_id;                // bytes 8 to 15
   UINT8 side;                     // byte 16
@@ -142,4 +218,48 @@ entrypoint typedef struct _SiQuoteMessage {
   UINT8 currency[3];              // bytes 74 to 76
   UINT8 venue_of_publication[4];  // bytes 77 to 80
 } SiQuoteMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x01: LoginRequestMessage login_request_message;
+    case 0x03: ReplayRequestMessage replay_request_message;
+    case 0x02: LoginResponseMessage login_response_message;
+    case 0x04: ReplayResponseMessage replay_response_message;
+    case 0x83: ReplayAndRecoveryCompleteMessage replay_and_recovery_complete_message;
+    case 0x53: SystemEventMessage system_event_message;
+    case 0x70: InstrumentDirectoryMessage instrument_directory_message;
+    case 0x48: InstrumentStatusMessage instrument_status_message;
+    case 0x44: DeleteOrderMessage delete_order_message;
+    case 0x79: OrderBookClearMessage order_book_clear_message;
+    case 0x47: SiQuoteMessage si_quote_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// Gtp Tcp Message
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16 message_length { message_length >= 3 };                                                                                                                   // bytes 0 to 1
+  UINT8 message_type;                                                                                                                                              // byte 2
+  Payload(message_type, (((UINT32) message_length) - 3)) payload[:byte-size-single-element-array (((UINT32) message_length) - 3)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// One unit on the tcp stream: the unit header and its payload messages
+typedef struct _TcpUnit (mutable UINT32 * tally) {
+  UINT16 length { length >= 8 };                                                                                            // bytes 0 to 1
+  UINT8 message_count;                                                                                                      // byte 2
+  UINT8 market_data_group;                                                                                                  // byte 3
+  UINT32 sequence_number;                                                                                                   // bytes 4 to 7
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size (((UINT32) length) - 8)];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} TcpUnit;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Gtp Tcp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) {
+  TcpUnit(tally) tcp_unit[:byte-size available];
+} Packet;
 

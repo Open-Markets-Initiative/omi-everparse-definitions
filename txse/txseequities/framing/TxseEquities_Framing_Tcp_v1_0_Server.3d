@@ -1,33 +1,76 @@
-// Texas Stock Exchange
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Txse TxseEquities Framing Tcp v1.0
 //
+// Protocol:
+//   Organization: Texas Stock Exchange
+//   Protocol:
+//   Encoding: Transmission Control Protocol
+//   Version: 1.0
+//   Date: 6/12/2026
+//   Specification: TXSE RAKE TCP and UDP.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ServerPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out TxseEquities_Framing_Tcp_v1_0_Server.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a length prefix framing what follows
-//
-// License: MIT No Attribution
 
-// ---- Rake Message Header: 3 bytes --------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Rake Tcp per-message header carrying the frame length and packet-level dispatch byte
-entrypoint typedef struct _RakeMessageHeader {
-  UINT16 message_length;  // bytes 0 to 1
-  UINT8 packet_type;      // byte 2
-} RakeMessageHeader;
+// Packet Type: one byte code
+#define PACKET_TYPE_LOGON_REQUEST_PACKET 0x35      // Logon Request Packet
+#define PACKET_TYPE_MEMBER_HEARTBEAT_PACKET 0x37   // Member Heartbeat Packet
+#define PACKET_TYPE_TCP_UNSEQUENCED_MESSAGE 0x36   // Tcp Unsequenced Message
+#define PACKET_TYPE_DEBUG_MESSAGE 0x30             // Debug Message
+#define PACKET_TYPE_END_OF_SESSION_MESSAGE 0x34    // End Of Session Message
+#define PACKET_TYPE_LOGON_RESPONSE_MESSAGE 0x31    // Logon Response Message
+#define PACKET_TYPE_SERVER_HEARTBEAT_MESSAGE 0x33  // Server Heartbeat Message
+#define PACKET_TYPE_TCP_SEQUENCED_MESSAGE 0x32     // Tcp Sequenced Message
 
-// ---- Logon Response Message: 30 bytes ----------------------------------------
+// Logon Response Code: one byte code
+#define LOGON_RESPONSE_CODE_SUCCESS 0x00                // Success
+#define LOGON_RESPONSE_CODE_INCORRECT_SENDER_COMP 0x01  // Incorrect Sender Comp
+#define LOGON_RESPONSE_CODE_INCORRECT_SESSION 0x02      // Incorrect Session
+#define LOGON_RESPONSE_CODE_INVALID_NEXT_SEQUENCE 0x03  // Invalid Next Sequence
+#define LOGON_RESPONSE_CODE_INVALID_CONFIGURATION 0x04  // Invalid Configuration
+#define LOGON_RESPONSE_CODE_INCORRECT_TOKEN 0x05        // Incorrect Token
+
+// ---- Types -------------------------------------------------------------------
+
+// human readable debug message
+typedef struct _DebugMessage (UINT16 message_length) where (message_length >= 1) {
+  UINT8 text[(((UINT32) message_length) - 1)];
+} DebugMessage;
 
 // Response to a logon request
-entrypoint typedef struct _LogonResponseMessage {
+typedef struct _LogonResponseMessage {
   UINT64 session;                        // bytes 0 to 7
   UINT64 next_sequence_number;           // bytes 8 to 15
   UINT64 highest_known_sequence_number;  // bytes 16 to 23
@@ -35,4 +78,36 @@ entrypoint typedef struct _LogonResponseMessage {
   UINT8 number_stream_ids;               // byte 25
   UINT32 instance_;                      // bytes 26 to 29
 } LogonResponseMessage;
+
+// A sequenced message from the exchange
+typedef struct _TcpSequencedMessage (UINT16 message_length) where (message_length >= 3) {
+  UINT8 stream_id;                                           // byte 0
+  UINT8 message_type;                                        // byte 1
+  UINT8 sequenced_message[(((UINT32) message_length) - 3)];
+} TcpSequencedMessage;
+
+// Branch
+casetype _ServerPayload (UINT8 selector, UINT32 length, UINT16 message_length, UINT32 available) {
+  switch (selector) {
+    case 0x30: DebugMessage(message_length) debug_message;
+    case 0x34: unit end_of_session_message;
+    case 0x31: LogonResponseMessage logon_response_message;
+    case 0x32: TcpSequencedMessage(message_length) tcp_sequenced_message[:byte-size-single-element-array length];
+    default: UINT8 unknown[available];
+  }
+} ServerPayload;
+
+// Rake Tcp Message sent by the Exchange to the Member
+typedef struct _ServerRakeTcpMessage {
+  UINT16 message_length { message_length >= 1 };                                                                                                                                                             // bytes 0 to 1
+  UINT8 packet_type;                                                                                                                                                                                         // byte 2
+  ServerPayload(packet_type, (((UINT32) message_length) - 1), message_length, ((((UINT32) message_length) + 2) - 3)) server_payload[:byte-size-single-element-array ((((UINT32) message_length) + 2) - 3)];
+} ServerRakeTcpMessage;
+
+// ---- Packet: ServerPacket ----------------------------------------------------
+
+// Rake Packet sent by the Exchange
+entrypoint typedef struct _ServerPacket (UINT32 available) {
+  ServerRakeTcpMessage server_rake_tcp_message[:byte-size available];
+} ServerPacket;
 

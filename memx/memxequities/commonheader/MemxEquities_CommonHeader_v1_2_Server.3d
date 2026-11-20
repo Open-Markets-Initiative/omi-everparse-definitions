@@ -1,91 +1,167 @@
-// The Members Exchange Common Header
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Memx MemxEquities CommonHeader Tcp v1.2
 //
+// Protocol:
+//   Organization: The Members Exchange
+//   Protocol: Common Header
+//   Encoding: Transmission Control Protocol
+//   Version: 1.2
+//   Date: 2025-10-23
+//   Specification: MEMX-TCP-v1_2.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ServerPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out MemxEquities_CommonHeader_v1_2_Server.3d
-//
-// What this definition does not state, and the model does:
-// - a Reassemble rule
-// - a length prefix framing what follows
-//
-// License: MIT No Attribution
 
-// ---- Common Header: 3 bytes --------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Tcp Common Header
-entrypoint typedef struct _CommonHeader {
-  UINT8 message_type;       // byte 0
-  UINT16BE message_length;  // bytes 1 to 2
-} CommonHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_HEARTBEAT 0x00            // Heartbeat
+#define MESSAGE_TYPE_LOGIN_REQUEST 0x64        // Login Request
+#define MESSAGE_TYPE_REPLAY_REQUEST 0x65       // Replay Request
+#define MESSAGE_TYPE_REPLAY_ALL_REQUEST 0x66   // Replay All Request
+#define MESSAGE_TYPE_STREAM_REQUEST 0x67       // Stream Request
+#define MESSAGE_TYPE_UNSEQUENCED_MESSAGE 0x68  // Unsequenced Message
+#define MESSAGE_TYPE_LOGIN_ACCEPTED 0x01       // Login Accepted
+#define MESSAGE_TYPE_LOGIN_REJECTED 0x02       // Login Rejected
+#define MESSAGE_TYPE_START_OF_SESSION 0x03     // Start Of Session
+#define MESSAGE_TYPE_END_OF_SESSION 0x04       // End Of Session
+#define MESSAGE_TYPE_REPLAY_BEGIN 0x05         // Replay Begin
+#define MESSAGE_TYPE_REPLAY_REJECTED 0x06      // Replay Rejected
+#define MESSAGE_TYPE_REPLAY_COMPLETE 0x07      // Replay Complete
+#define MESSAGE_TYPE_STREAM_BEGIN 0x08         // Stream Begin
+#define MESSAGE_TYPE_STREAM_REJECTED 0x09      // Stream Rejected
+#define MESSAGE_TYPE_STREAM_COMPLETE 0x0A      // Stream Complete
+#define MESSAGE_TYPE_SEQUENCED_MESSAGE 0x0B    // Sequenced Message
 
-// ---- Login Accepted Message: 1 byte ------------------------------------------
+// Supported Request Mode: one byte code
+#define SUPPORTED_REQUEST_MODE_STREAM 0x53         // Stream
+#define SUPPORTED_REQUEST_MODE_REPLAY 0x52         // Replay
+#define SUPPORTED_REQUEST_MODE_SNAPSHOT_MODE 0x54  // Snapshot Mode
+
+// Login Reject Code: one byte code
+#define LOGIN_REJECT_CODE_MALFORMED_TOKEN 0x54         // Malformed Token
+#define LOGIN_REJECT_CODE_TOKEN_TYPE_UNSUPPORTED 0x55  // Token Type Unsupported
+#define LOGIN_REJECT_CODE_TOKEN_TYPE_INVALID 0x56      // Token Type Invalid
+#define LOGIN_REJECT_CODE_AUTHORIZATION_FAILED 0x41    // Authorization Failed
+
+// Replay Reject Code: one byte code
+#define REPLAY_REJECT_CODE_REPLAY_REQUESTS_ARE_NOT_ALLOWED 0x52      // Replay Requests Are Not Allowed
+#define REPLAY_REJECT_CODE_REPLAY_ALL_REQUESTS_ARE_NOT_ALLOWED 0x41  // Replay All Requests Are Not Allowed
+#define REPLAY_REJECT_CODE_NOT_THE_ACTIVE_SESSION 0x50               // Not The Active Session
+#define REPLAY_REJECT_CODE_SEQUENCE_NUMBER_OUT_OF_RANGE 0x53         // Sequence Number Out Of Range
+
+// Stream Reject Code: one byte code
+#define STREAM_REJECT_CODE_STREAM_REQUESTS_ARE_NOT_ALLOWED 0x52  // Stream Requests Are Not Allowed
+#define STREAM_REJECT_CODE_NOT_THE_ACTIVE_SESSION 0x50           // Not The Active Session
+#define STREAM_REJECT_CODE_SEQUENCE_NUMBER_OUT_OF_RANGE 0x53     // Sequence Number Out Of Range
+
+// ---- Types -------------------------------------------------------------------
 
 // Memx Tcp Login Accepted Message
-entrypoint typedef struct _LoginAcceptedMessage {
+typedef struct _LoginAcceptedMessage {
   UINT8 supported_request_mode;  // byte 0
 } LoginAcceptedMessage;
 
-// ---- Login Rejected Message: 1 byte ------------------------------------------
-
 // Memx Tcp Login Rejected Message
-entrypoint typedef struct _LoginRejectedMessage {
+typedef struct _LoginRejectedMessage {
   UINT8 login_reject_code;  // byte 0
 } LoginRejectedMessage;
 
-// ---- Start Of Session Message: 8 bytes ---------------------------------------
-
 // Memx Tcp Start of Session Message
-entrypoint typedef struct _StartOfSessionMessage {
+typedef struct _StartOfSessionMessage {
   UINT64BE session_id;  // bytes 0 to 7
 } StartOfSessionMessage;
 
-// ---- Replay Begin Message: 12 bytes ------------------------------------------
-
 // Memx Tcp Replay Begin Message
-entrypoint typedef struct _ReplayBeginMessage {
+typedef struct _ReplayBeginMessage {
   UINT64BE next_sequence_number;   // bytes 0 to 7
   UINT32BE pending_message_count;  // bytes 8 to 11
 } ReplayBeginMessage;
 
-// ---- Replay Rejected Message: 1 byte -----------------------------------------
-
 // Memx Tcp Replay Rejected Message
-entrypoint typedef struct _ReplayRejectedMessage {
+typedef struct _ReplayRejectedMessage {
   UINT8 replay_reject_code;  // byte 0
 } ReplayRejectedMessage;
 
-// ---- Replay Complete Message: 8 bytes ----------------------------------------
-
 // Memx Tcp Replay Complete Message
-entrypoint typedef struct _ReplayCompleteMessage {
+typedef struct _ReplayCompleteMessage {
   UINT64BE message_count;  // bytes 0 to 7
 } ReplayCompleteMessage;
 
-// ---- Stream Begin Message: 16 bytes ------------------------------------------
-
 // Memx Tcp Stream Begin Message
-entrypoint typedef struct _StreamBeginMessage {
+typedef struct _StreamBeginMessage {
   UINT64BE next_sequence_number;  // bytes 0 to 7
   UINT64BE max_sequence_number;   // bytes 8 to 15
 } StreamBeginMessage;
 
-// ---- Stream Rejected Message: 1 byte -----------------------------------------
-
 // Memx Tcp Stream Rejected Message
-entrypoint typedef struct _StreamRejectedMessage {
+typedef struct _StreamRejectedMessage {
   UINT8 stream_reject_code;  // byte 0
 } StreamRejectedMessage;
 
-// ---- Stream Complete Message: 8 bytes ----------------------------------------
-
 // Memx Tcp Stream Complete Message
-entrypoint typedef struct _StreamCompleteMessage {
+typedef struct _StreamCompleteMessage {
   UINT64BE total_sequence_count;  // bytes 0 to 7
 } StreamCompleteMessage;
+
+// Memx Tcp sequenced message
+typedef struct _SequencedMessage (UINT32 available) {
+  UINT8 server_sbe_message[available];
+} SequencedMessage;
+
+// Session message body sent by Memx to the firm, dispatched on the message type
+casetype _ServerData (UINT8 selector, UINT32 length, UINT32 available) {
+  switch (selector) {
+    case 0x01: LoginAcceptedMessage login_accepted_message;
+    case 0x02: LoginRejectedMessage login_rejected_message;
+    case 0x03: StartOfSessionMessage start_of_session_message;
+    case 0x05: ReplayBeginMessage replay_begin_message;
+    case 0x06: ReplayRejectedMessage replay_rejected_message;
+    case 0x07: ReplayCompleteMessage replay_complete_message;
+    case 0x08: StreamBeginMessage stream_begin_message;
+    case 0x09: StreamRejectedMessage stream_rejected_message;
+    case 0x0A: StreamCompleteMessage stream_complete_message;
+    case 0x0B: SequencedMessage(length) sequenced_message[:byte-size-single-element-array length];
+    default: UINT8 unknown[available];
+  }
+} ServerData;
+
+// ---- Packet: ServerPacket ----------------------------------------------------
+
+// Memx Tcp packet sent by Memx to the firm
+entrypoint typedef struct _ServerPacket {
+  UINT8 message_type;                                                                                                                                     // byte 0
+  UINT16BE message_length;                                                                                                                                // bytes 1 to 2
+  ServerData(message_type, ((UINT32) message_length), ((UINT32) message_length)) server_data[:byte-size-single-element-array ((UINT32) message_length)];
+} ServerPacket;
 

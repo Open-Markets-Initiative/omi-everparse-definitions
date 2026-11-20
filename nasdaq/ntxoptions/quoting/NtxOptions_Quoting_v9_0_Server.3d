@@ -1,49 +1,382 @@
-// National Association of Securities Dealers Automated Quotations (Nasdaq) Specialized Quote Interface
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nasdaq NtxOptions Quoting Sqf v9.0
 //
+// Protocol:
+//   Organization: National Association of Securities Dealers Automated Quotations (Nasdaq)
+//   Protocol: Specialized Quote Interface
+//   Encoding: Specialized Quote Interface
+//   Version: 9.0
+//   Date: 09/22/2026
+//   Specification: Options_SQF.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ServerPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out NtxOptions_Quoting_v9_0_Server.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a length prefix framing what follows
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Server Packet Header: 3 bytes -------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Packet header of a packet sent by the server
-entrypoint typedef struct _ServerPacketHeader {
-  UINT16BE packet_length;    // bytes 0 to 1
-  UINT8 server_packet_type;  // byte 2
-} ServerPacketHeader;
+// Server Packet Type: one byte code
+#define SERVER_PACKET_TYPE_DEBUG_PACKET 0x2B             // Debug Packet
+#define SERVER_PACKET_TYPE_LOGIN_ACCEPTED_PACKET 0x41    // Login Accepted Packet
+#define SERVER_PACKET_TYPE_LOGIN_REJECTED_PACKET 0x4A    // Login Rejected Packet
+#define SERVER_PACKET_TYPE_SEQUENCED_DATA_PACKET 0x53    // Sequenced Data Packet
+#define SERVER_PACKET_TYPE_UNSEQUENCED_DATA_PACKET 0x55  // Unsequenced Data Packet
+#define SERVER_PACKET_TYPE_SERVER_HEARTBEAT_PACKET 0x48  // Server Heartbeat Packet
+#define SERVER_PACKET_TYPE_END_OF_SESSION_PACKET 0x5A    // End Of Session Packet
 
-// ---- Login Accepted Packet: 30 bytes -----------------------------------------
+// Reject Reason Code: one byte code
+#define REJECT_REASON_CODE_NOT_AUTHORIZED 0x41         // Not Authorized
+#define REJECT_REASON_CODE_SESSION_NOT_AVAILABLE 0x53  // Session Not Available
+
+// Sequenced Message Type: 2 byte code
+#define SEQUENCED_MESSAGE_TYPE_MSAR_ACCEPT_MESSAGE 0x5341                                                     // Msar Accept Message
+#define SEQUENCED_MESSAGE_TYPE_MSAR_REJECT_MESSAGE 0x5352                                                     // Msar Reject Message
+#define SEQUENCED_MESSAGE_TYPE_COMPLEX_MSAR_ACCEPT_MESSAGE 0x5359                                             // Complex Msar Accept Message
+#define SEQUENCED_MESSAGE_TYPE_COMPLEX_MSAR_REJECT_MESSAGE 0x534E                                             // Complex Msar Reject Message
+#define SEQUENCED_MESSAGE_TYPE_UNDERLYING_PERMISSION_NOTIFICATION_MESSAGE 0x4150                              // Underlying Permission Notification Message
+#define SEQUENCED_MESSAGE_TYPE_MM_PARAMETER_DEFINITION_NOTIFICATION_MESSAGE 0x414A                            // Mm Parameter Definition Notification Message
+#define SEQUENCED_MESSAGE_TYPE_RAPID_FIRE_CONFIG_NOTIFICATION_MESSAGE 0x4166                                  // Rapid Fire Config Notification Message
+#define SEQUENCED_MESSAGE_TYPE_ACTIVE_QP_SELF_REPLENISHMENT_PARAMETER_DEFINITION_NOTIFICATION_MESSAGE 0x414B  // Active Qp Self Replenishment Parameter Definition Notification Message
+#define SEQUENCED_MESSAGE_TYPE_SYSTEM_EVENT_MESSAGE 0x4153                                                    // System Event Message
+#define SEQUENCED_MESSAGE_TYPE_SIMPLE_INSTRUMENT_DIRECTORY_MESSAGE 0x4144                                     // Simple Instrument Directory Message
+#define SEQUENCED_MESSAGE_TYPE_COMPLEX_INSTRUMENT_DIRECTORY_MESSAGE 0x4152                                    // Complex Instrument Directory Message
+#define SEQUENCED_MESSAGE_TYPE_SIMPLE_INSTRUMENT_TRADING_ACTION_MESSAGE 0x4148                                // Simple Instrument Trading Action Message
+#define SEQUENCED_MESSAGE_TYPE_COMPLEX_INSTRUMENT_TRADING_ACTION_MESSAGE 0x4149                               // Complex Instrument Trading Action Message
+#define SEQUENCED_MESSAGE_TYPE_SIMPLE_QUOTE_EXECUTION_NOTIFICATION_MESSAGE 0x4E45                             // Simple Quote Execution Notification Message
+#define SEQUENCED_MESSAGE_TYPE_COMPLEX_QUOTE_EXECUTION_NOTIFICATION_MESSAGE 0x4E56                            // Complex Quote Execution Notification Message
+#define SEQUENCED_MESSAGE_TYPE_COMPLEX_QUOTE_LEG_EXECUTION_NOTIFICATION_MESSAGE 0x4E57                        // Complex Quote Leg Execution Notification Message
+#define SEQUENCED_MESSAGE_TYPE_SIMPLE_MSAR_NOTIFICATION_MESSAGE 0x4E53                                        // Simple Msar Notification Message
+#define SEQUENCED_MESSAGE_TYPE_COMPLEX_MSAR_LEG_NOTIFICATION_MESSAGE 0x4E4C                                   // Complex Msar Leg Notification Message
+#define SEQUENCED_MESSAGE_TYPE_COMPLEX_MSAR_NOTIFICATION_MESSAGE 0x4E58                                       // Complex Msar Notification Message
+#define SEQUENCED_MESSAGE_TYPE_OPENING_ROTATION_QUOTE_SPREAD_MULTIPLIER_NOTIFICATION_MESSAGE 0x414D           // Opening Rotation Quote Spread Multiplier Notification Message
+
+// Msar Type: one byte code
+#define MSAR_TYPE_AUCTION_RESPONSE 0x41  // Auction Response
+#define MSAR_TYPE_MARKET_SWEEP 0x4D      // Market Sweep
+
+// Side: one byte code
+#define SIDE_BUY 0x42                // Buy
+#define SIDE_SELL 0x53               // Sell
+#define SIDE_NOT_DISCLOSED 0x2A      // Not Disclosed
+#define SIDE_BUY_SHORT 0x54          // Buy Short
+#define SIDE_BUY_SHORT_EXEMPT 0x58   // Buy Short Exempt
+#define SIDE_SELL_SHORT 0x59         // Sell Short
+#define SIDE_SELL_SHORT_EXEMPT 0x5A  // Sell Short Exempt
+
+// Status Code: one byte code
+#define STATUS_CODE_VALID_REQUEST 0x20                  // Valid Request
+#define STATUS_CODE_INVALID_BADGE 0x41                  // Invalid Badge
+#define STATUS_CODE_INVALID_INSTRUMENT_UNDERLYING 0x42  // Invalid Instrument Underlying
+#define STATUS_CODE_NOT_PERMITTED 0x43                  // Not Permitted
+#define STATUS_CODE_INVALID_SIDE 0x44                   // Invalid Side
+#define STATUS_CODE_INVALID_SIZE 0x45                   // Invalid Size
+#define STATUS_CODE_INVALID_PRICE 0x46                  // Invalid Price
+#define STATUS_CODE_INVALID_SPREAD 0x47                 // Invalid Spread
+#define STATUS_CODE_INVALID_INDICATOR_ATTRIBUTE 0x48    // Invalid Indicator Attribute
+#define STATUS_CODE_REENTRY_REQUIRED 0x49               // Reentry Required
+#define STATUS_CODE_OPENING_ROTATION_IN_PROGRESS 0x4A   // Opening Rotation In Progress
+#define STATUS_CODE_KILL_SWITCH_REENTRY_REQUIRED 0x4B   // Kill Switch Reentry Required
+#define STATUS_CODE_FULL_REPLENISHMENT_REQUIRED 0x4C    // Full Replenishment Required
+#define STATUS_CODE_ACTIVE_COUNTER_EXCEEDED 0x4D        // Active Counter Exceeded
+#define STATUS_CODE_TOO_LATE_TO_ACT 0x4E                // Too Late To Act
+#define STATUS_CODE_NOT_IN_FREE_TRADING 0x50            // Not In Free Trading
+#define STATUS_CODE_INVALID_AUCTION_INFORMATION 0x51    // Invalid Auction Information
+#define STATUS_CODE_MARKET_CLOSED 0x52                  // Market Closed
+#define STATUS_CODE_POST_ONLY_REPRICE 0x53              // Post Only Reprice
+#define STATUS_CODE_REQUEST_PENDING 0x54                // Request Pending
+#define STATUS_CODE_INVALID_FORMAT_BAD_BLOCK 0x59       // Invalid Format Bad Block
+#define STATUS_CODE_SYSTEM_ERROR 0x5A                   // System Error
+
+// Price Protection: one byte code
+#define PRICE_PROTECTION_LOCAL 0x4C     // Local
+#define PRICE_PROTECTION_NATIONAL 0x4E  // National
+
+// Permitted: one byte code
+#define PERMITTED_PERMITTED 0x59      // Permitted
+#define PERMITTED_NOT_PERMITTED 0x4E  // Not Permitted
+
+// Instrument Type: one byte code
+#define INSTRUMENT_TYPE_SIMPLE_INSTRUMENTS 0x53   // Simple Instruments
+#define INSTRUMENT_TYPE_COMPLEX_INSTRUMENTS 0x43  // Complex Instruments
+#define INSTRUMENT_TYPE_SIMPLE_INSTRUMENT 0x4F    // Simple Instrument
+
+// Event Code: one byte code
+#define EVENT_CODE_START_OF_MESSAGES 0x4F               // Start Of Messages
+#define EVENT_CODE_START_OF_SYSTEM_HOURS 0x53           // Start Of System Hours
+#define EVENT_CODE_START_OF_QUOTE 0x42                  // Start Of Quote
+#define EVENT_CODE_START_OF_OPENING_PROCESS 0x51        // Start Of Opening Process
+#define EVENT_CODE_END_OF_WCO_EARLY_CLOSING 0x57        // End Of Wco Early Closing
+#define EVENT_CODE_END_OF_NORMAL_HOURS_PROCESSING 0x4E  // End Of Normal Hours Processing
+#define EVENT_CODE_END_OF_LATE_HOURS_PROCESSING 0x4C    // End Of Late Hours Processing
+#define EVENT_CODE_END_OF_SYSTEM_HOURS 0x45             // End Of System Hours
+#define EVENT_CODE_END_OF_MESSAGES 0x43                 // End Of Messages
+
+// Option Type: one byte code
+#define OPTION_TYPE_CALL 0x43  // Call
+#define OPTION_TYPE_PUT 0x50   // Put
+
+// Closing Type: one byte code
+#define CLOSING_TYPE_NORMAL_HOURS 0x4E       // Normal Hours
+#define CLOSING_TYPE_LATE_HOURS 0x4C         // Late Hours
+#define CLOSING_TYPE_WCO_EARLY_CLOSING 0x57  // Wco Early Closing
+
+// Tradable: one byte code
+#define TRADABLE_TRADABLE 0x59      // Tradable
+#define TRADABLE_NOT_TRADABLE 0x4E  // Not Tradable
+
+// Mpv: one byte code
+#define MPV_PENNY_EVERYWHERE 0x45  // Penny Everywhere
+#define MPV_SCALED 0x53            // Scaled
+#define MPV_PENNY_PILOT 0x50       // Penny Pilot
+
+// Leg Side: one byte code
+#define LEG_SIDE_BUY 0x42   // Buy
+#define LEG_SIDE_SELL 0x53  // Sell
+
+// Trading State: one byte code
+#define TRADING_STATE_HALT_IN_EFFECT 0x48   // Halt In Effect
+#define TRADING_STATE_TRADING_RESUMED 0x54  // Trading Resumed
+
+// Liquidity Indicator: one byte code
+#define LIQUIDITY_INDICATOR_NONE 0x00                                    // None
+#define LIQUIDITY_INDICATOR_MAKER 0x01                                   // Maker
+#define LIQUIDITY_INDICATOR_TAKER 0x02                                   // Taker
+#define LIQUIDITY_INDICATOR_RESPONSE 0x04                                // Response
+#define LIQUIDITY_INDICATOR_HIDDEN 0x05                                  // Hidden
+#define LIQUIDITY_INDICATOR_OPENING_ROTATION 0x06                        // Opening Rotation
+#define LIQUIDITY_INDICATOR_CROSS 0x07                                   // Cross
+#define LIQUIDITY_INDICATOR_FLASHED_ORDER 0x08                           // Flashed Order
+#define LIQUIDITY_INDICATOR_FLASH_RESPONSE 0x09                          // Flash Response
+#define LIQUIDITY_INDICATOR_ROUTED_OUT 0x0A                              // Routed Out
+#define LIQUIDITY_INDICATOR_TRADE_REPORT 0x0B                            // Trade Report
+#define LIQUIDITY_INDICATOR_COMBO_MAKER_AGAINST_COMBO 0x0C               // Combo Maker Against Combo
+#define LIQUIDITY_INDICATOR_COMBO_TAKER_AGAINST_COMBO 0x0D               // Combo Taker Against Combo
+#define LIQUIDITY_INDICATOR_COMBO_RESPONSE_AGAINST_COMBO 0x0E            // Combo Response Against Combo
+#define LIQUIDITY_INDICATOR_COMBO_HIDDEN_AGAINST_COMBO 0x0F              // Combo Hidden Against Combo
+#define LIQUIDITY_INDICATOR_COMBO_OPENING_ROTATION 0x10                  // Combo Opening Rotation
+#define LIQUIDITY_INDICATOR_COMBO_CROSS 0x11                             // Combo Cross
+#define LIQUIDITY_INDICATOR_COMBO_TAKER_AGAINST_REGULAR 0x12             // Combo Taker Against Regular
+#define LIQUIDITY_INDICATOR_REGULAR_MAKER_AGAINST_COMBO 0x13             // Regular Maker Against Combo
+#define LIQUIDITY_INDICATOR_COMBO_TAKER_AGAINST_IO 0x14                  // Combo Taker Against Io
+#define LIQUIDITY_INDICATOR_REGULAR_INCL_PIM_TAKER_AGAINST_IO 0x15       // Regular Incl Pim Taker Against Io
+#define LIQUIDITY_INDICATOR_IO_MAKER_AGAINST_COMBO 0x16                  // Io Maker Against Combo
+#define LIQUIDITY_INDICATOR_IO_MAKER_AGAINST_REGULAR 0x17                // Io Maker Against Regular
+#define LIQUIDITY_INDICATOR_REGULAR_MAKER_AGAINST_IO_PARTICIPANT 0x18    // Regular Maker Against Io Participant
+#define LIQUIDITY_INDICATOR_IO_PARTICIPANT_TAKER_AGAINST_REGULAR 0x19    // Io Participant Taker Against Regular
+#define LIQUIDITY_INDICATOR_BROKEN_PRICE_IMPROVEMENT 0x1A                // Broken Price Improvement
+#define LIQUIDITY_INDICATOR_BROKEN_FACILITATION 0x1B                     // Broken Facilitation
+#define LIQUIDITY_INDICATOR_BROKEN_SOLICITATION 0x1C                     // Broken Solicitation
+#define LIQUIDITY_INDICATOR_COMBO_BROKEN_PRICE_IMPROVEMENT 0x1D          // Combo Broken Price Improvement
+#define LIQUIDITY_INDICATOR_COMBO_BROKEN_FACILITATION 0x1E               // Combo Broken Facilitation
+#define LIQUIDITY_INDICATOR_COMBO_BROKEN_SOLICITATION 0x1F               // Combo Broken Solicitation
+#define LIQUIDITY_INDICATOR_BLOCK 0x20                                   // Block
+#define LIQUIDITY_INDICATOR_BLOCK_RESPONSE 0x21                          // Block Response
+#define LIQUIDITY_INDICATOR_DIRECTED_RESPONSE 0x22                       // Directed Response
+#define LIQUIDITY_INDICATOR_FACILITATION 0x23                            // Facilitation
+#define LIQUIDITY_INDICATOR_FACILITATION_RESPONSE 0x24                   // Facilitation Response
+#define LIQUIDITY_INDICATOR_PRICE_IMPROVEMENT 0x25                       // Price Improvement
+#define LIQUIDITY_INDICATOR_PRICE_IMPROVEMENT_RESPONSE 0x26              // Price Improvement Response
+#define LIQUIDITY_INDICATOR_SOLICITATION 0x27                            // Solicitation
+#define LIQUIDITY_INDICATOR_SOLICITATION_RESPONSE 0x28                   // Solicitation Response
+#define LIQUIDITY_INDICATOR_QUALIFIED_CONTINGENT_CROSS 0x29              // Qualified Contingent Cross
+#define LIQUIDITY_INDICATOR_CUSTOMER_TO_CUSTOMER 0x2A                    // Customer To Customer
+#define LIQUIDITY_INDICATOR_COMBO_FACILITATION 0x2B                      // Combo Facilitation
+#define LIQUIDITY_INDICATOR_COMBO_FACILITATION_RESPONSE 0x2C             // Combo Facilitation Response
+#define LIQUIDITY_INDICATOR_COMBO_PRICE_IMPROVEMENT 0x2D                 // Combo Price Improvement
+#define LIQUIDITY_INDICATOR_COMBO_PRICE_IMPROVEMENT_RESPONSE 0x2E        // Combo Price Improvement Response
+#define LIQUIDITY_INDICATOR_COMBO_SOLICITATION 0x2F                      // Combo Solicitation
+#define LIQUIDITY_INDICATOR_COMBO_SOLICITATION_RESPONSE 0x30             // Combo Solicitation Response
+#define LIQUIDITY_INDICATOR_COMBO_QUALIFIED_CONTINGENT_CROSS 0x31        // Combo Qualified Contingent Cross
+#define LIQUIDITY_INDICATOR_COMBO_CUSTOMER_TO_CUSTOMER 0x32              // Combo Customer To Customer
+#define LIQUIDITY_INDICATOR_SWEEP_ROUTED_OUT 0x33                        // Sweep Routed Out
+#define LIQUIDITY_INDICATOR_SWEEP_TRADE_REPORT 0x34                      // Sweep Trade Report
+#define LIQUIDITY_INDICATOR_COMBO_TAKER_AGAINST_REGULAR_THRU_NBBO 0x35   // Combo Taker Against Regular Thru Nbbo
+#define LIQUIDITY_INDICATOR_COMBO_TAKER_AGAINST_IO_THRU_NBBO 0x36        // Combo Taker Against Io Thru Nbbo
+#define LIQUIDITY_INDICATOR_SIMPLE_EXPOSURE_ORDER_UPON_RECEIPT 0x37      // Simple Exposure Order Upon Receipt
+#define LIQUIDITY_INDICATOR_SIMPLE_EXPOSURE_ORDER_SUBSEQUENT 0x38        // Simple Exposure Order Subsequent
+#define LIQUIDITY_INDICATOR_SIMPLE_EXPOSURE_ORDER_RESPONDER 0x39         // Simple Exposure Order Responder
+#define LIQUIDITY_INDICATOR_FLEX_AUCTION 0x3A                            // Flex Auction
+#define LIQUIDITY_INDICATOR_FLEX_AUCTION_RESPONDER 0x3B                  // Flex Auction Responder
+#define LIQUIDITY_INDICATOR_FLEX_PRICE_IMPROVEMENT 0x3C                  // Flex Price Improvement
+#define LIQUIDITY_INDICATOR_FLEX_PRICE_IMPROVEMENT_RESPONDER 0x3D        // Flex Price Improvement Responder
+#define LIQUIDITY_INDICATOR_FLEX_BROKEN_PRICE_IMPROVEMENT 0x3E           // Flex Broken Price Improvement
+#define LIQUIDITY_INDICATOR_FLEX_SOLICITATION 0x3F                       // Flex Solicitation
+#define LIQUIDITY_INDICATOR_FLEX_SOLICITATION_RESPONDER 0x40             // Flex Solicitation Responder
+#define LIQUIDITY_INDICATOR_FLEX_BROKEN_SOLICITATION 0x41                // Flex Broken Solicitation
+#define LIQUIDITY_INDICATOR_COMBO_FLEX_AUCTION 0x42                      // Combo Flex Auction
+#define LIQUIDITY_INDICATOR_COMBO_FLEX_AUCTION_RESPONDER 0x43            // Combo Flex Auction Responder
+#define LIQUIDITY_INDICATOR_COMBO_FLEX_PRICE_IMPROVEMENT 0x44            // Combo Flex Price Improvement
+#define LIQUIDITY_INDICATOR_COMBO_FLEX_PRICE_IMPROVEMENT_RESPONDER 0x45  // Combo Flex Price Improvement Responder
+#define LIQUIDITY_INDICATOR_COMBO_FLEX_BROKEN_PRICE_IMPROVEMENT 0x46     // Combo Flex Broken Price Improvement
+#define LIQUIDITY_INDICATOR_COMBO_FLEX_SOLICITATION 0x47                 // Combo Flex Solicitation
+#define LIQUIDITY_INDICATOR_COMBO_FLEX_SOLICITATION_RESPONDER 0x48       // Combo Flex Solicitation Responder
+#define LIQUIDITY_INDICATOR_COMBO_FLEX_BROKEN_SOLICITATION 0x49          // Combo Flex Broken Solicitation
+
+// Notification Type: one byte code
+#define NOTIFICATION_TYPE_EXECUTED 0x45   // Executed
+#define NOTIFICATION_TYPE_CANCELLED 0x43  // Cancelled
+
+// Server Unsequenced Message Type: 2 byte code
+#define SERVER_UNSEQUENCED_MESSAGE_TYPE_NOTIFICATION_SUBSCRIPTION_REPLY_MESSAGE 0x4162                     // Notification Subscription Reply Message
+#define SERVER_UNSEQUENCED_MESSAGE_TYPE_ADD_COMPLEX_INSTRUMENT_REPLY_MESSAGE 0x4163                        // Add Complex Instrument Reply Message
+#define SERVER_UNSEQUENCED_MESSAGE_TYPE_MM_PARAMETER_DEFINITION_REPLY_MESSAGE 0x4165                       // Mm Parameter Definition Reply Message
+#define SERVER_UNSEQUENCED_MESSAGE_TYPE_ACTIVE_QP_SELF_REPLENISHMENT_SET_LIMIT_REPLY_MESSAGE 0x4167        // Active Qp Self Replenishment Set Limit Reply Message
+#define SERVER_UNSEQUENCED_MESSAGE_TYPE_RAPID_FIRE_CONFIG_REPLY_MESSAGE 0x4141                             // Rapid Fire Config Reply Message
+#define SERVER_UNSEQUENCED_MESSAGE_TYPE_QUOTE_BLOCK_REPLY_MESSAGE 0x5153                                   // Quote Block Reply Message
+#define SERVER_UNSEQUENCED_MESSAGE_TYPE_DETAILED_QUOTE_BLOCK_REPLY_MESSAGE 0x5173                          // Detailed Quote Block Reply Message
+#define SERVER_UNSEQUENCED_MESSAGE_TYPE_UNDERLYING_PURGE_REPLY_MESSAGE 0x5072                              // Underlying Purge Reply Message
+#define SERVER_UNSEQUENCED_MESSAGE_TYPE_MARKET_REENTRY_REPLY_MESSAGE 0x5252                                // Market Reentry Reply Message
+#define SERVER_UNSEQUENCED_MESSAGE_TYPE_ACTIVE_QP_SELF_REPLENISHMENT_REQUEST_REENTRY_REPLY_MESSAGE 0x5267  // Active Qp Self Replenishment Request Reentry Reply Message
+#define SERVER_UNSEQUENCED_MESSAGE_TYPE_AUCTION_NOTIFICATION_MESSAGE 0x4E41                                // Auction Notification Message
+#define SERVER_UNSEQUENCED_MESSAGE_TYPE_INSTRUMENT_PURGE_NOTIFICATION_MESSAGE 0x4E44                       // Instrument Purge Notification Message
+#define SERVER_UNSEQUENCED_MESSAGE_TYPE_UNDERLYING_PURGE_NOTIFICATION_MESSAGE 0x4E55                       // Underlying Purge Notification Message
+#define SERVER_UNSEQUENCED_MESSAGE_TYPE_MARKET_REENTRY_NOTIFICATION_MESSAGE 0x4E52                         // Market Reentry Notification Message
+
+// Block Status Code: one byte code
+#define BLOCK_STATUS_CODE_VALID_REQUEST 0x20                  // Valid Request
+#define BLOCK_STATUS_CODE_INVALID_BADGE 0x41                  // Invalid Badge
+#define BLOCK_STATUS_CODE_INVALID_INSTRUMENT_UNDERLYING 0x42  // Invalid Instrument Underlying
+#define BLOCK_STATUS_CODE_NOT_PERMITTED 0x43                  // Not Permitted
+#define BLOCK_STATUS_CODE_INVALID_SIDE 0x44                   // Invalid Side
+#define BLOCK_STATUS_CODE_INVALID_SIZE 0x45                   // Invalid Size
+#define BLOCK_STATUS_CODE_INVALID_PRICE 0x46                  // Invalid Price
+#define BLOCK_STATUS_CODE_INVALID_SPREAD 0x47                 // Invalid Spread
+#define BLOCK_STATUS_CODE_INVALID_INDICATOR_ATTRIBUTE 0x48    // Invalid Indicator Attribute
+#define BLOCK_STATUS_CODE_REENTRY_REQUIRED 0x49               // Reentry Required
+#define BLOCK_STATUS_CODE_OPENING_ROTATION_IN_PROGRESS 0x4A   // Opening Rotation In Progress
+#define BLOCK_STATUS_CODE_KILL_SWITCH_REENTRY_REQUIRED 0x4B   // Kill Switch Reentry Required
+#define BLOCK_STATUS_CODE_FULL_REPLENISHMENT_REQUIRED 0x4C    // Full Replenishment Required
+#define BLOCK_STATUS_CODE_ACTIVE_COUNTER_EXCEEDED 0x4D        // Active Counter Exceeded
+#define BLOCK_STATUS_CODE_TOO_LATE_TO_ACT 0x4E                // Too Late To Act
+#define BLOCK_STATUS_CODE_NOT_IN_FREE_TRADING 0x50            // Not In Free Trading
+#define BLOCK_STATUS_CODE_INVALID_AUCTION_INFORMATION 0x51    // Invalid Auction Information
+#define BLOCK_STATUS_CODE_MARKET_CLOSED 0x52                  // Market Closed
+#define BLOCK_STATUS_CODE_POST_ONLY_REPRICE 0x53              // Post Only Reprice
+#define BLOCK_STATUS_CODE_REQUEST_PENDING 0x54                // Request Pending
+#define BLOCK_STATUS_CODE_INVALID_FORMAT_BAD_BLOCK 0x59       // Invalid Format Bad Block
+#define BLOCK_STATUS_CODE_SYSTEM_ERROR 0x5A                   // System Error
+
+// Quote Status Code: one byte code
+#define QUOTE_STATUS_CODE_VALID_REQUEST 0x20                  // Valid Request
+#define QUOTE_STATUS_CODE_INVALID_BADGE 0x41                  // Invalid Badge
+#define QUOTE_STATUS_CODE_INVALID_INSTRUMENT_UNDERLYING 0x42  // Invalid Instrument Underlying
+#define QUOTE_STATUS_CODE_NOT_PERMITTED 0x43                  // Not Permitted
+#define QUOTE_STATUS_CODE_INVALID_SIDE 0x44                   // Invalid Side
+#define QUOTE_STATUS_CODE_INVALID_SIZE 0x45                   // Invalid Size
+#define QUOTE_STATUS_CODE_INVALID_PRICE 0x46                  // Invalid Price
+#define QUOTE_STATUS_CODE_INVALID_SPREAD 0x47                 // Invalid Spread
+#define QUOTE_STATUS_CODE_INVALID_INDICATOR_ATTRIBUTE 0x48    // Invalid Indicator Attribute
+#define QUOTE_STATUS_CODE_REENTRY_REQUIRED 0x49               // Reentry Required
+#define QUOTE_STATUS_CODE_OPENING_ROTATION_IN_PROGRESS 0x4A   // Opening Rotation In Progress
+#define QUOTE_STATUS_CODE_KILL_SWITCH_REENTRY_REQUIRED 0x4B   // Kill Switch Reentry Required
+#define QUOTE_STATUS_CODE_FULL_REPLENISHMENT_REQUIRED 0x4C    // Full Replenishment Required
+#define QUOTE_STATUS_CODE_ACTIVE_COUNTER_EXCEEDED 0x4D        // Active Counter Exceeded
+#define QUOTE_STATUS_CODE_TOO_LATE_TO_ACT 0x4E                // Too Late To Act
+#define QUOTE_STATUS_CODE_NOT_IN_FREE_TRADING 0x50            // Not In Free Trading
+#define QUOTE_STATUS_CODE_INVALID_AUCTION_INFORMATION 0x51    // Invalid Auction Information
+#define QUOTE_STATUS_CODE_MARKET_CLOSED 0x52                  // Market Closed
+#define QUOTE_STATUS_CODE_POST_ONLY_REPRICE 0x53              // Post Only Reprice
+#define QUOTE_STATUS_CODE_REQUEST_PENDING 0x54                // Request Pending
+#define QUOTE_STATUS_CODE_INVALID_FORMAT_BAD_BLOCK 0x59       // Invalid Format Bad Block
+#define QUOTE_STATUS_CODE_SYSTEM_ERROR 0x5A                   // System Error
+
+// Order Type: one byte code
+#define ORDER_TYPE_LIMIT 0x4C          // Limit
+#define ORDER_TYPE_MARKET 0x4D         // Market
+#define ORDER_TYPE_NOT_DISCLOSED 0x4E  // Not Disclosed
+
+// Exec Flag: one byte code
+#define EXEC_FLAG_NONE 0x30  // None
+#define EXEC_FLAG_AON 0x31   // Aon
+
+// Order Capacity: one byte code
+#define ORDER_CAPACITY_CUSTOMER 0x43                                // Customer
+#define ORDER_CAPACITY_FIRM 0x46                                    // Firm
+#define ORDER_CAPACITY_MARKET_MAKER 0x4D                            // Market Maker
+#define ORDER_CAPACITY_OTHER_EXCHANGE_REGISTERED_MARKET_MAKER 0x4F  // Other Exchange Registered Market Maker
+#define ORDER_CAPACITY_PROFESSIONAL_CUSTOMER 0x50                   // Professional Customer
+#define ORDER_CAPACITY_BROKER_DEALER_CUSTOMER 0x42                  // Broker Dealer Customer
+#define ORDER_CAPACITY_JOINT_BACK_OFFICE 0x4A                       // Joint Back Office
+#define ORDER_CAPACITY_NOT_APPLICABLE 0x20                          // Not Applicable
+
+// Auction Event: one byte code
+#define AUCTION_EVENT_START 0x53           // Start
+#define AUCTION_EVENT_AUCTION_UPDATE 0x55  // Auction Update
+#define AUCTION_EVENT_END_OF_AUCTION 0x45  // End Of Auction
+
+// Auction Type: one byte code
+#define AUCTION_TYPE_BLOCK_ORDER_AUCTION 0x42     // Block Order Auction
+#define AUCTION_TYPE_COMBO_EXPOSURE_AUCTION 0x43  // Combo Exposure Auction
+#define AUCTION_TYPE_ORDER_EXPOSURE 0x49          // Order Exposure
+#define AUCTION_TYPE_OPENING_AUCTION 0x4F         // Opening Auction
+#define AUCTION_TYPE_PIM_AUCTION 0x50             // Pim Auction
+#define AUCTION_TYPE_FACILITATION_AUCTION 0x48    // Facilitation Auction
+#define AUCTION_TYPE_SOLICITATION_AUCTION 0x53    // Solicitation Auction
+
+// Purge Reason: one byte code
+#define PURGE_REASON_USER_REQUESTED_SIMPLE 0x55     // User Requested Simple
+#define PURGE_REASON_SYSTEM_INITIATED 0x53          // System Initiated
+#define PURGE_REASON_AUTO_KILLSWITCH 0x4B           // Auto Killswitch
+#define PURGE_REASON_MANUAL_KILLSWITCH 0x4D         // Manual Killswitch
+#define PURGE_REASON_PURGE_ON_DISCONNECT 0x50       // Purge On Disconnect
+#define PURGE_REASON_USER_REQUESTED_COMPLEX 0x75    // User Requested Complex
+#define PURGE_REASON_SYSTEM_INITIATED_COMPLEX 0x73  // System Initiated Complex
+#define PURGE_REASON_ANTI_INTERNALIZE 0x51          // Anti Internalize
+
+// Reentry Scope: one byte code
+#define REENTRY_SCOPE_USER_REQUESTED_SIMPLE 0x4E   // User Requested Simple
+#define REENTRY_SCOPE_USER_REQUESTED_COMPLEX 0x6E  // User Requested Complex
+#define REENTRY_SCOPE_POST_KILLSWITCH 0x4B         // Post Killswitch
+
+// ---- Types -------------------------------------------------------------------
+
+// Debug packets are intended to provide human readable text that may aid in debugging problems
+typedef struct _DebugPacket (UINT16 packet_length) where (packet_length >= 1) {
+  UINT8 debug_text[(((UINT32) packet_length) - 1)];
+} DebugPacket;
 
 // The SoupBinTCP server sends a Login Accepted Packet in response to receiving a valid Login Request from the client
-entrypoint typedef struct _LoginAcceptedPacket {
+typedef struct _LoginAcceptedPacket {
   UINT8 accepted_session[10];          // bytes 0 to 9
   UINT8 accepted_sequence_number[20];  // bytes 10 to 29
 } LoginAcceptedPacket;
 
-// ---- Login Rejected Packet: 1 byte -------------------------------------------
-
 // The SoupBinTCP server sends this packet in response to an invalid Login Request Packet from the client
-entrypoint typedef struct _LoginRejectedPacket {
+typedef struct _LoginRejectedPacket {
   UINT8 reject_reason_code;  // byte 0
 } LoginRejectedPacket;
 
-// ---- Msar Accept Message: 30 bytes -------------------------------------------
-
 // The MSAR Request was accepted by the matching engine. Sequenced.
-entrypoint typedef struct _MsarAcceptMessage {
+typedef struct _MsarAcceptMessage {
   UINT8 badge[4];          // bytes 0 to 3
   UINT64BE message_id;     // bytes 4 to 11
   UINT32BE instrument_id;  // bytes 12 to 15
@@ -54,19 +387,15 @@ entrypoint typedef struct _MsarAcceptMessage {
   UINT32BE contracts;      // bytes 26 to 29
 } MsarAcceptMessage;
 
-// ---- Msar Reject Message: 13 bytes -------------------------------------------
-
 // The MSAR Request is invalid and therefore rejected. Sequenced.
-entrypoint typedef struct _MsarRejectMessage {
+typedef struct _MsarRejectMessage {
   UINT8 badge[4];       // bytes 0 to 3
   UINT64BE message_id;  // bytes 4 to 11
   UINT8 status_code;    // byte 12
 } MsarRejectMessage;
 
-// ---- Complex Msar Accept Message: 35 bytes -----------------------------------
-
 // The Complex MSAR Request was accepted by the matching engine. Sequenced.
-entrypoint typedef struct _ComplexMsarAcceptMessage {
+typedef struct _ComplexMsarAcceptMessage {
   UINT8 badge[4];          // bytes 0 to 3
   UINT64BE message_id;     // bytes 4 to 11
   UINT32BE instrument_id;  // bytes 12 to 15
@@ -79,19 +408,15 @@ entrypoint typedef struct _ComplexMsarAcceptMessage {
   UINT8 reserved_4[4];     // bytes 31 to 34
 } ComplexMsarAcceptMessage;
 
-// ---- Complex Msar Reject Message: 13 bytes -----------------------------------
-
 // The Complex MSAR Request is invalid and therefore rejected. Sequenced.
-entrypoint typedef struct _ComplexMsarRejectMessage {
+typedef struct _ComplexMsarRejectMessage {
   UINT8 badge[4];       // bytes 0 to 3
   UINT64BE message_id;  // bytes 4 to 11
   UINT8 status_code;    // byte 12
 } ComplexMsarRejectMessage;
 
-// ---- Underlying Permission Notification Message: 26 bytes --------------------
-
 // Sent once per badge/underlying pair, typically right after the instrument directory messages, and intra-day when permissions change. Sequenced.
-entrypoint typedef struct _UnderlyingPermissionNotificationMessage {
+typedef struct _UnderlyingPermissionNotificationMessage {
   UINT32BE seconds;      // bytes 0 to 3
   UINT32BE nanoseconds;  // bytes 4 to 7
   UINT8 badge[4];        // bytes 8 to 11
@@ -99,10 +424,8 @@ entrypoint typedef struct _UnderlyingPermissionNotificationMessage {
   UINT8 permitted;       // byte 25
 } UnderlyingPermissionNotificationMessage;
 
-// ---- Mm Parameter Definition Notification Message: 74 bytes ------------------
-
 // Optionally delivered participant per-underlying/instrument type configuration settings. Sequenced.
-entrypoint typedef struct _MmParameterDefinitionNotificationMessage {
+typedef struct _MmParameterDefinitionNotificationMessage {
   UINT32BE seconds;       // bytes 0 to 3
   UINT32BE nanoseconds;   // bytes 4 to 7
   UINT8 badge[4];         // bytes 8 to 11
@@ -116,10 +439,8 @@ entrypoint typedef struct _MmParameterDefinitionNotificationMessage {
   UINT8 reserved_32[32];  // bytes 42 to 73
 } MmParameterDefinitionNotificationMessage;
 
-// ---- Rapid Fire Config Notification Message: 33 bytes ------------------------
-
 // Rapid Fire/Curtailment Config Notification, Phlx, NOM and NTX only (replaced by MM Parameter Definition Notification for ISE, GEMX and MRX). Sequenced.
-entrypoint typedef struct _RapidFireConfigNotificationMessage {
+typedef struct _RapidFireConfigNotificationMessage {
   UINT32BE seconds;      // bytes 0 to 3
   UINT32BE nanoseconds;  // bytes 4 to 7
   UINT8 badge[4];        // bytes 8 to 11
@@ -129,10 +450,8 @@ entrypoint typedef struct _RapidFireConfigNotificationMessage {
   UINT32BE volume;       // bytes 29 to 32
 } RapidFireConfigNotificationMessage;
 
-// ---- Active Qp Self Replenishment Parameter Definition Notification Message: 61 bytes ----
-
 // Optionally delivered contract limit on the badges configured for ActiveQP. Sequenced.
-entrypoint typedef struct _ActiveQpSelfReplenishmentParameterDefinitionNotificationMessage {
+typedef struct _ActiveQpSelfReplenishmentParameterDefinitionNotificationMessage {
   UINT32BE seconds;             // bytes 0 to 3
   UINT32BE nanoseconds;         // bytes 4 to 7
   UINT8 badge[4];               // bytes 8 to 11
@@ -141,10 +460,8 @@ entrypoint typedef struct _ActiveQpSelfReplenishmentParameterDefinitionNotificat
   UINT8 reserved_32[32];        // bytes 29 to 60
 } ActiveQpSelfReplenishmentParameterDefinitionNotificationMessage;
 
-// ---- System Event Message: 11 bytes ------------------------------------------
-
 // Signals a market or data feed handler event. Sequenced.
-entrypoint typedef struct _SystemEventMessage {
+typedef struct _SystemEventMessage {
   UINT32BE seconds;      // bytes 0 to 3
   UINT32BE nanoseconds;  // bytes 4 to 7
   UINT8 event_code;      // byte 8
@@ -152,10 +469,8 @@ entrypoint typedef struct _SystemEventMessage {
   UINT8 sub_version;     // byte 10
 } SystemEventMessage;
 
-// ---- Simple Instrument Directory Message: 59 bytes ---------------------------
-
 // Disseminated at the start of each trading day for all symbols trading on the system, and intra-day when attributes change. Sequenced.
-entrypoint typedef struct _SimpleInstrumentDirectoryMessage {
+typedef struct _SimpleInstrumentDirectoryMessage {
   UINT32BE seconds;             // bytes 0 to 3
   UINT32BE nanoseconds;         // bytes 4 to 7
   UINT32BE instrument_id;       // bytes 8 to 11
@@ -170,30 +485,42 @@ entrypoint typedef struct _SimpleInstrumentDirectoryMessage {
   UINT8 reserved_16[16];        // bytes 43 to 58
 } SimpleInstrumentDirectoryMessage;
 
-// ---- Simple Instrument Trading Action Message: 13 bytes ----------------------
+// Leg Definitions, Repeated Number Of Legs times
+typedef struct _ComplexLegs {
+  UINT32BE leg_instrument_id;  // bytes 0 to 3
+  UINT8 leg_side;              // byte 4
+  UINT32BE leg_ratio;          // bytes 5 to 8
+} ComplexLegs;
+
+// Sent when a new complex strategy is created for the first time. Sequenced.
+typedef struct _ComplexInstrumentDirectoryMessage {
+  UINT32BE seconds;                                                      // bytes 0 to 3
+  UINT32BE nanoseconds;                                                  // bytes 4 to 7
+  UINT32BE instrument_id;                                                // bytes 8 to 11
+  UINT8 underlying_symbol[13];                                           // bytes 12 to 24
+  UINT8 reserved_1;                                                      // byte 25
+  UINT8 number_of_legs;                                                  // byte 26
+  ComplexLegs complex_legs[:byte-size (((UINT32) number_of_legs) * 9)];
+} ComplexInstrumentDirectoryMessage;
 
 // Relays changes in trading status for a simple instrument. Sequenced.
-entrypoint typedef struct _SimpleInstrumentTradingActionMessage {
+typedef struct _SimpleInstrumentTradingActionMessage {
   UINT32BE seconds;        // bytes 0 to 3
   UINT32BE nanoseconds;    // bytes 4 to 7
   UINT32BE instrument_id;  // bytes 8 to 11
   UINT8 trading_state;     // byte 12
 } SimpleInstrumentTradingActionMessage;
 
-// ---- Complex Instrument Trading Action Message: 13 bytes ---------------------
-
 // Relays changes in trading status for a complex strategy. Sequenced.
-entrypoint typedef struct _ComplexInstrumentTradingActionMessage {
+typedef struct _ComplexInstrumentTradingActionMessage {
   UINT32BE seconds;        // bytes 0 to 3
   UINT32BE nanoseconds;    // bytes 4 to 7
   UINT32BE instrument_id;  // bytes 8 to 11
   UINT8 trading_state;     // byte 12
 } ComplexInstrumentTradingActionMessage;
 
-// ---- Simple Quote Execution Notification Message: 46 bytes -------------------
-
 // Informs the firm that its quote for a given simple instrument has been executed. Only sent if subscribed. Sequenced.
-entrypoint typedef struct _SimpleQuoteExecutionNotificationMessage {
+typedef struct _SimpleQuoteExecutionNotificationMessage {
   UINT32BE seconds;           // bytes 0 to 3
   UINT32BE nanoseconds;       // bytes 4 to 7
   UINT8 badge[4];             // bytes 8 to 11
@@ -208,10 +535,8 @@ entrypoint typedef struct _SimpleQuoteExecutionNotificationMessage {
   UINT32BE match_id;          // bytes 42 to 45
 } SimpleQuoteExecutionNotificationMessage;
 
-// ---- Complex Quote Execution Notification Message: 50 bytes ------------------
-
 // Informs the participant that its quote for a given complex instrument has been executed. Sequenced.
-entrypoint typedef struct _ComplexQuoteExecutionNotificationMessage {
+typedef struct _ComplexQuoteExecutionNotificationMessage {
   UINT32BE seconds;           // bytes 0 to 3
   UINT32BE nanoseconds;       // bytes 4 to 7
   UINT8 badge[4];             // bytes 8 to 11
@@ -226,10 +551,8 @@ entrypoint typedef struct _ComplexQuoteExecutionNotificationMessage {
   UINT32BE match_id;          // bytes 46 to 49
 } ComplexQuoteExecutionNotificationMessage;
 
-// ---- Complex Quote Leg Execution Notification Message: 55 bytes --------------
-
 // Leg level execution of a quote in a complex instrument. Sequenced.
-entrypoint typedef struct _ComplexQuoteLegExecutionNotificationMessage {
+typedef struct _ComplexQuoteLegExecutionNotificationMessage {
   UINT32BE seconds;            // bytes 0 to 3
   UINT32BE nanoseconds;        // bytes 4 to 7
   UINT8 badge[4];              // bytes 8 to 11
@@ -246,10 +569,8 @@ entrypoint typedef struct _ComplexQuoteLegExecutionNotificationMessage {
   UINT32BE match_id;           // bytes 51 to 54
 } ComplexQuoteLegExecutionNotificationMessage;
 
-// ---- Simple Msar Notification Message: 47 bytes ------------------------------
-
 // Execution Notification Message: the MSAR Request for a given simple instrument has been executed or cancelled. The Side field reflects the side being swept. Sequenced.
-entrypoint typedef struct _SimpleMsarNotificationMessage {
+typedef struct _SimpleMsarNotificationMessage {
   UINT32BE seconds;           // bytes 0 to 3
   UINT32BE nanoseconds;       // bytes 4 to 7
   UINT8 badge[4];             // bytes 8 to 11
@@ -265,10 +586,8 @@ entrypoint typedef struct _SimpleMsarNotificationMessage {
   UINT32BE match_id;          // bytes 43 to 46
 } SimpleMsarNotificationMessage;
 
-// ---- Complex Msar Leg Notification Message: 61 bytes -------------------------
-
 // Leg-level information on the execution/out of an MSAR for a complex instrument. Precedes the corresponding Complex MSAR Notification. Sequenced.
-entrypoint typedef struct _ComplexMsarLegNotificationMessage {
+typedef struct _ComplexMsarLegNotificationMessage {
   UINT32BE seconds;            // bytes 0 to 3
   UINT32BE nanoseconds;        // bytes 4 to 7
   UINT8 badge[4];              // bytes 8 to 11
@@ -288,10 +607,8 @@ entrypoint typedef struct _ComplexMsarLegNotificationMessage {
   UINT64BE price_6;            // bytes 53 to 60, signed, read here as unsigned
 } ComplexMsarLegNotificationMessage;
 
-// ---- Complex Msar Notification Message: 55 bytes -----------------------------
-
 // Complex MSAR Execution Notification: the Complex MSAR Request has been executed or cancelled. Sequenced.
-entrypoint typedef struct _ComplexMsarNotificationMessage {
+typedef struct _ComplexMsarNotificationMessage {
   UINT32BE seconds;           // bytes 0 to 3
   UINT32BE nanoseconds;       // bytes 4 to 7
   UINT8 badge[4];             // bytes 8 to 11
@@ -308,47 +625,70 @@ entrypoint typedef struct _ComplexMsarNotificationMessage {
   UINT64BE price_6;           // bytes 47 to 54, signed, read here as unsigned
 } ComplexMsarNotificationMessage;
 
-// ---- Opening Rotation Quote Spread Multiplier Notification Message: 22 bytes ----
-
 // Quote Spread Multiplier Message: sent once per underlying permitted on the port and whenever the effective multiplier changes intraday. Sequenced.
-entrypoint typedef struct _OpeningRotationQuoteSpreadMultiplierNotificationMessage {
+typedef struct _OpeningRotationQuoteSpreadMultiplierNotificationMessage {
   UINT32BE seconds;             // bytes 0 to 3
   UINT32BE nanoseconds;         // bytes 4 to 7
   UINT8 underlying_symbol[13];  // bytes 8 to 20
   UINT8 multiplier;             // byte 21
 } OpeningRotationQuoteSpreadMultiplierNotificationMessage;
 
-// ---- Notification Subscription Reply Message: 13 bytes -----------------------
+// The sequenced (server to client) message carried by the packet, opaque bytes unless an application source dispatches it
+casetype _SequencedMessage (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x5341: MsarAcceptMessage msar_accept_message;
+    case 0x5352: MsarRejectMessage msar_reject_message;
+    case 0x5359: ComplexMsarAcceptMessage complex_msar_accept_message;
+    case 0x534E: ComplexMsarRejectMessage complex_msar_reject_message;
+    case 0x4150: UnderlyingPermissionNotificationMessage underlying_permission_notification_message;
+    case 0x414A: MmParameterDefinitionNotificationMessage mm_parameter_definition_notification_message;
+    case 0x4166: RapidFireConfigNotificationMessage rapid_fire_config_notification_message;
+    case 0x414B: ActiveQpSelfReplenishmentParameterDefinitionNotificationMessage active_qp_self_replenishment_parameter_definition_notification_message;
+    case 0x4153: SystemEventMessage system_event_message;
+    case 0x4144: SimpleInstrumentDirectoryMessage simple_instrument_directory_message;
+    case 0x4152: ComplexInstrumentDirectoryMessage complex_instrument_directory_message;
+    case 0x4148: SimpleInstrumentTradingActionMessage simple_instrument_trading_action_message;
+    case 0x4149: ComplexInstrumentTradingActionMessage complex_instrument_trading_action_message;
+    case 0x4E45: SimpleQuoteExecutionNotificationMessage simple_quote_execution_notification_message;
+    case 0x4E56: ComplexQuoteExecutionNotificationMessage complex_quote_execution_notification_message;
+    case 0x4E57: ComplexQuoteLegExecutionNotificationMessage complex_quote_leg_execution_notification_message;
+    case 0x4E53: SimpleMsarNotificationMessage simple_msar_notification_message;
+    case 0x4E4C: ComplexMsarLegNotificationMessage complex_msar_leg_notification_message;
+    case 0x4E58: ComplexMsarNotificationMessage complex_msar_notification_message;
+    case 0x414D: OpeningRotationQuoteSpreadMultiplierNotificationMessage opening_rotation_quote_spread_multiplier_notification_message;
+    default: UINT8 unknown[available];
+  }
+} SequencedMessage;
+
+// The Sequenced Data Packets act as an envelope to carry the actual sequenced data messages that are transferred from the server to the client. Each Sequenced Data Packet carries one message from the higher-lever protocol
+typedef struct _SequencedDataPacket (UINT16 packet_length) where (packet_length >= 3) {
+  UINT16BE sequenced_message_type;                                                                                                                             // bytes 0 to 1
+  SequencedMessage(sequenced_message_type, (((UINT32) packet_length) - 3)) sequenced_message[:byte-size-single-element-array (((UINT32) packet_length) - 3)];
+} SequencedDataPacket;
 
 // Reply to a Notification Subscription Request. Unsequenced.
-entrypoint typedef struct _NotificationSubscriptionReplyMessage {
+typedef struct _NotificationSubscriptionReplyMessage {
   UINT8 badge[4];       // bytes 0 to 3
   UINT64BE message_id;  // bytes 4 to 11
   UINT8 status_code;    // byte 12
 } NotificationSubscriptionReplyMessage;
 
-// ---- Add Complex Instrument Reply Message: 13 bytes --------------------------
-
 // Response to the Add Complex Instrument Request (AC) indicating the validity of the request. Unsequenced.
-entrypoint typedef struct _AddComplexInstrumentReplyMessage {
+typedef struct _AddComplexInstrumentReplyMessage {
   UINT8 badge[4];       // bytes 0 to 3
   UINT64BE message_id;  // bytes 4 to 11
   UINT8 status_code;    // byte 12
 } AddComplexInstrumentReplyMessage;
 
-// ---- Mm Parameter Definition Reply Message: 13 bytes -------------------------
-
 // Response to the MM Parameter Definition Request (AE) indicating the validity of the request. Unsequenced.
-entrypoint typedef struct _MmParameterDefinitionReplyMessage {
+typedef struct _MmParameterDefinitionReplyMessage {
   UINT8 badge[4];       // bytes 0 to 3
   UINT64BE message_id;  // bytes 4 to 11
   UINT8 status_code;    // byte 12
 } MmParameterDefinitionReplyMessage;
 
-// ---- Active Qp Self Replenishment Set Limit Reply Message: 30 bytes ----------
-
 // Acknowledgement message for Set Limit Message. Unsequenced.
-entrypoint typedef struct _ActiveQpSelfReplenishmentSetLimitReplyMessage {
+typedef struct _ActiveQpSelfReplenishmentSetLimitReplyMessage {
   UINT8 badge[4];               // bytes 0 to 3
   UINT64BE message_id;          // bytes 4 to 11
   UINT8 underlying_symbol[13];  // bytes 12 to 24
@@ -356,18 +696,50 @@ entrypoint typedef struct _ActiveQpSelfReplenishmentSetLimitReplyMessage {
   UINT8 status_code;            // byte 29
 } ActiveQpSelfReplenishmentSetLimitReplyMessage;
 
-// ---- Rapid Fire Config Reply Message: 5 bytes --------------------------------
-
 // Rapid-Fire Config Reply Message. Unsequenced.
-entrypoint typedef struct _RapidFireConfigReplyMessage {
+typedef struct _RapidFireConfigReplyMessage {
   UINT8 badge[4];     // bytes 0 to 3
   UINT8 status_code;  // byte 4
 } RapidFireConfigReplyMessage;
 
-// ---- Underlying Purge Reply Message: 29 bytes --------------------------------
+// 1-200 quote responses of a Quote Block Reply, one per quote of the submitted block
+typedef struct _QuoteResponses {
+  UINT8 quote_status_code;  // byte 0
+  UINT64BE sequence;        // bytes 1 to 8
+} QuoteResponses;
+
+// Quote Block Reply Message including SentTimestamp. Response to QA, QM and QD. Unsequenced.
+typedef struct _QuoteBlockReplyMessage {
+  UINT8 badge[4];                                                                 // bytes 0 to 3
+  UINT64BE message_id;                                                            // bytes 4 to 11
+  UINT64BE sent_timestamp;                                                        // bytes 12 to 19
+  UINT8 block_status_code;                                                        // byte 20
+  UINT16BE quote_count;                                                           // bytes 21 to 22
+  UINT16BE valid_quote_count;                                                     // bytes 23 to 24
+  QuoteResponses quote_responses[:byte-size (((UINT32) valid_quote_count) * 9)];
+} QuoteBlockReplyMessage;
+
+// 1-200 quote responses of a Detailed Quote Block Reply, one per quote of the submitted block
+typedef struct _DetailedQuoteResponses {
+  UINT8 quote_status_code;  // byte 0
+  UINT64BE sequence;        // bytes 1 to 8
+  UINT64BE bid_sequence;    // bytes 9 to 16
+  UINT64BE ask_sequence;    // bytes 17 to 24
+} DetailedQuoteResponses;
+
+// Detailed Quote Reply Message including SentTimestamp. Response to Qa, Qm and Qd; adds individual Bid/Ask sequence numbers. Unsequenced.
+typedef struct _DetailedQuoteBlockReplyMessage {
+  UINT8 badge[4];                                                                                   // bytes 0 to 3
+  UINT64BE message_id;                                                                              // bytes 4 to 11
+  UINT64BE sent_timestamp;                                                                          // bytes 12 to 19
+  UINT8 block_status_code;                                                                          // byte 20
+  UINT16BE quote_count;                                                                             // bytes 21 to 22
+  UINT16BE valid_quote_count;                                                                       // bytes 23 to 24
+  DetailedQuoteResponses detailed_quote_responses[:byte-size (((UINT32) valid_quote_count) * 25)];
+} DetailedQuoteBlockReplyMessage;
 
 // Underlying Purge Reply Message including SentTimestamp. Unsequenced.
-entrypoint typedef struct _UnderlyingPurgeReplyMessage {
+typedef struct _UnderlyingPurgeReplyMessage {
   UINT8 badge[4];           // bytes 0 to 3
   UINT64BE message_id;      // bytes 4 to 11
   UINT64BE sent_timestamp;  // bytes 12 to 19
@@ -375,20 +747,16 @@ entrypoint typedef struct _UnderlyingPurgeReplyMessage {
   UINT64BE sequence;        // bytes 21 to 28
 } UnderlyingPurgeReplyMessage;
 
-// ---- Market Reentry Reply Message: 21 bytes ----------------------------------
-
 // Market Reentry Reply Message. Unsequenced.
-entrypoint typedef struct _MarketReentryReplyMessage {
+typedef struct _MarketReentryReplyMessage {
   UINT8 badge[4];       // bytes 0 to 3
   UINT64BE message_id;  // bytes 4 to 11
   UINT8 status_code;    // byte 12
   UINT8 reserved_8[8];  // bytes 13 to 20
 } MarketReentryReplyMessage;
 
-// ---- Active Qp Self Replenishment Request Reentry Reply Message: 38 bytes ----
-
 // Acknowledgement for the ActiveQP Request/Reentry Message. Unsequenced.
-entrypoint typedef struct _ActiveQpSelfReplenishmentRequestReentryReplyMessage {
+typedef struct _ActiveQpSelfReplenishmentRequestReentryReplyMessage {
   UINT8 badge[4];                          // bytes 0 to 3
   UINT64BE message_id;                     // bytes 4 to 11
   UINT8 underlying_symbol[13];             // bytes 12 to 24
@@ -398,10 +766,40 @@ entrypoint typedef struct _ActiveQpSelfReplenishmentRequestReentryReplyMessage {
   UINT32BE set_contract_limit;             // bytes 34 to 37
 } ActiveQpSelfReplenishmentRequestReentryReplyMessage;
 
-// ---- Instrument Purge Notification Message: 49 bytes -------------------------
+// Auction Notification leg definitions, to be used in future to support Delta-Adjusted at Close functionality on Flex
+typedef struct _FlexDacLegs {
+  UINT8 reserved_8[8];  // bytes 0 to 7
+} FlexDacLegs;
+
+// Announces start, update or end of an Auction (Block, Exposure, Flash, Facilitation, Solicitation, PIM) for simple, complex and stock combo instruments. An end of auction notification has all fields after Auction ID zeroed and blanked out. Unsequenced.
+typedef struct _AuctionNotificationMessage {
+  UINT32BE seconds;                                               // bytes 0 to 3
+  UINT32BE nanoseconds;                                           // bytes 4 to 7
+  UINT8 instrument_type;                                          // byte 8
+  UINT32BE instrument_id;                                         // bytes 9 to 12
+  UINT32BE auction_id;                                            // bytes 13 to 16
+  UINT8 order_type;                                               // byte 17
+  UINT8 side;                                                     // byte 18
+  UINT32BE price;                                                 // bytes 19 to 22, signed, read here as unsigned
+  UINT32BE matched_volume;                                        // bytes 23 to 26
+  UINT32BE volume;                                                // bytes 27 to 30
+  UINT8 exec_flag;                                                // byte 31
+  UINT8 order_capacity;                                           // byte 32
+  UINT8 firm_id[4];                                               // bytes 33 to 36
+  UINT32BE occ_account;                                           // bytes 37 to 40
+  UINT32BE cmta;                                                  // bytes 41 to 44
+  UINT8 auction_event;                                            // byte 45
+  UINT8 auction_type;                                             // byte 46
+  UINT32BE auction_duration;                                      // bytes 47 to 50
+  UINT32BE best_response_price;                                   // bytes 51 to 54, signed, read here as unsigned
+  UINT32BE best_response_size;                                    // bytes 55 to 58
+  UINT8 reserved_9[9];                                            // bytes 59 to 67
+  UINT8 number_of_flex_dac_legs;                                  // byte 68
+  UINT8 flex_dac_legs[(((UINT32) number_of_flex_dac_legs) * 8)];
+} AuctionNotificationMessage;
 
 // Informs the firm that its quotes for a given simple or complex instrument have been purged. Unsequenced.
-entrypoint typedef struct _InstrumentPurgeNotificationMessage {
+typedef struct _InstrumentPurgeNotificationMessage {
   UINT32BE seconds;        // bytes 0 to 3
   UINT32BE nanoseconds;    // bytes 4 to 7
   UINT8 badge[4];          // bytes 8 to 11
@@ -412,10 +810,8 @@ entrypoint typedef struct _InstrumentPurgeNotificationMessage {
   UINT8 reserved_16[16];   // bytes 33 to 48
 } InstrumentPurgeNotificationMessage;
 
-// ---- Underlying Purge Notification Message: 42 bytes -------------------------
-
 // Informs the firm that all the quotes for instruments associated with the given underlying have been purged (user request, Rapid Fire/ActiveQP risk protection or Kill-Switch). Unsequenced.
-entrypoint typedef struct _UnderlyingPurgeNotificationMessage {
+typedef struct _UnderlyingPurgeNotificationMessage {
   UINT32BE seconds;      // bytes 0 to 3
   UINT32BE nanoseconds;  // bytes 4 to 7
   UINT8 badge[4];        // bytes 8 to 11
@@ -425,10 +821,8 @@ entrypoint typedef struct _UnderlyingPurgeNotificationMessage {
   UINT64BE sequence;     // bytes 34 to 41
 } UnderlyingPurgeNotificationMessage;
 
-// ---- Market Reentry Notification Message: 42 bytes ---------------------------
-
 // Informs that risk protection triggered by rapid fire/purge has been reset for the specified scope. Unsequenced.
-entrypoint typedef struct _MarketReentryNotificationMessage {
+typedef struct _MarketReentryNotificationMessage {
   UINT32BE seconds;             // bytes 0 to 3
   UINT32BE nanoseconds;         // bytes 4 to 7
   UINT8 badge[4];               // bytes 8 to 11
@@ -437,4 +831,59 @@ entrypoint typedef struct _MarketReentryNotificationMessage {
   UINT64BE message_id;          // bytes 26 to 33
   UINT8 reserved_8[8];          // bytes 34 to 41
 } MarketReentryNotificationMessage;
+
+// The unsequenced (server to client) message carried by the packet, opaque bytes unless an application source dispatches it
+casetype _ServerUnsequencedMessage (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x4162: NotificationSubscriptionReplyMessage notification_subscription_reply_message;
+    case 0x4163: AddComplexInstrumentReplyMessage add_complex_instrument_reply_message;
+    case 0x4165: MmParameterDefinitionReplyMessage mm_parameter_definition_reply_message;
+    case 0x4167: ActiveQpSelfReplenishmentSetLimitReplyMessage active_qp_self_replenishment_set_limit_reply_message;
+    case 0x4141: RapidFireConfigReplyMessage rapid_fire_config_reply_message;
+    case 0x5153: QuoteBlockReplyMessage quote_block_reply_message;
+    case 0x5173: DetailedQuoteBlockReplyMessage detailed_quote_block_reply_message;
+    case 0x5072: UnderlyingPurgeReplyMessage underlying_purge_reply_message;
+    case 0x5252: MarketReentryReplyMessage market_reentry_reply_message;
+    case 0x5267: ActiveQpSelfReplenishmentRequestReentryReplyMessage active_qp_self_replenishment_request_reentry_reply_message;
+    case 0x4E41: AuctionNotificationMessage auction_notification_message;
+    case 0x4E44: InstrumentPurgeNotificationMessage instrument_purge_notification_message;
+    case 0x4E55: UnderlyingPurgeNotificationMessage underlying_purge_notification_message;
+    case 0x4E52: MarketReentryNotificationMessage market_reentry_notification_message;
+    default: UINT8 unknown[available];
+  }
+} ServerUnsequencedMessage;
+
+// The Unsequenced Data Packets sent by the server carry unsequenced messages from the server to the client. They are delivered on a best-effort basis and do not advance the sequence number
+typedef struct _ServerUnsequencedDataPacket (UINT16 packet_length) where (packet_length >= 3) {
+  UINT16BE server_unsequenced_message_type;                                                                                                                                              // bytes 0 to 1
+  ServerUnsequencedMessage(server_unsequenced_message_type, (((UINT32) packet_length) - 3)) server_unsequenced_message[:byte-size-single-element-array (((UINT32) packet_length) - 3)];
+} ServerUnsequencedDataPacket;
+
+// Branch
+casetype _ServerPayload (UINT8 selector, UINT32 length, UINT32 length_2, UINT16 packet_length, UINT32 available) {
+  switch (selector) {
+    case 0x2B: DebugPacket(packet_length) debug_packet;
+    case 0x41: LoginAcceptedPacket login_accepted_packet;
+    case 0x4A: LoginRejectedPacket login_rejected_packet;
+    case 0x53: SequencedDataPacket(packet_length) sequenced_data_packet[:byte-size-single-element-array length];
+    case 0x55: ServerUnsequencedDataPacket(packet_length) server_unsequenced_data_packet[:byte-size-single-element-array length_2];
+    case 0x48: unit server_heartbeat_packet;
+    case 0x5A: unit end_of_session_packet;
+    default: UINT8 unknown[available];
+  }
+} ServerPayload;
+
+// Soup Bin Tcp Packet sent by the server
+typedef struct _ServerSoupBinTcpPacket {
+  UINT16BE packet_length { packet_length >= 1 };                                                                                                                                                                                                // bytes 0 to 1
+  UINT8 server_packet_type;                                                                                                                                                                                                                     // byte 2
+  ServerPayload(server_packet_type, (((UINT32) packet_length) - 1), (((UINT32) packet_length) - 1), packet_length, ((((UINT32) packet_length) + 2) - 3)) server_payload[:byte-size-single-element-array ((((UINT32) packet_length) + 2) - 3)];
+} ServerSoupBinTcpPacket;
+
+// ---- Packet: ServerPacket ----------------------------------------------------
+
+// Sqf Packet sent by the server
+entrypoint typedef struct _ServerPacket (UINT32 available) {
+  ServerSoupBinTcpPacket server_soup_bin_tcp_packet[:byte-size available];
+} ServerPacket;
 

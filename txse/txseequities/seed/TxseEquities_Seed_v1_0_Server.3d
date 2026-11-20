@@ -1,35 +1,577 @@
-// Texas Stock Exchange Session Enabled Entry Daemon
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Txse TxseEquities Seed Rake v1.0
 //
+// Protocol:
+//   Organization: Texas Stock Exchange
+//   Protocol: Session Enabled Entry Daemon
+//   Encoding: RAKE Session and Framing Layer
+//   Version: 1.0
+//   Date: 6/12/2026
+//   Specification: TXSE SEED Order Entry.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ServerPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out TxseEquities_Seed_v1_0_Server.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a length prefix framing what follows
-// - a field read in bits
-// - a field present only on a condition
-//
-// License: MIT No Attribution
 
-// ---- Rake Message Header: 3 bytes --------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Rake Tcp per-message header carrying the frame length and packet-level dispatch byte
-entrypoint typedef struct _RakeMessageHeader {
-  UINT16 message_length;  // bytes 0 to 1
-  UINT8 packet_type;      // byte 2
-} RakeMessageHeader;
+// Packet Type: one byte code
+#define PACKET_TYPE_LOGON_REQUEST_PACKET 0x35      // Logon Request Packet
+#define PACKET_TYPE_MEMBER_HEARTBEAT_PACKET 0x37   // Member Heartbeat Packet
+#define PACKET_TYPE_TCP_UNSEQUENCED_MESSAGE 0x36   // Tcp Unsequenced Message
+#define PACKET_TYPE_DEBUG_MESSAGE 0x30             // Debug Message
+#define PACKET_TYPE_END_OF_SESSION_MESSAGE 0x34    // End Of Session Message
+#define PACKET_TYPE_LOGON_RESPONSE_MESSAGE 0x31    // Logon Response Message
+#define PACKET_TYPE_SERVER_HEARTBEAT_MESSAGE 0x33  // Server Heartbeat Message
+#define PACKET_TYPE_TCP_SEQUENCED_MESSAGE 0x32     // Tcp Sequenced Message
 
-// ---- Logon Response Message: 30 bytes ----------------------------------------
+// Logon Response Code: one byte code
+#define LOGON_RESPONSE_CODE_SUCCESS 0x00                // Success
+#define LOGON_RESPONSE_CODE_INCORRECT_SENDER_COMP 0x01  // Incorrect Sender Comp
+#define LOGON_RESPONSE_CODE_INCORRECT_SESSION 0x02      // Incorrect Session
+#define LOGON_RESPONSE_CODE_INVALID_NEXT_SEQUENCE 0x03  // Invalid Next Sequence
+#define LOGON_RESPONSE_CODE_INVALID_CONFIGURATION 0x04  // Invalid Configuration
+#define LOGON_RESPONSE_CODE_INCORRECT_TOKEN 0x05        // Incorrect Token
+
+// Message Type: one byte code
+#define MESSAGE_TYPE_LIMIT_ORDER_MESSAGE 0x4C             // Limit Order Message
+#define MESSAGE_TYPE_MARKET_ORDER_MESSAGE 0x41            // Market Order Message
+#define MESSAGE_TYPE_CANCEL_ORDER_MESSAGE 0x43            // Cancel Order Message
+#define MESSAGE_TYPE_MODIFY_ORDER_MESSAGE 0x4D            // Modify Order Message
+#define MESSAGE_TYPE_REPLACE_ORDER_MESSAGE 0x52           // Replace Order Message
+#define MESSAGE_TYPE_MASS_CANCEL_MESSAGE 0x56             // Mass Cancel Message
+#define MESSAGE_TYPE_TRADING_SESSION_STATUS_MESSAGE 0x69  // Trading Session Status Message
+#define MESSAGE_TYPE_DEFINE_SYMBOL_MESSAGE 0x73           // Define Symbol Message
+#define MESSAGE_TYPE_SYMBOL_STATUS_MESSAGE 0x79           // Symbol Status Message
+#define MESSAGE_TYPE_LIMIT_ORDER_ACCEPTED_MESSAGE 0x49    // Limit Order Accepted Message
+#define MESSAGE_TYPE_LIMIT_ORDER_REJECTED_MESSAGE 0x55    // Limit Order Rejected Message
+#define MESSAGE_TYPE_MARKET_ORDER_ACCEPTED_MESSAGE 0x44   // Market Order Accepted Message
+#define MESSAGE_TYPE_MARKET_ORDER_REJECTED_MESSAGE 0x54   // Market Order Rejected Message
+#define MESSAGE_TYPE_ORDER_CANCELED_MESSAGE 0x58          // Order Canceled Message
+#define MESSAGE_TYPE_CANCEL_REJECTED_MESSAGE 0x57         // Cancel Rejected Message
+#define MESSAGE_TYPE_ORDER_MODIFIED_MESSAGE 0x59          // Order Modified Message
+#define MESSAGE_TYPE_MODIFY_REJECTED_MESSAGE 0x4E         // Modify Rejected Message
+#define MESSAGE_TYPE_ORDER_REPLACED_MESSAGE 0x4A          // Order Replaced Message
+#define MESSAGE_TYPE_REPLACE_REJECTED_MESSAGE 0x4B        // Replace Rejected Message
+#define MESSAGE_TYPE_ORDER_EXECUTED_MESSAGE 0x45          // Order Executed Message
+#define MESSAGE_TYPE_ORDER_RESTATED_MESSAGE 0x46          // Order Restated Message
+#define MESSAGE_TYPE_SELF_MATCH_PREVENTED_MESSAGE 0x5A    // Self Match Prevented Message
+#define MESSAGE_TYPE_MASS_CANCEL_ACCEPTED_MESSAGE 0x4F    // Mass Cancel Accepted Message
+#define MESSAGE_TYPE_MASS_CANCEL_REJECTED_MESSAGE 0x50    // Mass Cancel Rejected Message
+#define MESSAGE_TYPE_MASS_CANCEL_RESULT_MESSAGE 0x51      // Mass Cancel Result Message
+
+// Market Hours State: one byte code
+#define MARKET_HOURS_STATE_CLOSED_BEFORE_HOURS 0x00  // Closed Before Hours
+#define MARKET_HOURS_STATE_EARLY_SESSION 0x01        // Early Session
+#define MARKET_HOURS_STATE_REGULAR_SESSION 0x02      // Regular Session
+#define MARKET_HOURS_STATE_AFTER_HOURS_SESSION 0x03  // After Hours Session
+#define MARKET_HOURS_STATE_CLOSED_AFTER_HOURS 0x04   // Closed After Hours
+
+// Session Trading State: one byte code
+#define SESSION_TRADING_STATE_CLOSED 0x00   // Closed
+#define SESSION_TRADING_STATE_TRADING 0x01  // Trading
+#define SESSION_TRADING_STATE_HALTED 0x02   // Halted
+
+// Trading Session Status Operational Halt Reason: one byte code
+#define TRADING_SESSION_STATUS_OPERATIONAL_HALT_REASON_ADMINISTRATIVE 0x00  // Administrative
+
+// Trading Session Status Regulatory Halt Reason: one byte code
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_REASON_NOT_AVAILABLE 0x00                  // Reason Not Available
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_NEWS_PENDING 0x01                          // News Pending
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_NEWS_DISSEMINATION 0x02                    // News Dissemination
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_INFO_REQUESTED 0x03                        // Info Requested
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_ORDER_IMBALANCE 0x04                       // Order Imbalance
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_EXTRAORDINARY_MARKET_ACTIVITY 0x05         // Extraordinary Market Activity
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_LULD_PAUSE 0x06                            // Luld Pause
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_NON_COMPLIANCE 0x07                        // Non Compliance
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_FILINGS_NOT_CURRENT 0x08                   // Filings Not Current
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_SEC_SUSPENSION 0x09                        // Sec Suspension
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_REGULATORY_CONCERN 0x0A                    // Regulatory Concern
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_SUB_PENNY_TRADING 0x0B                     // Sub Penny Trading
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_ETF 0x0C                                   // Etf
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_IPO_NOT_TRADING 0x0D                       // Ipo Not Trading
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_CORPORATE_ACTION 0x0E                      // Corporate Action
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_CIRCUIT_BREAKER_L_1 0x0F                   // Circuit Breaker L 1
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_CIRCUIT_BREAKER_L_2 0x10                   // Circuit Breaker L 2
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_CIRCUIT_BREAKER_L_3 0x11                   // Circuit Breaker L 3
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_CIRCUIT_BREAKER_CARRYOVER 0x12             // Circuit Breaker Carryover
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_MERGER_EFFECTIVE 0x13                      // Merger Effective
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_NEW_SECURITY_OFFERING 0x14                 // New Security Offering
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_INDICATIVE_VALUE_NOT_AVAILABLE 0x15        // Indicative Value Not Available
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_QUOTATION_NOT_AVAILABLE 0x16               // Quotation Not Available
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_SINGLE_STOCK_TRADING_PAUSE 0x17            // Single Stock Trading Pause
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_OPERATIONAL 0x18                           // Operational
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_LULD_PAUSE_STRADDLE 0x19                   // Luld Pause Straddle
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_NEWS_RESUMPTION_TIMES 0x1A                 // News Resumption Times
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_SINGLE_STOCK_TRADING_PAUSE_QUOTING 0x1B    // Single Stock Trading Pause Quoting
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_QUALIFICATIONS_ISSUES_RESOLVED 0x1C        // Qualifications Issues Resolved
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_FILING_REQUIREMENTS_SATISFIED 0x1D         // Filing Requirements Satisfied
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_ISSUER_NEWS_NOT_FORTHCOMING 0x1E           // Issuer News Not Forthcoming
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_QUALIFICATIONS_HALT_ENDED 0x1F             // Qualifications Halt Ended
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_QUALIFICATIONS_HALT_CONCLUDED 0x20         // Qualifications Halt Concluded
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_REGULATORY_AUTHORITY_HALT_CONCLUDED 0x21   // Regulatory Authority Halt Concluded
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_NEW_ISSUE_AVAILABLE 0x22                   // New Issue Available
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_ISSUE_AVAILABLE 0x23                       // Issue Available
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_IPO_QUOTATION_RELEASED 0x24                // Ipo Quotation Released
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_IPO_POSITIONING_WINDOW_EXTENSION 0x25      // Ipo Positioning Window Extension
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_CIRCUIT_BREAKER_QUOTATION_RESUMPTION 0x26  // Circuit Breaker Quotation Resumption
+
+// Listing Market: one byte code
+#define LISTING_MARKET_NOT_AVAILABLE 0x00  // Not Available
+#define LISTING_MARKET_TXSE 0x46           // Txse
+
+// Symbol Trading State: one byte code
+#define SYMBOL_TRADING_STATE_TRADING 0x01         // Trading
+#define SYMBOL_TRADING_STATE_HALTED 0x02          // Halted
+#define SYMBOL_TRADING_STATE_RESUME_PENDING 0x03  // Resume Pending
+
+// Short Sale Restriction State: one byte code
+#define SHORT_SALE_RESTRICTION_STATE_NONE 0x00         // None
+#define SHORT_SALE_RESTRICTION_STATE_ACTIVATED 0x01    // Activated
+#define SHORT_SALE_RESTRICTION_STATE_CONTINUED 0x02    // Continued
+#define SHORT_SALE_RESTRICTION_STATE_DEACTIVATED 0x03  // Deactivated
+#define SHORT_SALE_RESTRICTION_STATE_IN_EFFECT 0x04    // In Effect
+
+// Symbol Status Operational Halt Reason: one byte code
+#define SYMBOL_STATUS_OPERATIONAL_HALT_REASON_ADMINISTRATIVE 0x00  // Administrative
+
+// Symbol Status Regulatory Halt Reason: one byte code
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_REASON_NOT_AVAILABLE 0x00                  // Reason Not Available
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_NEWS_PENDING 0x01                          // News Pending
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_NEWS_DISSEMINATION 0x02                    // News Dissemination
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_INFO_REQUESTED 0x03                        // Info Requested
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_ORDER_IMBALANCE 0x04                       // Order Imbalance
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_EXTRAORDINARY_MARKET_ACTIVITY 0x05         // Extraordinary Market Activity
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_LULD_PAUSE 0x06                            // Luld Pause
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_NON_COMPLIANCE 0x07                        // Non Compliance
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_FILINGS_NOT_CURRENT 0x08                   // Filings Not Current
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_SEC_SUSPENSION 0x09                        // Sec Suspension
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_REGULATORY_CONCERN 0x0A                    // Regulatory Concern
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_SUB_PENNY_TRADING 0x0B                     // Sub Penny Trading
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_ETF 0x0C                                   // Etf
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_IPO_NOT_TRADING 0x0D                       // Ipo Not Trading
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_CORPORATE_ACTION 0x0E                      // Corporate Action
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_CIRCUIT_BREAKER_L_1 0x0F                   // Circuit Breaker L 1
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_CIRCUIT_BREAKER_L_2 0x10                   // Circuit Breaker L 2
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_CIRCUIT_BREAKER_L_3 0x11                   // Circuit Breaker L 3
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_CIRCUIT_BREAKER_CARRYOVER 0x12             // Circuit Breaker Carryover
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_MERGER_EFFECTIVE 0x13                      // Merger Effective
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_NEW_SECURITY_OFFERING 0x14                 // New Security Offering
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_INDICATIVE_VALUE_NOT_AVAILABLE 0x15        // Indicative Value Not Available
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_QUOTATION_NOT_AVAILABLE 0x16               // Quotation Not Available
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_SINGLE_STOCK_TRADING_PAUSE 0x17            // Single Stock Trading Pause
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_OPERATIONAL 0x18                           // Operational
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_LULD_PAUSE_STRADDLE 0x19                   // Luld Pause Straddle
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_NEWS_RESUMPTION_TIMES 0x1A                 // News Resumption Times
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_SINGLE_STOCK_TRADING_PAUSE_QUOTING 0x1B    // Single Stock Trading Pause Quoting
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_QUALIFICATIONS_ISSUES_RESOLVED 0x1C        // Qualifications Issues Resolved
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_FILING_REQUIREMENTS_SATISFIED 0x1D         // Filing Requirements Satisfied
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_ISSUER_NEWS_NOT_FORTHCOMING 0x1E           // Issuer News Not Forthcoming
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_QUALIFICATIONS_HALT_ENDED 0x1F             // Qualifications Halt Ended
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_QUALIFICATIONS_HALT_CONCLUDED 0x20         // Qualifications Halt Concluded
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_REGULATORY_AUTHORITY_HALT_CONCLUDED 0x21   // Regulatory Authority Halt Concluded
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_NEW_ISSUE_AVAILABLE 0x22                   // New Issue Available
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_ISSUE_AVAILABLE 0x23                       // Issue Available
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_IPO_QUOTATION_RELEASED 0x24                // Ipo Quotation Released
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_IPO_POSITIONING_WINDOW_EXTENSION 0x25      // Ipo Positioning Window Extension
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_CIRCUIT_BREAKER_QUOTATION_RESUMPTION 0x26  // Circuit Breaker Quotation Resumption
+
+// Limit Order Accepted Self Match Instruction: one byte code
+#define LIMIT_ORDER_ACCEPTED_SELF_MATCH_INSTRUCTION_NO_SELF_MATCH_PREVENTION 0x00  // No Self Match Prevention
+#define LIMIT_ORDER_ACCEPTED_SELF_MATCH_INSTRUCTION_CANCEL_NEWEST 0x01             // Cancel Newest
+#define LIMIT_ORDER_ACCEPTED_SELF_MATCH_INSTRUCTION_CANCEL_OLDEST 0x02             // Cancel Oldest
+#define LIMIT_ORDER_ACCEPTED_SELF_MATCH_INSTRUCTION_CANCEL_BOTH 0x03               // Cancel Both
+#define LIMIT_ORDER_ACCEPTED_SELF_MATCH_INSTRUCTION_CANCEL_SMALLEST 0x04           // Cancel Smallest
+#define LIMIT_ORDER_ACCEPTED_SELF_MATCH_INSTRUCTION_DECREMENT_AND_CANCEL 0x05      // Decrement And Cancel
+
+// Limit Order Accepted Price Slide Instruction: one byte code
+#define LIMIT_ORDER_ACCEPTED_PRICE_SLIDE_INSTRUCTION_NO_PRICE_SLIDE 0x00                           // No Price Slide
+#define LIMIT_ORDER_ACCEPTED_PRICE_SLIDE_INSTRUCTION_SINGLE_PRICE_SLIDE_ON_LOCK_AND_CROSS 0x01     // Single Price Slide On Lock And Cross
+#define LIMIT_ORDER_ACCEPTED_PRICE_SLIDE_INSTRUCTION_MULTIPLE_PRICE_SLIDES_ON_LOCK_AND_CROSS 0x02  // Multiple Price Slides On Lock And Cross
+#define LIMIT_ORDER_ACCEPTED_PRICE_SLIDE_INSTRUCTION_SINGLE_PRICE_SLIDE_LOCK_ONLY 0x03             // Single Price Slide Lock Only
+
+// Limit Order Rejected Reason: one byte code
+#define LIMIT_ORDER_REJECTED_REASON_INVALID_CLIENT_ORDER_ID 0x01                // Invalid Client Order Id
+#define LIMIT_ORDER_REJECTED_REASON_DUPLICATE_CLIENT_ORDER_ID 0x02              // Duplicate Client Order Id
+#define LIMIT_ORDER_REJECTED_REASON_UNKNOWN_ORIGINAL_CLIENT_ORDER_ID 0x03       // Unknown Original Client Order Id
+#define LIMIT_ORDER_REJECTED_REASON_NO_LONGER_ON_BOOK 0x04                      // No Longer On Book
+#define LIMIT_ORDER_REJECTED_REASON_INVALID_SYMBOL 0x05                         // Invalid Symbol
+#define LIMIT_ORDER_REJECTED_REASON_INVALID_PRICE 0x06                          // Invalid Price
+#define LIMIT_ORDER_REJECTED_REASON_INVALID_ORDER_QUANTITY 0x07                 // Invalid Order Quantity
+#define LIMIT_ORDER_REJECTED_REASON_INVALID_REFERENCE_PRICE_TARGET 0x08         // Invalid Reference Price Target
+#define LIMIT_ORDER_REJECTED_REASON_INVALID_IS_HIDDEN_FLAG 0x09                 // Invalid Is Hidden Flag
+#define LIMIT_ORDER_REJECTED_REASON_INVALID_ORDER_TYPE 0x0A                     // Invalid Order Type
+#define LIMIT_ORDER_REJECTED_REASON_INVALID_SIDE 0x0B                           // Invalid Side
+#define LIMIT_ORDER_REJECTED_REASON_INVALID_MAX_FLOOR_QUANTITY 0x0C             // Invalid Max Floor Quantity
+#define LIMIT_ORDER_REJECTED_REASON_INVALID_MAX_REPLENISH_QUANTITY_RANGE 0x0D   // Invalid Max Replenish Quantity Range
+#define LIMIT_ORDER_REJECTED_REASON_INVALID_MAX_REPLENISH_TIME_RANGE 0x0E       // Invalid Max Replenish Time Range
+#define LIMIT_ORDER_REJECTED_REASON_INVALID_MINIMUM_QUANTITY 0x0F               // Invalid Minimum Quantity
+#define LIMIT_ORDER_REJECTED_REASON_INVALID_LOCATE_REQUIRED_FLAG 0x10           // Invalid Locate Required Flag
+#define LIMIT_ORDER_REJECTED_REASON_INVALID_TIME_IN_FORCE 0x11                  // Invalid Time In Force
+#define LIMIT_ORDER_REJECTED_REASON_MODIFICATION_NOT_PERMITTED 0x12             // Modification Not Permitted
+#define LIMIT_ORDER_REJECTED_REASON_INVALID_MPID 0x13                           // Invalid Mpid
+#define LIMIT_ORDER_REJECTED_REASON_INVALID_SENDER_COMP 0x14                    // Invalid Sender Comp
+#define LIMIT_ORDER_REJECTED_REASON_INVALID_IS_POST_ONLY_FLAG 0x15              // Invalid Is Post Only Flag
+#define LIMIT_ORDER_REJECTED_REASON_INVALID_EXPIRE_TIME 0x16                    // Invalid Expire Time
+#define LIMIT_ORDER_REJECTED_REASON_INVALID_FOR_TRADING_SESSION 0x17            // Invalid For Trading Session
+#define LIMIT_ORDER_REJECTED_REASON_INVALID_FOR_TRADING_STATUS 0x18             // Invalid For Trading Status
+#define LIMIT_ORDER_REJECTED_REASON_INVALID_FOR_SYMBOL_STATUS 0x19              // Invalid For Symbol Status
+#define LIMIT_ORDER_REJECTED_REASON_INVALID_IS_ISO_FLAG 0x1A                    // Invalid Is Iso Flag
+#define LIMIT_ORDER_REJECTED_REASON_TRADING_DISABLED_FOR_MPID_ON_PORT 0x1B      // Trading Disabled For Mpid On Port
+#define LIMIT_ORDER_REJECTED_REASON_TRADING_DISABLED_FOR_NON_TEST_SYMBOLS 0x1C  // Trading Disabled For Non Test Symbols
+#define LIMIT_ORDER_REJECTED_REASON_TRADING_DISABLED_FOR_ORDER_CAPACITY 0x1D    // Trading Disabled For Order Capacity
+#define LIMIT_ORDER_REJECTED_REASON_TRADING_DISABLED_FOR_ISO 0x1E               // Trading Disabled For Iso
+#define LIMIT_ORDER_REJECTED_REASON_MAXIMUM_ORDER_QUANTITY_BREACHED 0x1F        // Maximum Order Quantity Breached
+#define LIMIT_ORDER_REJECTED_REASON_MAXIMUM_PRICE_BREACHED 0x20                 // Maximum Price Breached
+#define LIMIT_ORDER_REJECTED_REASON_MAXIMUM_NOTIONAL_BREACHED 0x21              // Maximum Notional Breached
+#define LIMIT_ORDER_REJECTED_REASON_INVALID_MASS_CANCEL_REQUEST_ID 0x22         // Invalid Mass Cancel Request Id
+#define LIMIT_ORDER_REJECTED_REASON_SYMBOL_ON_RESTRICTED_LIST 0x23              // Symbol On Restricted List
+#define LIMIT_ORDER_REJECTED_REASON_LULD_BAND_BREACHED 0x24                     // Luld Band Breached
+#define LIMIT_ORDER_REJECTED_REASON_INVALID_PRICE_INCREMENT 0x25                // Invalid Price Increment
+#define LIMIT_ORDER_REJECTED_REASON_AUCTION_ORDER_NOT_CANCELABLE 0x26           // Auction Order Not Cancelable
+#define LIMIT_ORDER_REJECTED_REASON_INVALID_FOR_AUCTION_ORDER 0x27              // Invalid For Auction Order
+
+// Limit Order Rejected Self Match Instruction: one byte code
+#define LIMIT_ORDER_REJECTED_SELF_MATCH_INSTRUCTION_NO_SELF_MATCH_PREVENTION 0x00  // No Self Match Prevention
+#define LIMIT_ORDER_REJECTED_SELF_MATCH_INSTRUCTION_CANCEL_NEWEST 0x01             // Cancel Newest
+#define LIMIT_ORDER_REJECTED_SELF_MATCH_INSTRUCTION_CANCEL_OLDEST 0x02             // Cancel Oldest
+#define LIMIT_ORDER_REJECTED_SELF_MATCH_INSTRUCTION_CANCEL_BOTH 0x03               // Cancel Both
+#define LIMIT_ORDER_REJECTED_SELF_MATCH_INSTRUCTION_CANCEL_SMALLEST 0x04           // Cancel Smallest
+#define LIMIT_ORDER_REJECTED_SELF_MATCH_INSTRUCTION_DECREMENT_AND_CANCEL 0x05      // Decrement And Cancel
+
+// Limit Order Rejected Price Slide Instruction: one byte code
+#define LIMIT_ORDER_REJECTED_PRICE_SLIDE_INSTRUCTION_NO_PRICE_SLIDE 0x00                           // No Price Slide
+#define LIMIT_ORDER_REJECTED_PRICE_SLIDE_INSTRUCTION_SINGLE_PRICE_SLIDE_ON_LOCK_AND_CROSS 0x01     // Single Price Slide On Lock And Cross
+#define LIMIT_ORDER_REJECTED_PRICE_SLIDE_INSTRUCTION_MULTIPLE_PRICE_SLIDES_ON_LOCK_AND_CROSS 0x02  // Multiple Price Slides On Lock And Cross
+#define LIMIT_ORDER_REJECTED_PRICE_SLIDE_INSTRUCTION_SINGLE_PRICE_SLIDE_LOCK_ONLY 0x03             // Single Price Slide Lock Only
+
+// Market Order Accepted Self Match Instruction: one byte code
+#define MARKET_ORDER_ACCEPTED_SELF_MATCH_INSTRUCTION_NO_SELF_MATCH_PREVENTION 0x00  // No Self Match Prevention
+#define MARKET_ORDER_ACCEPTED_SELF_MATCH_INSTRUCTION_CANCEL_NEWEST 0x01             // Cancel Newest
+#define MARKET_ORDER_ACCEPTED_SELF_MATCH_INSTRUCTION_CANCEL_OLDEST 0x02             // Cancel Oldest
+#define MARKET_ORDER_ACCEPTED_SELF_MATCH_INSTRUCTION_CANCEL_BOTH 0x03               // Cancel Both
+#define MARKET_ORDER_ACCEPTED_SELF_MATCH_INSTRUCTION_CANCEL_SMALLEST 0x04           // Cancel Smallest
+#define MARKET_ORDER_ACCEPTED_SELF_MATCH_INSTRUCTION_DECREMENT_AND_CANCEL 0x05      // Decrement And Cancel
+
+// Market Order Rejected Reason: one byte code
+#define MARKET_ORDER_REJECTED_REASON_INVALID_CLIENT_ORDER_ID 0x01                // Invalid Client Order Id
+#define MARKET_ORDER_REJECTED_REASON_DUPLICATE_CLIENT_ORDER_ID 0x02              // Duplicate Client Order Id
+#define MARKET_ORDER_REJECTED_REASON_UNKNOWN_ORIGINAL_CLIENT_ORDER_ID 0x03       // Unknown Original Client Order Id
+#define MARKET_ORDER_REJECTED_REASON_NO_LONGER_ON_BOOK 0x04                      // No Longer On Book
+#define MARKET_ORDER_REJECTED_REASON_INVALID_SYMBOL 0x05                         // Invalid Symbol
+#define MARKET_ORDER_REJECTED_REASON_INVALID_PRICE 0x06                          // Invalid Price
+#define MARKET_ORDER_REJECTED_REASON_INVALID_ORDER_QUANTITY 0x07                 // Invalid Order Quantity
+#define MARKET_ORDER_REJECTED_REASON_INVALID_REFERENCE_PRICE_TARGET 0x08         // Invalid Reference Price Target
+#define MARKET_ORDER_REJECTED_REASON_INVALID_IS_HIDDEN_FLAG 0x09                 // Invalid Is Hidden Flag
+#define MARKET_ORDER_REJECTED_REASON_INVALID_ORDER_TYPE 0x0A                     // Invalid Order Type
+#define MARKET_ORDER_REJECTED_REASON_INVALID_SIDE 0x0B                           // Invalid Side
+#define MARKET_ORDER_REJECTED_REASON_INVALID_MAX_FLOOR_QUANTITY 0x0C             // Invalid Max Floor Quantity
+#define MARKET_ORDER_REJECTED_REASON_INVALID_MAX_REPLENISH_QUANTITY_RANGE 0x0D   // Invalid Max Replenish Quantity Range
+#define MARKET_ORDER_REJECTED_REASON_INVALID_MAX_REPLENISH_TIME_RANGE 0x0E       // Invalid Max Replenish Time Range
+#define MARKET_ORDER_REJECTED_REASON_INVALID_MINIMUM_QUANTITY 0x0F               // Invalid Minimum Quantity
+#define MARKET_ORDER_REJECTED_REASON_INVALID_LOCATE_REQUIRED_FLAG 0x10           // Invalid Locate Required Flag
+#define MARKET_ORDER_REJECTED_REASON_INVALID_TIME_IN_FORCE 0x11                  // Invalid Time In Force
+#define MARKET_ORDER_REJECTED_REASON_MODIFICATION_NOT_PERMITTED 0x12             // Modification Not Permitted
+#define MARKET_ORDER_REJECTED_REASON_INVALID_MPID 0x13                           // Invalid Mpid
+#define MARKET_ORDER_REJECTED_REASON_INVALID_SENDER_COMP 0x14                    // Invalid Sender Comp
+#define MARKET_ORDER_REJECTED_REASON_INVALID_IS_POST_ONLY_FLAG 0x15              // Invalid Is Post Only Flag
+#define MARKET_ORDER_REJECTED_REASON_INVALID_EXPIRE_TIME 0x16                    // Invalid Expire Time
+#define MARKET_ORDER_REJECTED_REASON_INVALID_FOR_TRADING_SESSION 0x17            // Invalid For Trading Session
+#define MARKET_ORDER_REJECTED_REASON_INVALID_FOR_TRADING_STATUS 0x18             // Invalid For Trading Status
+#define MARKET_ORDER_REJECTED_REASON_INVALID_FOR_SYMBOL_STATUS 0x19              // Invalid For Symbol Status
+#define MARKET_ORDER_REJECTED_REASON_INVALID_IS_ISO_FLAG 0x1A                    // Invalid Is Iso Flag
+#define MARKET_ORDER_REJECTED_REASON_TRADING_DISABLED_FOR_MPID_ON_PORT 0x1B      // Trading Disabled For Mpid On Port
+#define MARKET_ORDER_REJECTED_REASON_TRADING_DISABLED_FOR_NON_TEST_SYMBOLS 0x1C  // Trading Disabled For Non Test Symbols
+#define MARKET_ORDER_REJECTED_REASON_TRADING_DISABLED_FOR_ORDER_CAPACITY 0x1D    // Trading Disabled For Order Capacity
+#define MARKET_ORDER_REJECTED_REASON_TRADING_DISABLED_FOR_ISO 0x1E               // Trading Disabled For Iso
+#define MARKET_ORDER_REJECTED_REASON_MAXIMUM_ORDER_QUANTITY_BREACHED 0x1F        // Maximum Order Quantity Breached
+#define MARKET_ORDER_REJECTED_REASON_MAXIMUM_PRICE_BREACHED 0x20                 // Maximum Price Breached
+#define MARKET_ORDER_REJECTED_REASON_MAXIMUM_NOTIONAL_BREACHED 0x21              // Maximum Notional Breached
+#define MARKET_ORDER_REJECTED_REASON_INVALID_MASS_CANCEL_REQUEST_ID 0x22         // Invalid Mass Cancel Request Id
+#define MARKET_ORDER_REJECTED_REASON_SYMBOL_ON_RESTRICTED_LIST 0x23              // Symbol On Restricted List
+#define MARKET_ORDER_REJECTED_REASON_LULD_BAND_BREACHED 0x24                     // Luld Band Breached
+#define MARKET_ORDER_REJECTED_REASON_INVALID_PRICE_INCREMENT 0x25                // Invalid Price Increment
+#define MARKET_ORDER_REJECTED_REASON_AUCTION_ORDER_NOT_CANCELABLE 0x26           // Auction Order Not Cancelable
+#define MARKET_ORDER_REJECTED_REASON_INVALID_FOR_AUCTION_ORDER 0x27              // Invalid For Auction Order
+
+// Market Order Rejected Self Match Instruction: one byte code
+#define MARKET_ORDER_REJECTED_SELF_MATCH_INSTRUCTION_NO_SELF_MATCH_PREVENTION 0x00  // No Self Match Prevention
+#define MARKET_ORDER_REJECTED_SELF_MATCH_INSTRUCTION_CANCEL_NEWEST 0x01             // Cancel Newest
+#define MARKET_ORDER_REJECTED_SELF_MATCH_INSTRUCTION_CANCEL_OLDEST 0x02             // Cancel Oldest
+#define MARKET_ORDER_REJECTED_SELF_MATCH_INSTRUCTION_CANCEL_BOTH 0x03               // Cancel Both
+#define MARKET_ORDER_REJECTED_SELF_MATCH_INSTRUCTION_CANCEL_SMALLEST 0x04           // Cancel Smallest
+#define MARKET_ORDER_REJECTED_SELF_MATCH_INSTRUCTION_DECREMENT_AND_CANCEL 0x05      // Decrement And Cancel
+
+// Cancel Reason: one byte code
+#define CANCEL_REASON_REQUESTED_BY_USER 0x01                         // Requested By User
+#define CANCEL_REASON_RELATED_TO_TIME_IN_FORCE 0x02                  // Related To Time In Force
+#define CANCEL_REASON_RELATED_TO_MIN_QTY 0x03                        // Related To Min Qty
+#define CANCEL_REASON_REG_NMS_VIOLATION_NO_SLIDE 0x04                // Reg Nms Violation No Slide
+#define CANCEL_REASON_MARKETABLE_RESERVE 0x05                        // Marketable Reserve
+#define CANCEL_REASON_SELF_MATCH_PREVENTION 0x06                     // Self Match Prevention
+#define CANCEL_REASON_REPLENISHMENT_CANCELED_DUE_TO_RESERVE 0x07     // Replenishment Canceled Due To Reserve
+#define CANCEL_REASON_RELATED_TO_ORDER_TYPE 0x08                     // Related To Order Type
+#define CANCEL_REASON_CANCELED_DUE_TO_CROSSED_MARKETS 0x09           // Canceled Due To Crossed Markets
+#define CANCEL_REASON_CANCELED_DUE_TO_MASS_CANCEL_REQUEST 0x0A       // Canceled Due To Mass Cancel Request
+#define CANCEL_REASON_EXCHANGE_LOCKED_OR_CROSSED_NO_SLIDE 0x0B       // Exchange Locked Or Crossed No Slide
+#define CANCEL_REASON_REG_SHO_VIOLATION_NO_SLIDE 0x0C                // Reg Sho Violation No Slide
+#define CANCEL_REASON_LULD_BREACHED_NO_SLIDE 0x0D                    // Luld Breached No Slide
+#define CANCEL_REASON_CANCELED_AS_PRICE_BREACHED_LULD 0x0E           // Canceled As Price Breached Luld
+#define CANCEL_REASON_CANCELED_ON_DISCONNECT 0x0F                    // Canceled On Disconnect
+#define CANCEL_REASON_AUCTION_ORDER_POST_CROSS 0x10                  // Auction Order Post Cross
+#define CANCEL_REASON_PEG_REFERENCE_PRICE_BREACHES_LIMIT_PRICE 0x11  // Peg Reference Price Breaches Limit Price
+#define CANCEL_REASON_ODD_LOT_NOT_EXECUTABLE 0x12                    // Odd Lot Not Executable
+
+// Cancel Rejected Reason: one byte code
+#define CANCEL_REJECTED_REASON_INVALID_CLIENT_ORDER_ID 0x01                // Invalid Client Order Id
+#define CANCEL_REJECTED_REASON_DUPLICATE_CLIENT_ORDER_ID 0x02              // Duplicate Client Order Id
+#define CANCEL_REJECTED_REASON_UNKNOWN_ORIGINAL_CLIENT_ORDER_ID 0x03       // Unknown Original Client Order Id
+#define CANCEL_REJECTED_REASON_NO_LONGER_ON_BOOK 0x04                      // No Longer On Book
+#define CANCEL_REJECTED_REASON_INVALID_SYMBOL 0x05                         // Invalid Symbol
+#define CANCEL_REJECTED_REASON_INVALID_PRICE 0x06                          // Invalid Price
+#define CANCEL_REJECTED_REASON_INVALID_ORDER_QUANTITY 0x07                 // Invalid Order Quantity
+#define CANCEL_REJECTED_REASON_INVALID_REFERENCE_PRICE_TARGET 0x08         // Invalid Reference Price Target
+#define CANCEL_REJECTED_REASON_INVALID_IS_HIDDEN_FLAG 0x09                 // Invalid Is Hidden Flag
+#define CANCEL_REJECTED_REASON_INVALID_ORDER_TYPE 0x0A                     // Invalid Order Type
+#define CANCEL_REJECTED_REASON_INVALID_SIDE 0x0B                           // Invalid Side
+#define CANCEL_REJECTED_REASON_INVALID_MAX_FLOOR_QUANTITY 0x0C             // Invalid Max Floor Quantity
+#define CANCEL_REJECTED_REASON_INVALID_MAX_REPLENISH_QUANTITY_RANGE 0x0D   // Invalid Max Replenish Quantity Range
+#define CANCEL_REJECTED_REASON_INVALID_MAX_REPLENISH_TIME_RANGE 0x0E       // Invalid Max Replenish Time Range
+#define CANCEL_REJECTED_REASON_INVALID_MINIMUM_QUANTITY 0x0F               // Invalid Minimum Quantity
+#define CANCEL_REJECTED_REASON_INVALID_LOCATE_REQUIRED_FLAG 0x10           // Invalid Locate Required Flag
+#define CANCEL_REJECTED_REASON_INVALID_TIME_IN_FORCE 0x11                  // Invalid Time In Force
+#define CANCEL_REJECTED_REASON_MODIFICATION_NOT_PERMITTED 0x12             // Modification Not Permitted
+#define CANCEL_REJECTED_REASON_INVALID_MPID 0x13                           // Invalid Mpid
+#define CANCEL_REJECTED_REASON_INVALID_SENDER_COMP 0x14                    // Invalid Sender Comp
+#define CANCEL_REJECTED_REASON_INVALID_IS_POST_ONLY_FLAG 0x15              // Invalid Is Post Only Flag
+#define CANCEL_REJECTED_REASON_INVALID_EXPIRE_TIME 0x16                    // Invalid Expire Time
+#define CANCEL_REJECTED_REASON_INVALID_FOR_TRADING_SESSION 0x17            // Invalid For Trading Session
+#define CANCEL_REJECTED_REASON_INVALID_FOR_TRADING_STATUS 0x18             // Invalid For Trading Status
+#define CANCEL_REJECTED_REASON_INVALID_FOR_SYMBOL_STATUS 0x19              // Invalid For Symbol Status
+#define CANCEL_REJECTED_REASON_INVALID_IS_ISO_FLAG 0x1A                    // Invalid Is Iso Flag
+#define CANCEL_REJECTED_REASON_TRADING_DISABLED_FOR_MPID_ON_PORT 0x1B      // Trading Disabled For Mpid On Port
+#define CANCEL_REJECTED_REASON_TRADING_DISABLED_FOR_NON_TEST_SYMBOLS 0x1C  // Trading Disabled For Non Test Symbols
+#define CANCEL_REJECTED_REASON_TRADING_DISABLED_FOR_ORDER_CAPACITY 0x1D    // Trading Disabled For Order Capacity
+#define CANCEL_REJECTED_REASON_TRADING_DISABLED_FOR_ISO 0x1E               // Trading Disabled For Iso
+#define CANCEL_REJECTED_REASON_MAXIMUM_ORDER_QUANTITY_BREACHED 0x1F        // Maximum Order Quantity Breached
+#define CANCEL_REJECTED_REASON_MAXIMUM_PRICE_BREACHED 0x20                 // Maximum Price Breached
+#define CANCEL_REJECTED_REASON_MAXIMUM_NOTIONAL_BREACHED 0x21              // Maximum Notional Breached
+#define CANCEL_REJECTED_REASON_INVALID_MASS_CANCEL_REQUEST_ID 0x22         // Invalid Mass Cancel Request Id
+#define CANCEL_REJECTED_REASON_SYMBOL_ON_RESTRICTED_LIST 0x23              // Symbol On Restricted List
+#define CANCEL_REJECTED_REASON_LULD_BAND_BREACHED 0x24                     // Luld Band Breached
+#define CANCEL_REJECTED_REASON_INVALID_PRICE_INCREMENT 0x25                // Invalid Price Increment
+#define CANCEL_REJECTED_REASON_AUCTION_ORDER_NOT_CANCELABLE 0x26           // Auction Order Not Cancelable
+#define CANCEL_REJECTED_REASON_INVALID_FOR_AUCTION_ORDER 0x27              // Invalid For Auction Order
+
+// Modify Rejected Reason: one byte code
+#define MODIFY_REJECTED_REASON_INVALID_CLIENT_ORDER_ID 0x01                // Invalid Client Order Id
+#define MODIFY_REJECTED_REASON_DUPLICATE_CLIENT_ORDER_ID 0x02              // Duplicate Client Order Id
+#define MODIFY_REJECTED_REASON_UNKNOWN_ORIGINAL_CLIENT_ORDER_ID 0x03       // Unknown Original Client Order Id
+#define MODIFY_REJECTED_REASON_NO_LONGER_ON_BOOK 0x04                      // No Longer On Book
+#define MODIFY_REJECTED_REASON_INVALID_SYMBOL 0x05                         // Invalid Symbol
+#define MODIFY_REJECTED_REASON_INVALID_PRICE 0x06                          // Invalid Price
+#define MODIFY_REJECTED_REASON_INVALID_ORDER_QUANTITY 0x07                 // Invalid Order Quantity
+#define MODIFY_REJECTED_REASON_INVALID_REFERENCE_PRICE_TARGET 0x08         // Invalid Reference Price Target
+#define MODIFY_REJECTED_REASON_INVALID_IS_HIDDEN_FLAG 0x09                 // Invalid Is Hidden Flag
+#define MODIFY_REJECTED_REASON_INVALID_ORDER_TYPE 0x0A                     // Invalid Order Type
+#define MODIFY_REJECTED_REASON_INVALID_SIDE 0x0B                           // Invalid Side
+#define MODIFY_REJECTED_REASON_INVALID_MAX_FLOOR_QUANTITY 0x0C             // Invalid Max Floor Quantity
+#define MODIFY_REJECTED_REASON_INVALID_MAX_REPLENISH_QUANTITY_RANGE 0x0D   // Invalid Max Replenish Quantity Range
+#define MODIFY_REJECTED_REASON_INVALID_MAX_REPLENISH_TIME_RANGE 0x0E       // Invalid Max Replenish Time Range
+#define MODIFY_REJECTED_REASON_INVALID_MINIMUM_QUANTITY 0x0F               // Invalid Minimum Quantity
+#define MODIFY_REJECTED_REASON_INVALID_LOCATE_REQUIRED_FLAG 0x10           // Invalid Locate Required Flag
+#define MODIFY_REJECTED_REASON_INVALID_TIME_IN_FORCE 0x11                  // Invalid Time In Force
+#define MODIFY_REJECTED_REASON_MODIFICATION_NOT_PERMITTED 0x12             // Modification Not Permitted
+#define MODIFY_REJECTED_REASON_INVALID_MPID 0x13                           // Invalid Mpid
+#define MODIFY_REJECTED_REASON_INVALID_SENDER_COMP 0x14                    // Invalid Sender Comp
+#define MODIFY_REJECTED_REASON_INVALID_IS_POST_ONLY_FLAG 0x15              // Invalid Is Post Only Flag
+#define MODIFY_REJECTED_REASON_INVALID_EXPIRE_TIME 0x16                    // Invalid Expire Time
+#define MODIFY_REJECTED_REASON_INVALID_FOR_TRADING_SESSION 0x17            // Invalid For Trading Session
+#define MODIFY_REJECTED_REASON_INVALID_FOR_TRADING_STATUS 0x18             // Invalid For Trading Status
+#define MODIFY_REJECTED_REASON_INVALID_FOR_SYMBOL_STATUS 0x19              // Invalid For Symbol Status
+#define MODIFY_REJECTED_REASON_INVALID_IS_ISO_FLAG 0x1A                    // Invalid Is Iso Flag
+#define MODIFY_REJECTED_REASON_TRADING_DISABLED_FOR_MPID_ON_PORT 0x1B      // Trading Disabled For Mpid On Port
+#define MODIFY_REJECTED_REASON_TRADING_DISABLED_FOR_NON_TEST_SYMBOLS 0x1C  // Trading Disabled For Non Test Symbols
+#define MODIFY_REJECTED_REASON_TRADING_DISABLED_FOR_ORDER_CAPACITY 0x1D    // Trading Disabled For Order Capacity
+#define MODIFY_REJECTED_REASON_TRADING_DISABLED_FOR_ISO 0x1E               // Trading Disabled For Iso
+#define MODIFY_REJECTED_REASON_MAXIMUM_ORDER_QUANTITY_BREACHED 0x1F        // Maximum Order Quantity Breached
+#define MODIFY_REJECTED_REASON_MAXIMUM_PRICE_BREACHED 0x20                 // Maximum Price Breached
+#define MODIFY_REJECTED_REASON_MAXIMUM_NOTIONAL_BREACHED 0x21              // Maximum Notional Breached
+#define MODIFY_REJECTED_REASON_INVALID_MASS_CANCEL_REQUEST_ID 0x22         // Invalid Mass Cancel Request Id
+#define MODIFY_REJECTED_REASON_SYMBOL_ON_RESTRICTED_LIST 0x23              // Symbol On Restricted List
+#define MODIFY_REJECTED_REASON_LULD_BAND_BREACHED 0x24                     // Luld Band Breached
+#define MODIFY_REJECTED_REASON_INVALID_PRICE_INCREMENT 0x25                // Invalid Price Increment
+#define MODIFY_REJECTED_REASON_AUCTION_ORDER_NOT_CANCELABLE 0x26           // Auction Order Not Cancelable
+#define MODIFY_REJECTED_REASON_INVALID_FOR_AUCTION_ORDER 0x27              // Invalid For Auction Order
+
+// Order Replaced Self Match Instruction: one byte code
+#define ORDER_REPLACED_SELF_MATCH_INSTRUCTION_NO_SELF_MATCH_PREVENTION 0x00  // No Self Match Prevention
+#define ORDER_REPLACED_SELF_MATCH_INSTRUCTION_CANCEL_NEWEST 0x01             // Cancel Newest
+#define ORDER_REPLACED_SELF_MATCH_INSTRUCTION_CANCEL_OLDEST 0x02             // Cancel Oldest
+#define ORDER_REPLACED_SELF_MATCH_INSTRUCTION_CANCEL_BOTH 0x03               // Cancel Both
+#define ORDER_REPLACED_SELF_MATCH_INSTRUCTION_CANCEL_SMALLEST 0x04           // Cancel Smallest
+#define ORDER_REPLACED_SELF_MATCH_INSTRUCTION_DECREMENT_AND_CANCEL 0x05      // Decrement And Cancel
+
+// Order Replaced Price Slide Instruction: one byte code
+#define ORDER_REPLACED_PRICE_SLIDE_INSTRUCTION_NO_PRICE_SLIDE 0x00                           // No Price Slide
+#define ORDER_REPLACED_PRICE_SLIDE_INSTRUCTION_SINGLE_PRICE_SLIDE_ON_LOCK_AND_CROSS 0x01     // Single Price Slide On Lock And Cross
+#define ORDER_REPLACED_PRICE_SLIDE_INSTRUCTION_MULTIPLE_PRICE_SLIDES_ON_LOCK_AND_CROSS 0x02  // Multiple Price Slides On Lock And Cross
+#define ORDER_REPLACED_PRICE_SLIDE_INSTRUCTION_SINGLE_PRICE_SLIDE_LOCK_ONLY 0x03             // Single Price Slide Lock Only
+
+// Replace Rejected Reason: one byte code
+#define REPLACE_REJECTED_REASON_INVALID_CLIENT_ORDER_ID 0x01                // Invalid Client Order Id
+#define REPLACE_REJECTED_REASON_DUPLICATE_CLIENT_ORDER_ID 0x02              // Duplicate Client Order Id
+#define REPLACE_REJECTED_REASON_UNKNOWN_ORIGINAL_CLIENT_ORDER_ID 0x03       // Unknown Original Client Order Id
+#define REPLACE_REJECTED_REASON_NO_LONGER_ON_BOOK 0x04                      // No Longer On Book
+#define REPLACE_REJECTED_REASON_INVALID_SYMBOL 0x05                         // Invalid Symbol
+#define REPLACE_REJECTED_REASON_INVALID_PRICE 0x06                          // Invalid Price
+#define REPLACE_REJECTED_REASON_INVALID_ORDER_QUANTITY 0x07                 // Invalid Order Quantity
+#define REPLACE_REJECTED_REASON_INVALID_REFERENCE_PRICE_TARGET 0x08         // Invalid Reference Price Target
+#define REPLACE_REJECTED_REASON_INVALID_IS_HIDDEN_FLAG 0x09                 // Invalid Is Hidden Flag
+#define REPLACE_REJECTED_REASON_INVALID_ORDER_TYPE 0x0A                     // Invalid Order Type
+#define REPLACE_REJECTED_REASON_INVALID_SIDE 0x0B                           // Invalid Side
+#define REPLACE_REJECTED_REASON_INVALID_MAX_FLOOR_QUANTITY 0x0C             // Invalid Max Floor Quantity
+#define REPLACE_REJECTED_REASON_INVALID_MAX_REPLENISH_QUANTITY_RANGE 0x0D   // Invalid Max Replenish Quantity Range
+#define REPLACE_REJECTED_REASON_INVALID_MAX_REPLENISH_TIME_RANGE 0x0E       // Invalid Max Replenish Time Range
+#define REPLACE_REJECTED_REASON_INVALID_MINIMUM_QUANTITY 0x0F               // Invalid Minimum Quantity
+#define REPLACE_REJECTED_REASON_INVALID_LOCATE_REQUIRED_FLAG 0x10           // Invalid Locate Required Flag
+#define REPLACE_REJECTED_REASON_INVALID_TIME_IN_FORCE 0x11                  // Invalid Time In Force
+#define REPLACE_REJECTED_REASON_MODIFICATION_NOT_PERMITTED 0x12             // Modification Not Permitted
+#define REPLACE_REJECTED_REASON_INVALID_MPID 0x13                           // Invalid Mpid
+#define REPLACE_REJECTED_REASON_INVALID_SENDER_COMP 0x14                    // Invalid Sender Comp
+#define REPLACE_REJECTED_REASON_INVALID_IS_POST_ONLY_FLAG 0x15              // Invalid Is Post Only Flag
+#define REPLACE_REJECTED_REASON_INVALID_EXPIRE_TIME 0x16                    // Invalid Expire Time
+#define REPLACE_REJECTED_REASON_INVALID_FOR_TRADING_SESSION 0x17            // Invalid For Trading Session
+#define REPLACE_REJECTED_REASON_INVALID_FOR_TRADING_STATUS 0x18             // Invalid For Trading Status
+#define REPLACE_REJECTED_REASON_INVALID_FOR_SYMBOL_STATUS 0x19              // Invalid For Symbol Status
+#define REPLACE_REJECTED_REASON_INVALID_IS_ISO_FLAG 0x1A                    // Invalid Is Iso Flag
+#define REPLACE_REJECTED_REASON_TRADING_DISABLED_FOR_MPID_ON_PORT 0x1B      // Trading Disabled For Mpid On Port
+#define REPLACE_REJECTED_REASON_TRADING_DISABLED_FOR_NON_TEST_SYMBOLS 0x1C  // Trading Disabled For Non Test Symbols
+#define REPLACE_REJECTED_REASON_TRADING_DISABLED_FOR_ORDER_CAPACITY 0x1D    // Trading Disabled For Order Capacity
+#define REPLACE_REJECTED_REASON_TRADING_DISABLED_FOR_ISO 0x1E               // Trading Disabled For Iso
+#define REPLACE_REJECTED_REASON_MAXIMUM_ORDER_QUANTITY_BREACHED 0x1F        // Maximum Order Quantity Breached
+#define REPLACE_REJECTED_REASON_MAXIMUM_PRICE_BREACHED 0x20                 // Maximum Price Breached
+#define REPLACE_REJECTED_REASON_MAXIMUM_NOTIONAL_BREACHED 0x21              // Maximum Notional Breached
+#define REPLACE_REJECTED_REASON_INVALID_MASS_CANCEL_REQUEST_ID 0x22         // Invalid Mass Cancel Request Id
+#define REPLACE_REJECTED_REASON_SYMBOL_ON_RESTRICTED_LIST 0x23              // Symbol On Restricted List
+#define REPLACE_REJECTED_REASON_LULD_BAND_BREACHED 0x24                     // Luld Band Breached
+#define REPLACE_REJECTED_REASON_INVALID_PRICE_INCREMENT 0x25                // Invalid Price Increment
+#define REPLACE_REJECTED_REASON_AUCTION_ORDER_NOT_CANCELABLE 0x26           // Auction Order Not Cancelable
+#define REPLACE_REJECTED_REASON_INVALID_FOR_AUCTION_ORDER 0x27              // Invalid For Auction Order
+
+// Replace Rejected Self Match Instruction: one byte code
+#define REPLACE_REJECTED_SELF_MATCH_INSTRUCTION_NO_SELF_MATCH_PREVENTION 0x00  // No Self Match Prevention
+#define REPLACE_REJECTED_SELF_MATCH_INSTRUCTION_CANCEL_NEWEST 0x01             // Cancel Newest
+#define REPLACE_REJECTED_SELF_MATCH_INSTRUCTION_CANCEL_OLDEST 0x02             // Cancel Oldest
+#define REPLACE_REJECTED_SELF_MATCH_INSTRUCTION_CANCEL_BOTH 0x03               // Cancel Both
+#define REPLACE_REJECTED_SELF_MATCH_INSTRUCTION_CANCEL_SMALLEST 0x04           // Cancel Smallest
+#define REPLACE_REJECTED_SELF_MATCH_INSTRUCTION_DECREMENT_AND_CANCEL 0x05      // Decrement And Cancel
+
+// Replace Rejected Price Slide Instruction: one byte code
+#define REPLACE_REJECTED_PRICE_SLIDE_INSTRUCTION_NO_PRICE_SLIDE 0x00                           // No Price Slide
+#define REPLACE_REJECTED_PRICE_SLIDE_INSTRUCTION_SINGLE_PRICE_SLIDE_ON_LOCK_AND_CROSS 0x01     // Single Price Slide On Lock And Cross
+#define REPLACE_REJECTED_PRICE_SLIDE_INSTRUCTION_MULTIPLE_PRICE_SLIDES_ON_LOCK_AND_CROSS 0x02  // Multiple Price Slides On Lock And Cross
+#define REPLACE_REJECTED_PRICE_SLIDE_INSTRUCTION_SINGLE_PRICE_SLIDE_LOCK_ONLY 0x03             // Single Price Slide Lock Only
+
+// Liquidity Indicator: one byte code
+#define LIQUIDITY_INDICATOR_REMOVED_HIDDEN_LIQUIDITY 0x00     // Removed Hidden Liquidity
+#define LIQUIDITY_INDICATOR_REMOVED_DISPLAYED_LIQUIDITY 0x01  // Removed Displayed Liquidity
+#define LIQUIDITY_INDICATOR_ADDED_HIDDEN_LIQUIDITY 0x02       // Added Hidden Liquidity
+#define LIQUIDITY_INDICATOR_ADDED_DISPLAYED_LIQUIDITY 0x03    // Added Displayed Liquidity
+#define LIQUIDITY_INDICATOR_AUCTION 0x04                      // Auction
+
+// Restatement Reason: one byte code
+#define RESTATEMENT_REASON_RESERVE_REPLENISHED 0x01  // Reserve Replenished
+#define RESTATEMENT_REASON_REPRICED 0x02             // Repriced
+#define RESTATEMENT_REASON_POST_AUCTION 0x03         // Post Auction
+
+// Mass Cancel Accepted Scope: one byte code
+#define MASS_CANCEL_ACCEPTED_SCOPE_BY_MEMBER_OWNED_SENDER_COMPS 0x00  // By Member Owned Sender Comps
+#define MASS_CANCEL_ACCEPTED_SCOPE_BY_MEMBER_OWNED_MPIDS 0x01         // By Member Owned Mpids
+
+// Mass Cancel Rejected Scope: one byte code
+#define MASS_CANCEL_REJECTED_SCOPE_BY_MEMBER_OWNED_SENDER_COMPS 0x00  // By Member Owned Sender Comps
+#define MASS_CANCEL_REJECTED_SCOPE_BY_MEMBER_OWNED_MPIDS 0x01         // By Member Owned Mpids
+
+// Mass Cancel Rejected Reason: one byte code
+#define MASS_CANCEL_REJECTED_REASON_INVALID_CLIENT_ORDER_ID 0x01                // Invalid Client Order Id
+#define MASS_CANCEL_REJECTED_REASON_DUPLICATE_CLIENT_ORDER_ID 0x02              // Duplicate Client Order Id
+#define MASS_CANCEL_REJECTED_REASON_UNKNOWN_ORIGINAL_CLIENT_ORDER_ID 0x03       // Unknown Original Client Order Id
+#define MASS_CANCEL_REJECTED_REASON_NO_LONGER_ON_BOOK 0x04                      // No Longer On Book
+#define MASS_CANCEL_REJECTED_REASON_INVALID_SYMBOL 0x05                         // Invalid Symbol
+#define MASS_CANCEL_REJECTED_REASON_INVALID_PRICE 0x06                          // Invalid Price
+#define MASS_CANCEL_REJECTED_REASON_INVALID_ORDER_QUANTITY 0x07                 // Invalid Order Quantity
+#define MASS_CANCEL_REJECTED_REASON_INVALID_REFERENCE_PRICE_TARGET 0x08         // Invalid Reference Price Target
+#define MASS_CANCEL_REJECTED_REASON_INVALID_IS_HIDDEN_FLAG 0x09                 // Invalid Is Hidden Flag
+#define MASS_CANCEL_REJECTED_REASON_INVALID_ORDER_TYPE 0x0A                     // Invalid Order Type
+#define MASS_CANCEL_REJECTED_REASON_INVALID_SIDE 0x0B                           // Invalid Side
+#define MASS_CANCEL_REJECTED_REASON_INVALID_MAX_FLOOR_QUANTITY 0x0C             // Invalid Max Floor Quantity
+#define MASS_CANCEL_REJECTED_REASON_INVALID_MAX_REPLENISH_QUANTITY_RANGE 0x0D   // Invalid Max Replenish Quantity Range
+#define MASS_CANCEL_REJECTED_REASON_INVALID_MAX_REPLENISH_TIME_RANGE 0x0E       // Invalid Max Replenish Time Range
+#define MASS_CANCEL_REJECTED_REASON_INVALID_MINIMUM_QUANTITY 0x0F               // Invalid Minimum Quantity
+#define MASS_CANCEL_REJECTED_REASON_INVALID_LOCATE_REQUIRED_FLAG 0x10           // Invalid Locate Required Flag
+#define MASS_CANCEL_REJECTED_REASON_INVALID_TIME_IN_FORCE 0x11                  // Invalid Time In Force
+#define MASS_CANCEL_REJECTED_REASON_MODIFICATION_NOT_PERMITTED 0x12             // Modification Not Permitted
+#define MASS_CANCEL_REJECTED_REASON_INVALID_MPID 0x13                           // Invalid Mpid
+#define MASS_CANCEL_REJECTED_REASON_INVALID_SENDER_COMP 0x14                    // Invalid Sender Comp
+#define MASS_CANCEL_REJECTED_REASON_INVALID_IS_POST_ONLY_FLAG 0x15              // Invalid Is Post Only Flag
+#define MASS_CANCEL_REJECTED_REASON_INVALID_EXPIRE_TIME 0x16                    // Invalid Expire Time
+#define MASS_CANCEL_REJECTED_REASON_INVALID_FOR_TRADING_SESSION 0x17            // Invalid For Trading Session
+#define MASS_CANCEL_REJECTED_REASON_INVALID_FOR_TRADING_STATUS 0x18             // Invalid For Trading Status
+#define MASS_CANCEL_REJECTED_REASON_INVALID_FOR_SYMBOL_STATUS 0x19              // Invalid For Symbol Status
+#define MASS_CANCEL_REJECTED_REASON_INVALID_IS_ISO_FLAG 0x1A                    // Invalid Is Iso Flag
+#define MASS_CANCEL_REJECTED_REASON_TRADING_DISABLED_FOR_MPID_ON_PORT 0x1B      // Trading Disabled For Mpid On Port
+#define MASS_CANCEL_REJECTED_REASON_TRADING_DISABLED_FOR_NON_TEST_SYMBOLS 0x1C  // Trading Disabled For Non Test Symbols
+#define MASS_CANCEL_REJECTED_REASON_TRADING_DISABLED_FOR_ORDER_CAPACITY 0x1D    // Trading Disabled For Order Capacity
+#define MASS_CANCEL_REJECTED_REASON_TRADING_DISABLED_FOR_ISO 0x1E               // Trading Disabled For Iso
+#define MASS_CANCEL_REJECTED_REASON_MAXIMUM_ORDER_QUANTITY_BREACHED 0x1F        // Maximum Order Quantity Breached
+#define MASS_CANCEL_REJECTED_REASON_MAXIMUM_PRICE_BREACHED 0x20                 // Maximum Price Breached
+#define MASS_CANCEL_REJECTED_REASON_MAXIMUM_NOTIONAL_BREACHED 0x21              // Maximum Notional Breached
+#define MASS_CANCEL_REJECTED_REASON_INVALID_MASS_CANCEL_REQUEST_ID 0x22         // Invalid Mass Cancel Request Id
+#define MASS_CANCEL_REJECTED_REASON_SYMBOL_ON_RESTRICTED_LIST 0x23              // Symbol On Restricted List
+#define MASS_CANCEL_REJECTED_REASON_LULD_BAND_BREACHED 0x24                     // Luld Band Breached
+#define MASS_CANCEL_REJECTED_REASON_INVALID_PRICE_INCREMENT 0x25                // Invalid Price Increment
+#define MASS_CANCEL_REJECTED_REASON_AUCTION_ORDER_NOT_CANCELABLE 0x26           // Auction Order Not Cancelable
+#define MASS_CANCEL_REJECTED_REASON_INVALID_FOR_AUCTION_ORDER 0x27              // Invalid For Auction Order
+
+// ---- Types -------------------------------------------------------------------
+
+// human readable debug message
+typedef struct _DebugMessage (UINT16 message_length) where (message_length >= 1) {
+  UINT8 text[(((UINT32) message_length) - 1)];
+} DebugMessage;
 
 // Response to a logon request
-entrypoint typedef struct _LogonResponseMessage {
+typedef struct _LogonResponseMessage {
   UINT64 session;                        // bytes 0 to 7
   UINT64 next_sequence_number;           // bytes 8 to 15
   UINT64 highest_known_sequence_number;  // bytes 16 to 23
@@ -38,32 +580,1103 @@ entrypoint typedef struct _LogonResponseMessage {
   UINT32 instance_;                      // bytes 26 to 29
 } LogonResponseMessage;
 
-// ---- Order Canceled Message: 25 bytes ----------------------------------------
+// Enum TradingSessionStatusOperationalHaltReason.
+casetype _OptionalTradingSessionStatusOperationalHaltReason (Bool present) {
+  switch (present) {
+    case true: UINT8 trading_session_status_operational_halt_reason;
+    case false: unit absent;
+  }
+} OptionalTradingSessionStatusOperationalHaltReason;
+
+// Enum TradingSessionStatusRegulatoryHaltReason.
+casetype _OptionalTradingSessionStatusRegulatoryHaltReason (Bool present) {
+  switch (present) {
+    case true: UINT8 trading_session_status_regulatory_halt_reason;
+    case false: unit absent;
+  }
+} OptionalTradingSessionStatusRegulatoryHaltReason;
+
+// Market-wide status representing the overall state of the trading session.
+typedef struct _TradingSessionStatusMessage {
+  UINT8 has_trading_session_status_operational_halt_reason : 1;                                                                                                 // byte 0
+  UINT8 has_trading_session_status_regulatory_halt_reason : 1;                                                                                                  // byte 0
+  UINT8 reserved_6 : 6;                                                                                                                                         // byte 0
+  UINT64 transact_time;                                                                                                                                         // bytes 1 to 8, signed, read here as unsigned
+  UINT8 market_hours_state;                                                                                                                                     // byte 9, signed, read here as unsigned
+  UINT8 session_trading_state;                                                                                                                                  // byte 10, signed, read here as unsigned
+  OptionalTradingSessionStatusOperationalHaltReason((has_trading_session_status_operational_halt_reason == 1)) trading_session_status_operational_halt_reason;
+  OptionalTradingSessionStatusRegulatoryHaltReason((has_trading_session_status_regulatory_halt_reason == 1)) trading_session_status_regulatory_halt_reason;
+} TradingSessionStatusMessage;
+
+// Enum ListingMarket. Added in 0.20.draft; absent in pre-0.20 senders, so it is a length-tolerant trailing field - present only when the frame extends past lotSize.
+casetype _OptionalListingMarket (Bool present) {
+  switch (present) {
+    case true: UINT8 listing_market;
+    case false: unit absent;
+  }
+} OptionalListingMarket;
+
+// Symbol definition containing instrument details and trading parameters. A DefineSymbol will be followed by a SymbolStatus message establishing the initial trading state for the symbol. Clients must treat a symbol as operationally HALTED while awaiting the accompanying SymbolStatus.
+typedef struct _DefineSymbolMessage (UINT32 available) where (available >= 32) {
+  UINT64 transact_time;                                          // bytes 0 to 7, signed, read here as unsigned
+  UINT16 symbol_id;                                              // bytes 8 to 9, signed, read here as unsigned
+  UINT8 symbol[8];                                               // bytes 10 to 17
+  UINT8 suffix[8];                                               // bytes 18 to 25
+  UINT8 matching_engine_id;                                      // byte 26, signed, read here as unsigned
+  UINT8 is_test : 1;                                             // byte 27
+  UINT8 reserved_7 : 7;                                          // byte 27
+  UINT32 lot_size;                                               // bytes 28 to 31, signed, read here as unsigned
+  OptionalListingMarket(((available - 32) > 0)) listing_market;
+} DefineSymbolMessage;
+
+// Enum SymbolStatusOperationalHaltReason.
+casetype _OptionalSymbolStatusOperationalHaltReason (Bool present) {
+  switch (present) {
+    case true: UINT8 symbol_status_operational_halt_reason;
+    case false: unit absent;
+  }
+} OptionalSymbolStatusOperationalHaltReason;
+
+// Enum SymbolStatusRegulatoryHaltReason.
+casetype _OptionalSymbolStatusRegulatoryHaltReason (Bool present) {
+  switch (present) {
+    case true: UINT8 symbol_status_regulatory_halt_reason;
+    case false: unit absent;
+  }
+} OptionalSymbolStatusRegulatoryHaltReason;
+
+// Symbol-specific trading status representing the current state and restrictions for an individual security. A SymbolStatus is sent for every symbol, including those that open in the TRADING state. Clients must treat a symbol as operationally HALTED while awaiting the first SymbolStatus. Subsequent SymbolStatus messages are sent whenever the trading state or short-sale restriction changes.
+typedef struct _SymbolStatusMessage {
+  UINT8 has_symbol_status_operational_halt_reason : 1;                                                                                // byte 0
+  UINT8 has_symbol_status_regulatory_halt_reason : 1;                                                                                 // byte 0
+  UINT8 reserved_6 : 6;                                                                                                               // byte 0
+  UINT64 transact_time;                                                                                                               // bytes 1 to 8, signed, read here as unsigned
+  UINT16 symbol_id;                                                                                                                   // bytes 9 to 10, signed, read here as unsigned
+  UINT8 symbol_trading_state;                                                                                                         // byte 11, signed, read here as unsigned
+  UINT8 short_sale_restriction_state;                                                                                                 // byte 12, signed, read here as unsigned
+  OptionalSymbolStatusOperationalHaltReason((has_symbol_status_operational_halt_reason == 1)) symbol_status_operational_halt_reason;
+  OptionalSymbolStatusRegulatoryHaltReason((has_symbol_status_regulatory_halt_reason == 1)) symbol_status_regulatory_halt_reason;
+} SymbolStatusMessage;
+
+// Enum SelfMatchScope.
+casetype _OptionalLimitOrderAcceptedSelfMatchScope (Bool present) {
+  switch (present) {
+    case true: UINT8 limit_order_accepted_self_match_scope;
+    case false: unit absent;
+  }
+} OptionalLimitOrderAcceptedSelfMatchScope;
+
+// Enum LimitOrderAcceptedSelfMatchInstruction.
+casetype _OptionalLimitOrderAcceptedSelfMatchInstruction (Bool present) {
+  switch (present) {
+    case true: UINT8 limit_order_accepted_self_match_instruction;
+    case false: unit absent;
+  }
+} OptionalLimitOrderAcceptedSelfMatchInstruction;
+
+// Enum LimitOrderAcceptedPriceSlideInstruction.
+casetype _OptionalLimitOrderAcceptedPriceSlideInstruction (Bool present) {
+  switch (present) {
+    case true: UINT8 limit_order_accepted_price_slide_instruction;
+    case false: unit absent;
+  }
+} OptionalLimitOrderAcceptedPriceSlideInstruction;
+
+// Number of shares that must be executed to execute any shares.
+casetype _OptionalLimitOrderAcceptedMinQty (Bool present) {
+  switch (present) {
+    case true: UINT32 limit_order_accepted_min_qty;
+    case false: unit absent;
+  }
+} OptionalLimitOrderAcceptedMinQty;
+
+// Quantity to be displayed at one time with remaining quantity not displayed on the book.
+casetype _OptionalLimitOrderAcceptedMaxFloorQty (Bool present) {
+  switch (present) {
+    case true: UINT32 limit_order_accepted_max_floor_qty;
+    case false: unit absent;
+  }
+} OptionalLimitOrderAcceptedMaxFloorQty;
+
+// Defines the maximum range to be used when calculating a random refresh quantity.
+casetype _OptionalLimitOrderAcceptedMaxReplenishQtyRange (Bool present) {
+  switch (present) {
+    case true: UINT32 limit_order_accepted_max_replenish_qty_range;
+    case false: unit absent;
+  }
+} OptionalLimitOrderAcceptedMaxReplenishQtyRange;
+
+// Defines the maximum range to be used when calculating a random refresh time, in nanoseconds.
+casetype _OptionalLimitOrderAcceptedMaxReplenishTimeRange (Bool present) {
+  switch (present) {
+    case true: UINT64 limit_order_accepted_max_replenish_time_range;
+    case false: unit absent;
+  }
+} OptionalLimitOrderAcceptedMaxReplenishTimeRange;
+
+// The target relative to the reference base price in basis points of the NBBO spread.
+casetype _OptionalLimitOrderAcceptedReferencePriceTarget (Bool present) {
+  switch (present) {
+    case true: UINT16 limit_order_accepted_reference_price_target;
+    case false: unit absent;
+  }
+} OptionalLimitOrderAcceptedReferencePriceTarget;
+
+// Timestamp at which the order's open quantity will be canceled, valid only with GTT time in force.
+casetype _OptionalLimitOrderAcceptedExpireTime (Bool present) {
+  switch (present) {
+    case true: UINT64 limit_order_accepted_expire_time;
+    case false: unit absent;
+  }
+} OptionalLimitOrderAcceptedExpireTime;
+
+// Pass-through field for use by clients, not used by the Exchange.
+casetype _OptionalLimitOrderAcceptedUserData (Bool present) {
+  switch (present) {
+    case true: UINT64 limit_order_accepted_user_data;
+    case false: unit absent;
+  }
+} OptionalLimitOrderAcceptedUserData;
+
+// Market Participant Identifier.
+casetype _OptionalLimitOrderAcceptedMpid (Bool present) {
+  switch (present) {
+    case true: UINT8 limit_order_accepted_mpid[4];
+    case false: unit absent;
+  }
+} OptionalLimitOrderAcceptedMpid;
+
+// Member supplied grouping.
+casetype _OptionalLimitOrderAcceptedMemberGroup (Bool present) {
+  switch (present) {
+    case true: UINT8 limit_order_accepted_member_group[2];
+    case false: unit absent;
+  }
+} OptionalLimitOrderAcceptedMemberGroup;
+
+// Identifies the broker that has loaned the stock to settle the short sale.
+casetype _OptionalLimitOrderAcceptedLocateBroker (Bool present) {
+  switch (present) {
+    case true: UINT8 limit_order_accepted_locate_broker[4];
+    case false: unit absent;
+  }
+} OptionalLimitOrderAcceptedLocateBroker;
+
+// Optional rank price, when different from limit price.
+casetype _OptionalLimitOrderAcceptedRankPrice (Bool present) {
+  switch (present) {
+    case true: UINT64 limit_order_accepted_rank_price;
+    case false: unit absent;
+  }
+} OptionalLimitOrderAcceptedRankPrice;
+
+// Optional display price, when different from limit price.
+casetype _OptionalLimitOrderAcceptedDisplayPrice (Bool present) {
+  switch (present) {
+    case true: UINT64 limit_order_accepted_display_price;
+    case false: unit absent;
+  }
+} OptionalLimitOrderAcceptedDisplayPrice;
+
+// Acknowledges acceptance of a submitted LimitOrder.
+typedef struct _LimitOrderAcceptedMessage {
+  UINT32 has_limit_order_accepted_self_match_scope : 1;                                                                                                     // bytes 0 to 3
+  UINT32 has_limit_order_accepted_self_match_instruction : 1;                                                                                               // bytes 0 to 3
+  UINT32 has_limit_order_accepted_price_slide_instruction : 1;                                                                                              // bytes 0 to 3
+  UINT32 has_limit_order_accepted_min_qty : 1;                                                                                                              // bytes 0 to 3
+  UINT32 has_limit_order_accepted_max_floor_qty : 1;                                                                                                        // bytes 0 to 3
+  UINT32 has_limit_order_accepted_max_replenish_qty_range : 1;                                                                                              // bytes 0 to 3
+  UINT32 has_limit_order_accepted_max_replenish_time_range : 1;                                                                                             // bytes 0 to 3
+  UINT32 has_limit_order_accepted_reference_price_target : 1;                                                                                               // bytes 0 to 3
+  UINT32 has_limit_order_accepted_expire_time : 1;                                                                                                          // bytes 0 to 3
+  UINT32 has_limit_order_accepted_user_data : 1;                                                                                                            // bytes 0 to 3
+  UINT32 has_limit_order_accepted_mpid : 1;                                                                                                                 // bytes 0 to 3
+  UINT32 has_limit_order_accepted_member_group : 1;                                                                                                         // bytes 0 to 3
+  UINT32 has_limit_order_accepted_locate_broker : 1;                                                                                                        // bytes 0 to 3
+  UINT32 has_limit_order_accepted_rank_price : 1;                                                                                                           // bytes 0 to 3
+  UINT32 has_limit_order_accepted_display_price : 1;                                                                                                        // bytes 0 to 3
+  UINT32 reserved_17 : 17;                                                                                                                                  // bytes 0 to 3
+  UINT64 transact_time;                                                                                                                                     // bytes 4 to 11, signed, read here as unsigned
+  UINT64 order_id;                                                                                                                                          // bytes 12 to 19, signed, read here as unsigned
+  UINT64 cl_ord_id;                                                                                                                                         // bytes 20 to 27, signed, read here as unsigned
+  UINT32 order_qty;                                                                                                                                         // bytes 28 to 31, signed, read here as unsigned
+  UINT32 side : 3;                                                                                                                                          // bytes 32 to 35
+  UINT32 is_locate_required : 1;                                                                                                                            // bytes 32 to 35
+  UINT32 time_in_force : 4;                                                                                                                                 // bytes 32 to 35
+  UINT32 order_capacity : 3;                                                                                                                                // bytes 32 to 35
+  UINT32 is_iso : 1;                                                                                                                                        // bytes 32 to 35
+  UINT32 is_hidden : 1;                                                                                                                                     // bytes 32 to 35
+  UINT32 is_post_only : 1;                                                                                                                                  // bytes 32 to 35
+  UINT32 cancel_at_entry_if_crossed : 1;                                                                                                                    // bytes 32 to 35
+  UINT32 reserved_17_2 : 17;                                                                                                                                // bytes 32 to 35
+  UINT16 symbol_id;                                                                                                                                         // bytes 36 to 37, signed, read here as unsigned
+  UINT64 price;                                                                                                                                             // bytes 38 to 45, signed, read here as unsigned
+  OptionalLimitOrderAcceptedSelfMatchScope((has_limit_order_accepted_self_match_scope == 1)) limit_order_accepted_self_match_scope;
+  OptionalLimitOrderAcceptedSelfMatchInstruction((has_limit_order_accepted_self_match_instruction == 1)) limit_order_accepted_self_match_instruction;
+  OptionalLimitOrderAcceptedPriceSlideInstruction((has_limit_order_accepted_price_slide_instruction == 1)) limit_order_accepted_price_slide_instruction;
+  OptionalLimitOrderAcceptedMinQty((has_limit_order_accepted_min_qty == 1)) limit_order_accepted_min_qty;
+  OptionalLimitOrderAcceptedMaxFloorQty((has_limit_order_accepted_max_floor_qty == 1)) limit_order_accepted_max_floor_qty;
+  OptionalLimitOrderAcceptedMaxReplenishQtyRange((has_limit_order_accepted_max_replenish_qty_range == 1)) limit_order_accepted_max_replenish_qty_range;
+  OptionalLimitOrderAcceptedMaxReplenishTimeRange((has_limit_order_accepted_max_replenish_time_range == 1)) limit_order_accepted_max_replenish_time_range;
+  OptionalLimitOrderAcceptedReferencePriceTarget((has_limit_order_accepted_reference_price_target == 1)) limit_order_accepted_reference_price_target;
+  OptionalLimitOrderAcceptedExpireTime((has_limit_order_accepted_expire_time == 1)) limit_order_accepted_expire_time;
+  OptionalLimitOrderAcceptedUserData((has_limit_order_accepted_user_data == 1)) limit_order_accepted_user_data;
+  OptionalLimitOrderAcceptedMpid((has_limit_order_accepted_mpid == 1)) limit_order_accepted_mpid;
+  OptionalLimitOrderAcceptedMemberGroup((has_limit_order_accepted_member_group == 1)) limit_order_accepted_member_group;
+  OptionalLimitOrderAcceptedLocateBroker((has_limit_order_accepted_locate_broker == 1)) limit_order_accepted_locate_broker;
+  OptionalLimitOrderAcceptedRankPrice((has_limit_order_accepted_rank_price == 1)) limit_order_accepted_rank_price;
+  OptionalLimitOrderAcceptedDisplayPrice((has_limit_order_accepted_display_price == 1)) limit_order_accepted_display_price;
+} LimitOrderAcceptedMessage;
+
+// Enum SelfMatchScope.
+casetype _OptionalLimitOrderRejectedSelfMatchScope (Bool present) {
+  switch (present) {
+    case true: UINT8 limit_order_rejected_self_match_scope;
+    case false: unit absent;
+  }
+} OptionalLimitOrderRejectedSelfMatchScope;
+
+// Enum LimitOrderRejectedSelfMatchInstruction.
+casetype _OptionalLimitOrderRejectedSelfMatchInstruction (Bool present) {
+  switch (present) {
+    case true: UINT8 limit_order_rejected_self_match_instruction;
+    case false: unit absent;
+  }
+} OptionalLimitOrderRejectedSelfMatchInstruction;
+
+// Enum LimitOrderRejectedPriceSlideInstruction.
+casetype _OptionalLimitOrderRejectedPriceSlideInstruction (Bool present) {
+  switch (present) {
+    case true: UINT8 limit_order_rejected_price_slide_instruction;
+    case false: unit absent;
+  }
+} OptionalLimitOrderRejectedPriceSlideInstruction;
+
+// Minimum quantity to execute.
+casetype _OptionalLimitOrderRejectedMinQty (Bool present) {
+  switch (present) {
+    case true: UINT32 limit_order_rejected_min_qty;
+    case false: unit absent;
+  }
+} OptionalLimitOrderRejectedMinQty;
+
+// Quantity to be displayed at one time.
+casetype _OptionalLimitOrderRejectedMaxFloorQty (Bool present) {
+  switch (present) {
+    case true: UINT32 limit_order_rejected_max_floor_qty;
+    case false: unit absent;
+  }
+} OptionalLimitOrderRejectedMaxFloorQty;
+
+// Maximum range for random refresh quantity.
+casetype _OptionalLimitOrderRejectedMaxReplenishQtyRange (Bool present) {
+  switch (present) {
+    case true: UINT32 limit_order_rejected_max_replenish_qty_range;
+    case false: unit absent;
+  }
+} OptionalLimitOrderRejectedMaxReplenishQtyRange;
+
+// Maximum range for random refresh time.
+casetype _OptionalLimitOrderRejectedMaxReplenishTimeRange (Bool present) {
+  switch (present) {
+    case true: UINT64 limit_order_rejected_max_replenish_time_range;
+    case false: unit absent;
+  }
+} OptionalLimitOrderRejectedMaxReplenishTimeRange;
+
+// Basis points relative to the NBBO spread.
+casetype _OptionalLimitOrderRejectedReferencePriceTarget (Bool present) {
+  switch (present) {
+    case true: UINT16 limit_order_rejected_reference_price_target;
+    case false: unit absent;
+  }
+} OptionalLimitOrderRejectedReferencePriceTarget;
+
+// Timestamp at which the order will be canceled.
+casetype _OptionalLimitOrderRejectedExpireTime (Bool present) {
+  switch (present) {
+    case true: UINT64 limit_order_rejected_expire_time;
+    case false: unit absent;
+  }
+} OptionalLimitOrderRejectedExpireTime;
+
+// Pass-through field.
+casetype _OptionalLimitOrderRejectedUserData (Bool present) {
+  switch (present) {
+    case true: UINT64 limit_order_rejected_user_data;
+    case false: unit absent;
+  }
+} OptionalLimitOrderRejectedUserData;
+
+// Market Participant Identifier.
+casetype _OptionalLimitOrderRejectedMpid (Bool present) {
+  switch (present) {
+    case true: UINT8 limit_order_rejected_mpid[4];
+    case false: unit absent;
+  }
+} OptionalLimitOrderRejectedMpid;
+
+// Member supplied grouping.
+casetype _OptionalLimitOrderRejectedMemberGroup (Bool present) {
+  switch (present) {
+    case true: UINT8 limit_order_rejected_member_group[2];
+    case false: unit absent;
+  }
+} OptionalLimitOrderRejectedMemberGroup;
+
+// Locate broker.
+casetype _OptionalLimitOrderRejectedLocateBroker (Bool present) {
+  switch (present) {
+    case true: UINT8 limit_order_rejected_locate_broker[4];
+    case false: unit absent;
+  }
+} OptionalLimitOrderRejectedLocateBroker;
+
+// The submitted limit order has been rejected by the Exchange.
+typedef struct _LimitOrderRejectedMessage {
+  UINT32 has_limit_order_rejected_self_match_scope : 1;                                                                                                     // bytes 0 to 3
+  UINT32 has_limit_order_rejected_self_match_instruction : 1;                                                                                               // bytes 0 to 3
+  UINT32 has_limit_order_rejected_price_slide_instruction : 1;                                                                                              // bytes 0 to 3
+  UINT32 has_limit_order_rejected_min_qty : 1;                                                                                                              // bytes 0 to 3
+  UINT32 has_limit_order_rejected_max_floor_qty : 1;                                                                                                        // bytes 0 to 3
+  UINT32 has_limit_order_rejected_max_replenish_qty_range : 1;                                                                                              // bytes 0 to 3
+  UINT32 has_limit_order_rejected_max_replenish_time_range : 1;                                                                                             // bytes 0 to 3
+  UINT32 has_limit_order_rejected_reference_price_target : 1;                                                                                               // bytes 0 to 3
+  UINT32 has_limit_order_rejected_expire_time : 1;                                                                                                          // bytes 0 to 3
+  UINT32 has_limit_order_rejected_user_data : 1;                                                                                                            // bytes 0 to 3
+  UINT32 has_limit_order_rejected_mpid : 1;                                                                                                                 // bytes 0 to 3
+  UINT32 has_limit_order_rejected_member_group : 1;                                                                                                         // bytes 0 to 3
+  UINT32 has_limit_order_rejected_locate_broker : 1;                                                                                                        // bytes 0 to 3
+  UINT32 reserved_19 : 19;                                                                                                                                  // bytes 0 to 3
+  UINT64 transact_time;                                                                                                                                     // bytes 4 to 11, signed, read here as unsigned
+  UINT64 cl_ord_id;                                                                                                                                         // bytes 12 to 19, signed, read here as unsigned
+  UINT32 order_qty;                                                                                                                                         // bytes 20 to 23, signed, read here as unsigned
+  UINT32 side : 3;                                                                                                                                          // bytes 24 to 27
+  UINT32 is_locate_required : 1;                                                                                                                            // bytes 24 to 27
+  UINT32 time_in_force : 4;                                                                                                                                 // bytes 24 to 27
+  UINT32 order_capacity : 3;                                                                                                                                // bytes 24 to 27
+  UINT32 is_iso : 1;                                                                                                                                        // bytes 24 to 27
+  UINT32 is_hidden : 1;                                                                                                                                     // bytes 24 to 27
+  UINT32 is_post_only : 1;                                                                                                                                  // bytes 24 to 27
+  UINT32 cancel_at_entry_if_crossed : 1;                                                                                                                    // bytes 24 to 27
+  UINT32 reserved_17 : 17;                                                                                                                                  // bytes 24 to 27
+  UINT16 symbol_id;                                                                                                                                         // bytes 28 to 29, signed, read here as unsigned
+  UINT64 price;                                                                                                                                             // bytes 30 to 37, signed, read here as unsigned
+  UINT8 limit_order_rejected_reason;                                                                                                                        // byte 38, signed, read here as unsigned
+  OptionalLimitOrderRejectedSelfMatchScope((has_limit_order_rejected_self_match_scope == 1)) limit_order_rejected_self_match_scope;
+  OptionalLimitOrderRejectedSelfMatchInstruction((has_limit_order_rejected_self_match_instruction == 1)) limit_order_rejected_self_match_instruction;
+  OptionalLimitOrderRejectedPriceSlideInstruction((has_limit_order_rejected_price_slide_instruction == 1)) limit_order_rejected_price_slide_instruction;
+  OptionalLimitOrderRejectedMinQty((has_limit_order_rejected_min_qty == 1)) limit_order_rejected_min_qty;
+  OptionalLimitOrderRejectedMaxFloorQty((has_limit_order_rejected_max_floor_qty == 1)) limit_order_rejected_max_floor_qty;
+  OptionalLimitOrderRejectedMaxReplenishQtyRange((has_limit_order_rejected_max_replenish_qty_range == 1)) limit_order_rejected_max_replenish_qty_range;
+  OptionalLimitOrderRejectedMaxReplenishTimeRange((has_limit_order_rejected_max_replenish_time_range == 1)) limit_order_rejected_max_replenish_time_range;
+  OptionalLimitOrderRejectedReferencePriceTarget((has_limit_order_rejected_reference_price_target == 1)) limit_order_rejected_reference_price_target;
+  OptionalLimitOrderRejectedExpireTime((has_limit_order_rejected_expire_time == 1)) limit_order_rejected_expire_time;
+  OptionalLimitOrderRejectedUserData((has_limit_order_rejected_user_data == 1)) limit_order_rejected_user_data;
+  OptionalLimitOrderRejectedMpid((has_limit_order_rejected_mpid == 1)) limit_order_rejected_mpid;
+  OptionalLimitOrderRejectedMemberGroup((has_limit_order_rejected_member_group == 1)) limit_order_rejected_member_group;
+  OptionalLimitOrderRejectedLocateBroker((has_limit_order_rejected_locate_broker == 1)) limit_order_rejected_locate_broker;
+} LimitOrderRejectedMessage;
+
+// Enum SelfMatchScope.
+casetype _OptionalMarketOrderAcceptedSelfMatchScope (Bool present) {
+  switch (present) {
+    case true: UINT8 market_order_accepted_self_match_scope;
+    case false: unit absent;
+  }
+} OptionalMarketOrderAcceptedSelfMatchScope;
+
+// Enum MarketOrderAcceptedSelfMatchInstruction.
+casetype _OptionalMarketOrderAcceptedSelfMatchInstruction (Bool present) {
+  switch (present) {
+    case true: UINT8 market_order_accepted_self_match_instruction;
+    case false: unit absent;
+  }
+} OptionalMarketOrderAcceptedSelfMatchInstruction;
+
+// Pass-through field.
+casetype _OptionalMarketOrderAcceptedUserData (Bool present) {
+  switch (present) {
+    case true: UINT64 market_order_accepted_user_data;
+    case false: unit absent;
+  }
+} OptionalMarketOrderAcceptedUserData;
+
+// Market Participant Identifier.
+casetype _OptionalMarketOrderAcceptedMpid (Bool present) {
+  switch (present) {
+    case true: UINT8 market_order_accepted_mpid[4];
+    case false: unit absent;
+  }
+} OptionalMarketOrderAcceptedMpid;
+
+// Member supplied grouping.
+casetype _OptionalMarketOrderAcceptedMemberGroup (Bool present) {
+  switch (present) {
+    case true: UINT8 market_order_accepted_member_group[2];
+    case false: unit absent;
+  }
+} OptionalMarketOrderAcceptedMemberGroup;
+
+// Locate broker.
+casetype _OptionalMarketOrderAcceptedLocateBroker (Bool present) {
+  switch (present) {
+    case true: UINT8 market_order_accepted_locate_broker[4];
+    case false: unit absent;
+  }
+} OptionalMarketOrderAcceptedLocateBroker;
+
+// Acknowledges acceptance of a submitted MarketOrder.
+typedef struct _MarketOrderAcceptedMessage {
+  UINT16 has_market_order_accepted_self_match_scope : 1;                                                                                                  // bytes 0 to 1
+  UINT16 has_market_order_accepted_self_match_instruction : 1;                                                                                            // bytes 0 to 1
+  UINT16 has_market_order_accepted_user_data : 1;                                                                                                         // bytes 0 to 1
+  UINT16 has_market_order_accepted_mpid : 1;                                                                                                              // bytes 0 to 1
+  UINT16 has_market_order_accepted_member_group : 1;                                                                                                      // bytes 0 to 1
+  UINT16 has_market_order_accepted_locate_broker : 1;                                                                                                     // bytes 0 to 1
+  UINT16 reserved_10 : 10;                                                                                                                                // bytes 0 to 1
+  UINT64 transact_time;                                                                                                                                   // bytes 2 to 9, signed, read here as unsigned
+  UINT64 order_id;                                                                                                                                        // bytes 10 to 17, signed, read here as unsigned
+  UINT64 cl_ord_id;                                                                                                                                       // bytes 18 to 25, signed, read here as unsigned
+  UINT32 order_qty;                                                                                                                                       // bytes 26 to 29, signed, read here as unsigned
+  UINT16 side : 3;                                                                                                                                        // bytes 30 to 31
+  UINT16 is_locate_required : 1;                                                                                                                          // bytes 30 to 31
+  UINT16 time_in_force : 4;                                                                                                                               // bytes 30 to 31
+  UINT16 order_capacity : 3;                                                                                                                              // bytes 30 to 31
+  UINT16 reserved_5 : 5;                                                                                                                                  // bytes 30 to 31
+  UINT16 symbol_id;                                                                                                                                       // bytes 32 to 33, signed, read here as unsigned
+  OptionalMarketOrderAcceptedSelfMatchScope((has_market_order_accepted_self_match_scope == 1)) market_order_accepted_self_match_scope;
+  OptionalMarketOrderAcceptedSelfMatchInstruction((has_market_order_accepted_self_match_instruction == 1)) market_order_accepted_self_match_instruction;
+  OptionalMarketOrderAcceptedUserData((has_market_order_accepted_user_data == 1)) market_order_accepted_user_data;
+  OptionalMarketOrderAcceptedMpid((has_market_order_accepted_mpid == 1)) market_order_accepted_mpid;
+  OptionalMarketOrderAcceptedMemberGroup((has_market_order_accepted_member_group == 1)) market_order_accepted_member_group;
+  OptionalMarketOrderAcceptedLocateBroker((has_market_order_accepted_locate_broker == 1)) market_order_accepted_locate_broker;
+} MarketOrderAcceptedMessage;
+
+// Enum SelfMatchScope.
+casetype _OptionalMarketOrderRejectedSelfMatchScope (Bool present) {
+  switch (present) {
+    case true: UINT8 market_order_rejected_self_match_scope;
+    case false: unit absent;
+  }
+} OptionalMarketOrderRejectedSelfMatchScope;
+
+// Enum MarketOrderRejectedSelfMatchInstruction.
+casetype _OptionalMarketOrderRejectedSelfMatchInstruction (Bool present) {
+  switch (present) {
+    case true: UINT8 market_order_rejected_self_match_instruction;
+    case false: unit absent;
+  }
+} OptionalMarketOrderRejectedSelfMatchInstruction;
+
+// Pass-through field.
+casetype _OptionalMarketOrderRejectedUserData (Bool present) {
+  switch (present) {
+    case true: UINT64 market_order_rejected_user_data;
+    case false: unit absent;
+  }
+} OptionalMarketOrderRejectedUserData;
+
+// Market Participant Identifier.
+casetype _OptionalMarketOrderRejectedMpid (Bool present) {
+  switch (present) {
+    case true: UINT8 market_order_rejected_mpid[4];
+    case false: unit absent;
+  }
+} OptionalMarketOrderRejectedMpid;
+
+// Member supplied grouping.
+casetype _OptionalMarketOrderRejectedMemberGroup (Bool present) {
+  switch (present) {
+    case true: UINT8 market_order_rejected_member_group[2];
+    case false: unit absent;
+  }
+} OptionalMarketOrderRejectedMemberGroup;
+
+// Locate broker.
+casetype _OptionalMarketOrderRejectedLocateBroker (Bool present) {
+  switch (present) {
+    case true: UINT8 market_order_rejected_locate_broker[4];
+    case false: unit absent;
+  }
+} OptionalMarketOrderRejectedLocateBroker;
+
+// The submitted market order has been rejected by the Exchange.
+typedef struct _MarketOrderRejectedMessage {
+  UINT16 has_market_order_rejected_self_match_scope : 1;                                                                                                  // bytes 0 to 1
+  UINT16 has_market_order_rejected_self_match_instruction : 1;                                                                                            // bytes 0 to 1
+  UINT16 has_market_order_rejected_user_data : 1;                                                                                                         // bytes 0 to 1
+  UINT16 has_market_order_rejected_mpid : 1;                                                                                                              // bytes 0 to 1
+  UINT16 has_market_order_rejected_member_group : 1;                                                                                                      // bytes 0 to 1
+  UINT16 has_market_order_rejected_locate_broker : 1;                                                                                                     // bytes 0 to 1
+  UINT16 reserved_10 : 10;                                                                                                                                // bytes 0 to 1
+  UINT64 transact_time;                                                                                                                                   // bytes 2 to 9, signed, read here as unsigned
+  UINT64 cl_ord_id;                                                                                                                                       // bytes 10 to 17, signed, read here as unsigned
+  UINT32 order_qty;                                                                                                                                       // bytes 18 to 21, signed, read here as unsigned
+  UINT16 side : 3;                                                                                                                                        // bytes 22 to 23
+  UINT16 is_locate_required : 1;                                                                                                                          // bytes 22 to 23
+  UINT16 time_in_force : 4;                                                                                                                               // bytes 22 to 23
+  UINT16 order_capacity : 3;                                                                                                                              // bytes 22 to 23
+  UINT16 reserved_5 : 5;                                                                                                                                  // bytes 22 to 23
+  UINT16 symbol_id;                                                                                                                                       // bytes 24 to 25, signed, read here as unsigned
+  UINT8 market_order_rejected_reason;                                                                                                                     // byte 26, signed, read here as unsigned
+  OptionalMarketOrderRejectedSelfMatchScope((has_market_order_rejected_self_match_scope == 1)) market_order_rejected_self_match_scope;
+  OptionalMarketOrderRejectedSelfMatchInstruction((has_market_order_rejected_self_match_instruction == 1)) market_order_rejected_self_match_instruction;
+  OptionalMarketOrderRejectedUserData((has_market_order_rejected_user_data == 1)) market_order_rejected_user_data;
+  OptionalMarketOrderRejectedMpid((has_market_order_rejected_mpid == 1)) market_order_rejected_mpid;
+  OptionalMarketOrderRejectedMemberGroup((has_market_order_rejected_member_group == 1)) market_order_rejected_member_group;
+  OptionalMarketOrderRejectedLocateBroker((has_market_order_rejected_locate_broker == 1)) market_order_rejected_locate_broker;
+} MarketOrderRejectedMessage;
 
 // This order has been canceled. No shares are left on the Exchange. The Member will receive this message in response to a CancelOrder message, as well as unsolicited messages from the Exchange for various reasons.
-entrypoint typedef struct _OrderCanceledMessage {
+typedef struct _OrderCanceledMessage {
   UINT64 transact_time;   // bytes 0 to 7, signed, read here as unsigned
   UINT64 order_id;        // bytes 8 to 15, signed, read here as unsigned
   UINT64 orig_cl_ord_id;  // bytes 16 to 23, signed, read here as unsigned
   UINT8 cancel_reason;    // byte 24, signed, read here as unsigned
 } OrderCanceledMessage;
 
-// ---- Cancel Rejected Message: 17 bytes ---------------------------------------
-
 // The requested CancelOrder has been rejected.
-entrypoint typedef struct _CancelRejectedMessage {
+typedef struct _CancelRejectedMessage {
   UINT64 transact_time;          // bytes 0 to 7, signed, read here as unsigned
   UINT64 orig_cl_ord_id;         // bytes 8 to 15, signed, read here as unsigned
   UINT8 cancel_rejected_reason;  // byte 16, signed, read here as unsigned
 } CancelRejectedMessage;
 
-// ---- Mass Cancel Result Message: 28 bytes ------------------------------------
+// Quantity can remain the same or decrease.
+casetype _OptionalOrderModifiedOrderQty (Bool present) {
+  switch (present) {
+    case true: UINT32 order_modified_order_qty;
+    case false: unit absent;
+  }
+} OptionalOrderModifiedOrderQty;
+
+// Bitfield used in ModifyOrder, OrderModified, and ModifyRejected messages.
+typedef struct _OrderModifiedBitFields {
+  UINT8 side : 3;                // byte 0
+  UINT8 is_locate_required : 1;  // byte 0
+  UINT8 reserved_4 : 4;          // byte 0
+} OrderModifiedBitFields;
+
+// Bitfield used in ModifyOrder, OrderModified, and ModifyRejected messages.
+casetype _OptionalOrderModifiedBitFields (Bool present) {
+  switch (present) {
+    case true: OrderModifiedBitFields order_modified_bit_fields;
+    case false: unit absent;
+  }
+} OptionalOrderModifiedBitFields;
+
+// Locate broker.
+casetype _OptionalOrderModifiedLocateBroker (Bool present) {
+  switch (present) {
+    case true: UINT8 order_modified_locate_broker[4];
+    case false: unit absent;
+  }
+} OptionalOrderModifiedLocateBroker;
+
+// An order has been modified.
+typedef struct _OrderModifiedMessage {
+  UINT8 has_order_modified_order_qty : 1;                                                                   // byte 0
+  UINT8 has_order_modified_bit_fields : 1;                                                                  // byte 0
+  UINT8 has_order_modified_locate_broker : 1;                                                               // byte 0
+  UINT8 reserved_5 : 5;                                                                                     // byte 0
+  UINT64 transact_time;                                                                                     // bytes 1 to 8, signed, read here as unsigned
+  UINT64 order_id;                                                                                          // bytes 9 to 16, signed, read here as unsigned
+  UINT64 cl_ord_id;                                                                                         // bytes 17 to 24, signed, read here as unsigned
+  UINT64 orig_cl_ord_id;                                                                                    // bytes 25 to 32, signed, read here as unsigned
+  UINT32 leaves_qty;                                                                                        // bytes 33 to 36, signed, read here as unsigned
+  OptionalOrderModifiedOrderQty((has_order_modified_order_qty == 1)) order_modified_order_qty;
+  OptionalOrderModifiedBitFields((has_order_modified_bit_fields == 1)) order_modified_bit_fields;
+  OptionalOrderModifiedLocateBroker((has_order_modified_locate_broker == 1)) order_modified_locate_broker;
+} OrderModifiedMessage;
+
+// Quantity can remain the same or decrease.
+casetype _OptionalModifyRejectedOrderQty (Bool present) {
+  switch (present) {
+    case true: UINT32 modify_rejected_order_qty;
+    case false: unit absent;
+  }
+} OptionalModifyRejectedOrderQty;
+
+// Bitfield used in ModifyOrder, OrderModified, and ModifyRejected messages.
+casetype _OptionalModifyRejectedBitFields (Bool present) {
+  switch (present) {
+    case true: OrderModifiedBitFields modify_rejected_bit_fields;
+    case false: unit absent;
+  }
+} OptionalModifyRejectedBitFields;
+
+// Locate broker.
+casetype _OptionalModifyRejectedLocateBroker (Bool present) {
+  switch (present) {
+    case true: UINT8 modify_rejected_locate_broker[4];
+    case false: unit absent;
+  }
+} OptionalModifyRejectedLocateBroker;
+
+// The requested ModifyOrder has been rejected.
+typedef struct _ModifyRejectedMessage {
+  UINT8 has_modify_rejected_order_qty : 1;                                                                     // byte 0
+  UINT8 has_modify_rejected_bit_fields : 1;                                                                    // byte 0
+  UINT8 has_modify_rejected_locate_broker : 1;                                                                 // byte 0
+  UINT8 reserved_5 : 5;                                                                                        // byte 0
+  UINT64 transact_time;                                                                                        // bytes 1 to 8, signed, read here as unsigned
+  UINT64 cl_ord_id;                                                                                            // bytes 9 to 16, signed, read here as unsigned
+  UINT64 orig_cl_ord_id;                                                                                       // bytes 17 to 24, signed, read here as unsigned
+  UINT8 modify_rejected_reason;                                                                                // byte 25, signed, read here as unsigned
+  OptionalModifyRejectedOrderQty((has_modify_rejected_order_qty == 1)) modify_rejected_order_qty;
+  OptionalModifyRejectedBitFields((has_modify_rejected_bit_fields == 1)) modify_rejected_bit_fields;
+  OptionalModifyRejectedLocateBroker((has_modify_rejected_locate_broker == 1)) modify_rejected_locate_broker;
+} ModifyRejectedMessage;
+
+// New limit price.
+casetype _OptionalOrderReplacedPrice (Bool present) {
+  switch (present) {
+    case true: UINT64 order_replaced_price;
+    case false: unit absent;
+  }
+} OptionalOrderReplacedPrice;
+
+// Quantity can remain the same, decrease or increase.
+casetype _OptionalOrderReplacedOrderQty (Bool present) {
+  switch (present) {
+    case true: UINT32 order_replaced_order_qty;
+    case false: unit absent;
+  }
+} OptionalOrderReplacedOrderQty;
+
+// Quantity to be displayed at one time.
+casetype _OptionalOrderReplacedMaxFloorQty (Bool present) {
+  switch (present) {
+    case true: UINT32 order_replaced_max_floor_qty;
+    case false: unit absent;
+  }
+} OptionalOrderReplacedMaxFloorQty;
+
+// Enum SelfMatchScope.
+casetype _OptionalOrderReplacedSelfMatchScope (Bool present) {
+  switch (present) {
+    case true: UINT8 order_replaced_self_match_scope;
+    case false: unit absent;
+  }
+} OptionalOrderReplacedSelfMatchScope;
+
+// Enum OrderReplacedSelfMatchInstruction.
+casetype _OptionalOrderReplacedSelfMatchInstruction (Bool present) {
+  switch (present) {
+    case true: UINT8 order_replaced_self_match_instruction;
+    case false: unit absent;
+  }
+} OptionalOrderReplacedSelfMatchInstruction;
+
+// Enum OrderReplacedPriceSlideInstruction.
+casetype _OptionalOrderReplacedPriceSlideInstruction (Bool present) {
+  switch (present) {
+    case true: UINT8 order_replaced_price_slide_instruction;
+    case false: unit absent;
+  }
+} OptionalOrderReplacedPriceSlideInstruction;
+
+// Basis points relative to the NBBO spread.
+casetype _OptionalOrderReplacedReferencePriceTarget (Bool present) {
+  switch (present) {
+    case true: UINT16 order_replaced_reference_price_target;
+    case false: unit absent;
+  }
+} OptionalOrderReplacedReferencePriceTarget;
+
+// Locate broker.
+casetype _OptionalOrderReplacedLocateBroker (Bool present) {
+  switch (present) {
+    case true: UINT8 order_replaced_locate_broker[4];
+    case false: unit absent;
+  }
+} OptionalOrderReplacedLocateBroker;
+
+// Optional rank price, when different from limit price.
+casetype _OptionalOrderReplacedRankPrice (Bool present) {
+  switch (present) {
+    case true: UINT64 order_replaced_rank_price;
+    case false: unit absent;
+  }
+} OptionalOrderReplacedRankPrice;
+
+// Optional display price, when different from limit price.
+casetype _OptionalOrderReplacedDisplayPrice (Bool present) {
+  switch (present) {
+    case true: UINT64 order_replaced_display_price;
+    case false: unit absent;
+  }
+} OptionalOrderReplacedDisplayPrice;
+
+// Replace an existing order with a new order.
+typedef struct _OrderReplacedMessage {
+  UINT16 has_order_replaced_price : 1;                                                                                                   // bytes 0 to 1
+  UINT16 has_order_replaced_order_qty : 1;                                                                                               // bytes 0 to 1
+  UINT16 has_order_replaced_max_floor_qty : 1;                                                                                           // bytes 0 to 1
+  UINT16 has_order_replaced_self_match_scope : 1;                                                                                        // bytes 0 to 1
+  UINT16 has_order_replaced_self_match_instruction : 1;                                                                                  // bytes 0 to 1
+  UINT16 has_order_replaced_price_slide_instruction : 1;                                                                                 // bytes 0 to 1
+  UINT16 has_order_replaced_reference_price_target : 1;                                                                                  // bytes 0 to 1
+  UINT16 has_order_replaced_locate_broker : 1;                                                                                           // bytes 0 to 1
+  UINT16 has_order_replaced_rank_price : 1;                                                                                              // bytes 0 to 1
+  UINT16 has_order_replaced_display_price : 1;                                                                                           // bytes 0 to 1
+  UINT16 reserved_6 : 6;                                                                                                                 // bytes 0 to 1
+  UINT64 transact_time;                                                                                                                  // bytes 2 to 9, signed, read here as unsigned
+  UINT64 order_id;                                                                                                                       // bytes 10 to 17, signed, read here as unsigned
+  UINT64 cl_ord_id;                                                                                                                      // bytes 18 to 25, signed, read here as unsigned
+  UINT64 orig_cl_ord_id;                                                                                                                 // bytes 26 to 33, signed, read here as unsigned
+  UINT16 side : 3;                                                                                                                       // bytes 34 to 35
+  UINT16 is_locate_required : 1;                                                                                                         // bytes 34 to 35
+  UINT16 is_iso : 1;                                                                                                                     // bytes 34 to 35
+  UINT16 is_post_only : 1;                                                                                                               // bytes 34 to 35
+  UINT16 cancel_at_entry_if_crossed : 1;                                                                                                 // bytes 34 to 35
+  UINT16 reserved_9 : 9;                                                                                                                 // bytes 34 to 35
+  UINT32 leaves_qty;                                                                                                                     // bytes 36 to 39, signed, read here as unsigned
+  OptionalOrderReplacedPrice((has_order_replaced_price == 1)) order_replaced_price;
+  OptionalOrderReplacedOrderQty((has_order_replaced_order_qty == 1)) order_replaced_order_qty;
+  OptionalOrderReplacedMaxFloorQty((has_order_replaced_max_floor_qty == 1)) order_replaced_max_floor_qty;
+  OptionalOrderReplacedSelfMatchScope((has_order_replaced_self_match_scope == 1)) order_replaced_self_match_scope;
+  OptionalOrderReplacedSelfMatchInstruction((has_order_replaced_self_match_instruction == 1)) order_replaced_self_match_instruction;
+  OptionalOrderReplacedPriceSlideInstruction((has_order_replaced_price_slide_instruction == 1)) order_replaced_price_slide_instruction;
+  OptionalOrderReplacedReferencePriceTarget((has_order_replaced_reference_price_target == 1)) order_replaced_reference_price_target;
+  OptionalOrderReplacedLocateBroker((has_order_replaced_locate_broker == 1)) order_replaced_locate_broker;
+  OptionalOrderReplacedRankPrice((has_order_replaced_rank_price == 1)) order_replaced_rank_price;
+  OptionalOrderReplacedDisplayPrice((has_order_replaced_display_price == 1)) order_replaced_display_price;
+} OrderReplacedMessage;
+
+// New limit price.
+casetype _OptionalReplaceRejectedPrice (Bool present) {
+  switch (present) {
+    case true: UINT64 replace_rejected_price;
+    case false: unit absent;
+  }
+} OptionalReplaceRejectedPrice;
+
+// Quantity.
+casetype _OptionalReplaceRejectedOrderQty (Bool present) {
+  switch (present) {
+    case true: UINT32 replace_rejected_order_qty;
+    case false: unit absent;
+  }
+} OptionalReplaceRejectedOrderQty;
+
+// Quantity to be displayed at one time.
+casetype _OptionalReplaceRejectedMaxFloorQty (Bool present) {
+  switch (present) {
+    case true: UINT32 replace_rejected_max_floor_qty;
+    case false: unit absent;
+  }
+} OptionalReplaceRejectedMaxFloorQty;
+
+// Enum SelfMatchScope.
+casetype _OptionalReplaceRejectedSelfMatchScope (Bool present) {
+  switch (present) {
+    case true: UINT8 replace_rejected_self_match_scope;
+    case false: unit absent;
+  }
+} OptionalReplaceRejectedSelfMatchScope;
+
+// Enum ReplaceRejectedSelfMatchInstruction.
+casetype _OptionalReplaceRejectedSelfMatchInstruction (Bool present) {
+  switch (present) {
+    case true: UINT8 replace_rejected_self_match_instruction;
+    case false: unit absent;
+  }
+} OptionalReplaceRejectedSelfMatchInstruction;
+
+// Enum ReplaceRejectedPriceSlideInstruction.
+casetype _OptionalReplaceRejectedPriceSlideInstruction (Bool present) {
+  switch (present) {
+    case true: UINT8 replace_rejected_price_slide_instruction;
+    case false: unit absent;
+  }
+} OptionalReplaceRejectedPriceSlideInstruction;
+
+// Basis points relative to the NBBO spread.
+casetype _OptionalReplaceRejectedReferencePriceTarget (Bool present) {
+  switch (present) {
+    case true: UINT16 replace_rejected_reference_price_target;
+    case false: unit absent;
+  }
+} OptionalReplaceRejectedReferencePriceTarget;
+
+// Locate broker.
+casetype _OptionalReplaceRejectedLocateBroker (Bool present) {
+  switch (present) {
+    case true: UINT8 replace_rejected_locate_broker[4];
+    case false: unit absent;
+  }
+} OptionalReplaceRejectedLocateBroker;
+
+// The requested ReplaceOrder has been rejected.
+typedef struct _ReplaceRejectedMessage {
+  UINT16 has_replace_rejected_price : 1;                                                                                                       // bytes 0 to 1
+  UINT16 has_replace_rejected_order_qty : 1;                                                                                                   // bytes 0 to 1
+  UINT16 has_replace_rejected_max_floor_qty : 1;                                                                                               // bytes 0 to 1
+  UINT16 has_replace_rejected_self_match_scope : 1;                                                                                            // bytes 0 to 1
+  UINT16 has_replace_rejected_self_match_instruction : 1;                                                                                      // bytes 0 to 1
+  UINT16 has_replace_rejected_price_slide_instruction : 1;                                                                                     // bytes 0 to 1
+  UINT16 has_replace_rejected_reference_price_target : 1;                                                                                      // bytes 0 to 1
+  UINT16 has_replace_rejected_locate_broker : 1;                                                                                               // bytes 0 to 1
+  UINT16 reserved_8 : 8;                                                                                                                       // bytes 0 to 1
+  UINT64 transact_time;                                                                                                                        // bytes 2 to 9, signed, read here as unsigned
+  UINT64 cl_ord_id;                                                                                                                            // bytes 10 to 17, signed, read here as unsigned
+  UINT64 orig_cl_ord_id;                                                                                                                       // bytes 18 to 25, signed, read here as unsigned
+  UINT16 side : 3;                                                                                                                             // bytes 26 to 27
+  UINT16 is_locate_required : 1;                                                                                                               // bytes 26 to 27
+  UINT16 is_iso : 1;                                                                                                                           // bytes 26 to 27
+  UINT16 is_post_only : 1;                                                                                                                     // bytes 26 to 27
+  UINT16 cancel_at_entry_if_crossed : 1;                                                                                                       // bytes 26 to 27
+  UINT16 reserved_9 : 9;                                                                                                                       // bytes 26 to 27
+  UINT8 replace_rejected_reason;                                                                                                               // byte 28, signed, read here as unsigned
+  OptionalReplaceRejectedPrice((has_replace_rejected_price == 1)) replace_rejected_price;
+  OptionalReplaceRejectedOrderQty((has_replace_rejected_order_qty == 1)) replace_rejected_order_qty;
+  OptionalReplaceRejectedMaxFloorQty((has_replace_rejected_max_floor_qty == 1)) replace_rejected_max_floor_qty;
+  OptionalReplaceRejectedSelfMatchScope((has_replace_rejected_self_match_scope == 1)) replace_rejected_self_match_scope;
+  OptionalReplaceRejectedSelfMatchInstruction((has_replace_rejected_self_match_instruction == 1)) replace_rejected_self_match_instruction;
+  OptionalReplaceRejectedPriceSlideInstruction((has_replace_rejected_price_slide_instruction == 1)) replace_rejected_price_slide_instruction;
+  OptionalReplaceRejectedReferencePriceTarget((has_replace_rejected_reference_price_target == 1)) replace_rejected_reference_price_target;
+  OptionalReplaceRejectedLocateBroker((has_replace_rejected_locate_broker == 1)) replace_rejected_locate_broker;
+} ReplaceRejectedMessage;
+
+// Enum LiquidityIndicator. Added in 0.14.draft; absent in pre-0.14 senders, so it is a length-tolerant trailing field - present only when the frame extends past the preceding fields.
+casetype _OptionalLiquidityIndicator (Bool present) {
+  switch (present) {
+    case true: UINT8 liquidity_indicator;
+    case false: unit absent;
+  }
+} OptionalLiquidityIndicator;
+
+// An order has executed.
+typedef struct _OrderExecutedMessage (UINT32 available) where (available >= 48) {
+  UINT64 transact_time;                                                    // bytes 0 to 7, signed, read here as unsigned
+  UINT64 order_id;                                                         // bytes 8 to 15, signed, read here as unsigned
+  UINT64 cl_ord_id;                                                        // bytes 16 to 23, signed, read here as unsigned
+  UINT64 exec_price;                                                       // bytes 24 to 31, signed, read here as unsigned
+  UINT64 exec_id;                                                          // bytes 32 to 39, signed, read here as unsigned
+  UINT32 exec_qty;                                                         // bytes 40 to 43, signed, read here as unsigned
+  UINT32 leaves_qty;                                                       // bytes 44 to 47, signed, read here as unsigned
+  OptionalLiquidityIndicator(((available - 48) > 0)) liquidity_indicator;
+} OrderExecutedMessage;
+
+// The rank price. Only present on re-priced orders.
+casetype _OptionalOrderRestatedRankPrice (Bool present) {
+  switch (present) {
+    case true: UINT64 order_restated_rank_price;
+    case false: unit absent;
+  }
+} OptionalOrderRestatedRankPrice;
+
+// The display price, when different from rank price. Only present on re-priced orders.
+casetype _OptionalOrderRestatedDisplayPrice (Bool present) {
+  switch (present) {
+    case true: UINT64 order_restated_display_price;
+    case false: unit absent;
+  }
+} OptionalOrderRestatedDisplayPrice;
+
+// The quantity of the displayed replenished reserve order. Only present on reserve orders.
+casetype _OptionalDisplayQty (Bool present) {
+  switch (present) {
+    case true: UINT32 display_qty;
+    case false: unit absent;
+  }
+} OptionalDisplayQty;
+
+// Informational message from the Exchange. Sent when the Exchange performs work on the Member's order, such as repricing after entry or a reserve replenishment. For a replenishment, the OrderId refers to the new displayed portion of the order. For a repricing, the OrderId is the new OrderId for the entire order. This message is informational.
+typedef struct _OrderRestatedMessage {
+  UINT8 has_order_restated_rank_price : 1;                                                                  // byte 0
+  UINT8 has_order_restated_display_price : 1;                                                               // byte 0
+  UINT8 has_display_qty : 1;                                                                                // byte 0
+  UINT8 reserved_5 : 5;                                                                                     // byte 0
+  UINT64 transact_time;                                                                                     // bytes 1 to 8, signed, read here as unsigned
+  UINT64 order_id;                                                                                          // bytes 9 to 16, signed, read here as unsigned
+  UINT64 cl_ord_id;                                                                                         // bytes 17 to 24, signed, read here as unsigned
+  UINT8 restatement_reason;                                                                                 // byte 25, signed, read here as unsigned
+  OptionalOrderRestatedRankPrice((has_order_restated_rank_price == 1)) order_restated_rank_price;
+  OptionalOrderRestatedDisplayPrice((has_order_restated_display_price == 1)) order_restated_display_price;
+  OptionalDisplayQty((has_display_qty == 1)) display_qty;
+} OrderRestatedMessage;
+
+// Notification that a self-match was detected and prevented according to the order's self-match prevention instructions. The message reports the quantity that would have executed, the quantity that was canceled, and the remaining quantity still active on the book.
+typedef struct _SelfMatchPreventedMessage (UINT32 available) where (available >= 52) {
+  UINT64 transact_time;                                                    // bytes 0 to 7, signed, read here as unsigned
+  UINT64 order_id;                                                         // bytes 8 to 15, signed, read here as unsigned
+  UINT64 cl_ord_id;                                                        // bytes 16 to 23, signed, read here as unsigned
+  UINT64 exec_price;                                                       // bytes 24 to 31, signed, read here as unsigned
+  UINT64 exec_id;                                                          // bytes 32 to 39, signed, read here as unsigned
+  UINT32 exec_qty;                                                         // bytes 40 to 43, signed, read here as unsigned
+  UINT32 canceled_qty;                                                     // bytes 44 to 47, signed, read here as unsigned
+  UINT32 leaves_qty;                                                       // bytes 48 to 51, signed, read here as unsigned
+  OptionalLiquidityIndicator(((available - 52) > 0)) liquidity_indicator;
+} SelfMatchPreventedMessage;
+
+// Market Participant Identifier.
+casetype _OptionalMassCancelAcceptedMpid (Bool present) {
+  switch (present) {
+    case true: UINT8 mass_cancel_accepted_mpid[4];
+    case false: unit absent;
+  }
+} OptionalMassCancelAcceptedMpid;
+
+// Narrows the cancel to orders entered on the specified order entry port.
+casetype _OptionalMassCancelAcceptedSenderComp (Bool present) {
+  switch (present) {
+    case true: UINT8 mass_cancel_accepted_sender_comp[8];
+    case false: unit absent;
+  }
+} OptionalMassCancelAcceptedSenderComp;
+
+// Member supplied grouping.
+casetype _OptionalMassCancelAcceptedMemberGroup (Bool present) {
+  switch (present) {
+    case true: UINT8 mass_cancel_accepted_member_group[2];
+    case false: unit absent;
+  }
+} OptionalMassCancelAcceptedMemberGroup;
+
+// Scopes the mass cancel to this specific order.
+casetype _OptionalMassCancelAcceptedClOrdId (Bool present) {
+  switch (present) {
+    case true: UINT64 mass_cancel_accepted_cl_ord_id;
+    case false: unit absent;
+  }
+} OptionalMassCancelAcceptedClOrdId;
+
+// The Mass Cancel has been accepted and is being processed.
+typedef struct _MassCancelAcceptedMessage {
+  UINT8 has_mass_cancel_accepted_mpid : 1;                                                                                // byte 0
+  UINT8 has_mass_cancel_accepted_sender_comp : 1;                                                                         // byte 0
+  UINT8 has_mass_cancel_accepted_member_group : 1;                                                                        // byte 0
+  UINT8 has_mass_cancel_accepted_cl_ord_id : 1;                                                                           // byte 0
+  UINT8 reserved_4 : 4;                                                                                                   // byte 0
+  UINT64 transact_time;                                                                                                   // bytes 1 to 8, signed, read here as unsigned
+  UINT64 mass_cancel_request_id;                                                                                          // bytes 9 to 16, signed, read here as unsigned
+  UINT8 mass_cancel_accepted_scope;                                                                                       // byte 17, signed, read here as unsigned
+  UINT8 exclude_auction_orders : 1;                                                                                       // byte 18
+  UINT8 reserved_7 : 7;                                                                                                   // byte 18
+  UINT64 mass_cancel_id;                                                                                                  // bytes 19 to 26, signed, read here as unsigned
+  OptionalMassCancelAcceptedMpid((has_mass_cancel_accepted_mpid == 1)) mass_cancel_accepted_mpid;
+  OptionalMassCancelAcceptedSenderComp((has_mass_cancel_accepted_sender_comp == 1)) mass_cancel_accepted_sender_comp;
+  OptionalMassCancelAcceptedMemberGroup((has_mass_cancel_accepted_member_group == 1)) mass_cancel_accepted_member_group;
+  OptionalMassCancelAcceptedClOrdId((has_mass_cancel_accepted_cl_ord_id == 1)) mass_cancel_accepted_cl_ord_id;
+} MassCancelAcceptedMessage;
+
+// Market Participant Identifier.
+casetype _OptionalMassCancelRejectedMpid (Bool present) {
+  switch (present) {
+    case true: UINT8 mass_cancel_rejected_mpid[4];
+    case false: unit absent;
+  }
+} OptionalMassCancelRejectedMpid;
+
+// Narrows the cancel to orders entered on the specified order entry port.
+casetype _OptionalMassCancelRejectedSenderComp (Bool present) {
+  switch (present) {
+    case true: UINT8 mass_cancel_rejected_sender_comp[8];
+    case false: unit absent;
+  }
+} OptionalMassCancelRejectedSenderComp;
+
+// Member supplied grouping.
+casetype _OptionalMassCancelRejectedMemberGroup (Bool present) {
+  switch (present) {
+    case true: UINT8 mass_cancel_rejected_member_group[2];
+    case false: unit absent;
+  }
+} OptionalMassCancelRejectedMemberGroup;
+
+// Scopes the mass cancel to this specific order.
+casetype _OptionalMassCancelRejectedClOrdId (Bool present) {
+  switch (present) {
+    case true: UINT64 mass_cancel_rejected_cl_ord_id;
+    case false: unit absent;
+  }
+} OptionalMassCancelRejectedClOrdId;
+
+// The Mass Cancel has been rejected.
+typedef struct _MassCancelRejectedMessage {
+  UINT8 has_mass_cancel_rejected_mpid : 1;                                                                                // byte 0
+  UINT8 has_mass_cancel_rejected_sender_comp : 1;                                                                         // byte 0
+  UINT8 has_mass_cancel_rejected_member_group : 1;                                                                        // byte 0
+  UINT8 has_mass_cancel_rejected_cl_ord_id : 1;                                                                           // byte 0
+  UINT8 reserved_4 : 4;                                                                                                   // byte 0
+  UINT64 transact_time;                                                                                                   // bytes 1 to 8, signed, read here as unsigned
+  UINT64 mass_cancel_request_id;                                                                                          // bytes 9 to 16, signed, read here as unsigned
+  UINT8 mass_cancel_rejected_scope;                                                                                       // byte 17, signed, read here as unsigned
+  UINT8 exclude_auction_orders : 1;                                                                                       // byte 18
+  UINT8 reserved_7 : 7;                                                                                                   // byte 18
+  UINT8 mass_cancel_rejected_reason;                                                                                      // byte 19, signed, read here as unsigned
+  OptionalMassCancelRejectedMpid((has_mass_cancel_rejected_mpid == 1)) mass_cancel_rejected_mpid;
+  OptionalMassCancelRejectedSenderComp((has_mass_cancel_rejected_sender_comp == 1)) mass_cancel_rejected_sender_comp;
+  OptionalMassCancelRejectedMemberGroup((has_mass_cancel_rejected_member_group == 1)) mass_cancel_rejected_member_group;
+  OptionalMassCancelRejectedClOrdId((has_mass_cancel_rejected_cl_ord_id == 1)) mass_cancel_rejected_cl_ord_id;
+} MassCancelRejectedMessage;
 
 // Confirms sweep completion. Sent after all affected orders have been canceled.
-entrypoint typedef struct _MassCancelResultMessage {
+typedef struct _MassCancelResultMessage {
   UINT64 transact_time;           // bytes 0 to 7, signed, read here as unsigned
   UINT64 mass_cancel_request_id;  // bytes 8 to 15, signed, read here as unsigned
   UINT64 mass_cancel_id;          // bytes 16 to 23, signed, read here as unsigned
   UINT32 canceled_count;          // bytes 24 to 27, signed, read here as unsigned
 } MassCancelResultMessage;
+
+// Branch
+casetype _SequencedMessage (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x69: TradingSessionStatusMessage trading_session_status_message;
+    case 0x73: DefineSymbolMessage(available) define_symbol_message;
+    case 0x79: SymbolStatusMessage symbol_status_message;
+    case 0x49: LimitOrderAcceptedMessage limit_order_accepted_message;
+    case 0x55: LimitOrderRejectedMessage limit_order_rejected_message;
+    case 0x44: MarketOrderAcceptedMessage market_order_accepted_message;
+    case 0x54: MarketOrderRejectedMessage market_order_rejected_message;
+    case 0x58: OrderCanceledMessage order_canceled_message;
+    case 0x57: CancelRejectedMessage cancel_rejected_message;
+    case 0x59: OrderModifiedMessage order_modified_message;
+    case 0x4E: ModifyRejectedMessage modify_rejected_message;
+    case 0x4A: OrderReplacedMessage order_replaced_message;
+    case 0x4B: ReplaceRejectedMessage replace_rejected_message;
+    case 0x45: OrderExecutedMessage(available) order_executed_message;
+    case 0x46: OrderRestatedMessage order_restated_message;
+    case 0x5A: SelfMatchPreventedMessage(available) self_match_prevented_message;
+    case 0x4F: MassCancelAcceptedMessage mass_cancel_accepted_message;
+    case 0x50: MassCancelRejectedMessage mass_cancel_rejected_message;
+    case 0x51: MassCancelResultMessage mass_cancel_result_message;
+    default: UINT8 unknown[available];
+  }
+} SequencedMessage;
+
+// A sequenced message from the exchange
+typedef struct _TcpSequencedMessage (UINT16 message_length) where (message_length >= 3) {
+  UINT8 stream_id;                                                                                                                                     // byte 0
+  UINT8 message_type;                                                                                                                                  // byte 1
+  SequencedMessage(message_type, (((UINT32) message_length) - 3)) sequenced_message[:byte-size-single-element-array (((UINT32) message_length) - 3)];
+} TcpSequencedMessage;
+
+// Branch
+casetype _ServerPayload (UINT8 selector, UINT32 length, UINT16 message_length, UINT32 available) {
+  switch (selector) {
+    case 0x30: DebugMessage(message_length) debug_message;
+    case 0x34: unit end_of_session_message;
+    case 0x31: LogonResponseMessage logon_response_message;
+    case 0x32: TcpSequencedMessage(message_length) tcp_sequenced_message[:byte-size-single-element-array length];
+    default: UINT8 unknown[available];
+  }
+} ServerPayload;
+
+// Rake Tcp Message sent by the Exchange to the Member
+typedef struct _ServerRakeTcpMessage {
+  UINT16 message_length { message_length >= 1 };                                                                                                                                                             // bytes 0 to 1
+  UINT8 packet_type;                                                                                                                                                                                         // byte 2
+  ServerPayload(packet_type, (((UINT32) message_length) - 1), message_length, ((((UINT32) message_length) + 2) - 3)) server_payload[:byte-size-single-element-array ((((UINT32) message_length) + 2) - 3)];
+} ServerRakeTcpMessage;
+
+// ---- Packet: ServerPacket ----------------------------------------------------
+
+// Rake Packet sent by the Exchange
+entrypoint typedef struct _ServerPacket (UINT32 available) {
+  ServerRakeTcpMessage server_rake_tcp_message[:byte-size available];
+} ServerPacket;
 

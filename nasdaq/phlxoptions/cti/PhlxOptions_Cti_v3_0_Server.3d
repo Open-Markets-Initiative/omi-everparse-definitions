@@ -1,64 +1,618 @@
-// National Association of Securities Dealers Automated Quotations (Nasdaq) Clearing Trade Interface
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nasdaq PhlxOptions Cti Itch v3.0
 //
+// Protocol:
+//   Organization: National Association of Securities Dealers Automated Quotations (Nasdaq)
+//   Protocol: Clearing Trade Interface
+//   Encoding: Itch
+//   Version: 3.0
+//   Date: 08/03/2026
+//   Specification: Options_CTI.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ServerPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out PhlxOptions_Cti_v3_0_Server.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a length prefix framing what follows
-// - a field read in bits
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Server Packet Header: 3 bytes -------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Packet header of a packet sent by the server
-entrypoint typedef struct _ServerPacketHeader {
-  UINT16BE packet_length;    // bytes 0 to 1
-  UINT8 server_packet_type;  // byte 2
-} ServerPacketHeader;
+// Server Packet Type: one byte code
+#define SERVER_PACKET_TYPE_DEBUG_PACKET 0x2B             // Debug Packet
+#define SERVER_PACKET_TYPE_LOGIN_ACCEPTED_PACKET 0x41    // Login Accepted Packet
+#define SERVER_PACKET_TYPE_LOGIN_REJECTED_PACKET 0x4A    // Login Rejected Packet
+#define SERVER_PACKET_TYPE_SEQUENCED_DATA_PACKET 0x53    // Sequenced Data Packet
+#define SERVER_PACKET_TYPE_SERVER_HEARTBEAT_PACKET 0x48  // Server Heartbeat Packet
+#define SERVER_PACKET_TYPE_END_OF_SESSION_PACKET 0x5A    // End Of Session Packet
 
-// ---- Login Accepted Packet: 30 bytes -----------------------------------------
+// Reject Reason Code: one byte code
+#define REJECT_REASON_CODE_NOT_AUTHORIZED 0x41         // Not Authorized
+#define REJECT_REASON_CODE_SESSION_NOT_AVAILABLE 0x53  // Session Not Available
+
+// Sequenced Message Type: one byte code
+#define SEQUENCED_MESSAGE_TYPE_SYSTEM_EVENT_MESSAGE 0x53             // System Event Message
+#define SEQUENCED_MESSAGE_TYPE_OPTIONS_DIRECTORY_MESSAGE 0x44        // Options Directory Message
+#define SEQUENCED_MESSAGE_TYPE_COMPLEX_ORDER_STRATEGY_MESSAGE 0x52   // Complex Order Strategy Message
+#define SEQUENCED_MESSAGE_TYPE_SECURITY_TRADING_ACTION_MESSAGE 0x48  // Security Trading Action Message
+#define SEQUENCED_MESSAGE_TYPE_COMPLEX_TRADING_ACTION_MESSAGE 0x49   // Complex Trading Action Message
+#define SEQUENCED_MESSAGE_TYPE_TRADE_MESSAGE 0x54                    // Trade Message
+#define SEQUENCED_MESSAGE_TYPE_CANCEL_TRADE_MESSAGE 0x56             // Cancel Trade Message
+
+// Event Code: one byte code
+#define EVENT_CODE_START_OF_MESSAGES 0x4F               // Start Of Messages
+#define EVENT_CODE_START_OF_SYSTEM_HOURS 0x53           // Start Of System Hours
+#define EVENT_CODE_START_OF_OPENING_PROCESS 0x51        // Start Of Opening Process
+#define EVENT_CODE_END_OF_NORMAL_HOURS_PROCESSING 0x4E  // End Of Normal Hours Processing
+#define EVENT_CODE_END_OF_LATE_HOURS_PROCESSING 0x4C    // End Of Late Hours Processing
+#define EVENT_CODE_END_OF_SYSTEM_HOURS 0x45             // End Of System Hours
+#define EVENT_CODE_END_OF_MESSAGES 0x43                 // End Of Messages
+#define EVENT_CODE_END_OF_WCO_EARLY_CLOSING 0x57        // End Of Wco Early Closing
+
+// Option Kind: one byte code
+#define OPTION_KIND_CALL 0x43       // Call
+#define OPTION_KIND_PUT 0x50        // Put
+#define OPTION_KIND_STOCK_LEG 0x20  // Stock Leg
+
+// Option Closing Type: one byte code
+#define OPTION_CLOSING_TYPE_NORMAL_HOURS 0x4E       // Normal Hours
+#define OPTION_CLOSING_TYPE_LATE_HOURS 0x4C         // Late Hours
+#define OPTION_CLOSING_TYPE_WCO_EARLY_CLOSING 0x57  // Wco Early Closing
+
+// Tradable: one byte code
+#define TRADABLE_TRADABLE 0x59      // Tradable
+#define TRADABLE_NON_TRADABLE 0x4E  // Non Tradable
+
+// Mpv: one byte code
+#define MPV_PENNY_EVERYWHERE 0x45  // Penny Everywhere
+#define MPV_SCALED 0x53            // Scaled
+#define MPV_PENNY_PILOT 0x50       // Penny Pilot
+
+// Closing Only: one byte code
+#define CLOSING_ONLY_CLOSING_POSITION_ONLY 0x59      // Closing Position Only
+#define CLOSING_ONLY_NOT_CLOSING_POSITION_ONLY 0x4E  // Not Closing Position Only
+
+// Action: one byte code
+#define ACTION_ADD 0x41     // Add
+#define ACTION_DELETE 0x44  // Delete
+
+// Leg Option Kind: one byte code
+#define LEG_OPTION_KIND_CALL 0x43       // Call
+#define LEG_OPTION_KIND_PUT 0x50        // Put
+#define LEG_OPTION_KIND_STOCK_LEG 0x20  // Stock Leg
+
+// Leg Side: one byte code
+#define LEG_SIDE_BUY 0x42   // Buy
+#define LEG_SIDE_SELL 0x53  // Sell
+
+// Current Trading State: one byte code
+#define CURRENT_TRADING_STATE_HALT_IN_EFFECT 0x48   // Halt In Effect
+#define CURRENT_TRADING_STATE_TRADING_RESUMED 0x54  // Trading Resumed
+
+// Send Type: one byte code
+#define SEND_TYPE_SEND 0x53                // Send
+#define SEND_TYPE_POSSIBLE_DUPLICATE 0x50  // Possible Duplicate
+
+// Transaction Type: one byte code
+#define TRANSACTION_TYPE_NEW_TRADE 0x58         // New Trade
+#define TRANSACTION_TYPE_TRADE_CORRECTION 0x59  // Trade Correction
+#define TRANSACTION_TYPE_TRADE_CANCEL 0x5A      // Trade Cancel
+
+// Liquidity: one byte code
+#define LIQUIDITY_ADD_MAKER 0x01                               // Add Maker
+#define LIQUIDITY_REMOVE_TAKER 0x02                            // Remove Taker
+#define LIQUIDITY_RESPONSE 0x04                                // Response
+#define LIQUIDITY_HIDDEN 0x05                                  // Hidden
+#define LIQUIDITY_OPENING_TRADE 0x06                           // Opening Trade
+#define LIQUIDITY_CROSS 0x07                                   // Cross
+#define LIQUIDITY_FLASHED_ORDER 0x08                           // Flashed Order
+#define LIQUIDITY_FLASH_RESPONSE 0x09                          // Flash Response
+#define LIQUIDITY_ROUTED_OUT 0x0A                              // Routed Out
+#define LIQUIDITY_TRADE_REPORT 0x0B                            // Trade Report
+#define LIQUIDITY_COMBO_MAKER_AGAINST_COMBO 0x0C               // Combo Maker Against Combo
+#define LIQUIDITY_COMBO_TAKER_AGAINST_COMBO 0x0D               // Combo Taker Against Combo
+#define LIQUIDITY_COMBO_RESPONSE_AGAINST_COMBO 0x0E            // Combo Response Against Combo
+#define LIQUIDITY_COMBO_HIDDEN_AGAINST_COMBO 0x0F              // Combo Hidden Against Combo
+#define LIQUIDITY_COMBO_OPENING_ROTATION 0x10                  // Combo Opening Rotation
+#define LIQUIDITY_COMBO_CROSS 0x11                             // Combo Cross
+#define LIQUIDITY_COMBO_TAKER_AGAINST_REGULAR 0x12             // Combo Taker Against Regular
+#define LIQUIDITY_REGULAR_MAKER_AGAINST_COMBO 0x13             // Regular Maker Against Combo
+#define LIQUIDITY_COMBO_TAKER_AGAINST_IO 0x14                  // Combo Taker Against Io
+#define LIQUIDITY_REGULAR_TAKER_AGAINST_IO 0x15                // Regular Taker Against Io
+#define LIQUIDITY_IO_MAKER_AGAINST_REGULAR 0x17                // Io Maker Against Regular
+#define LIQUIDITY_REGULAR_MAKER_AGAINST_IO_PARTICIPANT 0x18    // Regular Maker Against Io Participant
+#define LIQUIDITY_IO_PARTICIPANT_TAKER_AGAINST_REGULAR 0x19    // Io Participant Taker Against Regular
+#define LIQUIDITY_BROKEN_PRICE_IMPROVEMENT 0x1A                // Broken Price Improvement
+#define LIQUIDITY_BROKEN_FACILITATION 0x1B                     // Broken Facilitation
+#define LIQUIDITY_BROKEN_SOLICITATION 0x1C                     // Broken Solicitation
+#define LIQUIDITY_COMBO_BROKEN_PRICE_IMPROVEMENT 0x1D          // Combo Broken Price Improvement
+#define LIQUIDITY_COMBO_BROKEN_FACILITATION 0x1E               // Combo Broken Facilitation
+#define LIQUIDITY_COMBO_BROKEN_SOLICITATION 0x1F               // Combo Broken Solicitation
+#define LIQUIDITY_BLOCK 0x20                                   // Block
+#define LIQUIDITY_BLOCK_RESPONSE 0x21                          // Block Response
+#define LIQUIDITY_DIRECTED_RESPONSE 0x22                       // Directed Response
+#define LIQUIDITY_FACILITATION 0x23                            // Facilitation
+#define LIQUIDITY_FACILITATION_RESPONSE 0x24                   // Facilitation Response
+#define LIQUIDITY_PRICE_IMPROVEMENT 0x25                       // Price Improvement
+#define LIQUIDITY_PRICE_IMPROVEMENT_RESPONSE 0x26              // Price Improvement Response
+#define LIQUIDITY_SOLICITATION 0x27                            // Solicitation
+#define LIQUIDITY_SOLICITATION_RESPONSE 0x28                   // Solicitation Response
+#define LIQUIDITY_QUALIFIED_CONTINGENT_CROSS 0x29              // Qualified Contingent Cross
+#define LIQUIDITY_CUSTOMER_TO_CUSTOMER 0x2A                    // Customer To Customer
+#define LIQUIDITY_COMBO_FACILITATION 0x2B                      // Combo Facilitation
+#define LIQUIDITY_COMBO_FACILITATION_RESPONSE 0x2C             // Combo Facilitation Response
+#define LIQUIDITY_COMBO_PRICE_IMPROVEMENT 0x2D                 // Combo Price Improvement
+#define LIQUIDITY_COMBO_PRICE_IMPROVEMENT_RESPONSE 0x2E        // Combo Price Improvement Response
+#define LIQUIDITY_COMBO_SOLICITATION 0x2F                      // Combo Solicitation
+#define LIQUIDITY_COMBO_SOLICITATION_RESPONSE 0x30             // Combo Solicitation Response
+#define LIQUIDITY_COMBO_QUALIFIED_CONTINGENT_CROSS 0x31        // Combo Qualified Contingent Cross
+#define LIQUIDITY_COMBO_CUSTOMER_TO_CUSTOMER 0x32              // Combo Customer To Customer
+#define LIQUIDITY_SWEEP_ROUTED_OUT 0x33                        // Sweep Routed Out
+#define LIQUIDITY_SWEEP_TRADE_REPORT 0x34                      // Sweep Trade Report
+#define LIQUIDITY_COMBO_TAKER_AGAINST_REGULAR_THRU_NBBO 0x35   // Combo Taker Against Regular Thru Nbbo
+#define LIQUIDITY_SIMPLE_EXPOSURE_ORDER_UPON_RECEIPT 0x37      // Simple Exposure Order Upon Receipt
+#define LIQUIDITY_SIMPLE_EXPOSURE_ORDER_RESPONDER 0x39         // Simple Exposure Order Responder
+#define LIQUIDITY_FLEX_AUCTION 0x3A                            // Flex Auction
+#define LIQUIDITY_FLEX_AUCTION_RESPONDER 0x3B                  // Flex Auction Responder
+#define LIQUIDITY_FLEX_PRICE_IMPROVEMENT 0x3C                  // Flex Price Improvement
+#define LIQUIDITY_FLEX_PRICE_IMPROVEMENT_RESPONDER 0x3D        // Flex Price Improvement Responder
+#define LIQUIDITY_FLEX_BROKEN_PRICE_IMPROVEMENT 0x3E           // Flex Broken Price Improvement
+#define LIQUIDITY_FLEX_SOLICITATION 0x3F                       // Flex Solicitation
+#define LIQUIDITY_FLEX_SOLICITATION_RESPONDER 0x40             // Flex Solicitation Responder
+#define LIQUIDITY_FLEX_BROKEN_SOLICITATION 0x41                // Flex Broken Solicitation
+#define LIQUIDITY_COMBO_FLEX_AUCTION 0x42                      // Combo Flex Auction
+#define LIQUIDITY_COMBO_FLEX_AUCTION_RESPONDER 0x43            // Combo Flex Auction Responder
+#define LIQUIDITY_COMBO_FLEX_PRICE_IMPROVEMENT 0x44            // Combo Flex Price Improvement
+#define LIQUIDITY_COMBO_FLEX_PRICE_IMPROVEMENT_RESPONDER 0x45  // Combo Flex Price Improvement Responder
+#define LIQUIDITY_COMBO_FLEX_BROKEN_PRICE_IMPROVEMENT 0x46     // Combo Flex Broken Price Improvement
+#define LIQUIDITY_COMBO_FLEX_SOLICITATION 0x47                 // Combo Flex Solicitation
+#define LIQUIDITY_COMBO_FLEX_SOLICITATION_RESPONDER 0x48       // Combo Flex Solicitation Responder
+#define LIQUIDITY_COMBO_FLEX_BROKEN_SOLICITATION 0x49          // Combo Flex Broken Solicitation
+
+// Auction Type: one byte code
+#define AUCTION_TYPE_SIMPLE_ORDER_PIXL_PRISM_PIM 0x50  // Simple Order Pixl Prism Pim
+#define AUCTION_TYPE_COMPLEX_ORDER_PIXL_PIM 0x51       // Complex Order Pixl Pim
+#define AUCTION_TYPE_OPENING 0x4F                      // Opening
+#define AUCTION_TYPE_COMPLEX_ORDER_LIVE_AUCTION 0x43   // Complex Order Live Auction
+#define AUCTION_TYPE_COMPLEX_OPENING_AUCTION 0x5A      // Complex Opening Auction
+#define AUCTION_TYPE_SIMPLE_ORDER_SOLICITATION 0x53    // Simple Order Solicitation
+#define AUCTION_TYPE_COMPLEX_ORDER_SOLICITATION 0x52   // Complex Order Solicitation
+#define AUCTION_TYPE_SIMPLE_FACILITATION 0x46          // Simple Facilitation
+#define AUCTION_TYPE_COMPLEX_FACILITATION 0x47         // Complex Facilitation
+#define AUCTION_TYPE_BLOCK 0x42                        // Block
+#define AUCTION_TYPE_FLEX_AUCTION 0x58                 // Flex Auction
+#define AUCTION_TYPE_COMPLEX_FLEX_AUCTION 0x59         // Complex Flex Auction
+#define AUCTION_TYPE_NO_AUCTION 0x20                   // No Auction
+
+// Execution Type: one byte code
+#define EXECUTION_TYPE_AUTOMATIC 0x41  // Automatic
+#define EXECUTION_TYPE_MANUAL 0x4D     // Manual
+
+// Execution Market: one byte code
+#define EXECUTION_MARKET_AMEX 0x41            // Amex
+#define EXECUTION_MARKET_BOX 0x42             // Box
+#define EXECUTION_MARKET_CBOE 0x43            // Cboe
+#define EXECUTION_MARKET_MIAX_EMERALD 0x44    // Miax Emerald
+#define EXECUTION_MARKET_ISE 0x49             // Ise
+#define EXECUTION_MARKET_NYSE 0x4E            // Nyse
+#define EXECUTION_MARKET_NASDAQ 0x51          // Nasdaq
+#define EXECUTION_MARKET_C_2 0x57             // C 2
+#define EXECUTION_MARKET_BATS 0x5A            // Bats
+#define EXECUTION_MARKET_PHLX 0x58            // Phlx
+#define EXECUTION_MARKET_NTX_OPTIONS 0x54     // Ntx Options
+#define EXECUTION_MARKET_MIAX 0x4D            // Miax
+#define EXECUTION_MARKET_MIAX_PEARL 0x50      // Miax Pearl
+#define EXECUTION_MARKET_GEMX 0x48            // Gemx
+#define EXECUTION_MARKET_BATS_EDGX 0x45       // Bats Edgx
+#define EXECUTION_MARKET_MRX 0x4A             // Mrx
+#define EXECUTION_MARKET_MEMX 0x55            // Memx
+#define EXECUTION_MARKET_MIAX_SAPPHIRE 0x53   // Miax Sapphire
+#define EXECUTION_MARKET_IEX 0x56             // Iex
+#define EXECUTION_MARKET_MX_2 0x47            // Mx 2
+#define EXECUTION_MARKET_NOT_AWAY_TRADE 0x20  // Not Away Trade
+
+// Trade Side: one byte code
+#define TRADE_SIDE_BUY 0x42   // Buy
+#define TRADE_SIDE_SELL 0x53  // Sell
+
+// Side Changed: one byte code
+#define SIDE_CHANGED_YES 0x59  // Yes
+#define SIDE_CHANGED_NO 0x4E   // No
+
+// Capacity: one byte code
+#define CAPACITY_CUSTOMER 0x43                                // Customer
+#define CAPACITY_PROFESSIONAL_CUSTOMER 0x50                   // Professional Customer
+#define CAPACITY_BROKER_DEALER_CUSTOMER 0x42                  // Broker Dealer Customer
+#define CAPACITY_EXCHANGE_REGISTERED_MARKET_MAKER 0x4D        // Exchange Registered Market Maker
+#define CAPACITY_OTHER_EXCHANGE_REGISTERED_MARKET_MAKER 0x4F  // Other Exchange Registered Market Maker
+#define CAPACITY_NOT_APPLICABLE 0x20                          // Not Applicable
+#define CAPACITY_JOINT_BACK_OFFICE 0x4A                       // Joint Back Office
+#define CAPACITY_FIRM 0x46                                    // Firm
+
+// Origin Market: one byte code
+#define ORIGIN_MARKET_AMEX 0x41            // Amex
+#define ORIGIN_MARKET_BOX 0x42             // Box
+#define ORIGIN_MARKET_CBOE 0x43            // Cboe
+#define ORIGIN_MARKET_MIAX_EMERALD 0x44    // Miax Emerald
+#define ORIGIN_MARKET_ISE 0x49             // Ise
+#define ORIGIN_MARKET_NYSE 0x4E            // Nyse
+#define ORIGIN_MARKET_NASDAQ 0x51          // Nasdaq
+#define ORIGIN_MARKET_C_2 0x57             // C 2
+#define ORIGIN_MARKET_PHLX 0x58            // Phlx
+#define ORIGIN_MARKET_NTX_OPTIONS 0x54     // Ntx Options
+#define ORIGIN_MARKET_MIAX 0x4D            // Miax
+#define ORIGIN_MARKET_GEMX 0x48            // Gemx
+#define ORIGIN_MARKET_BATS_EDGX 0x45       // Bats Edgx
+#define ORIGIN_MARKET_MRX 0x4A             // Mrx
+#define ORIGIN_MARKET_MEMX 0x55            // Memx
+#define ORIGIN_MARKET_MIAX_SAPPHIRE 0x53   // Miax Sapphire
+#define ORIGIN_MARKET_IEX 0x56             // Iex
+#define ORIGIN_MARKET_MX_2 0x47            // Mx 2
+#define ORIGIN_MARKET_NOT_APPLICABLE 0x20  // Not Applicable
+
+// Contra Capacity: one byte code
+#define CONTRA_CAPACITY_CUSTOMER 0x43                                // Customer
+#define CONTRA_CAPACITY_PROPRIETARY_CUSTOMER 0x45                    // Proprietary Customer
+#define CONTRA_CAPACITY_RETAIL_CUSTOMER 0x52                         // Retail Customer
+#define CONTRA_CAPACITY_PROFESSIONAL_CUSTOMER 0x50                   // Professional Customer
+#define CONTRA_CAPACITY_BROKER_DEALER_CUSTOMER 0x42                  // Broker Dealer Customer
+#define CONTRA_CAPACITY_EXCHANGE_REGISTERED_MARKET_MAKER 0x4D        // Exchange Registered Market Maker
+#define CONTRA_CAPACITY_OTHER_EXCHANGE_REGISTERED_MARKET_MAKER 0x4F  // Other Exchange Registered Market Maker
+#define CONTRA_CAPACITY_NOT_APPLICABLE 0x20                          // Not Applicable
+#define CONTRA_CAPACITY_JOINT_BACK_OFFICE 0x4A                       // Joint Back Office
+#define CONTRA_CAPACITY_FIRM 0x46                                    // Firm
+#define CONTRA_CAPACITY_PROPRIETARY_FIRM 0x66                        // Proprietary Firm
+#define CONTRA_CAPACITY_BROKER_DEALER_FIRM 0x4B                      // Broker Dealer Firm
+
+// Short Sell: one byte code
+#define SHORT_SELL_SHORT_SALE 0x59         // Short Sale
+#define SHORT_SELL_NOT_A_SHORT_SALE 0x4E   // Not A Short Sale
+#define SHORT_SELL_SHORT_SALE_EXEMPT 0x45  // Short Sale Exempt
+#define SHORT_SELL_NOT_APPLICABLE 0x20     // Not Applicable
+
+// Principal Agent: one byte code
+#define PRINCIPAL_AGENT_AGENCY 0x41              // Agency
+#define PRINCIPAL_AGENT_PRINCIPAL 0x50           // Principal
+#define PRINCIPAL_AGENT_RISKLESS_PRINCIPAL 0x52  // Riskless Principal
+#define PRINCIPAL_AGENT_NOT_A_STOCK_LEG 0x20     // Not A Stock Leg
+
+// Origin Type: one byte code
+#define ORIGIN_TYPE_FIX_ORDER 0x4F                                // Fix Order
+#define ORIGIN_TYPE_FIX_COMPLEX_ORDER 0x43                        // Fix Complex Order
+#define ORIGIN_TYPE_OTTO_ORDER 0x54                               // Otto Order
+#define ORIGIN_TYPE_OTTO_COMPLEX_ORDER 0x5A                       // Otto Complex Order
+#define ORIGIN_TYPE_SQF_QUOTE 0x51                                // Sqf Quote
+#define ORIGIN_TYPE_SQF_SWEEP 0x57                                // Sqf Sweep
+#define ORIGIN_TYPE_SQF_COMPLEX_SWEEP 0x53                        // Sqf Complex Sweep
+#define ORIGIN_TYPE_BLOCK_ORDER 0x50                              // Block Order
+#define ORIGIN_TYPE_BLOCK_RESPONSE 0x58                           // Block Response
+#define ORIGIN_TYPE_PIM_PRIMARY_ORDER 0x47                        // Pim Primary Order
+#define ORIGIN_TYPE_PIM_CONTRA_ORDER 0x48                         // Pim Contra Order
+#define ORIGIN_TYPE_PIM_RESPONSE_ORDER 0x49                       // Pim Response Order
+#define ORIGIN_TYPE_PIM_RESPONSE_SQF_SWEEP 0x4A                   // Pim Response Sqf Sweep
+#define ORIGIN_TYPE_PIM_PRIMARY_COMPLEX_ORDER 0x67                // Pim Primary Complex Order
+#define ORIGIN_TYPE_PIM_CONTRA_COMPLEX_ORDER 0x68                 // Pim Contra Complex Order
+#define ORIGIN_TYPE_PIM_RESPONSE_COMPLEX_ORDER 0x69               // Pim Response Complex Order
+#define ORIGIN_TYPE_PIM_RESPONSE_SQF_COMPLEX_SWEEP 0x6A           // Pim Response Sqf Complex Sweep
+#define ORIGIN_TYPE_FBMS_FLOOR_TRADE 0x42                         // Fbms Floor Trade
+#define ORIGIN_TYPE_QCC_PRIMARY 0x4B                              // Qcc Primary
+#define ORIGIN_TYPE_QCC_CONTRA 0x4C                               // Qcc Contra
+#define ORIGIN_TYPE_SOLICITATION_PRIMARY_ORDER 0x4D               // Solicitation Primary Order
+#define ORIGIN_TYPE_SOLICITATION_CONTRA_ORDER 0x4E                // Solicitation Contra Order
+#define ORIGIN_TYPE_SOLICITATION_RESPONSE_ORDER 0x55              // Solicitation Response Order
+#define ORIGIN_TYPE_SOLICITATION_RESPONSE_SQF_SWEEP 0x56          // Solicitation Response Sqf Sweep
+#define ORIGIN_TYPE_SOLICITATION_PRIMARY_COMPLEX_ORDER 0x6D       // Solicitation Primary Complex Order
+#define ORIGIN_TYPE_SOLICITATION_CONTRA_COMPLEX_ORDER 0x6E        // Solicitation Contra Complex Order
+#define ORIGIN_TYPE_SOLICITATION_RESPONSE_COMPLEX_ORDER 0x75      // Solicitation Response Complex Order
+#define ORIGIN_TYPE_SOLICITATION_RESPONSE_SQF_COMPLEX_SWEEP 0x76  // Solicitation Response Sqf Complex Sweep
+#define ORIGIN_TYPE_FACILITATION_PRIMARY_ORDER 0x46               // Facilitation Primary Order
+#define ORIGIN_TYPE_FACILITATION_CONTRA_ORDER 0x41                // Facilitation Contra Order
+#define ORIGIN_TYPE_FACILITATION_RESPONSE_ORDER 0x44              // Facilitation Response Order
+#define ORIGIN_TYPE_FACILITATION_RESPONSE_SQF_SWEEP 0x59          // Facilitation Response Sqf Sweep
+#define ORIGIN_TYPE_FACILITATION_PRIMARY_COMPLEX_ORDER 0x66       // Facilitation Primary Complex Order
+#define ORIGIN_TYPE_FACILITATION_CONTRA_COMPLEX_ORDER 0x61        // Facilitation Contra Complex Order
+#define ORIGIN_TYPE_FACILITATION_RESPONSE_COMPLEX_ORDER 0x64      // Facilitation Response Complex Order
+#define ORIGIN_TYPE_FACILITATION_RESPONSE_SQF_COMPLEX_SWEEP 0x79  // Facilitation Response Sqf Complex Sweep
+#define ORIGIN_TYPE_OTHERS 0x20                                   // Others
+#define ORIGIN_TYPE_SIMPLE_FLEX_INITIATOR 0x30                    // Simple Flex Initiator
+#define ORIGIN_TYPE_SIMPLE_FLEX_RESPONSE_ORDER 0x31               // Simple Flex Response Order
+#define ORIGIN_TYPE_SIMPLE_FLEX_RESPONSE_SQF_SWEEP 0x32           // Simple Flex Response Sqf Sweep
+#define ORIGIN_TYPE_COMPLEX_FLEX_INITIATOR 0x33                   // Complex Flex Initiator
+#define ORIGIN_TYPE_COMPLEX_FLEX_RESPONSE_ORDER 0x34              // Complex Flex Response Order
+#define ORIGIN_TYPE_COMPLEX_FLEX_RESPONSE_SQF_SWEEP 0x35          // Complex Flex Response Sqf Sweep
+
+// Tif: one byte code
+#define TIF_IOC_OR_FOK 0x49      // Ioc Or Fok
+#define TIF_DAY 0x44             // Day
+#define TIF_GTC 0x47             // Gtc
+#define TIF_OPG 0x4F             // Opg
+#define TIF_GTD 0x54             // Gtd
+#define TIF_NOT_APPLICABLE 0x20  // Not Applicable
+
+// ---- Types -------------------------------------------------------------------
+
+// Debug packets are intended to provide human readable text that may aid in debugging problems
+typedef struct _DebugPacket (UINT16 packet_length) where (packet_length >= 1) {
+  UINT8 debug_text[(((UINT32) packet_length) - 1)];
+} DebugPacket;
 
 // The SoupBinTCP server sends a Login Accepted Packet in response to receiving a valid Login Request from the client
-entrypoint typedef struct _LoginAcceptedPacket {
+typedef struct _LoginAcceptedPacket {
   UINT8 accepted_session[10];          // bytes 0 to 9
   UINT8 accepted_sequence_number[20];  // bytes 10 to 29
 } LoginAcceptedPacket;
 
-// ---- Login Rejected Packet: 1 byte -------------------------------------------
-
 // The SoupBinTCP server sends this packet in response to an invalid Login Request Packet from the client
-entrypoint typedef struct _LoginRejectedPacket {
+typedef struct _LoginRejectedPacket {
   UINT8 reject_reason_code;  // byte 0
 } LoginRejectedPacket;
 
-// ---- System Event Message: 10 bytes ------------------------------------------
-
 // The system event message is used to signal a ring wide event.
-entrypoint typedef struct _SystemEventMessage {
+typedef struct _SystemEventMessage {
   UINT32BE seconds;      // bytes 0 to 3
   UINT32BE nanoseconds;  // bytes 4 to 7
   UINT8 version;         // byte 8
   UINT8 event_code;      // byte 9
 } SystemEventMessage;
 
-// ---- Complex Trading Action Message: 14 bytes --------------------------------
+// At the start of each trading day, the exchange disseminates directory messages for all symbols trading on a given ring. Sent once per symbol, typically before the Start of System Hours System Event; intra-day updates are sent as they occur.
+typedef struct _OptionsDirectoryMessage {
+  UINT32BE seconds;               // bytes 0 to 3
+  UINT32BE nanoseconds;           // bytes 4 to 7
+  UINT8 version;                  // byte 8
+  UINT32BE option_id;             // bytes 9 to 12
+  UINT8 security_symbol[8];       // bytes 13 to 20
+  UINT16BE expiration_year : 7;   // bytes 21 to 22
+  UINT16BE expiration_month : 4;  // bytes 21 to 22
+  UINT16BE expiration_day : 5;    // bytes 21 to 22
+  UINT32BE strike_price;          // bytes 23 to 26
+  UINT8 option_kind;              // byte 27
+  UINT8 underlying_symbol[13];    // bytes 28 to 40
+  UINT8 option_closing_type;      // byte 41
+  UINT8 tradable;                 // byte 42
+  UINT8 mpv;                      // byte 43
+  UINT8 closing_only;             // byte 44
+  UINT32BE contract_size;         // bytes 45 to 48
+  UINT8 reserved_16[16];          // bytes 49 to 64
+} OptionsDirectoryMessage;
+
+// Leg information of the Complex Order Strategy message, 32 bytes per leg at offset 32n + 45
+typedef struct _StrategyLegs {
+  UINT32BE leg_option_id;             // bytes 0 to 3
+  UINT8 leg_security_symbol[8];       // bytes 4 to 11
+  UINT16BE leg_expiration_year : 7;   // bytes 12 to 13
+  UINT16BE leg_expiration_month : 4;  // bytes 12 to 13
+  UINT16BE leg_expiration_day : 5;    // bytes 12 to 13
+  UINT32BE leg_strike_price;          // bytes 14 to 17
+  UINT8 leg_option_kind;              // byte 18
+  UINT8 leg_side;                     // byte 19
+  UINT32BE leg_ratio;                 // bytes 20 to 23
+  UINT8 reserved_8[8];                // bytes 24 to 31
+} StrategyLegs;
+
+// The strategy associated to a complex order (PHLX, ISE and MRX only). The Strategy ID assigned for a new complex strategy is unique for a particular complex instrument for a trading session, however Strategy IDs are independent of session Option IDs and uniqueness across complex and simple options is not guaranteed.
+typedef struct _ComplexOrderStrategyMessage {
+  UINT32BE seconds;                                                         // bytes 0 to 3
+  UINT32BE nanoseconds;                                                     // bytes 4 to 7
+  UINT8 version;                                                            // byte 8
+  UINT32BE strategy_id;                                                     // bytes 9 to 12
+  UINT8 underlying_symbol[13];                                              // bytes 13 to 25
+  UINT8 action;                                                             // byte 26
+  UINT8 reserved_16[16];                                                    // bytes 27 to 42
+  UINT8 number_of_legs;                                                     // byte 43
+  StrategyLegs strategy_legs[:byte-size (((UINT32) number_of_legs) * 32)];
+} ComplexOrderStrategyMessage;
+
+// Indicates the current trading status of an option within the exchange. A T (Trading resumed) message is sent for all options eligible for trading at the start of system hours; a security absent from the pre-opening spin should be treated as halted.
+typedef struct _SecurityTradingActionMessage {
+  UINT32BE seconds;               // bytes 0 to 3
+  UINT32BE nanoseconds;           // bytes 4 to 7
+  UINT8 version;                  // byte 8
+  UINT32BE option_id;             // bytes 9 to 12
+  UINT8 security_symbol[8];       // bytes 13 to 20
+  UINT16BE expiration_year : 7;   // bytes 21 to 22
+  UINT16BE expiration_month : 4;  // bytes 21 to 22
+  UINT16BE expiration_day : 5;    // bytes 21 to 22
+  UINT32BE strike_price;          // bytes 23 to 26
+  UINT8 option_kind;              // byte 27
+  UINT8 current_trading_state;    // byte 28
+} SecurityTradingActionMessage;
 
 // Indicates the current trading status of a strategy within the exchange (PHLX, ISE and MRX only). A T (Trading Resumed) message is sent for all strategies eligible for trading at the start of system hours.
-entrypoint typedef struct _ComplexTradingActionMessage {
+typedef struct _ComplexTradingActionMessage {
   UINT32BE seconds;             // bytes 0 to 3
   UINT32BE nanoseconds;         // bytes 4 to 7
   UINT8 version;                // byte 8
   UINT32BE strategy_id;         // bytes 9 to 12
   UINT8 current_trading_state;  // byte 13
 } ComplexTradingActionMessage;
+
+// Clearing trades and trade corrections, with contra side clearing information (trade cancels too when a firm and connection block is configured for extended cancels, Transaction Type Z). 337 bytes. Contra side clearing fields carry a Contra prefix.
+typedef struct _TradeMessage {
+  UINT32BE seconds;                             // bytes 0 to 3
+  UINT32BE nanoseconds;                         // bytes 4 to 7
+  UINT8 version;                                // byte 8
+  UINT8 send_type;                              // byte 9
+  UINT32BE option_id;                           // bytes 10 to 13
+  UINT8 underlying_symbol[13];                  // bytes 14 to 26
+  UINT8 security_symbol[8];                     // bytes 27 to 34
+  UINT16BE expiration_year : 7;                 // bytes 35 to 36
+  UINT16BE expiration_month : 4;                // bytes 35 to 36
+  UINT16BE expiration_day : 5;                  // bytes 35 to 36
+  UINT32BE strike_price;                        // bytes 37 to 40
+  UINT8 option_kind;                            // byte 41
+  UINT16BE penny_pilot : 1;                     // bytes 42 to 43
+  UINT16BE make_take_program : 1;               // bytes 42 to 43
+  UINT16BE single_listed : 1;                   // bytes 42 to 43
+  UINT16BE weekly_expiration : 1;               // bytes 42 to 43
+  UINT16BE monthly_expiration : 1;              // bytes 42 to 43
+  UINT16BE quarterly_expiration : 1;            // bytes 42 to 43
+  UINT16BE reserved_trade_flags : 10;           // bytes 42 to 43
+  UINT8 reserved_4[4];                          // bytes 44 to 47
+  UINT8 transaction_type;                       // byte 48
+  UINT8 liquidity;                              // byte 49
+  UINT32BE trade_id;                            // bytes 50 to 53
+  UINT16BE correction_number;                   // bytes 54 to 55
+  UINT32BE cross_id;                            // bytes 56 to 59
+  UINT32BE match_id;                            // bytes 60 to 63
+  UINT32BE auction_id;                          // bytes 64 to 67
+  UINT8 auction_type;                           // byte 68
+  UINT32BE ref_trade_id;                        // bytes 69 to 72
+  UINT16BE ref_correction_number;               // bytes 73 to 74
+  UINT32BE ref_match_id;                        // bytes 75 to 78
+  UINT8 execution_type;                         // byte 79
+  UINT8 execution_market;                       // byte 80
+  UINT8 trade_side;                             // byte 81
+  UINT64BE trade_price;                         // bytes 82 to 89
+  UINT32BE trade_contracts;                     // bytes 90 to 93
+  UINT8 side_changed;                           // byte 94
+  UINT32BE strategy_id;                         // bytes 95 to 98
+  UINT16BE strategy_leg;                        // bytes 99 to 100
+  UINT8 reserved_8[8];                          // bytes 101 to 108
+  UINT32BE occ_clearing_number;                 // bytes 109 to 112
+  UINT32BE give_up_occ_clearing_number;         // bytes 113 to 116
+  UINT32BE exchange_clearing_number;            // bytes 117 to 120
+  UINT32BE exchange_house;                      // bytes 121 to 124
+  UINT8 exchange_suffix;                        // byte 125
+  UINT8 capacity;                               // byte 126
+  UINT8 multi_account[5];                       // bytes 127 to 131
+  UINT8 broker[4];                              // bytes 132 to 135
+  UINT32BE second_broker;                       // bytes 136 to 139
+  UINT8 origin_market;                          // byte 140
+  UINT8 account[32];                            // bytes 141 to 172
+  UINT32BE nscc;                                // bytes 173 to 176
+  UINT8 mpid[5];                                // bytes 177 to 181
+  UINT16BE priority_market_maker : 1;           // bytes 182 to 183
+  UINT16BE reserved_clearing_flags : 15;        // bytes 182 to 183
+  UINT8 executing_broker[4];                    // bytes 184 to 187
+  UINT8 reserved_6[6];                          // bytes 188 to 193
+  UINT32BE contra_occ_clearing_number;          // bytes 194 to 197
+  UINT32BE contra_give_up_occ_clearing_number;  // bytes 198 to 201
+  UINT32BE contra_exchange_clearing_number;     // bytes 202 to 205
+  UINT32BE contra_exchange_house;               // bytes 206 to 209
+  UINT8 contra_capacity;                        // byte 210
+  UINT32BE contra_broker;                       // bytes 211 to 214
+  UINT32BE contra_second_broker;                // bytes 215 to 218
+  UINT32BE contra_nscc;                         // bytes 219 to 222
+  UINT8 contra_mpid[5];                         // bytes 223 to 227
+  UINT8 second_reserved_8[8];                   // bytes 228 to 235
+  UINT8 firm[4];                                // bytes 236 to 239
+  UINT16BE order_date_year : 7;                 // bytes 240 to 241
+  UINT16BE order_date_month : 4;                // bytes 240 to 241
+  UINT16BE order_date_day : 5;                  // bytes 240 to 241
+  UINT8 order_id[30];                           // bytes 242 to 271
+  UINT64BE quote_id;                            // bytes 272 to 279
+  UINT64BE sqf_sweep_id;                        // bytes 280 to 287
+  UINT8 open_close_indicator;                   // byte 288
+  UINT8 customer_strategy_leg[10];              // bytes 289 to 298
+  UINT8 short_sell;                             // byte 299
+  UINT8 principal_agent;                        // byte 300
+  UINT8 supplementary_id[15];                   // bytes 301 to 315
+  UINT16BE fbms_order : 1;                      // bytes 316 to 317
+  UINT16BE directed_preferenced : 1;            // bytes 316 to 317
+  UINT16BE post_only_alo : 1;                   // bytes 316 to 317
+  UINT16BE mkt_order : 1;                       // bytes 316 to 317
+  UINT16BE ise_directed_order : 1;              // bytes 316 to 317
+  UINT16BE reserved_order_indicators : 11;      // bytes 316 to 317
+  UINT8 origin_type;                            // byte 318
+  UINT32BE order_size;                          // bytes 319 to 322
+  UINT32BE order_price;                         // bytes 323 to 326
+  UINT8 tif;                                    // byte 327
+  UINT8 third_reserved_8[8];                    // bytes 328 to 335
+} TradeMessage;
+
+// By default CTI sends trade cancels using this message; alternatively a firm and connection block can be configured to send extended cancels with all the trade information using the Trade message with Transaction Type Z. 66 bytes.
+typedef struct _CancelTradeMessage {
+  UINT32BE seconds;               // bytes 0 to 3
+  UINT32BE nanoseconds;           // bytes 4 to 7
+  UINT8 version;                  // byte 8
+  UINT8 send_type;                // byte 9
+  UINT32BE option_id;             // bytes 10 to 13
+  UINT8 underlying_symbol[13];    // bytes 14 to 26
+  UINT8 security_symbol[8];       // bytes 27 to 34
+  UINT16BE expiration_year : 7;   // bytes 35 to 36
+  UINT16BE expiration_month : 4;  // bytes 35 to 36
+  UINT16BE expiration_day : 5;    // bytes 35 to 36
+  UINT32BE strike_price;          // bytes 37 to 40
+  UINT8 option_kind;              // byte 41
+  UINT32BE trade_id;              // bytes 42 to 45
+  UINT16BE correction_number;     // bytes 46 to 47
+  UINT32BE cross_id;              // bytes 48 to 51
+  UINT8 trade_side;               // byte 52
+  UINT32BE match_id;              // bytes 53 to 56
+  UINT8 reserved_8[8];            // bytes 57 to 64
+} CancelTradeMessage;
+
+// The sequenced (server to client) message carried by the packet, opaque bytes unless an application source dispatches it
+casetype _SequencedMessage (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x53: SystemEventMessage system_event_message;
+    case 0x44: OptionsDirectoryMessage options_directory_message;
+    case 0x52: ComplexOrderStrategyMessage complex_order_strategy_message;
+    case 0x48: SecurityTradingActionMessage security_trading_action_message;
+    case 0x49: ComplexTradingActionMessage complex_trading_action_message;
+    case 0x54: TradeMessage trade_message;
+    case 0x56: CancelTradeMessage cancel_trade_message;
+    default: UINT8 unknown[available];
+  }
+} SequencedMessage;
+
+// The Sequenced Data Packets act as an envelope to carry the actual sequenced data messages that are transferred from the server to the client. Each Sequenced Data Packet carries one message from the higher-lever protocol
+typedef struct _SequencedDataPacket (UINT16 packet_length) where (packet_length >= 2) {
+  UINT8 sequenced_message_type;                                                                                                                                // byte 0
+  SequencedMessage(sequenced_message_type, (((UINT32) packet_length) - 2)) sequenced_message[:byte-size-single-element-array (((UINT32) packet_length) - 2)];
+} SequencedDataPacket;
+
+// Branch
+casetype _ServerPayload (UINT8 selector, UINT32 length, UINT16 packet_length, UINT32 available) {
+  switch (selector) {
+    case 0x2B: DebugPacket(packet_length) debug_packet;
+    case 0x41: LoginAcceptedPacket login_accepted_packet;
+    case 0x4A: LoginRejectedPacket login_rejected_packet;
+    case 0x53: SequencedDataPacket(packet_length) sequenced_data_packet[:byte-size-single-element-array length];
+    case 0x48: unit server_heartbeat;
+    case 0x5A: unit end_of_session;
+    default: UINT8 unknown[available];
+  }
+} ServerPayload;
+
+// Soup Bin Tcp Packet sent by the server
+typedef struct _ServerSoupBinTcpPacket {
+  UINT16BE packet_length { packet_length >= 1 };                                                                                                                                                                // bytes 0 to 1
+  UINT8 server_packet_type;                                                                                                                                                                                     // byte 2
+  ServerPayload(server_packet_type, (((UINT32) packet_length) - 1), packet_length, ((((UINT32) packet_length) + 2) - 3)) server_payload[:byte-size-single-element-array ((((UINT32) packet_length) + 2) - 3)];
+} ServerSoupBinTcpPacket;
+
+// ---- Packet: ServerPacket ----------------------------------------------------
+
+// SoupBinTCP Packet sent by the server
+entrypoint typedef struct _ServerPacket (UINT32 available) {
+  ServerSoupBinTcpPacket server_soup_bin_tcp_packet[:byte-size available];
+} ServerPacket;
 

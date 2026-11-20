@@ -1,63 +1,142 @@
-// National Association of Securities Dealers Automated Quotations (Nasdaq) TX TotalView Itch
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nasdaq NtxEquities TotalView Glimpse v4.1
 //
+// Protocol:
+//   Organization: National Association of Securities Dealers Automated Quotations (Nasdaq)
+//   Protocol: TX TotalView Itch
+//   Encoding: Glimpse
+//   Version: 4.1
+//   Date: 01/08/2013
+//   Specification: BXGLIMPSE-V4_1.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ServerPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out NtxEquities_TotalView_v4_1_Server.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a length prefix framing what follows
-//
-// License: MIT No Attribution
 
-// ---- Server Packet Header: 3 bytes -------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Packet header of a packet sent by the server
-entrypoint typedef struct _ServerPacketHeader {
-  UINT16BE packet_length;    // bytes 0 to 1
-  UINT8 server_packet_type;  // byte 2
-} ServerPacketHeader;
+// Server Packet Type: one byte code
+#define SERVER_PACKET_TYPE_DEBUG_PACKET 0x2B             // Debug Packet
+#define SERVER_PACKET_TYPE_LOGIN_ACCEPTED_PACKET 0x41    // Login Accepted Packet
+#define SERVER_PACKET_TYPE_LOGIN_REJECTED_PACKET 0x4A    // Login Rejected Packet
+#define SERVER_PACKET_TYPE_SEQUENCED_DATA_PACKET 0x53    // Sequenced Data Packet
+#define SERVER_PACKET_TYPE_SERVER_HEARTBEAT_PACKET 0x48  // Server Heartbeat Packet
+#define SERVER_PACKET_TYPE_END_OF_SESSION_PACKET 0x5A    // End Of Session Packet
 
-// ---- Login Accepted Packet: 30 bytes -----------------------------------------
+// Reject Reason Code: one byte code
+#define REJECT_REASON_CODE_NOT_AUTHORIZED 0x41         // Not Authorized
+#define REJECT_REASON_CODE_SESSION_NOT_AVAILABLE 0x53  // Session Not Available
+
+// Event Code: one byte code
+#define EVENT_CODE_START_OF_MESSAGES 0x4F                             // Start Of Messages
+#define EVENT_CODE_START_OF_SYSTEM_HOURS 0x53                         // Start Of System Hours
+#define EVENT_CODE_START_OF_MARKET_HOURS 0x51                         // Start Of Market Hours
+#define EVENT_CODE_END_OF_MARKET_HOURS 0x4D                           // End Of Market Hours
+#define EVENT_CODE_END_OF_SYSTEM_HOURS 0x45                           // End Of System Hours
+#define EVENT_CODE_END_OF_MESSAGES 0x43                               // End Of Messages
+#define EVENT_CODE_EMERGENCY_MARKET_CONDITION_HALT 0x41               // Emergency Market Condition Halt
+#define EVENT_CODE_EMERGENCY_MARKET_CONDITION_QUOTE_ONLY_PERIOD 0x52  // Emergency Market Condition Quote Only Period
+#define EVENT_CODE_EMERGENCY_MARKET_CONDITION_RESUMPTION 0x42         // Emergency Market Condition Resumption
+
+// Buy Sell Indicator: one byte code
+#define BUY_SELL_INDICATOR_BUY_ORDER 0x42   // Buy Order
+#define BUY_SELL_INDICATOR_SELL_ORDER 0x53  // Sell Order
+
+// Market Category: one byte code
+#define MARKET_CATEGORY_NEW_YORK_STOCK_EXCHANGE 0x4E      // New York Stock Exchange
+#define MARKET_CATEGORY_NYSE_AMEX 0x41                    // Nyse Amex
+#define MARKET_CATEGORY_NYSE_ARCA 0x50                    // Nyse Arca
+#define MARKET_CATEGORY_NASDAQ_GLOBAL_SELECT_MARKET 0x51  // Nasdaq Global Select Market
+#define MARKET_CATEGORY_NASDAQ_GLOBAL_MARKET 0x47         // Nasdaq Global Market
+#define MARKET_CATEGORY_NASDAQ_CAPITAL_MARKET 0x53        // Nasdaq Capital Market
+#define MARKET_CATEGORY_BATS_BZX_EXCHANGE 0x5A            // Bats Bzx Exchange
+#define MARKET_CATEGORY_NOT_AVAILABLE 0x20                // Not Available
+
+// Financial Status Indicator: one byte code
+#define FINANCIAL_STATUS_INDICATOR_DEFICIENT 0x44                          // Deficient
+#define FINANCIAL_STATUS_INDICATOR_DELINQUENT 0x45                         // Delinquent
+#define FINANCIAL_STATUS_INDICATOR_BANKRUPT 0x51                           // Bankrupt
+#define FINANCIAL_STATUS_INDICATOR_SUSPENDED 0x53                          // Suspended
+#define FINANCIAL_STATUS_INDICATOR_DEFICIENT_AND_BANKRUPT 0x47             // Deficient And Bankrupt
+#define FINANCIAL_STATUS_INDICATOR_DEFICIENT_AND_DELINQUENT 0x48           // Deficient And Delinquent
+#define FINANCIAL_STATUS_INDICATOR_DELINQUENT_AND_BANKRUPT 0x4A            // Delinquent And Bankrupt
+#define FINANCIAL_STATUS_INDICATOR_DEFICIENT_DELINQUENT_AND_BANKRUPT 0x4B  // Deficient Delinquent And Bankrupt
+#define FINANCIAL_STATUS_INDICATOR_IN_COMPLIANCE 0x20                      // In Compliance
+
+// Round Lots Only: one byte code
+#define ROUND_LOTS_ONLY_ONLY_ROUND_LOTS_ARE_ACCEPTED 0x59    // Only Round Lots Are Accepted
+#define ROUND_LOTS_ONLY_ODD_AND_MIXED_LOTS_ARE_ALLOWED 0x4E  // Odd And Mixed Lots Are Allowed
+
+// Trading State: one byte code
+#define TRADING_STATE_HALTED_OR_PAUSED_ACROSS_ALL_US_EQUITY_MARKETS 0x48  // Halted Or Paused Across All Us Equity Markets
+#define TRADING_STATE_QUOTATION_ONLY_PERIOD 0x51                          // Quotation Only Period
+#define TRADING_STATE_TRADING_ON_BX 0x54                                  // Trading On Bx
+
+// Reg Sho Action: one byte code
+#define REG_SHO_ACTION_NO_PRICE_TEST_IN_PLACE 0x30         // No Price Test In Place
+#define REG_SHO_ACTION_RESTRICTION_IN_EFFECT 0x31          // Restriction In Effect
+#define REG_SHO_ACTION_RESTRICTION_REMAINS_IN_EFFECT 0x32  // Restriction Remains In Effect
+
+// ---- Types -------------------------------------------------------------------
+
+// Debug packets are intended to provide human readable text that may aid in debugging problems
+typedef struct _DebugPacket (UINT16 packet_length) where (packet_length >= 1) {
+  UINT8 debug_text[(((UINT32) packet_length) - 1)];
+} DebugPacket;
 
 // The SoupBinTCP server sends a Login Accepted Packet in response to receiving a valid Login Request from the client
-entrypoint typedef struct _LoginAcceptedPacket {
+typedef struct _LoginAcceptedPacket {
   UINT8 accepted_session[10];          // bytes 0 to 9
   UINT8 accepted_sequence_number[20];  // bytes 10 to 29
 } LoginAcceptedPacket;
 
-// ---- Login Rejected Packet: 1 byte -------------------------------------------
-
 // The SoupBinTCP server sends this packet in response to an invalid Login Request Packet from the client
-entrypoint typedef struct _LoginRejectedPacket {
+typedef struct _LoginRejectedPacket {
   UINT8 reject_reason_code;  // byte 0
 } LoginRejectedPacket;
 
-// ---- Timestamp Seconds Message: 4 bytes --------------------------------------
-
 // Reflects the number of seconds past midnight that the Timestamp message was generated. A Timestamp - Second message will be disseminated for every second for which there is at least one payload message.
-entrypoint typedef struct _TimestampSecondsMessage {
+typedef struct _TimestampSecondsMessage {
   UINT32BE second;  // bytes 0 to 3
 } TimestampSecondsMessage;
 
-// ---- System Event Message: 5 bytes -------------------------------------------
-
 // BX GLIMPSE product is designed to support the same system event messages as the BX TotalView-ITCH feed. On BX GLIMPSE, BX will send out system event messages for those events that occurred up to the time of the BX GLIMPSE snapshot request.
-entrypoint typedef struct _SystemEventMessage {
+typedef struct _SystemEventMessage {
   UINT32BE timestamp_nanoseconds;  // bytes 0 to 3
   UINT8 event_code;                // byte 4
 } SystemEventMessage;
 
-// ---- Add Order Message: 29 bytes ---------------------------------------------
-
 // Add Order - No MPID Attribution Message. This message will be generated for unattributed orders accepted by the BX system.
-entrypoint typedef struct _AddOrderMessage {
+typedef struct _AddOrderMessage {
   UINT32BE timestamp_nanoseconds;   // bytes 0 to 3
   UINT64BE order_reference_number;  // bytes 4 to 11
   UINT8 buy_sell_indicator;         // byte 12
@@ -66,10 +145,8 @@ entrypoint typedef struct _AddOrderMessage {
   UINT32BE price;                   // bytes 25 to 28
 } AddOrderMessage;
 
-// ---- Add Order Mpid Attribution Message: 33 bytes ----------------------------
-
 // Add Order with MPID Attribution Message. This message will be generated for attributed orders and quotations accepted by the BX system.
-entrypoint typedef struct _AddOrderMpidAttributionMessage {
+typedef struct _AddOrderMpidAttributionMessage {
   UINT32BE timestamp_nanoseconds;   // bytes 0 to 3
   UINT64BE order_reference_number;  // bytes 4 to 11
   UINT8 buy_sell_indicator;         // byte 12
@@ -79,10 +156,8 @@ entrypoint typedef struct _AddOrderMpidAttributionMessage {
   UINT8 attribution[4];             // bytes 29 to 32
 } AddOrderMpidAttributionMessage;
 
-// ---- Stock Directory Message: 19 bytes ---------------------------------------
-
 // At the start of each trading day, NASDAQ OMX BX disseminates stock directory messages for all active symbols in the system for the current trading day. Please note that the Symbol Directory spin may include halted issues.
-entrypoint typedef struct _StockDirectoryMessage {
+typedef struct _StockDirectoryMessage {
   UINT32BE timestamp_nanoseconds;    // bytes 0 to 3
   UINT8 stock[8];                    // bytes 4 to 11
   UINT8 market_category;             // byte 12
@@ -91,10 +166,8 @@ entrypoint typedef struct _StockDirectoryMessage {
   UINT8 round_lots_only;             // byte 18
 } StockDirectoryMessage;
 
-// ---- Stock Trading Action Message: 18 bytes ----------------------------------
-
 // In the GLIMPSE transmission, BX will send out a Stock Trading Action message for only those NASDAQ, NYSE, NYSE Amex, NYSE Arca and BATS issues that were eligible for trading during the current trading session.
-entrypoint typedef struct _StockTradingActionMessage {
+typedef struct _StockTradingActionMessage {
   UINT32BE timestamp_nanoseconds;  // bytes 0 to 3
   UINT8 stock[8];                  // bytes 4 to 11
   UINT8 trading_state;             // byte 12
@@ -102,19 +175,63 @@ entrypoint typedef struct _StockTradingActionMessage {
   UINT8 reason[4];                 // bytes 14 to 17
 } StockTradingActionMessage;
 
-// ---- Reg Sho Restriction Message: 13 bytes -----------------------------------
-
 // Reg SHO Short Sale Price Test Restricted Indicator
-entrypoint typedef struct _RegShoRestrictionMessage {
+typedef struct _RegShoRestrictionMessage {
   UINT32BE timestamp_nanoseconds;  // bytes 0 to 3
   UINT8 stock[8];                  // bytes 4 to 11
   UINT8 reg_sho_action;            // byte 12
 } RegShoRestrictionMessage;
 
-// ---- End Of Snapshot Message: 20 bytes ---------------------------------------
-
 // The Snapshot message reflects the BX TotalView-ITCH 4.1 sequence number at the time that the BX GLIMPSE 4.1 spin was requested.
-entrypoint typedef struct _EndOfSnapshotMessage {
+typedef struct _EndOfSnapshotMessage {
   UINT8 itch_sequence_number[20];  // bytes 0 to 19
 } EndOfSnapshotMessage;
+
+// The sequenced (server to client) message carried by the packet, opaque bytes unless an application source dispatches it
+casetype _SequencedMessage (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x54: TimestampSecondsMessage timestamp_seconds_message;
+    case 0x53: SystemEventMessage system_event_message;
+    case 0x41: AddOrderMessage add_order_message;
+    case 0x46: AddOrderMpidAttributionMessage add_order_mpid_attribution_message;
+    case 0x52: StockDirectoryMessage stock_directory_message;
+    case 0x48: StockTradingActionMessage stock_trading_action_message;
+    case 0x59: RegShoRestrictionMessage reg_sho_restriction_message;
+    case 0x47: EndOfSnapshotMessage end_of_snapshot_message;
+    default: UINT8 unknown[available];
+  }
+} SequencedMessage;
+
+// The Sequenced Data Packets act as an envelope to carry the actual sequenced data messages that are transferred from the server to the client. Each Sequenced Data Packet carries one message from the higher-lever protocol
+typedef struct _SequencedDataPacket (UINT16 packet_length) where (packet_length >= 2) {
+  UINT8 sequenced_message_type;                                                                                                                                // byte 0
+  SequencedMessage(sequenced_message_type, (((UINT32) packet_length) - 2)) sequenced_message[:byte-size-single-element-array (((UINT32) packet_length) - 2)];
+} SequencedDataPacket;
+
+// Branch
+casetype _ServerPayload (UINT8 selector, UINT32 length, UINT16 packet_length, UINT32 available) {
+  switch (selector) {
+    case 0x2B: DebugPacket(packet_length) debug_packet;
+    case 0x41: LoginAcceptedPacket login_accepted_packet;
+    case 0x4A: LoginRejectedPacket login_rejected_packet;
+    case 0x53: SequencedDataPacket(packet_length) sequenced_data_packet[:byte-size-single-element-array length];
+    case 0x48: unit server_heartbeat;
+    case 0x5A: unit end_of_session;
+    default: UINT8 unknown[available];
+  }
+} ServerPayload;
+
+// Soup Bin Tcp Packet sent by the server
+typedef struct _ServerSoupBinTcpPacket {
+  UINT16BE packet_length { packet_length >= 1 };                                                                                                                                                                // bytes 0 to 1
+  UINT8 server_packet_type;                                                                                                                                                                                     // byte 2
+  ServerPayload(server_packet_type, (((UINT32) packet_length) - 1), packet_length, ((((UINT32) packet_length) + 2) - 3)) server_payload[:byte-size-single-element-array ((((UINT32) packet_length) + 2) - 3)];
+} ServerSoupBinTcpPacket;
+
+// ---- Packet: ServerPacket ----------------------------------------------------
+
+// SoupBinTCP Packet sent by the server
+entrypoint typedef struct _ServerPacket (UINT32 available) {
+  ServerSoupBinTcpPacket server_soup_bin_tcp_packet[:byte-size available];
+} ServerPacket;
 

@@ -1,54 +1,273 @@
-// National Association of Securities Dealers Automated Quotations (Nasdaq) Orders
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nasdaq NsmEquities Orders Ouch v4.2.2018
 //
+// Protocol:
+//   Organization: National Association of Securities Dealers Automated Quotations (Nasdaq)
+//   Protocol: Orders
+//   Encoding: Ouch
+//   Version: 4.2.2018
+//   Date: 12/7/2018
+//   Specification: OUCH4.2.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ServerPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out NsmEquities_Orders_v4_2_2018_Server.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a length prefix framing what follows
-//
-// License: MIT No Attribution
 
-// ---- Server Packet Header: 3 bytes -------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Packet header of a packet sent by the server
-entrypoint typedef struct _ServerPacketHeader {
-  UINT16BE packet_length;    // bytes 0 to 1
-  UINT8 server_packet_type;  // byte 2
-} ServerPacketHeader;
+// Server Packet Type: one byte code
+#define SERVER_PACKET_TYPE_DEBUG_PACKET 0x2B             // Debug Packet
+#define SERVER_PACKET_TYPE_LOGIN_ACCEPTED_PACKET 0x41    // Login Accepted Packet
+#define SERVER_PACKET_TYPE_LOGIN_REJECTED_PACKET 0x4A    // Login Rejected Packet
+#define SERVER_PACKET_TYPE_SEQUENCED_DATA_PACKET 0x53    // Sequenced Data Packet
+#define SERVER_PACKET_TYPE_SERVER_HEARTBEAT_PACKET 0x48  // Server Heartbeat Packet
+#define SERVER_PACKET_TYPE_END_OF_SESSION_PACKET 0x5A    // End Of Session Packet
 
-// ---- Login Accepted Packet: 30 bytes -----------------------------------------
+// Reject Reason Code: one byte code
+#define REJECT_REASON_CODE_NOT_AUTHORIZED 0x41         // Not Authorized
+#define REJECT_REASON_CODE_SESSION_NOT_AVAILABLE 0x53  // Session Not Available
+
+// Sequenced Message Type: one byte code
+#define SEQUENCED_MESSAGE_TYPE_SYSTEM_EVENT_MESSAGE 0x53                   // System Event Message
+#define SEQUENCED_MESSAGE_TYPE_ACCEPTED_MESSAGE 0x41                       // Accepted Message
+#define SEQUENCED_MESSAGE_TYPE_REPLACED_MESSAGE 0x55                       // Replaced Message
+#define SEQUENCED_MESSAGE_TYPE_CANCELED_MESSAGE 0x43                       // Canceled Message
+#define SEQUENCED_MESSAGE_TYPE_AIQ_CANCELLED_MESSAGE 0x44                  // Aiq Cancelled Message
+#define SEQUENCED_MESSAGE_TYPE_EXECUTED_MESSAGE 0x45                       // Executed Message
+#define SEQUENCED_MESSAGE_TYPE_BROKEN_TRADE_MESSAGE 0x42                   // Broken Trade Message
+#define SEQUENCED_MESSAGE_TYPE_EXECUTED_WITH_REFERENCE_PRICE_MESSAGE 0x47  // Executed With Reference Price Message
+#define SEQUENCED_MESSAGE_TYPE_TRADE_CORRECTION_MESSAGE 0x46               // Trade Correction Message
+#define SEQUENCED_MESSAGE_TYPE_REJECTED_ORDER_MESSAGE 0x4A                 // Rejected Order Message
+#define SEQUENCED_MESSAGE_TYPE_CANCEL_PENDING_MESSAGE 0x50                 // Cancel Pending Message
+#define SEQUENCED_MESSAGE_TYPE_CANCEL_REJECT_MESSAGE 0x49                  // Cancel Reject Message
+#define SEQUENCED_MESSAGE_TYPE_ORDER_PRIORITY_UPDATE_MESSAGE 0x54          // Order Priority Update Message
+#define SEQUENCED_MESSAGE_TYPE_ORDER_MODIFIED_MESSAGE 0x4D                 // Order Modified Message
+#define SEQUENCED_MESSAGE_TYPE_SEQUENCED_TRADE_NOW_MESSAGE 0x4E            // Sequenced Trade Now Message
+
+// Event Code: one byte code
+#define EVENT_CODE_START_OF_DAY_THIS_IS_ALWAYS_THE_FIRST_MESSAGE_EACH_DAY 0x53                            // Start Of Day This Is Always The First Message Each Day
+#define EVENT_CODE_END_OF_DAY_THIS_INDICATES_THAT_NASDAQ_IS_NOW_CLOSED_AND_WILL_NOT_ACCEPT_A_n6puol 0x45  // End Of Day This Indicates That Nasdaq Is Now Closed And Will Not Accept Any New Orders Or Replaces In This Session
+
+// Buy Sell Indicator: one byte code
+#define BUY_SELL_INDICATOR_BUY 0x42                // Buy
+#define BUY_SELL_INDICATOR_SELL 0x53               // Sell
+#define BUY_SELL_INDICATOR_SELL_SHORT 0x54         // Sell Short
+#define BUY_SELL_INDICATOR_SELL_SHORT_EXEMPT 0x45  // Sell Short Exempt
+
+// Time In Force: 4 byte code
+#define TIME_IN_FORCE_IMMEDIATE_OR_CANCEL 0x00000000  // Immediate Or Cancel
+#define TIME_IN_FORCE_MARKET_HOURS 0x0001869E         // Market Hours
+#define TIME_IN_FORCE_SYSTEM_HOURS 0x0001869F         // System Hours
+
+// Display: one byte code
+#define DISPLAY_ATTRIBUTABLE_PRICE 0x41                                 // Attributable Price
+#define DISPLAY_IMBALANCE_ONLY 0x49                                     // Imbalance Only
+#define DISPLAY_NON_DISPLAY 0x4E                                        // Non Display
+#define DISPLAY_ANONYMOUS_PRICE 0x59                                    // Anonymous Price
+#define DISPLAY_ENTERED_AS_DISPLAYED_BUT_CHANGED_TO_NON_DISPLAYED 0x5A  // Entered As Displayed But Changed To Non Displayed
+#define DISPLAY_MID_POINT_PEG 0x4D                                      // Mid Point Peg
+#define DISPLAY_MID_POINT_PEG_POST_ONLY 0x57                            // Mid Point Peg Post Only
+#define DISPLAY_POST_ONLY_AND_ATTRIBUTABLE 0x4C                         // Post Only And Attributable
+#define DISPLAY_RETAIL_ORDER_TYPE_1 0x4F                                // Retail Order Type 1
+#define DISPLAY_RETAIL_ORDER_TYPE_2 0x54                                // Retail Order Type 2
+#define DISPLAY_RETAIL_PRICE 0x51                                       // Retail Price
+#define DISPLAY_MID_POINT_PEG_AND_MID_POINT_TRADE_NOW 0x6D              // Mid Point Peg And Mid Point Trade Now
+#define DISPLAY_NON_DISPLAY_AND_MID_POINT 0x6E                          // Non Display And Mid Point
+
+// Capacity: one byte code
+#define CAPACITY_OTHER 0x4F      // Other
+#define CAPACITY_AGENCY 0x41     // Agency
+#define CAPACITY_PRINCIPAL 0x50  // Principal
+#define CAPACITY_RISKLESS 0x52   // Riskless
+
+// Intermarket Sweep Eligibility: one byte code
+#define INTERMARKET_SWEEP_ELIGIBILITY_ELIGIBLE 0x59      // Eligible
+#define INTERMARKET_SWEEP_ELIGIBILITY_NOT_ELIGIBLE 0x4E  // Not Eligible
+#define INTERMARKET_SWEEP_ELIGIBILITY_TRADE_AT 0x79      // Trade At
+
+// Cross Type: one byte code
+#define CROSS_TYPE_NO_CROSS 0x4E        // No Cross
+#define CROSS_TYPE_OPENING 0x4F         // Opening
+#define CROSS_TYPE_CLOSING 0x43         // Closing
+#define CROSS_TYPE_HALT_IPO_CROSS 0x48  // Halt Ipo Cross
+#define CROSS_TYPE_SUPPLEMENTAL 0x53    // Supplemental
+#define CROSS_TYPE_RETAIL 0x52          // Retail
+#define CROSS_TYPE_EXTENDED 0x45        // Extended
+
+// Order State: one byte code
+#define ORDER_STATE_ORDER_LIVE 0x4C  // Order Live
+#define ORDER_STATE_ORDER_DEAD 0x44  // Order Dead
+
+// Bbo Weight Indicator: one byte code
+#define BBO_WEIGHT_INDICATOR_LESS_THAN_POINT_TWO_PERCENT 0x30   // Less Than Point Two Percent
+#define BBO_WEIGHT_INDICATOR_LESS_THAN_ONE_PERCENT 0x31         // Less Than One Percent
+#define BBO_WEIGHT_INDICATOR_LESS_THAN_TWO_PERCENT 0x32         // Less Than Two Percent
+#define BBO_WEIGHT_INDICATOR_GREATER_THAN_TWO_PERCENT 0x33      // Greater Than Two Percent
+#define BBO_WEIGHT_INDICATOR_UNSPECIFIED 0x20                   // Unspecified
+#define BBO_WEIGHT_INDICATOR_SETS_THE_QBBO 0x53                 // Sets The Qbbo
+#define BBO_WEIGHT_INDICATOR_IMPROVES_THE_NBBO_UPON_ENTRY 0x4E  // Improves The Nbbo Upon Entry
+
+// Display: one byte code
+#define DISPLAY2_ATTRIBUTABLE_PRICE 0x41                                 // Attributable Price
+#define DISPLAY2_IMBALANCE_ONLY 0x49                                     // Imbalance Only
+#define DISPLAY2_NON_DISPLAY 0x4E                                        // Non Display
+#define DISPLAY2_ANONYMOUS_PRICE 0x59                                    // Anonymous Price
+#define DISPLAY2_ENTERED_AS_DISPLAYED_BUT_CHANGED_TO_NON_DISPLAYED 0x5A  // Entered As Displayed But Changed To Non Displayed
+#define DISPLAY2_MID_POINT_PEG 0x4D                                      // Mid Point Peg
+#define DISPLAY2_MID_POINT_PEG_POST_ONLY 0x57                            // Mid Point Peg Post Only
+#define DISPLAY2_RETAIL_ORDER_TYPE_1 0x4F                                // Retail Order Type 1
+#define DISPLAY2_RETAIL_ORDER_TYPE_2 0x54                                // Retail Order Type 2
+#define DISPLAY2_RETAIL_PRICE 0x51                                       // Retail Price
+#define DISPLAY2_MID_POINT_PEG_AND_MID_POINT_TRADE_NOW 0x6D              // Mid Point Peg And Mid Point Trade Now
+#define DISPLAY2_NON_DISPLAY_AND_MID_POINT 0x6E                          // Non Display And Mid Point
+
+// Cancel Order Reason: one byte code
+#define CANCEL_ORDER_REASON_USER_REQUESTED_CANCEL 0x55                                              // User Requested Cancel
+#define CANCEL_ORDER_REASON_IMMEDIATE_OR_CANCEL_ORDER 0x49                                          // Immediate Or Cancel Order
+#define CANCEL_ORDER_REASON_TIMEOUT 0x54                                                            // Timeout
+#define CANCEL_ORDER_REASON_SUPERVISORY 0x53                                                        // Supervisory
+#define CANCEL_ORDER_REASON_THIS_ORDER_CANNOT_BE_EXECUTED_BECAUSE_OF_A_REGULATORY_RESTRICTION 0x44  // This Order Cannot Be Executed Because Of A Regulatory Restriction
+#define CANCEL_ORDER_REASON_SELF_MATCH_PREVENTION 0x51                                              // Self Match Prevention
+#define CANCEL_ORDER_REASON_SYSTEM_CANCEL 0x5A                                                      // System Cancel
+#define CANCEL_ORDER_REASON_CROSS_CANCELED 0x43                                                     // Cross Canceled
+#define CANCEL_ORDER_REASON_THIS_ORDER_CANNOT_BE_EXECUTED 0x4B                                      // This Order Cannot Be Executed
+#define CANCEL_ORDER_REASON_HALTED 0x48                                                             // Halted
+#define CANCEL_ORDER_REASON_OPEN_PROTECTION 0x58                                                    // Open Protection
+#define CANCEL_ORDER_REASON_CLOSED 0x45                                                             // Closed
+#define CANCEL_ORDER_REASON_POST_ONLY_CANCEL_FOR_NMS 0x46                                           // Post Only Cancel For Nms
+#define CANCEL_ORDER_REASON_POST_ONLY_CANCEL_DUE_TO_CONTRA_SIDE_DISPLAYED_ORDER 0x47                // Post Only Cancel Due To Contra Side Displayed Order
+
+// Cancel Order Reason: one byte code
+#define CANCEL_ORDER_REASON2_SELF_MATCH_PREVENTION 0x51  // Self Match Prevention
+
+// Liquidity Flag: one byte code
+#define LIQUIDITY_FLAG_ADDED 0x41                                                 // Added
+#define LIQUIDITY_FLAG_REMOVED 0x52                                               // Removed
+#define LIQUIDITY_FLAG_OPENING 0x4F                                               // Opening
+#define LIQUIDITY_FLAG_OPENING_CROSS 0x4D                                         // Opening Cross
+#define LIQUIDITY_FLAG_CLOSING 0x43                                               // Closing
+#define LIQUIDITY_FLAG_CLOSING_CROSS 0x4C                                         // Closing Cross
+#define LIQUIDITY_FLAG_HALT_IPO 0x48                                              // Halt Ipo
+#define LIQUIDITY_FLAG_HALT 0x4B                                                  // Halt
+#define LIQUIDITY_FLAG_NON_DISPLAYED 0x4A                                         // Non Displayed
+#define LIQUIDITY_FLAG_ADDED_POST_ONLY 0x57                                       // Added Post Only
+#define LIQUIDITY_FLAG_REMOVED_AT_MIDPOINT 0x6D                                   // Removed At Midpoint
+#define LIQUIDITY_FLAG_ADDED_VIA_MIDPOINT 0x6B                                    // Added Via Midpoint
+#define LIQUIDITY_FLAG_SUPPLEMENTAL 0x30                                          // Supplemental
+#define LIQUIDITY_FLAG_IMPROVES_NBBO 0x37                                         // Improves Nbbo
+#define LIQUIDITY_FLAG_SETS_QBBO_WHILE_JOINING_NBBO 0x38                          // Sets Qbbo While Joining Nbbo
+#define LIQUIDITY_FLAG_RETAIL_DESIGNATED_REMOVED_LIQUIDITY 0x64                   // Retail Designated Removed Liquidity
+#define LIQUIDITY_FLAG_RETAIL_DESIGNATED_ADDED_DISPLAYED_LIQUIDITY 0x65           // Retail Designated Added Displayed Liquidity
+#define LIQUIDITY_FLAG_RETAIL_DESIGNATED_ADDED_NON_DISPLAYED_LIQUIDITY 0x66       // Retail Designated Added Non Displayed Liquidity
+#define LIQUIDITY_FLAG_RPI_RETAIL_PRICE_IMPROVING 0x6A                            // Rpi Retail Price Improving
+#define LIQUIDITY_FLAG_RETAIL_ORDER_REMOVES_RPI_LIQUIDITY 0x72                    // Retail Order Removes Rpi Liquidity
+#define LIQUIDITY_FLAG_RETAIL_ORDER_REMOVES_OTHER_PRICE_IMPROVING_LIQUIDITY 0x74  // Retail Order Removes Other Price Improving Liquidity
+#define LIQUIDITY_FLAG_ADDED_DISPLAYED_IN_GROUP_A 0x34                            // Added Displayed In Group A
+#define LIQUIDITY_FLAG_ADDED_NON_DISPLAYED_IN_GROUP_A 0x35                        // Added Non Displayed In Group A
+#define LIQUIDITY_FLAG_REMOVED_IN_GROUP_A 0x36                                    // Removed In Group A
+#define LIQUIDITY_FLAG_ADDED_NON_DISPLAYED_MID_POINT_IN_GROUP_A 0x67              // Added Non Displayed Mid Point In Group A
+#define LIQUIDITY_FLAG_MIDPOINT 0x6E                                              // Midpoint
+
+// Broken Trade Reason: one byte code
+#define BROKEN_TRADE_REASON_ERRONEOUS 0x45    // Erroneous
+#define BROKEN_TRADE_REASON_CONSENT 0x43      // Consent
+#define BROKEN_TRADE_REASON_SUPERVISORY 0x53  // Supervisory
+#define BROKEN_TRADE_REASON_EXTERNAL 0x58     // External
+
+// Reference Price Type: one byte code
+#define REFERENCE_PRICE_TYPE_INTRADAY_INDICATIVE_VALUE 0x49  // Intraday Indicative Value
+
+// Reason: one byte code
+#define REASON_ADJUSTED_TO_NAV 0x4E  // Adjusted To Nav
+
+// Rejected Order Reason: one byte code
+#define REJECTED_ORDER_REASON_TEST_MODE 0x54                                                                  // Test Mode
+#define REJECTED_ORDER_REASON_HALTED 0x48                                                                     // Halted
+#define REJECTED_ORDER_REASON_SHARES_EXCEEDS_CONFIGURED_SAFETY_THRESHOLD 0x5A                                 // Shares Exceeds Configured Safety Threshold
+#define REJECTED_ORDER_REASON_INVALID_STOCK 0x53                                                              // Invalid Stock
+#define REJECTED_ORDER_REASON_INVALID_DISPLAY_TYPE 0x44                                                       // Invalid Display Type
+#define REJECTED_ORDER_REASON_NASDAQ_IS_CLOSED 0x43                                                           // Nasdaq Is Closed
+#define REJECTED_ORDER_REASON_REQUESTED_FIRM_NOT_AUTHORIZED_FOR_REQUESTED_CLEARING_TYPE_ON_THIS_ACCOUNT 0x4C  // Requested Firm Not Authorized For Requested Clearing Type On This Account
+#define REJECTED_ORDER_REASON_OUTSIDE_OF_PERMITTED_TIMES 0x4D                                                 // Outside Of Permitted Times
+#define REJECTED_ORDER_REASON_THIS_ORDER_IS_NOT_ALLOWED_IN_THIS_TYPE_OF_CROSS 0x52                            // This Order Is Not Allowed In This Type Of Cross
+#define REJECTED_ORDER_REASON_INVALID_PRICE 0x58                                                              // Invalid Price
+#define REJECTED_ORDER_REASON_INVALID_MINIMUM 0x4E                                                            // Invalid Minimum
+#define REJECTED_ORDER_REASON_OTHER 0x4F                                                                      // Other
+#define REJECTED_ORDER_REASON_INVALID_MIDPOINT 0x57                                                           // Invalid Midpoint
+#define REJECTED_ORDER_REASON_THERE_IS_NO_REFERENCE_PRICE 0x6F                                                // There Is No Reference Price
+#define REJECTED_ORDER_REASON_MIDPOINT_PEG_ORDERS_ARE_NOT_ACCEPTED 0x71                                       // Midpoint Peg Orders Are Not Accepted
+#define REJECTED_ORDER_REASON_LOC_ORDER_PRICED_MORE_AGGRESSIVELY 0x75                                         // Loc Order Priced More Aggressively
+#define REJECTED_ORDER_REASON_REJECT 0x61                                                                     // Reject
+#define REJECTED_ORDER_REASON_EASY_TO_BORROW_ETB 0x62                                                         // Easy To Borrow Etb
+#define REJECTED_ORDER_REASON_RESTRICTED 0x63                                                                 // Restricted
+#define REJECTED_ORDER_REASON_ISO 0x64                                                                        // Iso
+#define REJECTED_ORDER_REASON_ODD 0x65                                                                        // Odd
+#define REJECTED_ORDER_REASON_MID_POINT 0x66                                                                  // Mid Point
+#define REJECTED_ORDER_REASON_PRE_MARKET 0x67                                                                 // Pre Market
+#define REJECTED_ORDER_REASON_POST_MARKET 0x68                                                                // Post Market
+#define REJECTED_ORDER_REASON_SHORT_SALE 0x69                                                                 // Short Sale
+#define REJECTED_ORDER_REASON_ON_OPEN 0x6A                                                                    // On Open
+#define REJECTED_ORDER_REASON_ON_CLOSE 0x6B                                                                   // On Close
+#define REJECTED_ORDER_REASON_TWO_SIDED 0x6C                                                                  // Two Sided
+#define REJECTED_ORDER_REASON_EXCEEDED_SHARES_LIMIT 0x6D                                                      // Exceeded Shares Limit
+#define REJECTED_ORDER_REASON_EXCEEDED_DOLLAR_VALUE_LIMIT 0x6E                                                // Exceeded Dollar Value Limit
+
+// Display: one byte code
+#define DISPLAY3_ANONYMOUS_PRICE 0x59  // Anonymous Price
+
+// ---- Types -------------------------------------------------------------------
+
+// Debug packets are intended to provide human readable text that may aid in debugging problems
+typedef struct _DebugPacket (UINT16 packet_length) where (packet_length >= 1) {
+  UINT8 debug_text[(((UINT32) packet_length) - 1)];
+} DebugPacket;
 
 // The SoupBinTCP server sends a Login Accepted Packet in response to receiving a valid Login Request from the client
-entrypoint typedef struct _LoginAcceptedPacket {
+typedef struct _LoginAcceptedPacket {
   UINT8 accepted_session[10];          // bytes 0 to 9
   UINT8 accepted_sequence_number[20];  // bytes 10 to 29
 } LoginAcceptedPacket;
 
-// ---- Login Rejected Packet: 1 byte -------------------------------------------
-
 // The SoupBinTCP server sends this packet in response to an invalid Login Request Packet from the client
-entrypoint typedef struct _LoginRejectedPacket {
+typedef struct _LoginRejectedPacket {
   UINT8 reject_reason_code;  // byte 0
 } LoginRejectedPacket;
 
-// ---- System Event Message: 9 bytes -------------------------------------------
-
-entrypoint typedef struct _SystemEventMessage {
+typedef struct _SystemEventMessage {
   UINT64BE timestamp;  // bytes 0 to 7
   UINT8 event_code;    // byte 8
 } SystemEventMessage;
 
-// ---- Accepted Message: 65 bytes ----------------------------------------------
-
-entrypoint typedef struct _AcceptedMessage {
+typedef struct _AcceptedMessage {
   UINT64BE timestamp;                   // bytes 0 to 7
   UINT8 order_token[14];                // bytes 8 to 21
   UINT8 buy_sell_indicator;             // byte 22
@@ -67,9 +286,7 @@ entrypoint typedef struct _AcceptedMessage {
   UINT8 bbo_weight_indicator;           // byte 64
 } AcceptedMessage;
 
-// ---- Replaced Message: 79 bytes ----------------------------------------------
-
-entrypoint typedef struct _ReplacedMessage {
+typedef struct _ReplacedMessage {
   UINT64BE timestamp;                   // bytes 0 to 7
   UINT8 replacement_order_token[14];    // bytes 8 to 21
   UINT8 buy_sell_indicator;             // byte 22
@@ -89,18 +306,14 @@ entrypoint typedef struct _ReplacedMessage {
   UINT8 bbo_weight_indicator;           // byte 78
 } ReplacedMessage;
 
-// ---- Canceled Message: 27 bytes ----------------------------------------------
-
-entrypoint typedef struct _CanceledMessage {
+typedef struct _CanceledMessage {
   UINT64BE timestamp;         // bytes 0 to 7
   UINT8 order_token[14];      // bytes 8 to 21
   UINT32BE decrement_shares;  // bytes 22 to 25
   UINT8 cancel_order_reason;  // byte 26
 } CanceledMessage;
 
-// ---- Aiq Cancelled Message: 36 bytes -----------------------------------------
-
-entrypoint typedef struct _AiqCancelledMessage {
+typedef struct _AiqCancelledMessage {
   UINT64BE timestamp;                        // bytes 0 to 7
   UINT8 order_token[14];                     // bytes 8 to 21
   UINT32BE decrement_shares;                 // bytes 22 to 25
@@ -110,9 +323,7 @@ entrypoint typedef struct _AiqCancelledMessage {
   UINT8 liquidity_flag;                      // byte 35
 } AiqCancelledMessage;
 
-// ---- Executed Message: 39 bytes ----------------------------------------------
-
-entrypoint typedef struct _ExecutedMessage {
+typedef struct _ExecutedMessage {
   UINT64BE timestamp;        // bytes 0 to 7
   UINT8 order_token[14];     // bytes 8 to 21
   UINT32BE executed_shares;  // bytes 22 to 25
@@ -121,18 +332,14 @@ entrypoint typedef struct _ExecutedMessage {
   UINT64BE match_number;     // bytes 31 to 38
 } ExecutedMessage;
 
-// ---- Broken Trade Message: 31 bytes ------------------------------------------
-
-entrypoint typedef struct _BrokenTradeMessage {
+typedef struct _BrokenTradeMessage {
   UINT64BE timestamp;         // bytes 0 to 7
   UINT8 order_token[14];      // bytes 8 to 21
   UINT64BE match_number;      // bytes 22 to 29
   UINT8 broken_trade_reason;  // byte 30
 } BrokenTradeMessage;
 
-// ---- Executed With Reference Price Message: 44 bytes -------------------------
-
-entrypoint typedef struct _ExecutedWithReferencePriceMessage {
+typedef struct _ExecutedWithReferencePriceMessage {
   UINT64BE timestamp;          // bytes 0 to 7
   UINT8 order_token[14];       // bytes 8 to 21
   UINT32BE executed_shares;    // bytes 22 to 25
@@ -143,9 +350,7 @@ entrypoint typedef struct _ExecutedWithReferencePriceMessage {
   UINT8 reference_price_type;  // byte 43
 } ExecutedWithReferencePriceMessage;
 
-// ---- Trade Correction Message: 40 bytes --------------------------------------
-
-entrypoint typedef struct _TradeCorrectionMessage {
+typedef struct _TradeCorrectionMessage {
   UINT64BE timestamp;        // bytes 0 to 7
   UINT8 order_token[14];     // bytes 8 to 21
   UINT32BE executed_shares;  // bytes 22 to 25
@@ -155,31 +360,18 @@ entrypoint typedef struct _TradeCorrectionMessage {
   UINT8 reason;              // byte 39
 } TradeCorrectionMessage;
 
-// ---- Rejected Order Message: 23 bytes ----------------------------------------
-
-entrypoint typedef struct _RejectedOrderMessage {
+typedef struct _RejectedOrderMessage {
   UINT64BE timestamp;           // bytes 0 to 7
   UINT8 order_token[14];        // bytes 8 to 21
   UINT8 rejected_order_reason;  // byte 22
 } RejectedOrderMessage;
 
-// ---- Cancel Pending Message: 22 bytes ----------------------------------------
-
-entrypoint typedef struct _CancelPendingMessage {
+typedef struct _CancelPendingMessage {
   UINT64BE timestamp;     // bytes 0 to 7
   UINT8 order_token[14];  // bytes 8 to 21
 } CancelPendingMessage;
 
-// ---- Cancel Reject Message: 22 bytes -----------------------------------------
-
-entrypoint typedef struct _CancelRejectMessage {
-  UINT64BE timestamp;     // bytes 0 to 7
-  UINT8 order_token[14];  // bytes 8 to 21
-} CancelRejectMessage;
-
-// ---- Order Priority Update Message: 35 bytes ---------------------------------
-
-entrypoint typedef struct _OrderPriorityUpdateMessage {
+typedef struct _OrderPriorityUpdateMessage {
   UINT64BE timestamp;               // bytes 0 to 7
   UINT8 order_token[14];            // bytes 8 to 21
   UINT32BE price;                   // bytes 22 to 25
@@ -187,19 +379,65 @@ entrypoint typedef struct _OrderPriorityUpdateMessage {
   UINT64BE order_reference_number;  // bytes 27 to 34
 } OrderPriorityUpdateMessage;
 
-// ---- Order Modified Message: 27 bytes ----------------------------------------
-
-entrypoint typedef struct _OrderModifiedMessage {
+typedef struct _OrderModifiedMessage {
   UINT64BE timestamp;        // bytes 0 to 7
   UINT8 order_token[14];     // bytes 8 to 21
   UINT8 buy_sell_indicator;  // byte 22
   UINT32BE shares;           // bytes 23 to 26
 } OrderModifiedMessage;
 
-// ---- Sequenced Trade Now Message: 22 bytes -----------------------------------
+// The sequenced (server to client) message carried by the packet, opaque bytes unless an application source dispatches it
+casetype _SequencedMessage (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x53: SystemEventMessage system_event_message;
+    case 0x41: AcceptedMessage accepted_message;
+    case 0x55: ReplacedMessage replaced_message;
+    case 0x43: CanceledMessage canceled_message;
+    case 0x44: AiqCancelledMessage aiq_cancelled_message;
+    case 0x45: ExecutedMessage executed_message;
+    case 0x42: BrokenTradeMessage broken_trade_message;
+    case 0x47: ExecutedWithReferencePriceMessage executed_with_reference_price_message;
+    case 0x46: TradeCorrectionMessage trade_correction_message;
+    case 0x4A: RejectedOrderMessage rejected_order_message;
+    case 0x50: CancelPendingMessage cancel_pending_message;
+    case 0x49: CancelPendingMessage cancel_reject_message;
+    case 0x54: OrderPriorityUpdateMessage order_priority_update_message;
+    case 0x4D: OrderModifiedMessage order_modified_message;
+    case 0x4E: CancelPendingMessage sequenced_trade_now_message;
+    default: UINT8 unknown[available];
+  }
+} SequencedMessage;
 
-entrypoint typedef struct _SequencedTradeNowMessage {
-  UINT64BE timestamp;     // bytes 0 to 7
-  UINT8 order_token[14];  // bytes 8 to 21
-} SequencedTradeNowMessage;
+// The Sequenced Data Packets act as an envelope to carry the actual sequenced data messages that are transferred from the server to the client. Each Sequenced Data Packet carries one message from the higher-lever protocol
+typedef struct _SequencedDataPacket (UINT16 packet_length) where (packet_length >= 2) {
+  UINT8 sequenced_message_type;                                                                                                                                // byte 0
+  SequencedMessage(sequenced_message_type, (((UINT32) packet_length) - 2)) sequenced_message[:byte-size-single-element-array (((UINT32) packet_length) - 2)];
+} SequencedDataPacket;
+
+// Branch
+casetype _ServerPayload (UINT8 selector, UINT32 length, UINT16 packet_length, UINT32 available) {
+  switch (selector) {
+    case 0x2B: DebugPacket(packet_length) debug_packet;
+    case 0x41: LoginAcceptedPacket login_accepted_packet;
+    case 0x4A: LoginRejectedPacket login_rejected_packet;
+    case 0x53: SequencedDataPacket(packet_length) sequenced_data_packet[:byte-size-single-element-array length];
+    case 0x48: unit server_heartbeat;
+    case 0x5A: unit end_of_session;
+    default: UINT8 unknown[available];
+  }
+} ServerPayload;
+
+// Soup Bin Tcp Packet sent by the server
+typedef struct _ServerSoupBinTcpPacket {
+  UINT16BE packet_length { packet_length >= 1 };                                                                                                                                                                // bytes 0 to 1
+  UINT8 server_packet_type;                                                                                                                                                                                     // byte 2
+  ServerPayload(server_packet_type, (((UINT32) packet_length) - 1), packet_length, ((((UINT32) packet_length) + 2) - 3)) server_payload[:byte-size-single-element-array ((((UINT32) packet_length) + 2) - 3)];
+} ServerSoupBinTcpPacket;
+
+// ---- Packet: ServerPacket ----------------------------------------------------
+
+// SoupBinTCP Packet sent by the server
+entrypoint typedef struct _ServerPacket (UINT32 available) {
+  ServerSoupBinTcpPacket server_soup_bin_tcp_packet[:byte-size available];
+} ServerPacket;
 

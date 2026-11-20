@@ -1,28 +1,89 @@
-// The Members Exchange Common Header
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Memx MemxEquities CommonHeader Udp v1.1
 //
+// Protocol:
+//   Organization: The Members Exchange
+//   Protocol: Common Header
+//   Encoding: User Datagram Protocol
+//   Version: 1.1
+//   Date: 2025-10-23
+//   Specification: MEMX-UDP-v1_1.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out MemxEquities_CommonHeader_v1_1.3d
-//
-// What this definition does not state, and the model does:
-// - the dispatch that chooses a message by its type
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Common Header: 18 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Common Header
-entrypoint typedef struct _CommonHeader {
-  UINT8 message_type;        // byte 0
-  UINT8 header_length;       // byte 1
-  UINT64BE session_id;       // bytes 2 to 9
-  UINT64BE sequence_number;  // bytes 10 to 17
-} CommonHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_HEARTBEAT_MESSAGE 0x00         // Heartbeat Message
+#define MESSAGE_TYPE_SESSION_SHUTDOWN_MESSAGE 0x01  // Session Shutdown Message
+#define MESSAGE_TYPE_SEQUENCED_MESSAGE 0x02         // Sequenced Message
+
+// ---- Types -------------------------------------------------------------------
+
+// Message List Element
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16BE message_length;                                                                                                                                         // bytes 0 to 1
+  UINT8 sbe_message[((((UINT32) message_length) + 2) - 2)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// Sequenced Message
+typedef struct _SequencedMessage (UINT32 available, mutable UINT32 * tally) where (available >= 2) {
+  UINT16BE message_count;                                                                                                   // bytes 0 to 1
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size (available - 2)];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} SequencedMessage;
+
+// Branch
+casetype _SequencedMessages (UINT8 selector, UINT32 available, mutable UINT32 * tally) {
+  switch (selector) {
+    case 0x00: unit heartbeat;
+    case 0x01: unit session_shutdown;
+    case 0x02: SequencedMessage(available, tally) sequenced_message;
+    default: UINT8 unknown[available];
+  }
+} SequencedMessages;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Datagram
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 18) {
+  UINT8 message_type;                                                                                                             // byte 0
+  UINT8 header_length;                                                                                                            // byte 1
+  UINT64BE session_id;                                                                                                            // bytes 2 to 9
+  UINT64BE sequence_number;                                                                                                       // bytes 10 to 17
+  SequencedMessages(message_type, (available - 18), tally) sequenced_messages[:byte-size-single-element-array (available - 18)];
+} Packet;
 

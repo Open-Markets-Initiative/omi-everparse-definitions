@@ -1,124 +1,272 @@
-// Chicago Board Options Exchange Complex Top
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Cboe C1Options ComplexTop Spin v1.1.54
 //
+// Protocol:
+//   Organization: Chicago Board Options Exchange
+//   Protocol: Complex Top
+//   Encoding: Spin
+//   Version: 1.1.54
+//   Date: 04/01/2026
+//   Specification: US_OPTIONS_COMPLEX_MULTICAST_TOP_SPECIFICATION.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out C1Options_ComplexTop_Spin_v1_1_54.3d
-//
-// What this definition does not state, and the model does:
-// - a Reassemble rule
-// - a run filling what frames it
-// - a run counted by a field
-// - a field read in bits
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 8 bytes --------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-entrypoint typedef struct _PacketHeader {
-  UINT16 length;        // bytes 0 to 1
-  UINT8 message_count;  // byte 2
-  UINT8 unit_;          // byte 3
-  UINT32 sequence;      // bytes 4 to 7
-} PacketHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_LOGIN_MESSAGE 0x01                                              // Login Message
+#define MESSAGE_TYPE_LOGIN_RESPONSE_MESSAGE 0x02                                     // Login Response Message
+#define MESSAGE_TYPE_SPIN_IMAGE_AVAILABLE_MESSAGE 0x80                               // Spin Image Available Message
+#define MESSAGE_TYPE_SPIN_REQUEST_MESSAGE 0x81                                       // Spin Request Message
+#define MESSAGE_TYPE_SPIN_RESPONSE_MESSAGE 0x82                                      // Spin Response Message
+#define MESSAGE_TYPE_SPIN_FINISHED_MESSAGE 0x83                                      // Spin Finished Message
+#define MESSAGE_TYPE_INSTRUMENT_DEFINITION_REQUEST_MESSAGE 0x84                      // Instrument Definition Request Message
+#define MESSAGE_TYPE_INSTRUMENT_DEFINITION_RESPONSE_MESSAGE 0x85                     // Instrument Definition Response Message
+#define MESSAGE_TYPE_INSTRUMENT_DEFINITION_FINISHED_MESSAGE 0x86                     // Instrument Definition Finished Message
+#define MESSAGE_TYPE_TIME_MESSAGE 0x20                                               // Time Message
+#define MESSAGE_TYPE_SYMBOL_MAPPING_MESSAGE 0x2F                                     // Symbol Mapping Message
+#define MESSAGE_TYPE_COMPLEX_INSTRUMENT_DEFINITION_EXPANDED_MESSAGE 0x9A             // Complex Instrument Definition Expanded Message
+#define MESSAGE_TYPE_EXCHANGE_DESIGNATED_COMPLEX_INSTRUMENT_DEFINITION_MESSAGE 0x9F  // Exchange Designated Complex Instrument Definition Message
+#define MESSAGE_TYPE_SINGLE_SIDE_UPDATE_EXPANDED_SHORT_MESSAGE 0xD4                  // Single Side Update Expanded Short Message
+#define MESSAGE_TYPE_SINGLE_SIDE_UPDATE_EXPANDED_LONG_MESSAGE 0xD5                   // Single Side Update Expanded Long Message
+#define MESSAGE_TYPE_TWO_SIDE_UPDATE_EXPANDED_SHORT_MESSAGE 0xD6                     // Two Side Update Expanded Short Message
+#define MESSAGE_TYPE_TWO_SIDE_UPDATE_EXPANDED_LONG_MESSAGE 0xD7                      // Two Side Update Expanded Long Message
+#define MESSAGE_TYPE_TOP_TRADE_MESSAGE 0xB8                                          // Top Trade Message
+#define MESSAGE_TYPE_TRADING_STATUS_MESSAGE 0x31                                     // Trading Status Message
 
-// ---- Message Header: 2 bytes -------------------------------------------------
+// Login Response Status: one byte code
+#define LOGIN_RESPONSE_STATUS_LOGIN_ACCEPTED 0x41                            // Login Accepted
+#define LOGIN_RESPONSE_STATUS_NOT_AUTHORIZED_INVALID_USERNAME_PASSWORD 0x4E  // Not Authorized Invalid Username Password
+#define LOGIN_RESPONSE_STATUS_SESSION_IN_USE 0x42                            // Session In Use
+#define LOGIN_RESPONSE_STATUS_INVALID_SESSION 0x53                           // Invalid Session
 
-entrypoint typedef struct _MessageHeader {
-  UINT8 message_length;  // byte 0
-  UINT8 message_type;    // byte 1
-} MessageHeader;
+// Spin Response Status: one byte code
+#define SPIN_RESPONSE_STATUS_ACCEPTED 0x41                                                                          // Accepted
+#define SPIN_RESPONSE_STATUS_OUT_OF_RANGE_SEQUENCE_REQUESTED_IS_GREATER_THAN_SEQUENCE_AVAILABLE_BY_THE_91uwx5 0x4F  // Out Of Range Sequence Requested Is Greater Than Sequence Available By The Next Spin
+#define SPIN_RESPONSE_STATUS_SPIN_ALREADY_IN_PROGRESS_ONLY_ONE_SPIN_CAN_BE_RUNNING_AT_A_TIME 0x53                   // Spin Already In Progress Only One Spin Can Be Running At A Time
 
-// ---- Login Message: 20 bytes -------------------------------------------------
+// Instrument Definition Response Status: one byte code
+#define INSTRUMENT_DEFINITION_RESPONSE_STATUS_ACCEPTED 0x41                                                         // Accepted
+#define INSTRUMENT_DEFINITION_RESPONSE_STATUS_OUT_OF_RANGE_SEQUENCE_MUST_BE_0 0x4F                                  // Out Of Range Sequence Must Be 0
+#define INSTRUMENT_DEFINITION_RESPONSE_STATUS_SPIN_ALREADY_IN_PROGRESS_ONLY_ONE_SPIN_CAN_BE_RUNNING_AT_A_TIME 0x53  // Spin Already In Progress Only One Spin Can Be Running At A Time
+
+// Symbol Condition: one byte code
+#define SYMBOL_CONDITION_NORMAL 0x4E        // Normal
+#define SYMBOL_CONDITION_CLOSING_ONLY 0x43  // Closing Only
+
+// Leg Security Type: one byte code
+#define LEG_SECURITY_TYPE_LEG_IS_AN_OPTION_INSTRUMENT 0x4F  // Leg Is An Option Instrument
+#define LEG_SECURITY_TYPE_LEG_IS_AN_EQUITY_INSTRUMENT 0x45  // Leg Is An Equity Instrument
+
+// Side: one byte code
+#define SIDE_BID_SIDE 0x42  // Bid Side
+#define SIDE_ASK_SIDE 0x53  // Ask Side
+
+// Trade Condition: one byte code
+#define TRADE_CONDITION_COMPLEX_TO_COMPLEX_ELECTRONIC_TRADE_CBOE_AUCTION_TYPE_IS_COA 0x66                      // Complex To Complex Electronic Trade Cboe Auction Type Is Coa
+#define TRADE_CONDITION_COMPLEX_AUCTION_TRADE_CBOE_ORDER_TYPES_INCLUDE_C_AIM_C_SAM 0x67                        // Complex Auction Trade Cboe Order Types Include C Aim C Sam
+#define TRADE_CONDITION_COMPLEX_CROSS_CBOE_AUCTION_TYPES_INCLUDE_CUST_TO_CUST_C_AIM_C_QCC 0x68                 // Complex Cross Cboe Auction Types Include Cust To Cust C Aim C Qcc
+#define TRADE_CONDITION_COMPLEX_ELECTRONIC_TRADE_AGAINST_SINGLE_LEGS 0x6A                                      // Complex Electronic Trade Against Single Legs
+#define TRADE_CONDITION_COMPLEX_WITH_STOCK_OPTIONS_AUCTION_TRADE_CBOE_AUCTION_TYPES_INCLUDE_C_AIM_ecg6wg 0x6B  // Complex With Stock Options Auction Trade Cboe Auction Types Include C Aim W Stock C Sam W Stock
+#define TRADE_CONDITION_COMPLEX_FLOOR_TRADE_AGAINST_SINGLE_LEGS_ALL_COMPLEX_FLOOR_EXECUTIONS_ARE__h40jog 0x6D  // Complex Floor Trade Against Single Legs All Complex Floor Executions Are Reported As Condition M
+#define TRADE_CONDITION_COMPLEX_WITH_STOCK_ELECTRONIC_TRADE_INCLUDES_COA_AUCTIONS_DONE_ELECTRONICALLY 0x6E     // Complex With Stock Electronic Trade Includes Coa Auctions Done Electronically
+#define TRADE_CONDITION_COMPLEX_WITH_STOCK_CROSS_CBOE_AUCTION_TYPES_INCLUDE_C_QCC_W_STOCK 0x6F                 // Complex With Stock Cross Cboe Auction Types Include C Qcc W Stock
+#define TRADE_CONDITION_COMPLEX_WITH_STOCK_FLOOR_TRADE 0x70                                                    // Complex With Stock Floor Trade
+#define TRADE_CONDITION_COMPLEX_FLOOR_TRADE_OF_PROPRIETARY_PRODUCTS_MARKED_AS_COMBO_ORDER 0x74                 // Complex Floor Trade Of Proprietary Products Marked As Combo Order
+#define TRADE_CONDITION_EXTENDED_HOURS_TRADE_TRANSACTION_REPRESENTS_A_TRADE_EXECUTED_DURING_THE_C_4upzov 0x76  // Extended Hours Trade Transaction Represents A Trade Executed During The Curb Session
+#define TRADE_CONDITION_ELECTRONIC_TRADE 0x49                                                                  // Electronic Trade
+#define TRADE_CONDITION_OPENING_TRADE 0x4F                                                                     // Opening Trade
+
+// Trading Status: one byte code
+#define TRADING_STATUS_HALTED 0x48        // Halted
+#define TRADING_STATUS_CURB_TRADING 0x4C  // Curb Trading
+#define TRADING_STATUS_QUOTE_ONLY 0x51    // Quote Only
+#define TRADING_STATUS_RTH_TRADING 0x54   // Rth Trading
+
+// Gth Trading Status: one byte code
+#define GTH_TRADING_STATUS_HALTED 0x48      // Halted
+#define GTH_TRADING_STATUS_QUOTE_ONLY 0x51  // Quote Only
+#define GTH_TRADING_STATUS_TRADING 0x54     // Trading
+
+// ---- Types -------------------------------------------------------------------
 
 // The Login message is the first message sent to the Spin Server by a user's process after the connection to the Spin Server is established. Failure to login before sending any other message type will result in the connection being dropped by the Spin Server. The format of the Login message for the Spin Server is identical to that of the GRP.
-entrypoint typedef struct _LoginMessage {
+typedef struct _LoginMessage {
   UINT8 session_sub_id[4];  // bytes 0 to 3
   UINT8 username[4];        // bytes 4 to 7
   UINT8 filler[2];          // bytes 8 to 9
   UINT8 password[10];       // bytes 10 to 19
 } LoginMessage;
 
-// ---- Login Response Message: 1 byte ------------------------------------------
-
 // The Login Response message is sent by the Spin Server to a user's process in response to a Login message. The status field is used to reflect an accepted login or the reason the session was not accepted. If login fails, the connection will be dropped after the Login Response message is sent.
-entrypoint typedef struct _LoginResponseMessage {
+typedef struct _LoginResponseMessage {
   UINT8 login_response_status;  // byte 0
 } LoginResponseMessage;
 
-// ---- Spin Image Available Message: 4 bytes -----------------------------------
-
 // The Spin Image Available message is sent once per second and indicates through what sequence number a spin is available.
-entrypoint typedef struct _SpinImageAvailableMessage {
+typedef struct _SpinImageAvailableMessage {
   UINT32 sequence;  // bytes 0 to 3
 } SpinImageAvailableMessage;
 
-// ---- Spin Request Message: 4 bytes -------------------------------------------
-
 // The Spin Request message is used by a user's process to request transmission of a spin of the unit's order book.
-entrypoint typedef struct _SpinRequestMessage {
+typedef struct _SpinRequestMessage {
   UINT32 sequence;  // bytes 0 to 3
 } SpinRequestMessage;
 
-// ---- Spin Response Message: 9 bytes ------------------------------------------
-
 // The Spin Response message is sent in response to a user's Spin Request message indicating whether a spin will be sent.
-entrypoint typedef struct _SpinResponseMessage {
+typedef struct _SpinResponseMessage {
   UINT32 sequence;             // bytes 0 to 3
   UINT32 order_count;          // bytes 4 to 7
   UINT8 spin_response_status;  // byte 8
 } SpinResponseMessage;
 
-// ---- Spin Finished Message: 4 bytes ------------------------------------------
-
 // The Spin Finished message is sent to indicate that all messages for the spin requested have been sent. A Spin Finished message is only sent if a Spin Request was not rejected. Upon receipt of a Spin Finished message, any buffered multicast messages should be applied to the customer's copy of the book to make it current.
-entrypoint typedef struct _SpinFinishedMessage {
+typedef struct _SpinFinishedMessage {
   UINT32 sequence;  // bytes 0 to 3
 } SpinFinishedMessage;
 
-// ---- Instrument Definition Request Message: 4 bytes --------------------------
-
 // The Instrument Definition Request message is used by a user's process to request transmission of this unit's Symbol Mappings and Complex Instrument Definitions. All Symbol Mapping messages will be sent before Complex Instrument Definition Expanded and Exchange Designated Complex Instrument Definition messages.
-entrypoint typedef struct _InstrumentDefinitionRequestMessage {
+typedef struct _InstrumentDefinitionRequestMessage {
   UINT32 sequence;  // bytes 0 to 3
 } InstrumentDefinitionRequestMessage;
 
-// ---- Instrument Definition Response Message: 9 bytes -------------------------
-
 // The Instrument Definition Response message is sent in response to a user's Instrument Definition Request message indicating whether a spin will be sent.
-entrypoint typedef struct _InstrumentDefinitionResponseMessage {
+typedef struct _InstrumentDefinitionResponseMessage {
   UINT32 sequence;                              // bytes 0 to 3
   UINT32 instrument_count;                      // bytes 4 to 7
   UINT8 instrument_definition_response_status;  // byte 8
 } InstrumentDefinitionResponseMessage;
 
-// ---- Time Message: 8 bytes ---------------------------------------------------
-
 // A Time message is immediately generated and sent when there is a Top event for a given clock second. If there is no Top event for a given clock second, then no Time message is sent for that second. All subsequent time offset fields for the same unit will use the new Time value as the base until another Time message is received for the same unit. On C1 only, the Time message will also include the Epoch Time field, which is the current time represented as the number of whole seconds since the Epoch (midnight January 1, 1970).
-entrypoint typedef struct _TimeMessage {
+typedef struct _TimeMessage {
   UINT32 time;        // bytes 0 to 3
   UINT32 epoch_time;  // bytes 4 to 7
 } TimeMessage;
 
-// ---- Symbol Mapping Message: 36 bytes ----------------------------------------
-
 // A Symbol Mapping message is used to map the 6 character simple instrument multicast feed symbol field to an OSI symbol and Underlying. These messages are not sequenced (sequence = 0) and are sent continuously through the day at variable rates as bandwidth allows.
-entrypoint typedef struct _SymbolMappingMessage {
+typedef struct _SymbolMappingMessage {
   UINT8 feed_symbol[6];    // bytes 0 to 5
   UINT8 osi_symbol[21];    // bytes 6 to 26
   UINT8 symbol_condition;  // byte 27
   UINT8 underlying[8];     // bytes 28 to 35
 } SymbolMappingMessage;
 
-// ---- Top Trade Message: 35 bytes ---------------------------------------------
+// Repeating leg definition group inside the Complex Instrument Definition Expanded message. Repeats Leg Count times.
+typedef struct _ComplexLeg {
+  UINT8 leg_symbol_long[8];  // bytes 0 to 7
+  UINT32 leg_ratio;          // bytes 8 to 11, signed, read here as unsigned
+  UINT8 leg_security_type;   // byte 12
+} ComplexLeg;
+
+// A Complex Instrument Definition Expanded message represents a complex instrument that is available to place orders. It is sent as a sequenced message. Complex Instrument Definition Expanded messages will be sent in a continuous loop through the day at variable rates as bandwidth allows. The Complex Instrument Definition Expanded message will contain two or more repeating groups of leg definitions. There is a limit of 16 leg definitions.
+typedef struct _ComplexInstrumentDefinitionExpandedMessage {
+  UINT32 time_offset;                                              // bytes 0 to 3
+  UINT8 complex_instrument_id[6];                                  // bytes 4 to 9
+  UINT8 complex_instrument_underlying[8];                          // bytes 10 to 17
+  UINT8 complex_instrument_type[4];                                // bytes 18 to 21
+  UINT8 leg_count;                                                 // byte 22
+  ComplexLeg complex_leg[:byte-size (((UINT32) leg_count) * 13)];
+} ComplexInstrumentDefinitionExpandedMessage;
+
+// Repeating leg definition group inside the Exchange Designated Complex Instrument Definition message. Repeats Leg Count times.
+typedef struct _EdcidLeg {
+  UINT8 leg_symbol_short[6];  // bytes 0 to 5
+  UINT32 leg_ratio;           // bytes 6 to 9, signed, read here as unsigned
+} EdcidLeg;
+
+// C1 Options Only. The Exchange Designated Complex Instrument Definition (EDCID) message represents supplemental information associated with an exchange-designated complex instrument and is sent as a sequenced message the first time it is sent. These messages are also sent continuously throughout the day as an unsequenced message (sequence = 0) at variable rates as bandwidth allows. The Time offset field should be ignored on unsequenced EDCID messages. This message is sent in addition to a Complex Instrument Definition Expanded message for each exchange-designated complex instrument.
+typedef struct _ExchangeDesignatedComplexInstrumentDefinitionMessage {
+  UINT32 time_offset;                                          // bytes 0 to 3
+  UINT8 complex_instrument_id[6];                              // bytes 4 to 9
+  UINT8 complex_instrument_underlying[8];                      // bytes 10 to 17
+  UINT8 edci_type[20];                                         // bytes 18 to 37
+  UINT8 edci_subtype[20];                                      // bytes 38 to 57
+  UINT8 reserved_2[2];                                         // bytes 58 to 59
+  UINT8 leg_count;                                             // byte 60
+  EdcidLeg edcid_leg[:byte-size (((UINT32) leg_count) * 10)];
+} ExchangeDesignatedComplexInstrumentDefinitionMessage;
+
+// Single Side Update messages provide an updated price and size for a single side of a Complex Instrument ID. The side is denoted by the Side field. One Single Side Update message may reflect one or more updates to the inside book that were processed at the same time, but will only be done so in a way that can be arbitrated between A/B feeds. The Single Side Update Expanded (Short) message is used whenever possible.
+typedef struct _SingleSideUpdateExpandedShortMessage {
+  UINT32 time_offset;              // bytes 0 to 3
+  UINT8 complex_instrument_id[6];  // bytes 4 to 9
+  UINT8 side;                      // byte 10
+  UINT8 reserved_bits : 8;         // byte 11
+  UINT16 price_short;              // bytes 12 to 13
+  UINT16 quantity_short;           // bytes 14 to 15
+  UINT16 customer_quantity_short;  // bytes 16 to 17
+} SingleSideUpdateExpandedShortMessage;
+
+// Single Side Update messages provide an updated price and size for a single side of a Complex Instrument ID. The Single Side Update Expanded (Long) message is used when the Price cannot be represented by a Binary Short Price or the Quantity cannot be represented by an unsigned 16-bit integer.
+typedef struct _SingleSideUpdateExpandedLongMessage {
+  UINT32 time_offset;              // bytes 0 to 3
+  UINT8 complex_instrument_id[6];  // bytes 4 to 9
+  UINT8 side;                      // byte 10
+  UINT8 reserved_bits : 8;         // byte 11
+  UINT64 price_long;               // bytes 12 to 19
+  UINT32 quantity_long;            // bytes 20 to 23
+  UINT32 customer_quantity_long;   // bytes 24 to 27
+} SingleSideUpdateExpandedLongMessage;
+
+// Two Side Update messages provide an updated price and size for both sides of a Complex Instrument ID. One Two Side Update message may reflect one or more updates to the inside book that were processed at the same time, but will only be done so in a way that can be arbitrated between A/B feeds. The Two Side Update Expanded (Short) message is used whenever possible.
+typedef struct _TwoSideUpdateExpandedShortMessage {
+  UINT32 time_offset;                  // bytes 0 to 3
+  UINT8 complex_instrument_id[6];      // bytes 4 to 9
+  UINT8 reserved_bits : 8;             // byte 10
+  UINT16 bid_price_short;              // bytes 11 to 12
+  UINT16 bid_quantity_short;           // bytes 13 to 14
+  UINT16 bid_customer_quantity_short;  // bytes 15 to 16
+  UINT16 ask_price_short;              // bytes 17 to 18
+  UINT16 ask_quantity_short;           // bytes 19 to 20
+  UINT16 ask_customer_quantity_short;  // bytes 21 to 22
+} TwoSideUpdateExpandedShortMessage;
+
+// Two Side Update messages provide an updated price and size for both sides of a Complex Instrument ID. The Two Side Update Expanded (Long) message is used when the Price cannot be represented by a Binary Short Price or the Quantity cannot be represented by an unsigned 16-bit integer.
+typedef struct _TwoSideUpdateExpandedLongMessage {
+  UINT32 time_offset;                 // bytes 0 to 3
+  UINT8 complex_instrument_id[6];     // bytes 4 to 9
+  UINT8 reserved_bits : 8;            // byte 10
+  UINT64 bid_price_long;              // bytes 11 to 18
+  UINT32 bid_quantity_long;           // bytes 19 to 22
+  UINT32 bid_customer_quantity_long;  // bytes 23 to 26
+  UINT64 ask_price_long;              // bytes 27 to 34
+  UINT32 ask_quantity_long;           // bytes 35 to 38
+  UINT32 ask_customer_quantity_long;  // bytes 39 to 42
+} TwoSideUpdateExpandedLongMessage;
 
 // The TOP Trade message provides information about executions of complex orders. TOP Trade messages are necessary to calculate Cboe execution-based data. TOP Trade messages do not alter the complex book. One or more Single Side Update Expanded or Two Side Update Expanded messages will follow a TOP Trade message to reflect the updated complex book. The TOP Trade message sends the trade price, trade quantity, and trade condition of a trade as well as the cumulative volume for the business day.
-entrypoint typedef struct _TopTradeMessage {
+typedef struct _TopTradeMessage {
   UINT32 time_offset;              // bytes 0 to 3
   UINT8 complex_instrument_id[6];  // bytes 4 to 9
   UINT32 quantity_long;            // bytes 10 to 13
@@ -128,10 +276,8 @@ entrypoint typedef struct _TopTradeMessage {
   UINT8 trade_condition;           // byte 34
 } TopTradeMessage;
 
-// ---- Trading Status Message: 16 bytes ----------------------------------------
-
 // The Trading Status message is used to indicate the current trading status of a complex instrument. A Trading Status message will be sent whenever a complex instrument trading status changes. The Trading Status field will be used to represent the status of the RTH (9:30 a.m. ET - 4:15 p.m. ET) and Curb sessions. The GTH Trading Status field will be used to represent the status of series that trade during the GTH session. The GTH session runs from 8:15 p.m. to 9:25 a.m. ET for GTH-eligible Products (C1 only).
-entrypoint typedef struct _TradingStatusMessage {
+typedef struct _TradingStatusMessage {
   UINT32 time_offset;              // bytes 0 to 3
   UINT8 complex_instrument_id[6];  // bytes 4 to 9
   UINT8 reserved_2[2];             // bytes 10 to 11
@@ -140,4 +286,62 @@ entrypoint typedef struct _TradingStatusMessage {
   UINT8 gth_trading_status;        // byte 14
   UINT8 second_reserved_1;         // byte 15
 } TradingStatusMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x01: LoginMessage login_message;
+    case 0x02: LoginResponseMessage login_response_message;
+    case 0x80: SpinImageAvailableMessage spin_image_available_message;
+    case 0x81: SpinRequestMessage spin_request_message;
+    case 0x82: SpinResponseMessage spin_response_message;
+    case 0x83: SpinFinishedMessage spin_finished_message;
+    case 0x84: InstrumentDefinitionRequestMessage instrument_definition_request_message;
+    case 0x85: InstrumentDefinitionResponseMessage instrument_definition_response_message;
+    case 0x86: unit instrument_definition_finished_message;
+    case 0x20: TimeMessage time_message;
+    case 0x2F: SymbolMappingMessage symbol_mapping_message;
+    case 0x9A: ComplexInstrumentDefinitionExpandedMessage complex_instrument_definition_expanded_message;
+    case 0x9F: ExchangeDesignatedComplexInstrumentDefinitionMessage exchange_designated_complex_instrument_definition_message;
+    case 0xD4: SingleSideUpdateExpandedShortMessage single_side_update_expanded_short_message;
+    case 0xD5: SingleSideUpdateExpandedLongMessage single_side_update_expanded_long_message;
+    case 0xD6: TwoSideUpdateExpandedShortMessage two_side_update_expanded_short_message;
+    case 0xD7: TwoSideUpdateExpandedLongMessage two_side_update_expanded_long_message;
+    case 0xB8: TopTradeMessage top_trade_message;
+    case 0x31: TradingStatusMessage trading_status_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT8 message_length { message_length >= 2 };                                                                                                                    // byte 0
+  UINT8 message_type;                                                                                                                                              // byte 1
+  Payload(message_type, (((UINT32) message_length) - 2)) payload[:byte-size-single-element-array (((UINT32) message_length) - 2)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+typedef struct _MessageRun (UINT8 message_count, UINT32 available, mutable UINT32 * tally) {
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size available];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} MessageRun;
+
+// Branch
+casetype _Messages (UINT8 selector, UINT8 message_count, UINT32 available, mutable UINT32 * tally) {
+  switch (selector) {
+    case 0x00: unit heartbeat;
+    default: MessageRun(message_count, available, tally) message;
+  }
+} Messages;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Pitch Tcp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 8) {
+  UINT16 length;                                                                                                             // bytes 0 to 1
+  UINT8 message_count;                                                                                                       // byte 2
+  UINT8 unit_;                                                                                                               // byte 3
+  UINT32 sequence;                                                                                                           // bytes 4 to 7
+  Messages(message_count, message_count, (available - 8), tally) messages[:byte-size-single-element-array (available - 8)];
+} Packet;
 

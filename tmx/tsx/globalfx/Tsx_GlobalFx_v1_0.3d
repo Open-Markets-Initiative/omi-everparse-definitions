@@ -1,34 +1,107 @@
-// TMX Group Global Fx Feed
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Tmx Tsx GlobalFx Gfx v1.0
 //
+// Protocol:
+//   Organization: TMX Group
+//   Protocol: Global Fx Feed
+//   Encoding: Global Fx
+//   Version: 1.0
+//   Date: 5/20/2016
+//   Specification: TMX Global FX.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out Tsx_GlobalFx_v1_0.3d
-//
-// What this definition does not state, and the model does:
-// - the dispatch that chooses a message by its type
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Bid Price: 5 bytes ------------------------------------------------------
+// ---- Values ------------------------------------------------------------------
+
+// Tier Status: one byte code
+#define TIER_STATUS_VALID_REFERENCE_PRICE 0x52  // Valid Reference Price
+#define TIER_STATUS_PRICE_NOT_AVAILABLE 0x5A    // Price Not Available
+
+// Price Terms: one byte code
+#define PRICE_TERMS_DIRECT_TERMS 0x44    // Direct Terms
+#define PRICE_TERMS_INVERTED_TERMS 0x49  // Inverted Terms
+
+// ---- Types -------------------------------------------------------------------
 
 // Bid Price mantissa, which Bid Price Exponent scales. Zero for Tier Status Z
-entrypoint typedef struct _BidPrice {
+typedef struct _BidPrice {
   UINT32BE bid_price_mantissa;  // bytes 0 to 3, signed, read here as unsigned
   UINT8 bid_price_exponent;     // byte 4, signed, read here as unsigned
 } BidPrice;
 
-// ---- Offer Price: 5 bytes ----------------------------------------------------
-
 // Offer Price mantissa, which Offer Price Exponent scales. Zero for Tier Status Z
-entrypoint typedef struct _OfferPrice {
+typedef struct _OfferPrice {
   UINT32BE offer_price_mantissa;  // bytes 0 to 3, signed, read here as unsigned
   UINT8 offer_price_exponent;     // byte 4, signed, read here as unsigned
 } OfferPrice;
+
+// Bid and offer reference prices at one pre-configured size tier
+typedef struct _SizeTier {
+  UINT8 tier_status;       // byte 0
+  UINT32BE tier_size;      // bytes 1 to 4
+  UINT8 price_terms;       // byte 5
+  BidPrice bid_price;      // bytes 6 to 10
+  OfferPrice offer_price;  // bytes 11 to 15
+} SizeTier;
+
+// Reports a bid and offer reference price at each pre-configured size tier for a currency pair
+typedef struct _ReferencePriceFxSpot {
+  UINT8 unused_1;                                                    // byte 0
+  UINT8 currency_1[3];                                               // bytes 1 to 3
+  UINT8 currency_2[3];                                               // bytes 4 to 6
+  UINT64BE timestamp;                                                // bytes 7 to 14
+  UINT64BE stream_id;                                                // bytes 15 to 22
+  UINT32BE sequence_number;                                          // bytes 23 to 26
+  UINT16BE valid_for_seconds;                                        // bytes 27 to 28
+  UINT8 unused_2;                                                    // byte 29
+  UINT8 number_of_tiers;                                             // byte 30
+  SizeTier size_tier[:byte-size (((UINT32) number_of_tiers) * 16)];
+} ReferencePriceFxSpot;
+
+// The datagram the packet dispatches to, chosen by its Msg Type.
+casetype _DatagramBody (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x23: ReferencePriceFxSpot reference_price_fx_spot;
+    default: UINT8 unknown[available];
+  }
+} DatagramBody;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Tmx Global Fx Udp packet
+entrypoint typedef struct _Packet (UINT32 available) where (available >= 1) {
+  UINT8 msg_type;                                                                                          // byte 0
+  DatagramBody(msg_type, (available - 1)) datagram_body[:byte-size-single-element-array (available - 1)];
+} Packet;
 

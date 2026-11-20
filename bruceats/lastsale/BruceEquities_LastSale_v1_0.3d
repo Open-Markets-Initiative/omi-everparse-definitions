@@ -1,51 +1,98 @@
-// Bruce ATS Last Sale
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: BruceAts LastSale Itch v1.0
 //
+// Protocol:
+//   Organization: Bruce ATS
+//   Protocol: Last Sale
+//   Encoding: Itch
+//   Version: 1.0
+//   Date: 03/01/2025
+//   Specification: Bruce Last Sale.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out BruceEquities_LastSale_v1_0.3d
-//
-// What this definition does not state, and the model does:
-// - the dispatch that chooses a message by its type
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 20 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Itch Mold Udp 64 Packet Header
-entrypoint typedef struct _PacketHeader {
-  UINT8 session[10];         // bytes 0 to 9
-  UINT64BE sequence_number;  // bytes 10 to 17
-  UINT16BE message_count;    // bytes 18 to 19
-} PacketHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_SYSTEM_EVENT_MESSAGE 0x53                                // System Event Message
+#define MESSAGE_TYPE_STOCK_DIRECTORY 0x52                                     // Stock Directory
+#define MESSAGE_TYPE_STOCK_TRADING_ACTION 0x48                                // Stock Trading Action
+#define MESSAGE_TYPE_REG_SHO_SHORT_SALE_PRICE_TEST_RESTRICTED_INDICATOR 0x59  // Reg Sho Short Sale Price Test Restricted Indicator
+#define MESSAGE_TYPE_TRADE_REPORT_MESSAGE 0x54                                // Trade Report Message
+#define MESSAGE_TYPE_TRADE_CANCEL_MESSAGE 0x58                                // Trade Cancel Message
 
-// ---- Message Header: 3 bytes -------------------------------------------------
+// Event Code: one byte code
+#define EVENT_CODE_START_OF_TRANSMISSIONS 0x4F  // Start Of Transmissions
+#define EVENT_CODE_START_OF_SYSTEM_HOURS 0x53   // Start Of System Hours
+#define EVENT_CODE_START_OF_MARKET_HOURS 0x51   // Start Of Market Hours
+#define EVENT_CODE_END_OF_MARKET_HOURS 0x4D     // End Of Market Hours
+#define EVENT_CODE_END_OF_SYSTEM_HOURS 0x45     // End Of System Hours
+#define EVENT_CODE_END_OF_TRANSMISSIONS 0x43    // End Of Transmissions
 
-// Mold Udp 64 Message Header
-entrypoint typedef struct _MessageHeader {
-  UINT16BE message_length;  // bytes 0 to 1
-  UINT8 message_type;       // byte 2
-} MessageHeader;
+// Market Category: one byte code
+#define MARKET_CATEGORY_NYSE_AMERICAN 0x41           // Nyse American
+#define MARKET_CATEGORY_NYSE 0x4E                    // Nyse
+#define MARKET_CATEGORY_NYSE_ARCA 0x50               // Nyse Arca
+#define MARKET_CATEGORY_NASDAQ 0x51                  // Nasdaq
+#define MARKET_CATEGORY_INVESTORS_EXCHANGE_LLC 0x56  // Investors Exchange Llc
+#define MARKET_CATEGORY_CBOE_BZX 0x5A                // Cboe Bzx
+#define MARKET_CATEGORY_NOT_AVAILABLE 0x20           // Not Available
 
-// ---- System Event Message: 11 bytes ------------------------------------------
+// Authenticity: one byte code
+#define AUTHENTICITY_LIVE_PRODUCTION 0x50  // Live Production
+#define AUTHENTICITY_TEST 0x54             // Test
+
+// Trading State: one byte code
+#define TRADING_STATE_HALTED 0x48   // Halted
+#define TRADING_STATE_TRADING 0x54  // Trading
+
+// Reg Sho Action: one byte code
+#define REG_SHO_ACTION_NO_PRICE_TEST_IN_PLACE 0x30                 // No Price Test In Place
+#define REG_SHO_ACTION_REG_SHO_RESTRICTION_IN_EFFECT 0x31          // Reg Sho Restriction In Effect
+#define REG_SHO_ACTION_REG_SHO_RESTRICTION_REMAINS_IN_EFFECT 0x32  // Reg Sho Restriction Remains In Effect
+
+// ---- Types -------------------------------------------------------------------
 
 // The System Event message is used to communicate key market or data feed control events.
-entrypoint typedef struct _SystemEventMessage {
+typedef struct _SystemEventMessage {
   UINT16BE stock_locate;  // bytes 0 to 1
   UINT64BE timestamp;     // bytes 2 to 9
   UINT8 event_code;       // byte 10
 } SystemEventMessage;
 
-// ---- Stock Directory: 24 bytes -----------------------------------------------
-
 // At the start of each trading day, Bruce disseminates stock directory messages for all active symbols in its trading system.
-entrypoint typedef struct _StockDirectory {
+typedef struct _StockDirectory {
   UINT16BE stock_locate;    // bytes 0 to 1
   UINT64BE timestamp;       // bytes 2 to 9
   UINT8 stock[8];           // bytes 10 to 17
@@ -54,30 +101,24 @@ entrypoint typedef struct _StockDirectory {
   UINT8 authenticity;       // byte 23
 } StockDirectory;
 
-// ---- Stock Trading Action: 19 bytes ------------------------------------------
-
 // Bruce uses this administrative message to indicate the current trading status of a security to the trading community.
-entrypoint typedef struct _StockTradingAction {
+typedef struct _StockTradingAction {
   UINT16BE stock_locate;  // bytes 0 to 1
   UINT64BE timestamp;     // bytes 2 to 9
   UINT8 stock[8];         // bytes 10 to 17
   UINT8 trading_state;    // byte 18
 } StockTradingAction;
 
-// ---- Reg Sho Short Sale Price Test Restricted Indicator: 19 bytes ------------
-
 // For all exchange-listed issues, Bruce relays the Reg SHO Short Sale Price Test Restricted Indicator message when it receives an update from the primary listing exchange.
-entrypoint typedef struct _RegShoShortSalePriceTestRestrictedIndicator {
+typedef struct _RegShoShortSalePriceTestRestrictedIndicator {
   UINT16BE stock_locate;  // bytes 0 to 1
   UINT64BE timestamp;     // bytes 2 to 9
   UINT8 stock[8];         // bytes 10 to 17
   UINT8 reg_sho_action;   // byte 18
 } RegShoShortSalePriceTestRestrictedIndicator;
 
-// ---- Trade Report Message: 38 bytes ------------------------------------------
-
 // Bruce Last Sale will broadcast a real-time update every time that the system produces a trade during the trading day.
-entrypoint typedef struct _TradeReportMessage {
+typedef struct _TradeReportMessage {
   UINT16BE stock_locate;  // bytes 0 to 1
   UINT64BE timestamp;     // bytes 2 to 9
   UINT8 stock[8];         // bytes 10 to 17
@@ -86,10 +127,8 @@ entrypoint typedef struct _TradeReportMessage {
   UINT32BE size;          // bytes 34 to 37
 } TradeReportMessage;
 
-// ---- Trade Cancel Message: 38 bytes ------------------------------------------
-
 // Bruce Last Sale will broadcast a real-time update every time that the system cancels a trade during the trading day.
-entrypoint typedef struct _TradeCancelMessage {
+typedef struct _TradeCancelMessage {
   UINT16BE stock_locate;  // bytes 0 to 1
   UINT64BE timestamp;     // bytes 2 to 9
   UINT8 stock[8];         // bytes 10 to 17
@@ -97,4 +136,51 @@ entrypoint typedef struct _TradeCancelMessage {
   UINT64BE price;         // bytes 26 to 33
   UINT32BE size;          // bytes 34 to 37
 } TradeCancelMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x53: SystemEventMessage system_event_message;
+    case 0x52: StockDirectory stock_directory;
+    case 0x48: StockTradingAction stock_trading_action;
+    case 0x59: RegShoShortSalePriceTestRestrictedIndicator reg_sho_short_sale_price_test_restricted_indicator;
+    case 0x54: TradeReportMessage trade_report_message;
+    case 0x58: TradeCancelMessage trade_cancel_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// Mold Udp64 Message
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16BE message_length { message_length >= 1 };                                                                                                                 // bytes 0 to 1
+  UINT8 message_type;                                                                                                                                              // byte 2
+  Payload(message_type, (((UINT32) message_length) - 1)) payload[:byte-size-single-element-array (((UINT32) message_length) - 1)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// Mold Udp64 Message
+typedef struct _MessageRun (UINT16 message_count, UINT32 available, mutable UINT32 * tally) {
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size available];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} MessageRun;
+
+// Branch
+casetype _Messages (UINT16 selector, UINT16 message_count, UINT32 available, mutable UINT32 * tally) {
+  switch (selector) {
+    case 0x0000: unit heartbeat;
+    case 0xFFFF: unit end_of_session;
+    default: MessageRun(message_count, available, tally) message;
+  }
+} Messages;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Itch Mold Udp 64 Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 20) {
+  UINT8 session[10];                                                                                                           // bytes 0 to 9
+  UINT64BE sequence_number;                                                                                                    // bytes 10 to 17
+  UINT16BE message_count;                                                                                                      // bytes 18 to 19
+  Messages(message_count, message_count, (available - 20), tally) messages[:byte-size-single-element-array (available - 20)];
+} Packet;
 

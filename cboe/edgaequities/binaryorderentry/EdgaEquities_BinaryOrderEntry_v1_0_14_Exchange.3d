@@ -1,45 +1,347 @@
-// Chicago Board Options Exchange Binary Order Entry
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Cboe EdgaEquities BinaryOrderEntry Boe3 v1.0.14
 //
+// Protocol:
+//   Organization: Chicago Board Options Exchange
+//   Protocol: Binary Order Entry
+//   Encoding: Binary Order Entry 3
+//   Version: 1.0.14
+//   Date: 09/23/2026
+//   Specification: technical-specifications-cboe-titanium-u-s-equities-boev3-specification.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ExchangePacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out EdgaEquities_BinaryOrderEntry_v1_0_14_Exchange.3d
-//
-// What this definition does not state, and the model does:
-// - a Reassemble rule
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Exchange Message Header: 12 bytes ---------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Message header of a packet sent by the exchange
-entrypoint typedef struct _ExchangeMessageHeader {
-  UINT16 start_of_message;       // bytes 0 to 1
-  UINT16 message_length;         // bytes 2 to 3
-  UINT16 exchange_message_type;  // bytes 4 to 5
-  UINT8 matching_unit;           // byte 6
-  UINT8 reserved_field;          // byte 7
-  UINT32 sequence_number;        // bytes 8 to 11
-} ExchangeMessageHeader;
+// Exchange Message Type: 2 byte code
+#define EXCHANGE_MESSAGE_TYPE_LOGIN_RESPONSE_MESSAGE 0x01F5                      // Login Response Message
+#define EXCHANGE_MESSAGE_TYPE_REPLAY_COMPLETE_MESSAGE 0x01F6                     // Replay Complete Message
+#define EXCHANGE_MESSAGE_TYPE_LOGOUT_RESPONSE_MESSAGE 0x01F7                     // Logout Response Message
+#define EXCHANGE_MESSAGE_TYPE_SERVER_HEARTBEAT_MESSAGE 0x01F8                    // Server Heartbeat Message
+#define EXCHANGE_MESSAGE_TYPE_ORDER_ACKNOWLEDGEMENT_US_EQUITIES_V_1 0x1195       // Order Acknowledgement Us Equities V 1
+#define EXCHANGE_MESSAGE_TYPE_ORDER_REJECTED_US_EQUITIES_V_1 0x1196              // Order Rejected Us Equities V 1
+#define EXCHANGE_MESSAGE_TYPE_ORDER_MODIFIED_US_EQUITIES_V_1 0x1197              // Order Modified Us Equities V 1
+#define EXCHANGE_MESSAGE_TYPE_ORDER_RESTATED_US_EQUITIES_V_1 0x1199              // Order Restated Us Equities V 1
+#define EXCHANGE_MESSAGE_TYPE_MODIFY_REJECTED_US_EQUITIES_V_1 0x1198             // Modify Rejected Us Equities V 1
+#define EXCHANGE_MESSAGE_TYPE_ORDER_CANCELLED_US_EQUITIES_V_1 0x119A             // Order Cancelled Us Equities V 1
+#define EXCHANGE_MESSAGE_TYPE_CANCEL_REJECTED_US_EQUITIES_V_1 0x119B             // Cancel Rejected Us Equities V 1
+#define EXCHANGE_MESSAGE_TYPE_ORDER_EXECUTION_US_EQUITIES_V_1 0x119C             // Order Execution Us Equities V 1
+#define EXCHANGE_MESSAGE_TYPE_TRADE_CANCEL_CORRECT_US_EQUITIES_V_1 0x119D        // Trade Cancel Correct Us Equities V 1
+#define EXCHANGE_MESSAGE_TYPE_PURGE_REJECTED_US_EQUITIES_V_1 0x11A0              // Purge Rejected Us Equities V 1
+#define EXCHANGE_MESSAGE_TYPE_RESET_RISK_ACKNOWLEDGEMENT_US_EQUITIES_V_1 0x119E  // Reset Risk Acknowledgement Us Equities V 1
+#define EXCHANGE_MESSAGE_TYPE_PURGE_ACKNOWLEDGEMENT_US_EQUITIES_V_1 0x119F       // Purge Acknowledgement Us Equities V 1
 
-// ---- Logout Response Message: 61 bytes ---------------------------------------
+// Login Response Status: one byte code
+#define LOGIN_RESPONSE_STATUS_ACCEPTED 0x41                    // Accepted
+#define LOGIN_RESPONSE_STATUS_SESSION_IN_USE 0x42              // Session In Use
+#define LOGIN_RESPONSE_STATUS_DISABLED 0x44                    // Disabled
+#define LOGIN_RESPONSE_STATUS_INVALID_UNIT 0x49                // Invalid Unit
+#define LOGIN_RESPONSE_STATUS_INVALID_MESSAGE 0x4D             // Invalid Message
+#define LOGIN_RESPONSE_STATUS_NOT_AUTHORIZED 0x4E              // Not Authorized
+#define LOGIN_RESPONSE_STATUS_SEQUENCE_AHEAD 0x51              // Sequence Ahead
+#define LOGIN_RESPONSE_STATUS_INVALID_SESSION 0x53             // Invalid Session
+#define LOGIN_RESPONSE_STATUS_INVALID_REPLAY_INSTRUCTION 0x58  // Invalid Replay Instruction
+
+// Logout Reason: one byte code
+#define LOGOUT_REASON_USER_REQUESTED 0x55      // User Requested
+#define LOGOUT_REASON_ADMINISTRATIVE 0x41      // Administrative
+#define LOGOUT_REASON_PROTOCOL_VIOLATION 0x21  // Protocol Violation
+
+// Side: one byte code
+#define SIDE_BUY 0x31                                          // Buy
+#define SIDE_SELL 0x32                                         // Sell
+#define SIDE_SELL_SHORT_CLIENT_AFFIRMS_ABILITY_TO_BORROW 0x35  // Sell Short Client Affirms Ability To Borrow
+#define SIDE_SELL_SHORT_EXEMPT 0x36                            // Sell Short Exempt
+
+// Ord Type: one byte code
+#define ORD_TYPE_MARKET 0x31         // Market
+#define ORD_TYPE_LIMIT_DEFAULT 0x32  // Limit Default
+#define ORD_TYPE_STOP 0x33           // Stop
+#define ORD_TYPE_STOP_LIMIT 0x34     // Stop Limit
+#define ORD_TYPE_PEGGED 0x50         // Pegged
+
+// Base Liquidity Indicator: one byte code
+#define BASE_LIQUIDITY_INDICATOR_ADDED_LIQUIDITY 0x41                           // Added Liquidity
+#define BASE_LIQUIDITY_INDICATOR_REMOVED_LIQUIDITY 0x52                         // Removed Liquidity
+#define BASE_LIQUIDITY_INDICATOR_ROUTED_TO_ANOTHER_MARKET 0x58                  // Routed To Another Market
+#define BASE_LIQUIDITY_INDICATOR_AUCTION_UNCROSSING 0x43                        // Auction Uncrossing
+#define BASE_LIQUIDITY_INDICATOR_WAITING_FOR_EXECUTION_AT_PRE_MARKET_TIME 0x57  // Waiting For Execution At Pre Market Time
+
+// Sub Liquidity Indicator: one byte code
+#define SUB_LIQUIDITY_INDICATOR_TRADE_ADDED_RPI_LIQUIDITY_BYX_AND_EDGX_ONLY 0x45           // Trade Added Rpi Liquidity Byx And Edgx Only
+#define SUB_LIQUIDITY_INDICATOR_TRADE_ADDED_HIDDEN_LIQUIDITY 0x48                          // Trade Added Hidden Liquidity
+#define SUB_LIQUIDITY_INDICATOR_TRADE_ADDED_HIDDEN_LIQUIDITY_THAT_WAS_PRICE_IMPROVED 0x49  // Trade Added Hidden Liquidity That Was Price Improved
+#define SUB_LIQUIDITY_INDICATOR_EXECUTION_FROM_FIRST_ORDER_TO_JOIN_THE_NBBO 0x4A           // Execution From First Order To Join The Nbbo
+#define SUB_LIQUIDITY_INDICATOR_PERIODIC_AUCTION_BYX_ONLY 0x50                             // Periodic Auction Byx Only
+#define SUB_LIQUIDITY_INDICATOR_NBBO_SETTER_FEE_ELIGIBLE 0x53                              // Nbbo Setter Fee Eligible
+#define SUB_LIQUIDITY_INDICATOR_VISIBLE_LIQUIDITY_ADD_TRADE_THAT_WAS_PRICE_IMPROVED 0x56   // Visible Liquidity Add Trade That Was Price Improved
+#define SUB_LIQUIDITY_INDICATOR_MIDPOINT_PEG_ORDER 0x6D                                    // Midpoint Peg Order
+#define SUB_LIQUIDITY_INDICATOR_ORDER_SET_THE_NBBO_BUT_IS_NOT_FEE_ELIGIBLE 0x73            // Order Set The Nbbo But Is Not Fee Eligible
+
+// Order Reject Reason: one byte code
+#define ORDER_REJECT_REASON_ADMIN 0x41                                        // Admin
+#define ORDER_REJECT_REASON_CAPACITY_UNDEFINED 0x43                           // Capacity Undefined
+#define ORDER_REJECT_REASON_DUPLICATE_IDENTIFIER_EG_CL_ORD_ID 0x44            // Duplicate Identifier Eg Cl Ord Id
+#define ORDER_REJECT_REASON_SIZE_REDUCTION_DUE_TO_SWP_RESTATEMENT 0x45        // Size Reduction Due To Swp Restatement
+#define ORDER_REJECT_REASON_FAILED_TO_QUOTE 0x46                              // Failed To Quote
+#define ORDER_REJECT_REASON_HALTED 0x48                                       // Halted
+#define ORDER_REJECT_REASON_INCORRECT_DATA_CENTER 0x49                        // Incorrect Data Center
+#define ORDER_REJECT_REASON_TOO_LATE_TO_CANCEL 0x4A                           // Too Late To Cancel
+#define ORDER_REJECT_REASON_ORDER_RATE_THRESHOLD_EXCEEDED 0x4B                // Order Rate Threshold Exceeded
+#define ORDER_REJECT_REASON_ORDER_WOULD_LOCK_OR_CROSS_NBBO 0x4C               // Order Would Lock Or Cross Nbbo
+#define ORDER_REJECT_REASON_ORDER_SIZE_EXCEEDED 0x4D                          // Order Size Exceeded
+#define ORDER_REJECT_REASON_RAN_OUT_OF_LIQUIDITY_TO_EXECUTE_AGAINST 0x4E      // Ran Out Of Liquidity To Execute Against
+#define ORDER_REJECT_REASON_CL_ORD_ID_DOESNT_MATCH_A_KNOWN_ORDER 0x4F         // Cl Ord Id Doesnt Match A Known Order
+#define ORDER_REJECT_REASON_CANT_MODIFY_AN_ORDER_THAT_IS_PENDING_FILL 0x50    // Cant Modify An Order That Is Pending Fill
+#define ORDER_REJECT_REASON_WAITING_FOR_FIRST_TRADE 0x51                      // Waiting For First Trade
+#define ORDER_REJECT_REASON_ROUTING_UNAVAILABLE 0x52                          // Routing Unavailable
+#define ORDER_REJECT_REASON_SHORT_SALE_PRICE_VIOLATION 0x53                   // Short Sale Price Violation
+#define ORDER_REJECT_REASON_FILL_WOULD_TRADE_THROUGH_THE_NBBO 0x54            // Fill Would Trade Through The Nbbo
+#define ORDER_REJECT_REASON_USER_REQUESTED 0x55                               // User Requested
+#define ORDER_REJECT_REASON_WOULD_WASH 0x56                                   // Would Wash
+#define ORDER_REJECT_REASON_ADD_LIQUIDITY_ONLY_ORDER_WOULD_REMOVE 0x57        // Add Liquidity Only Order Would Remove
+#define ORDER_REJECT_REASON_ORDER_EXPIRED 0x58                                // Order Expired
+#define ORDER_REJECT_REASON_SYMBOL_NOT_SUPPORTED 0x59                         // Symbol Not Supported
+#define ORDER_REJECT_REASON_UNFORESEEN_REASON 0x5A                            // Unforeseen Reason
+#define ORDER_REJECT_REASON_RISK_MANAGEMENT_MPID_OR_RISK_GROUP_ID_LEVEL 0x66  // Risk Management Mpid Or Risk Group Id Level
+#define ORDER_REJECT_REASON_MARKET_ACCESS_RISK_LIMIT_EXCEEDED 0x6D            // Market Access Risk Limit Exceeded
+#define ORDER_REJECT_REASON_MAX_OPEN_ORDERS_COUNT_EXCEEDED 0x6F               // Max Open Orders Count Exceeded
+#define ORDER_REJECT_REASON_RESERVE_RELOAD 0x72                               // Reserve Reload
+#define ORDER_REJECT_REASON_RISK_MANAGEMENT_SYMBOL_LEVEL 0x73                 // Risk Management Symbol Level
+#define ORDER_REJECT_REASON_LIMIT_UP_LIMIT_DOWN_LULD 0x75                     // Limit Up Limit Down Luld
+#define ORDER_REJECT_REASON_WOULD_REMOVE_ON_UNSLIDE 0x77                      // Would Remove On Unslide
+#define ORDER_REJECT_REASON_CROSSED_MARKET 0x78                               // Crossed Market
+#define ORDER_REJECT_REASON_ORDER_RECEIVED_BY_CBOE_DURING_REPLAY 0x79         // Order Received By Cboe During Replay
+#define ORDER_REJECT_REASON_SESSION_END 0x7A                                  // Session End
+
+// Order Restatement Reason: one byte code
+#define ORDER_RESTATEMENT_REASON_CBOE_MARKET_CLOSE_CMC 0x43              // Cboe Market Close Cmc
+#define ORDER_RESTATEMENT_REASON_RELOAD 0x4C                             // Reload
+#define ORDER_RESTATEMENT_REASON_PEG_OR_PRICE_SLIDING_REPRICE 0x50       // Peg Or Price Sliding Reprice
+#define ORDER_RESTATEMENT_REASON_LIQUIDITY_UPDATED 0x51                  // Liquidity Updated
+#define ORDER_RESTATEMENT_REASON_REROUTE 0x52                            // Reroute
+#define ORDER_RESTATEMENT_REASON_REDUCTION_OF_ORDER_QTY_DUE_TO_SWP 0x53  // Reduction Of Order Qty Due To Swp
+#define ORDER_RESTATEMENT_REASON_WASH_OR_MTP_DECREMENT 0x57              // Wash Or Mtp Decrement
+
+// Modify Reject Reason: one byte code
+#define MODIFY_REJECT_REASON_ADMIN 0x41                                        // Admin
+#define MODIFY_REJECT_REASON_CAPACITY_UNDEFINED 0x43                           // Capacity Undefined
+#define MODIFY_REJECT_REASON_DUPLICATE_IDENTIFIER_EG_CL_ORD_ID 0x44            // Duplicate Identifier Eg Cl Ord Id
+#define MODIFY_REJECT_REASON_SIZE_REDUCTION_DUE_TO_SWP_RESTATEMENT 0x45        // Size Reduction Due To Swp Restatement
+#define MODIFY_REJECT_REASON_FAILED_TO_QUOTE 0x46                              // Failed To Quote
+#define MODIFY_REJECT_REASON_HALTED 0x48                                       // Halted
+#define MODIFY_REJECT_REASON_INCORRECT_DATA_CENTER 0x49                        // Incorrect Data Center
+#define MODIFY_REJECT_REASON_TOO_LATE_TO_CANCEL 0x4A                           // Too Late To Cancel
+#define MODIFY_REJECT_REASON_ORDER_RATE_THRESHOLD_EXCEEDED 0x4B                // Order Rate Threshold Exceeded
+#define MODIFY_REJECT_REASON_ORDER_WOULD_LOCK_OR_CROSS_NBBO 0x4C               // Order Would Lock Or Cross Nbbo
+#define MODIFY_REJECT_REASON_ORDER_SIZE_EXCEEDED 0x4D                          // Order Size Exceeded
+#define MODIFY_REJECT_REASON_RAN_OUT_OF_LIQUIDITY_TO_EXECUTE_AGAINST 0x4E      // Ran Out Of Liquidity To Execute Against
+#define MODIFY_REJECT_REASON_CL_ORD_ID_DOESNT_MATCH_A_KNOWN_ORDER 0x4F         // Cl Ord Id Doesnt Match A Known Order
+#define MODIFY_REJECT_REASON_CANT_MODIFY_AN_ORDER_THAT_IS_PENDING_FILL 0x50    // Cant Modify An Order That Is Pending Fill
+#define MODIFY_REJECT_REASON_WAITING_FOR_FIRST_TRADE 0x51                      // Waiting For First Trade
+#define MODIFY_REJECT_REASON_ROUTING_UNAVAILABLE 0x52                          // Routing Unavailable
+#define MODIFY_REJECT_REASON_SHORT_SALE_PRICE_VIOLATION 0x53                   // Short Sale Price Violation
+#define MODIFY_REJECT_REASON_FILL_WOULD_TRADE_THROUGH_THE_NBBO 0x54            // Fill Would Trade Through The Nbbo
+#define MODIFY_REJECT_REASON_USER_REQUESTED 0x55                               // User Requested
+#define MODIFY_REJECT_REASON_WOULD_WASH 0x56                                   // Would Wash
+#define MODIFY_REJECT_REASON_ADD_LIQUIDITY_ONLY_ORDER_WOULD_REMOVE 0x57        // Add Liquidity Only Order Would Remove
+#define MODIFY_REJECT_REASON_ORDER_EXPIRED 0x58                                // Order Expired
+#define MODIFY_REJECT_REASON_SYMBOL_NOT_SUPPORTED 0x59                         // Symbol Not Supported
+#define MODIFY_REJECT_REASON_UNFORESEEN_REASON 0x5A                            // Unforeseen Reason
+#define MODIFY_REJECT_REASON_RISK_MANAGEMENT_MPID_OR_RISK_GROUP_ID_LEVEL 0x66  // Risk Management Mpid Or Risk Group Id Level
+#define MODIFY_REJECT_REASON_MARKET_ACCESS_RISK_LIMIT_EXCEEDED 0x6D            // Market Access Risk Limit Exceeded
+#define MODIFY_REJECT_REASON_MAX_OPEN_ORDERS_COUNT_EXCEEDED 0x6F               // Max Open Orders Count Exceeded
+#define MODIFY_REJECT_REASON_RESERVE_RELOAD 0x72                               // Reserve Reload
+#define MODIFY_REJECT_REASON_RISK_MANAGEMENT_SYMBOL_LEVEL 0x73                 // Risk Management Symbol Level
+#define MODIFY_REJECT_REASON_LIMIT_UP_LIMIT_DOWN_LULD 0x75                     // Limit Up Limit Down Luld
+#define MODIFY_REJECT_REASON_WOULD_REMOVE_ON_UNSLIDE 0x77                      // Would Remove On Unslide
+#define MODIFY_REJECT_REASON_CROSSED_MARKET 0x78                               // Crossed Market
+#define MODIFY_REJECT_REASON_ORDER_RECEIVED_BY_CBOE_DURING_REPLAY 0x79         // Order Received By Cboe During Replay
+#define MODIFY_REJECT_REASON_SESSION_END 0x7A                                  // Session End
+
+// Cancel Reason: one byte code
+#define CANCEL_REASON_ADMIN 0x41                                        // Admin
+#define CANCEL_REASON_CAPACITY_UNDEFINED 0x43                           // Capacity Undefined
+#define CANCEL_REASON_DUPLICATE_IDENTIFIER_EG_CL_ORD_ID 0x44            // Duplicate Identifier Eg Cl Ord Id
+#define CANCEL_REASON_SIZE_REDUCTION_DUE_TO_SWP_RESTATEMENT 0x45        // Size Reduction Due To Swp Restatement
+#define CANCEL_REASON_FAILED_TO_QUOTE 0x46                              // Failed To Quote
+#define CANCEL_REASON_HALTED 0x48                                       // Halted
+#define CANCEL_REASON_INCORRECT_DATA_CENTER 0x49                        // Incorrect Data Center
+#define CANCEL_REASON_TOO_LATE_TO_CANCEL 0x4A                           // Too Late To Cancel
+#define CANCEL_REASON_ORDER_RATE_THRESHOLD_EXCEEDED 0x4B                // Order Rate Threshold Exceeded
+#define CANCEL_REASON_ORDER_WOULD_LOCK_OR_CROSS_NBBO 0x4C               // Order Would Lock Or Cross Nbbo
+#define CANCEL_REASON_ORDER_SIZE_EXCEEDED 0x4D                          // Order Size Exceeded
+#define CANCEL_REASON_RAN_OUT_OF_LIQUIDITY_TO_EXECUTE_AGAINST 0x4E      // Ran Out Of Liquidity To Execute Against
+#define CANCEL_REASON_CL_ORD_ID_DOESNT_MATCH_A_KNOWN_ORDER 0x4F         // Cl Ord Id Doesnt Match A Known Order
+#define CANCEL_REASON_CANT_MODIFY_AN_ORDER_THAT_IS_PENDING_FILL 0x50    // Cant Modify An Order That Is Pending Fill
+#define CANCEL_REASON_WAITING_FOR_FIRST_TRADE 0x51                      // Waiting For First Trade
+#define CANCEL_REASON_ROUTING_UNAVAILABLE 0x52                          // Routing Unavailable
+#define CANCEL_REASON_SHORT_SALE_PRICE_VIOLATION 0x53                   // Short Sale Price Violation
+#define CANCEL_REASON_FILL_WOULD_TRADE_THROUGH_THE_NBBO 0x54            // Fill Would Trade Through The Nbbo
+#define CANCEL_REASON_USER_REQUESTED 0x55                               // User Requested
+#define CANCEL_REASON_WOULD_WASH 0x56                                   // Would Wash
+#define CANCEL_REASON_ADD_LIQUIDITY_ONLY_ORDER_WOULD_REMOVE 0x57        // Add Liquidity Only Order Would Remove
+#define CANCEL_REASON_ORDER_EXPIRED 0x58                                // Order Expired
+#define CANCEL_REASON_SYMBOL_NOT_SUPPORTED 0x59                         // Symbol Not Supported
+#define CANCEL_REASON_UNFORESEEN_REASON 0x5A                            // Unforeseen Reason
+#define CANCEL_REASON_RISK_MANAGEMENT_MPID_OR_RISK_GROUP_ID_LEVEL 0x66  // Risk Management Mpid Or Risk Group Id Level
+#define CANCEL_REASON_MARKET_ACCESS_RISK_LIMIT_EXCEEDED 0x6D            // Market Access Risk Limit Exceeded
+#define CANCEL_REASON_MAX_OPEN_ORDERS_COUNT_EXCEEDED 0x6F               // Max Open Orders Count Exceeded
+#define CANCEL_REASON_RESERVE_RELOAD 0x72                               // Reserve Reload
+#define CANCEL_REASON_RISK_MANAGEMENT_SYMBOL_LEVEL 0x73                 // Risk Management Symbol Level
+#define CANCEL_REASON_LIMIT_UP_LIMIT_DOWN_LULD 0x75                     // Limit Up Limit Down Luld
+#define CANCEL_REASON_WOULD_REMOVE_ON_UNSLIDE 0x77                      // Would Remove On Unslide
+#define CANCEL_REASON_CROSSED_MARKET 0x78                               // Crossed Market
+#define CANCEL_REASON_ORDER_RECEIVED_BY_CBOE_DURING_REPLAY 0x79         // Order Received By Cboe During Replay
+#define CANCEL_REASON_SESSION_END 0x7A                                  // Session End
+
+// Cancel Reject Reason: one byte code
+#define CANCEL_REJECT_REASON_ADMIN 0x41                                        // Admin
+#define CANCEL_REJECT_REASON_CAPACITY_UNDEFINED 0x43                           // Capacity Undefined
+#define CANCEL_REJECT_REASON_DUPLICATE_IDENTIFIER_EG_CL_ORD_ID 0x44            // Duplicate Identifier Eg Cl Ord Id
+#define CANCEL_REJECT_REASON_SIZE_REDUCTION_DUE_TO_SWP_RESTATEMENT 0x45        // Size Reduction Due To Swp Restatement
+#define CANCEL_REJECT_REASON_FAILED_TO_QUOTE 0x46                              // Failed To Quote
+#define CANCEL_REJECT_REASON_HALTED 0x48                                       // Halted
+#define CANCEL_REJECT_REASON_INCORRECT_DATA_CENTER 0x49                        // Incorrect Data Center
+#define CANCEL_REJECT_REASON_TOO_LATE_TO_CANCEL 0x4A                           // Too Late To Cancel
+#define CANCEL_REJECT_REASON_ORDER_RATE_THRESHOLD_EXCEEDED 0x4B                // Order Rate Threshold Exceeded
+#define CANCEL_REJECT_REASON_ORDER_WOULD_LOCK_OR_CROSS_NBBO 0x4C               // Order Would Lock Or Cross Nbbo
+#define CANCEL_REJECT_REASON_ORDER_SIZE_EXCEEDED 0x4D                          // Order Size Exceeded
+#define CANCEL_REJECT_REASON_RAN_OUT_OF_LIQUIDITY_TO_EXECUTE_AGAINST 0x4E      // Ran Out Of Liquidity To Execute Against
+#define CANCEL_REJECT_REASON_CL_ORD_ID_DOESNT_MATCH_A_KNOWN_ORDER 0x4F         // Cl Ord Id Doesnt Match A Known Order
+#define CANCEL_REJECT_REASON_CANT_MODIFY_AN_ORDER_THAT_IS_PENDING_FILL 0x50    // Cant Modify An Order That Is Pending Fill
+#define CANCEL_REJECT_REASON_WAITING_FOR_FIRST_TRADE 0x51                      // Waiting For First Trade
+#define CANCEL_REJECT_REASON_ROUTING_UNAVAILABLE 0x52                          // Routing Unavailable
+#define CANCEL_REJECT_REASON_SHORT_SALE_PRICE_VIOLATION 0x53                   // Short Sale Price Violation
+#define CANCEL_REJECT_REASON_FILL_WOULD_TRADE_THROUGH_THE_NBBO 0x54            // Fill Would Trade Through The Nbbo
+#define CANCEL_REJECT_REASON_USER_REQUESTED 0x55                               // User Requested
+#define CANCEL_REJECT_REASON_WOULD_WASH 0x56                                   // Would Wash
+#define CANCEL_REJECT_REASON_ADD_LIQUIDITY_ONLY_ORDER_WOULD_REMOVE 0x57        // Add Liquidity Only Order Would Remove
+#define CANCEL_REJECT_REASON_ORDER_EXPIRED 0x58                                // Order Expired
+#define CANCEL_REJECT_REASON_SYMBOL_NOT_SUPPORTED 0x59                         // Symbol Not Supported
+#define CANCEL_REJECT_REASON_UNFORESEEN_REASON 0x5A                            // Unforeseen Reason
+#define CANCEL_REJECT_REASON_RISK_MANAGEMENT_MPID_OR_RISK_GROUP_ID_LEVEL 0x66  // Risk Management Mpid Or Risk Group Id Level
+#define CANCEL_REJECT_REASON_MARKET_ACCESS_RISK_LIMIT_EXCEEDED 0x6D            // Market Access Risk Limit Exceeded
+#define CANCEL_REJECT_REASON_MAX_OPEN_ORDERS_COUNT_EXCEEDED 0x6F               // Max Open Orders Count Exceeded
+#define CANCEL_REJECT_REASON_RESERVE_RELOAD 0x72                               // Reserve Reload
+#define CANCEL_REJECT_REASON_RISK_MANAGEMENT_SYMBOL_LEVEL 0x73                 // Risk Management Symbol Level
+#define CANCEL_REJECT_REASON_LIMIT_UP_LIMIT_DOWN_LULD 0x75                     // Limit Up Limit Down Luld
+#define CANCEL_REJECT_REASON_WOULD_REMOVE_ON_UNSLIDE 0x77                      // Would Remove On Unslide
+#define CANCEL_REJECT_REASON_CROSSED_MARKET 0x78                               // Crossed Market
+#define CANCEL_REJECT_REASON_ORDER_RECEIVED_BY_CBOE_DURING_REPLAY 0x79         // Order Received By Cboe During Replay
+#define CANCEL_REJECT_REASON_SESSION_END 0x7A                                  // Session End
+
+// Capacity: one byte code
+#define CAPACITY_AGENCY 0x41              // Agency
+#define CAPACITY_PRINCIPAL 0x50           // Principal
+#define CAPACITY_RISKLESS_PRINCIPAL 0x52  // Riskless Principal
+
+// Purge Reject Reason: one byte code
+#define PURGE_REJECT_REASON_ADMIN 0x41                                        // Admin
+#define PURGE_REJECT_REASON_CAPACITY_UNDEFINED 0x43                           // Capacity Undefined
+#define PURGE_REJECT_REASON_DUPLICATE_IDENTIFIER_EG_CL_ORD_ID 0x44            // Duplicate Identifier Eg Cl Ord Id
+#define PURGE_REJECT_REASON_SIZE_REDUCTION_DUE_TO_SWP_RESTATEMENT 0x45        // Size Reduction Due To Swp Restatement
+#define PURGE_REJECT_REASON_FAILED_TO_QUOTE 0x46                              // Failed To Quote
+#define PURGE_REJECT_REASON_HALTED 0x48                                       // Halted
+#define PURGE_REJECT_REASON_INCORRECT_DATA_CENTER 0x49                        // Incorrect Data Center
+#define PURGE_REJECT_REASON_TOO_LATE_TO_CANCEL 0x4A                           // Too Late To Cancel
+#define PURGE_REJECT_REASON_ORDER_RATE_THRESHOLD_EXCEEDED 0x4B                // Order Rate Threshold Exceeded
+#define PURGE_REJECT_REASON_ORDER_WOULD_LOCK_OR_CROSS_NBBO 0x4C               // Order Would Lock Or Cross Nbbo
+#define PURGE_REJECT_REASON_ORDER_SIZE_EXCEEDED 0x4D                          // Order Size Exceeded
+#define PURGE_REJECT_REASON_RAN_OUT_OF_LIQUIDITY_TO_EXECUTE_AGAINST 0x4E      // Ran Out Of Liquidity To Execute Against
+#define PURGE_REJECT_REASON_CL_ORD_ID_DOESNT_MATCH_A_KNOWN_ORDER 0x4F         // Cl Ord Id Doesnt Match A Known Order
+#define PURGE_REJECT_REASON_CANT_MODIFY_AN_ORDER_THAT_IS_PENDING_FILL 0x50    // Cant Modify An Order That Is Pending Fill
+#define PURGE_REJECT_REASON_WAITING_FOR_FIRST_TRADE 0x51                      // Waiting For First Trade
+#define PURGE_REJECT_REASON_ROUTING_UNAVAILABLE 0x52                          // Routing Unavailable
+#define PURGE_REJECT_REASON_SHORT_SALE_PRICE_VIOLATION 0x53                   // Short Sale Price Violation
+#define PURGE_REJECT_REASON_FILL_WOULD_TRADE_THROUGH_THE_NBBO 0x54            // Fill Would Trade Through The Nbbo
+#define PURGE_REJECT_REASON_USER_REQUESTED 0x55                               // User Requested
+#define PURGE_REJECT_REASON_WOULD_WASH 0x56                                   // Would Wash
+#define PURGE_REJECT_REASON_ADD_LIQUIDITY_ONLY_ORDER_WOULD_REMOVE 0x57        // Add Liquidity Only Order Would Remove
+#define PURGE_REJECT_REASON_ORDER_EXPIRED 0x58                                // Order Expired
+#define PURGE_REJECT_REASON_SYMBOL_NOT_SUPPORTED 0x59                         // Symbol Not Supported
+#define PURGE_REJECT_REASON_UNFORESEEN_REASON 0x5A                            // Unforeseen Reason
+#define PURGE_REJECT_REASON_RISK_MANAGEMENT_MPID_OR_RISK_GROUP_ID_LEVEL 0x66  // Risk Management Mpid Or Risk Group Id Level
+#define PURGE_REJECT_REASON_MARKET_ACCESS_RISK_LIMIT_EXCEEDED 0x6D            // Market Access Risk Limit Exceeded
+#define PURGE_REJECT_REASON_MAX_OPEN_ORDERS_COUNT_EXCEEDED 0x6F               // Max Open Orders Count Exceeded
+#define PURGE_REJECT_REASON_RESERVE_RELOAD 0x72                               // Reserve Reload
+#define PURGE_REJECT_REASON_RISK_MANAGEMENT_SYMBOL_LEVEL 0x73                 // Risk Management Symbol Level
+#define PURGE_REJECT_REASON_LIMIT_UP_LIMIT_DOWN_LULD 0x75                     // Limit Up Limit Down Luld
+#define PURGE_REJECT_REASON_WOULD_REMOVE_ON_UNSLIDE 0x77                      // Would Remove On Unslide
+#define PURGE_REJECT_REASON_CROSSED_MARKET 0x78                               // Crossed Market
+#define PURGE_REJECT_REASON_ORDER_RECEIVED_BY_CBOE_DURING_REPLAY 0x79         // Order Received By Cboe During Replay
+#define PURGE_REJECT_REASON_SESSION_END 0x7A                                  // Session End
+
+// Risk Reset Result: one byte code
+#define RISK_RESET_RESULT_IGNORED_EXCEEDS_1_RESET_PER_100_MILLISECONDS 0x20  // Ignored Exceeds 1 Reset Per 100 Milliseconds
+#define RISK_RESET_RESULT_REJECTED_EXCEEDS_RISK_GROUP_ID_LIMIT 0x43          // Rejected Exceeds Risk Group Id Limit
+#define RISK_RESET_RESULT_REJECTED_AUTOMATIC_RISK_RESETS_ARE_DISABLED 0x44   // Rejected Automatic Risk Resets Are Disabled
+#define RISK_RESET_RESULT_REJECTED_EMPTY_RESET_RISK_FIELD 0x45               // Rejected Empty Reset Risk Field
+#define RISK_RESET_RESULT_REJECTED_EXCEEDS_FIRM_RESET_LIMIT 0x46             // Rejected Exceeds Firm Reset Limit
+#define RISK_RESET_RESULT_REJECTED_INCORRECT_DATA_CENTER 0x49                // Rejected Incorrect Data Center
+#define RISK_RESET_RESULT_REJECTED_INVALID_MATCHING_UNIT 0x4D                // Rejected Invalid Matching Unit
+#define RISK_RESET_RESULT_REJECTED_EXCEEDS_SYMBOL_RESET_LIMIT 0x53           // Rejected Exceeds Symbol Reset Limit
+#define RISK_RESET_RESULT_REJECTED_INVALID_SYMBOL 0x55                       // Rejected Invalid Symbol
+#define RISK_RESET_RESULT_SUCCESS 0x59                                       // Success
+#define RISK_RESET_RESULT_REJECTED_INVALID_CLEARING_FIRM 0x63                // Rejected Invalid Clearing Firm
+#define RISK_RESET_RESULT_REJECTED_IN_REPLAY 0x79                            // Rejected In Replay
+
+// ---- Types -------------------------------------------------------------------
+
+// Unit Sequence
+typedef struct _UnitSequence {
+  UINT8 unit_number;       // byte 0
+  UINT32 sequence_number;  // bytes 1 to 4
+} UnitSequence;
+
+// A Login Response message is sent in response to a Login Request message
+typedef struct _LoginResponseMessage {
+  UINT8 login_response_status;                                              // byte 0
+  UINT8 login_response_text[60];                                            // bytes 1 to 60
+  UINT32 client_sequence;                                                   // bytes 61 to 64
+  UINT8 number_of_units;                                                    // byte 65
+  UnitSequence unit_sequence[:byte-size (((UINT32) number_of_units) * 5)];
+} LoginResponseMessage;
 
 // A Logout Response is usually sent in response to a Logout Request
-entrypoint typedef struct _LogoutResponseMessage {
+typedef struct _LogoutResponseMessage {
   UINT8 logout_reason;           // byte 0
   UINT8 logout_reason_text[60];  // bytes 1 to 60
 } LogoutResponseMessage;
 
-// ---- Order Acknowledgement Us Equities V 1: 82 bytes -------------------------
-
 // Order Acknowledgment messages are sent in response to New Order messages
-entrypoint typedef struct _OrderAcknowledgementUsEquitiesV1 {
+typedef struct _OrderAcknowledgementUsEquitiesV1 {
   UINT16 in_flight;                // bytes 0 to 1
   UINT64 transaction_time;         // bytes 2 to 9
   UINT8 cl_ord_id[20];             // bytes 10 to 29
@@ -56,10 +358,8 @@ entrypoint typedef struct _OrderAcknowledgementUsEquitiesV1 {
   UINT8 sub_liquidity_indicator;   // byte 81
 } OrderAcknowledgementUsEquitiesV1;
 
-// ---- Order Rejected Us Equities V 1: 95 bytes --------------------------------
-
 // Order Rejected messages are sent in response to a New Order message which must be rejected
-entrypoint typedef struct _OrderRejectedUsEquitiesV1 {
+typedef struct _OrderRejectedUsEquitiesV1 {
   UINT16 in_flight;           // bytes 0 to 1
   UINT64 transaction_time;    // bytes 2 to 9
   UINT8 cl_ord_id[20];        // bytes 10 to 29
@@ -68,10 +368,8 @@ entrypoint typedef struct _OrderRejectedUsEquitiesV1 {
   UINT8 text[60];             // bytes 35 to 94
 } OrderRejectedUsEquitiesV1;
 
-// ---- Order Modified Us Equities V 1: 125 bytes -------------------------------
-
 // Order Modified messages are sent in response to a Modify Request message to indicate that the order has been successfully modified
-entrypoint typedef struct _OrderModifiedUsEquitiesV1 {
+typedef struct _OrderModifiedUsEquitiesV1 {
   UINT16 in_flight;                // bytes 0 to 1
   UINT64 transaction_time;         // bytes 2 to 9
   UINT8 cl_ord_id[20];             // bytes 10 to 29
@@ -92,10 +390,8 @@ entrypoint typedef struct _OrderModifiedUsEquitiesV1 {
   UINT64 secondary_order_id;       // bytes 117 to 124
 } OrderModifiedUsEquitiesV1;
 
-// ---- Order Restated Us Equities V 1: 108 bytes -------------------------------
-
 // Order Restated messages are sent to inform the Member that an order has been asynchronously modified for some reason without an explicit Modify Order message request having been sent
-entrypoint typedef struct _OrderRestatedUsEquitiesV1 {
+typedef struct _OrderRestatedUsEquitiesV1 {
   UINT16 in_flight;                // bytes 0 to 1
   UINT64 transaction_time;         // bytes 2 to 9
   UINT8 cl_ord_id[20];             // bytes 10 to 29
@@ -115,10 +411,8 @@ entrypoint typedef struct _OrderRestatedUsEquitiesV1 {
   UINT32 cmc_match_qty;            // bytes 104 to 107
 } OrderRestatedUsEquitiesV1;
 
-// ---- Modify Rejected Us Equities V 1: 115 bytes ------------------------------
-
 // User Modify Rejected messages are sent in response to a Modify Order message for an order which cannot be modified
-entrypoint typedef struct _ModifyRejectedUsEquitiesV1 {
+typedef struct _ModifyRejectedUsEquitiesV1 {
   UINT16 in_flight;            // bytes 0 to 1
   UINT64 transaction_time;     // bytes 2 to 9
   UINT8 clearing_firm[4];      // bytes 10 to 13
@@ -128,10 +422,8 @@ entrypoint typedef struct _ModifyRejectedUsEquitiesV1 {
   UINT8 text[60];              // bytes 55 to 114
 } ModifyRejectedUsEquitiesV1;
 
-// ---- Order Cancelled Us Equities V 1: 35 bytes -------------------------------
-
 // This message indicates an order has been cancelled
-entrypoint typedef struct _OrderCancelledUsEquitiesV1 {
+typedef struct _OrderCancelledUsEquitiesV1 {
   UINT16 in_flight;         // bytes 0 to 1
   UINT64 transaction_time;  // bytes 2 to 9
   UINT8 clearing_firm[4];   // bytes 10 to 13
@@ -139,10 +431,8 @@ entrypoint typedef struct _OrderCancelledUsEquitiesV1 {
   UINT8 cancel_reason;      // byte 34
 } OrderCancelledUsEquitiesV1;
 
-// ---- Cancel Rejected Us Equities V 1: 95 bytes -------------------------------
-
 // A Cancel Rejected message is sent in response to a Cancel Order message to indicate that the cancellation cannot occur
-entrypoint typedef struct _CancelRejectedUsEquitiesV1 {
+typedef struct _CancelRejectedUsEquitiesV1 {
   UINT16 in_flight;            // bytes 0 to 1
   UINT64 transaction_time;     // bytes 2 to 9
   UINT8 clearing_firm[4];      // bytes 10 to 13
@@ -151,10 +441,8 @@ entrypoint typedef struct _CancelRejectedUsEquitiesV1 {
   UINT8 text[60];              // bytes 35 to 94
 } CancelRejectedUsEquitiesV1;
 
-// ---- Order Execution Us Equities V 1: 83 bytes -------------------------------
-
 // An Order Execution message is sent for each fill on an order
-entrypoint typedef struct _OrderExecutionUsEquitiesV1 {
+typedef struct _OrderExecutionUsEquitiesV1 {
   UINT16 in_flight;                // bytes 0 to 1
   UINT64 transaction_time;         // bytes 2 to 9
   UINT8 clearing_firm[4];          // bytes 10 to 13
@@ -172,10 +460,8 @@ entrypoint typedef struct _OrderExecutionUsEquitiesV1 {
   UINT64 access_fee;               // bytes 75 to 82, signed, read here as unsigned
 } OrderExecutionUsEquitiesV1;
 
-// ---- Trade Cancel Correct Us Equities V 1: 94 bytes --------------------------
-
 // Used to relay a trade which has been cancelled (busted) or corrected (price change only)
-entrypoint typedef struct _TradeCancelCorrectUsEquitiesV1 {
+typedef struct _TradeCancelCorrectUsEquitiesV1 {
   UINT16 in_flight;                // bytes 0 to 1
   UINT64 transaction_time;         // bytes 2 to 9
   UINT8 cl_ord_id[20];             // bytes 10 to 29
@@ -194,10 +480,8 @@ entrypoint typedef struct _TradeCancelCorrectUsEquitiesV1 {
   UINT8 capacity;                  // byte 93
 } TradeCancelCorrectUsEquitiesV1;
 
-// ---- Purge Rejected Us Equities V 1: 91 bytes --------------------------------
-
 // A Purge Rejected message is sent in response to a Purge Orders message to indicate that the mass cancellation cannot occur
-entrypoint typedef struct _PurgeRejectedUsEquitiesV1 {
+typedef struct _PurgeRejectedUsEquitiesV1 {
   UINT16 in_flight;           // bytes 0 to 1
   UINT64 transaction_time;    // bytes 2 to 9
   UINT8 mass_cancel_id[20];   // bytes 10 to 29
@@ -205,22 +489,54 @@ entrypoint typedef struct _PurgeRejectedUsEquitiesV1 {
   UINT8 text[60];             // bytes 31 to 90
 } PurgeRejectedUsEquitiesV1;
 
-// ---- Reset Risk Acknowledgement Us Equities V 1: 19 bytes --------------------
-
 // Response to a Reset Risk message request
-entrypoint typedef struct _ResetRiskAcknowledgementUsEquitiesV1 {
+typedef struct _ResetRiskAcknowledgementUsEquitiesV1 {
   UINT16 in_flight;          // bytes 0 to 1
   UINT8 risk_status_id[16];  // bytes 2 to 17
   UINT8 risk_reset_result;   // byte 18
 } ResetRiskAcknowledgementUsEquitiesV1;
 
-// ---- Purge Acknowledgement Us Equities V 1: 34 bytes -------------------------
-
 // A Purge Acknowledgment message is an unsequenced message sent when a Purge Orders message requesting an order purge has completed canceling all individual orders
-entrypoint typedef struct _PurgeAcknowledgementUsEquitiesV1 {
+typedef struct _PurgeAcknowledgementUsEquitiesV1 {
   UINT16 in_flight;              // bytes 0 to 1
   UINT64 transaction_time;       // bytes 2 to 9
   UINT8 mass_cancel_id[20];      // bytes 10 to 29
   UINT32 cancelled_order_count;  // bytes 30 to 33
 } PurgeAcknowledgementUsEquitiesV1;
+
+// Branch
+casetype _ExchangeMessage (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x01F5: LoginResponseMessage login_response_message;
+    case 0x01F6: unit replay_complete;
+    case 0x01F7: LogoutResponseMessage logout_response_message;
+    case 0x01F8: unit server_heartbeat;
+    case 0x1195: OrderAcknowledgementUsEquitiesV1 order_acknowledgement_us_equities_v_1;
+    case 0x1196: OrderRejectedUsEquitiesV1 order_rejected_us_equities_v_1;
+    case 0x1197: OrderModifiedUsEquitiesV1 order_modified_us_equities_v_1;
+    case 0x1199: OrderRestatedUsEquitiesV1 order_restated_us_equities_v_1;
+    case 0x1198: ModifyRejectedUsEquitiesV1 modify_rejected_us_equities_v_1;
+    case 0x119A: OrderCancelledUsEquitiesV1 order_cancelled_us_equities_v_1;
+    case 0x119B: CancelRejectedUsEquitiesV1 cancel_rejected_us_equities_v_1;
+    case 0x119C: OrderExecutionUsEquitiesV1 order_execution_us_equities_v_1;
+    case 0x119D: TradeCancelCorrectUsEquitiesV1 trade_cancel_correct_us_equities_v_1;
+    case 0x11A0: PurgeRejectedUsEquitiesV1 purge_rejected_us_equities_v_1;
+    case 0x119E: ResetRiskAcknowledgementUsEquitiesV1 reset_risk_acknowledgement_us_equities_v_1;
+    case 0x119F: PurgeAcknowledgementUsEquitiesV1 purge_acknowledgement_us_equities_v_1;
+    default: UINT8 unknown[available];
+  }
+} ExchangeMessage;
+
+// ---- Packet: ExchangePacket --------------------------------------------------
+
+// Binary Order Entry Tcp Packet sent by the exchange
+entrypoint typedef struct _ExchangePacket (UINT32 available) where (available >= 12) {
+  UINT16 start_of_message;                                                                                                      // bytes 0 to 1
+  UINT16 message_length;                                                                                                        // bytes 2 to 3
+  UINT16 exchange_message_type;                                                                                                 // bytes 4 to 5
+  UINT8 matching_unit;                                                                                                          // byte 6
+  UINT8 reserved_field;                                                                                                         // byte 7
+  UINT32 sequence_number;                                                                                                       // bytes 8 to 11
+  ExchangeMessage(exchange_message_type, (available - 12)) exchange_message[:byte-size-single-element-array (available - 12)];
+} ExchangePacket;
 

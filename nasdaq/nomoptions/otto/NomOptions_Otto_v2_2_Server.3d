@@ -1,57 +1,456 @@
-// National Association of Securities Dealers Automated Quotations (Nasdaq) Ouch to Trade Options
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nasdaq NomOptions Otto Ouch v2.2
 //
+// Protocol:
+//   Organization: National Association of Securities Dealers Automated Quotations (Nasdaq)
+//   Protocol: Ouch to Trade Options
+//   Encoding: Ouch
+//   Version: 2.2
+//   Date: 04/07/2020
+//   Specification: OTTO-v2.2.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ServerPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out NomOptions_Otto_v2_2_Server.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a length prefix framing what follows
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Server Packet Header: 3 bytes -------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Packet header of a packet sent by the server
-entrypoint typedef struct _ServerPacketHeader {
-  UINT16BE packet_length;    // bytes 0 to 1
-  UINT8 server_packet_type;  // byte 2
-} ServerPacketHeader;
+// Server Packet Type: one byte code
+#define SERVER_PACKET_TYPE_DEBUG_PACKET 0x2B             // Debug Packet
+#define SERVER_PACKET_TYPE_LOGIN_ACCEPTED_PACKET 0x41    // Login Accepted Packet
+#define SERVER_PACKET_TYPE_LOGIN_REJECTED_PACKET 0x4A    // Login Rejected Packet
+#define SERVER_PACKET_TYPE_SEQUENCED_DATA_PACKET 0x53    // Sequenced Data Packet
+#define SERVER_PACKET_TYPE_SERVER_HEARTBEAT_PACKET 0x48  // Server Heartbeat Packet
+#define SERVER_PACKET_TYPE_END_OF_SESSION_PACKET 0x5A    // End Of Session Packet
 
-// ---- Login Accepted Packet: 30 bytes -----------------------------------------
+// Reject Reason Code: one byte code
+#define REJECT_REASON_CODE_NOT_AUTHORIZED 0x41         // Not Authorized
+#define REJECT_REASON_CODE_SESSION_NOT_AVAILABLE 0x53  // Session Not Available
+
+// Sequenced Message Type: one byte code
+#define SEQUENCED_MESSAGE_TYPE_SYSTEM_EVENT_MESSAGE 0x7A                     // System Event Message
+#define SEQUENCED_MESSAGE_TYPE_SIMPLE_INSTRUMENT_DIRECTORY_MESSAGE 0x6F      // Simple Instrument Directory Message
+#define SEQUENCED_MESSAGE_TYPE_COMPLEX_INSTRUMENT_DIRECTORY_MESSAGE 0x73     // Complex Instrument Directory Message
+#define SEQUENCED_MESSAGE_TYPE_INSTRUMENT_TRADING_ACTION_MESSAGE 0x69        // Instrument Trading Action Message
+#define SEQUENCED_MESSAGE_TYPE_AUCTION_NOTIFICATION_MESSAGE 0x6E             // Auction Notification Message
+#define SEQUENCED_MESSAGE_TYPE_ORDER_ACCEPTED_LONG_FORM_MESSAGE 0x61         // Order Accepted Long Form Message
+#define SEQUENCED_MESSAGE_TYPE_ORDER_ACCEPTED_SHORT_FORM_MESSAGE 0x62        // Order Accepted Short Form Message
+#define SEQUENCED_MESSAGE_TYPE_ORDER_REPLACED_MESSAGE 0x72                   // Order Replaced Message
+#define SEQUENCED_MESSAGE_TYPE_ORDER_CANCELLED_MESSAGE 0x63                  // Order Cancelled Message
+#define SEQUENCED_MESSAGE_TYPE_ORDER_EXECUTED_MESSAGE 0x65                   // Order Executed Message
+#define SEQUENCED_MESSAGE_TYPE_TRADE_DETAILS_MESSAGE 0x74                    // Trade Details Message
+#define SEQUENCED_MESSAGE_TYPE_CROSS_ORDER_ACCEPTED_MESSAGE 0x78             // Cross Order Accepted Message
+#define SEQUENCED_MESSAGE_TYPE_MEMBER_KILL_SWITCH_NOTIFICATION_MESSAGE 0x6B  // Member Kill Switch Notification Message
+#define SEQUENCED_MESSAGE_TYPE_MASS_CANCEL_RESPONSE_MESSAGE 0x75             // Mass Cancel Response Message
+#define SEQUENCED_MESSAGE_TYPE_ADD_COMPLEX_INSTRUMENT_RESPONSE_MESSAGE 0x64  // Add Complex Instrument Response Message
+#define SEQUENCED_MESSAGE_TYPE_MODIFY_TRADE_RESPONSE_MESSAGE 0x6D            // Modify Trade Response Message
+#define SEQUENCED_MESSAGE_TYPE_SUBSCRIPTION_RESPONSE_MESSAGE 0x66            // Subscription Response Message
+#define SEQUENCED_MESSAGE_TYPE_REJECT_MESSAGE 0x6A                           // Reject Message
+#define SEQUENCED_MESSAGE_TYPE_PENDING_RESPONSE_MESSAGE 0x70                 // Pending Response Message
+
+// Event Code: one byte code
+#define EVENT_CODE_START_OF_MESSAGES 0x4F               // Start Of Messages
+#define EVENT_CODE_START_OF_SYSTEM_HOURS 0x53           // Start Of System Hours
+#define EVENT_CODE_START_OF_OPENING_PROCESS 0x51        // Start Of Opening Process
+#define EVENT_CODE_END_OF_WCO_EARLY_CLOSING 0x57        // End Of Wco Early Closing
+#define EVENT_CODE_END_OF_NORMAL_HOURS_PROCESSING 0x4E  // End Of Normal Hours Processing
+#define EVENT_CODE_END_OF_LATE_HOURS_PROCESSING 0x4C    // End Of Late Hours Processing
+#define EVENT_CODE_END_OF_SYSTEM_HOURS 0x45             // End Of System Hours
+#define EVENT_CODE_END_OF_MESSAGES 0x43                 // End Of Messages
+
+// Option Type: one byte code
+#define OPTION_TYPE_CALL 0x43  // Call
+#define OPTION_TYPE_PUT 0x50   // Put
+
+// Closing Type: one byte code
+#define CLOSING_TYPE_NORMAL_HOURS 0x4E                    // Normal Hours
+#define CLOSING_TYPE_LATE_HOURS 0x4C                      // Late Hours
+#define CLOSING_TYPE_WCO_EARLY_CLOSING_AT_1200_NOON 0x57  // Wco Early Closing At 1200 Noon
+
+// Tradable: one byte code
+#define TRADABLE_TRADABLE 0x59      // Tradable
+#define TRADABLE_NOT_TRADABLE 0x4E  // Not Tradable
+
+// Closing Only: one byte code
+#define CLOSING_ONLY_UNRESTRICTED 0x4E           // Unrestricted
+#define CLOSING_ONLY_CLOSING_POSITION_ONLY 0x59  // Closing Position Only
+
+// Mpv: one byte code
+#define MPV_PENNY_EVERYWHERE 0x45  // Penny Everywhere
+#define MPV_SCALED 0x53            // Scaled
+#define MPV_PENNY_PILOT 0x50       // Penny Pilot
+
+// Leg Type: one byte code
+#define LEG_TYPE_OPTION 0x4F  // Option
+#define LEG_TYPE_STOCK 0x53   // Stock
+
+// Leg Side: one byte code
+#define LEG_SIDE_BUY 0x42   // Buy
+#define LEG_SIDE_SELL 0x53  // Sell
+
+// Trading State: one byte code
+#define TRADING_STATE_HALTED 0x48   // Halted
+#define TRADING_STATE_TRADING 0x54  // Trading
+
+// Instrument Type: one byte code
+#define INSTRUMENT_TYPE_ALL 0x41                   // All
+#define INSTRUMENT_TYPE_SIMPLE_INSTRUMENT 0x4F     // Simple Instrument
+#define INSTRUMENT_TYPE_STANDARD_COMBINATION 0x43  // Standard Combination
+#define INSTRUMENT_TYPE_STOCK_COMBINATION 0x53     // Stock Combination
+
+// Order Type: one byte code
+#define ORDER_TYPE_LIMIT 0x4C          // Limit
+#define ORDER_TYPE_MARKET 0x4D         // Market
+#define ORDER_TYPE_NOT_DISCLOSED 0x4E  // Not Disclosed
+
+// Side: one byte code
+#define SIDE_BUY 0x42            // Buy
+#define SIDE_SELL 0x53           // Sell
+#define SIDE_OFFER 0x4F          // Offer
+#define SIDE_NOT_DISCLOSED 0x4E  // Not Disclosed
+
+// Exec Flag: one byte code
+#define EXEC_FLAG_NONE 0x30  // None
+#define EXEC_FLAG_AON 0x31   // Aon
+
+// Order Capacity: one byte code
+#define ORDER_CAPACITY_CUSTOMER 0x43                                // Customer
+#define ORDER_CAPACITY_FIRM 0x46                                    // Firm
+#define ORDER_CAPACITY_MARKET_MAKER 0x4D                            // Market Maker
+#define ORDER_CAPACITY_OTHER_EXCHANGE_REGISTERED_MARKET_MAKER 0x4F  // Other Exchange Registered Market Maker
+#define ORDER_CAPACITY_PROFESSIONAL_CUSTOMER 0x50                   // Professional Customer
+#define ORDER_CAPACITY_BROKER_DEALER_CUSTOMER 0x42                  // Broker Dealer Customer
+#define ORDER_CAPACITY_BROKER_DEALER_FIRM 0x4B                      // Broker Dealer Firm
+#define ORDER_CAPACITY_JOINT_BACK_OFFICE 0x4A                       // Joint Back Office
+#define ORDER_CAPACITY_RETAIL 0x52                                  // Retail
+#define ORDER_CAPACITY_PROPRIETARY_CUSTOMER 0x45                    // Proprietary Customer
+#define ORDER_CAPACITY_NA 0x20                                      // Na
+
+// Auction Type: one byte code
+#define AUCTION_TYPE_BLOCK_ORDER_AUCTION 0x42   // Block Order Auction
+#define AUCTION_TYPE_EXPOSURE_AUCTION 0x45      // Exposure Auction
+#define AUCTION_TYPE_FLASH_AUCTION 0x46         // Flash Auction
+#define AUCTION_TYPE_OPENING_AUCTION 0x4F       // Opening Auction
+#define AUCTION_TYPE_PIM_AUCTION 0x50           // Pim Auction
+#define AUCTION_TYPE_FACILITATION_AUCTION 0x48  // Facilitation Auction
+#define AUCTION_TYPE_SOLICITATION_AUCTION 0x53  // Solicitation Auction
+#define AUCTION_TYPE_NONE 0x4E                  // None
+
+// Alo Inst: one byte code
+#define ALO_INST_NOT_ALO 0x4E   // Not Alo
+#define ALO_INST_RE_PRICE 0x52  // Re Price
+#define ALO_INST_CANCEL 0x43    // Cancel
+
+// Iso: one byte code
+#define ISO_NOT_ISO 0x4E  // Not Iso
+#define ISO_ISO 0x49      // Iso
+
+// Tif: one byte code
+#define TIF_DAY 0x44  // Day
+#define TIF_FOK 0x46  // Fok
+#define TIF_IOC 0x49  // Ioc
+
+// Capacity: one byte code
+#define CAPACITY_CUSTOMER 0x43                                // Customer
+#define CAPACITY_FIRM 0x46                                    // Firm
+#define CAPACITY_MARKET_MAKER 0x4D                            // Market Maker
+#define CAPACITY_OTHER_EXCHANGE_REGISTERED_MARKET_MAKER 0x4F  // Other Exchange Registered Market Maker
+#define CAPACITY_PROFESSIONAL_CUSTOMER 0x50                   // Professional Customer
+#define CAPACITY_BROKER_DEALER_CUSTOMER 0x42                  // Broker Dealer Customer
+#define CAPACITY_BROKER_DEALER_FIRM 0x4B                      // Broker Dealer Firm
+#define CAPACITY_JOINT_BACK_OFFICE 0x4A                       // Joint Back Office
+#define CAPACITY_RETAIL 0x52                                  // Retail
+#define CAPACITY_PROPRIETARY_CUSTOMER 0x45                    // Proprietary Customer
+#define CAPACITY_NA 0x20                                      // Na
+
+// Flash Inst: one byte code
+#define FLASH_INST_DEFAULT 0x20                     // Default
+#define FLASH_INST_DO_NOT_START_FLASH_AUCTION 0x44  // Do Not Start Flash Auction
+
+// Display When: one byte code
+#define DISPLAY_WHEN_IMMEDIATE 0x49  // Immediate
+#define DISPLAY_WHEN_EXHAUST 0x45    // Exhaust
+#define DISPLAY_WHEN_NA 0x4E         // Na
+
+// Display Method: one byte code
+#define DISPLAY_METHOD_INITIAL 0x49  // Initial
+#define DISPLAY_METHOD_RANDOM 0x52   // Random
+#define DISPLAY_METHOD_NONE 0x4E     // None
+
+// Stock Leg Short Sale: one byte code
+#define STOCK_LEG_SHORT_SALE_NOT_APPLICABLE 0x4E     // Not Applicable
+#define STOCK_LEG_SHORT_SALE_SELL_SHORT 0x48         // Sell Short
+#define STOCK_LEG_SHORT_SALE_SELL_SHORT_EXEMPT 0x45  // Sell Short Exempt
+
+// Persist Inst: one byte code
+#define PERSIST_INST_DO_NOT_PERSIST 0x4E  // Do Not Persist
+#define PERSIST_INST_PERSIST 0x50         // Persist
+
+// Price Protection: one byte code
+#define PRICE_PROTECTION_LOCAL_MARKET 0x4C     // Local Market
+#define PRICE_PROTECTION_NATIONAL_MARKET 0x4E  // National Market
+
+// Cancel Reason: one byte code
+#define CANCEL_REASON_USER_REQUESTED_CANCEL 0x55            // User Requested Cancel
+#define CANCEL_REASON_IMMEDIATE_OR_CANCEL_ORDER 0x49        // Immediate Or Cancel Order
+#define CANCEL_REASON_SUPERVISORY 0x53                      // Supervisory
+#define CANCEL_REASON_REGULATORY_RESTRICTION 0x44           // Regulatory Restriction
+#define CANCEL_REASON_ANTI_INTERNALIZE 0x51                 // Anti Internalize
+#define CANCEL_REASON_ALO_ORDER_CANCELLED 0x42              // Alo Order Cancelled
+#define CANCEL_REASON_UNEXECUTED_AUCTION_RESPONSE 0x41      // Unexecuted Auction Response
+#define CANCEL_REASON_KILL_SWITCH 0x4B                      // Kill Switch
+#define CANCEL_REASON_CANCEL_ON_DISCONNECT 0x43             // Cancel On Disconnect
+#define CANCEL_REASON_OPEN_DELAY_TIMER_CANCELLATION 0x4F    // Open Delay Timer Cancellation
+#define CANCEL_REASON_ATR_LIMIT_CANCELLATION 0x52           // Atr Limit Cancellation
+#define CANCEL_REASON_REJECTED_CANCEL_REPLACE_ATTEMPT 0x5A  // Rejected Cancel Replace Attempt
+
+// Ord Exec Type: one byte code
+#define ORD_EXEC_TYPE_EXECUTION_OF_AN_ORDER_FOR_A_SIMPLE_INSTRUMENT 0x41   // Execution Of An Order For A Simple Instrument
+#define ORD_EXEC_TYPE_EXECUTION_OF_AN_ORDER_FOR_A_COMPLEX_INSTRUMENT 0x42  // Execution Of An Order For A Complex Instrument
+#define ORD_EXEC_TYPE_EXECUTION_OF_AN_OPTION_LEG_OF_A_COMPLEX_ORDER 0x43   // Execution Of An Option Leg Of A Complex Order
+#define ORD_EXEC_TYPE_EXECUTION_OF_A_STOCK_LEG_OF_A_COMPLEX_ORDER 0x44     // Execution Of A Stock Leg Of A Complex Order
+
+// Liquidity Ind: one byte code
+#define LIQUIDITY_IND_NONE 0x00                                  // None
+#define LIQUIDITY_IND_MAKER 0x01                                 // Maker
+#define LIQUIDITY_IND_TAKER 0x02                                 // Taker
+#define LIQUIDITY_IND_RESPONSE 0x04                              // Response
+#define LIQUIDITY_IND_HIDDEN 0x05                                // Hidden
+#define LIQUIDITY_IND_OPENING_ROTATION 0x06                      // Opening Rotation
+#define LIQUIDITY_IND_CROSS 0x07                                 // Cross
+#define LIQUIDITY_IND_FLASHED_ORDER 0x08                         // Flashed Order
+#define LIQUIDITY_IND_FLASH_RESPONSE 0x09                        // Flash Response
+#define LIQUIDITY_IND_ROUTED_OUT 0x0A                            // Routed Out
+#define LIQUIDITY_IND_TRADE_REPORT 0x0B                          // Trade Report
+#define LIQUIDITY_IND_COMBO_MAKER_AGAINST_COMBO 0x0C             // Combo Maker Against Combo
+#define LIQUIDITY_IND_COMBO_TAKER_AGAINST_COMBO 0x0D             // Combo Taker Against Combo
+#define LIQUIDITY_IND_COMBO_RESPONSE_AGAINST_COMBO 0x0E          // Combo Response Against Combo
+#define LIQUIDITY_IND_COMBO_HIDDEN_AGAINST_COMBO 0x0F            // Combo Hidden Against Combo
+#define LIQUIDITY_IND_COMBO_OPENING_ROTATION 0x10                // Combo Opening Rotation
+#define LIQUIDITY_IND_COMBO_CROSS 0x11                           // Combo Cross
+#define LIQUIDITY_IND_COMBO_TAKER_AGAINST_REGULAR 0x12           // Combo Taker Against Regular
+#define LIQUIDITY_IND_REGULAR_MAKER_AGAINST_COMBO 0x13           // Regular Maker Against Combo
+#define LIQUIDITY_IND_COMBO_TAKER_AGAINST_IO 0x14                // Combo Taker Against Io
+#define LIQUIDITY_IND_REGULAR_INCL_PIM_TAKER_AGAINST_IO 0x15     // Regular Incl Pim Taker Against Io
+#define LIQUIDITY_IND_IO_MAKER_AGAINST_COMBO 0x16                // Io Maker Against Combo
+#define LIQUIDITY_IND_IO_MAKER_AGAINST_REGULAR 0x17              // Io Maker Against Regular
+#define LIQUIDITY_IND_REGULAR_MAKER_AGAINST_IO_PARTICIPANT 0x18  // Regular Maker Against Io Participant
+#define LIQUIDITY_IND_IO_PARTICIPANT_TAKER_AGAINST_REGULAR 0x19  // Io Participant Taker Against Regular
+#define LIQUIDITY_IND_BROKEN_PRICE_IMPROVEMENT 0x1A              // Broken Price Improvement
+#define LIQUIDITY_IND_BROKEN_FACILITATION 0x1B                   // Broken Facilitation
+#define LIQUIDITY_IND_BROKEN_SOLICITATION 0x1C                   // Broken Solicitation
+#define LIQUIDITY_IND_COMBO_BROKEN_PRICE_IMPROVEMENT 0x1D        // Combo Broken Price Improvement
+#define LIQUIDITY_IND_COMBO_BROKEN_FACILITATION 0x1E             // Combo Broken Facilitation
+#define LIQUIDITY_IND_COMBO_BROKEN_SOLICITATION 0x1F             // Combo Broken Solicitation
+#define LIQUIDITY_IND_BLOCK 0x20                                 // Block
+#define LIQUIDITY_IND_BLOCK_RESPONSE 0x21                        // Block Response
+#define LIQUIDITY_IND_DIRECTED_RESPONSE 0x22                     // Directed Response
+#define LIQUIDITY_IND_FACILITATION 0x23                          // Facilitation
+#define LIQUIDITY_IND_FACILITATION_RESPONSE 0x24                 // Facilitation Response
+#define LIQUIDITY_IND_PRICE_IMPROVEMENT 0x25                     // Price Improvement
+#define LIQUIDITY_IND_PRICE_IMPROVEMENT_RESPONSE 0x26            // Price Improvement Response
+#define LIQUIDITY_IND_SOLICITATION 0x27                          // Solicitation
+#define LIQUIDITY_IND_SOLICITATION_RESPONSE 0x28                 // Solicitation Response
+#define LIQUIDITY_IND_QUALIFIED_CONTINGENT_CROSS 0x29            // Qualified Contingent Cross
+#define LIQUIDITY_IND_CUSTOMER_TO_CUSTOMER 0x2A                  // Customer To Customer
+#define LIQUIDITY_IND_COMBO_FACILITATION 0x2B                    // Combo Facilitation
+#define LIQUIDITY_IND_COMBO_FACILITATION_RESPONSE 0x2C           // Combo Facilitation Response
+#define LIQUIDITY_IND_COMBO_PRICE_IMPROVEMENT 0x2D               // Combo Price Improvement
+#define LIQUIDITY_IND_COMBO_PRICE_IMPROVEMENT_RESPONSE 0x2E      // Combo Price Improvement Response
+#define LIQUIDITY_IND_COMBO_SOLICITATION 0x2F                    // Combo Solicitation
+#define LIQUIDITY_IND_COMBO_SOLICITATION_RESPONSE 0x30           // Combo Solicitation Response
+#define LIQUIDITY_IND_COMBO_QUALIFIED_CONTINGENT_CROSS 0x31      // Combo Qualified Contingent Cross
+#define LIQUIDITY_IND_COMBO_CUSTOMER_TO_CUSTOMER 0x32            // Combo Customer To Customer
+#define LIQUIDITY_IND_SWEEP_ROUTED_OUT 0x33                      // Sweep Routed Out
+#define LIQUIDITY_IND_SWEEP_TRADE_REPORT 0x34                    // Sweep Trade Report
+
+// Trans Type: one byte code
+#define TRANS_TYPE_NEW_TRADE 0x41       // New Trade
+#define TRANS_TYPE_TRADE_BUSTED 0x42    // Trade Busted
+#define TRANS_TYPE_MODIFIED_TRADE 0x43  // Modified Trade
+
+// Event Source: one byte code
+#define EVENT_SOURCE_MATCHING_ENGINE 0x41                      // Matching Engine
+#define EVENT_SOURCE_MANUAL_TRADE_ENTRY 0x4D                   // Manual Trade Entry
+#define EVENT_SOURCE_TRADE_MODIFICATION_USER 0x55              // Trade Modification User
+#define EVENT_SOURCE_TRADE_MODIFICATION_CONTRA_SIDE_USER 0x43  // Trade Modification Contra Side User
+#define EVENT_SOURCE_TRADE_MODIFICATION_EXCHANGE 0x45          // Trade Modification Exchange
+#define EVENT_SOURCE_TRADE_BUST_EXCHANGE 0x42                  // Trade Bust Exchange
+
+// Stock Venue: one byte code
+#define STOCK_VENUE_NOT_APPLICABLE 0x58                          // Not Applicable
+#define STOCK_VENUE_BNY_CONVERG_EX_US_TRANSACTION_SERVICES 0x41  // Bny Converg Ex Us Transaction Services
+#define STOCK_VENUE_BNY_CONVERG_EX_MILLENNIUM_ATS 0x42           // Bny Converg Ex Millennium Ats
+#define STOCK_VENUE_CHEEVERS 0x47                                // Cheevers
+#define STOCK_VENUE_LIBUCKI 0x48                                 // Libucki
+#define STOCK_VENUE_FOG_EQUITIES 0x49                            // Fog Equities
+#define STOCK_VENUE_KNIGHT_CAPITAL_GROUP 0x4A                    // Knight Capital Group
+
+// Cross Type: one byte code
+#define CROSS_TYPE_AUCTION 0x41  // Auction
+#define CROSS_TYPE_QCC 0x51      // Qcc
+#define CROSS_TYPE_CCC 0x43      // Ccc
+
+// Primary Capacity: one byte code
+#define PRIMARY_CAPACITY_CUSTOMER 0x43                                // Customer
+#define PRIMARY_CAPACITY_FIRM 0x46                                    // Firm
+#define PRIMARY_CAPACITY_MARKET_MAKER 0x4D                            // Market Maker
+#define PRIMARY_CAPACITY_OTHER_EXCHANGE_REGISTERED_MARKET_MAKER 0x4F  // Other Exchange Registered Market Maker
+#define PRIMARY_CAPACITY_PROFESSIONAL_CUSTOMER 0x50                   // Professional Customer
+#define PRIMARY_CAPACITY_BROKER_DEALER_CUSTOMER 0x42                  // Broker Dealer Customer
+#define PRIMARY_CAPACITY_BROKER_DEALER_FIRM 0x4B                      // Broker Dealer Firm
+#define PRIMARY_CAPACITY_JOINT_BACK_OFFICE 0x4A                       // Joint Back Office
+#define PRIMARY_CAPACITY_RETAIL 0x52                                  // Retail
+#define PRIMARY_CAPACITY_PROPRIETARY_CUSTOMER 0x45                    // Proprietary Customer
+#define PRIMARY_CAPACITY_NA 0x20                                      // Na
+
+// Primary Stock Leg Short Sale: one byte code
+#define PRIMARY_STOCK_LEG_SHORT_SALE_NOT_APPLICABLE 0x4E     // Not Applicable
+#define PRIMARY_STOCK_LEG_SHORT_SALE_SELL_SHORT 0x48         // Sell Short
+#define PRIMARY_STOCK_LEG_SHORT_SALE_SELL_SHORT_EXEMPT 0x45  // Sell Short Exempt
+
+// Contra Order Type: one byte code
+#define CONTRA_ORDER_TYPE_LIMIT 0x4C   // Limit
+#define CONTRA_ORDER_TYPE_MARKET 0x4D  // Market
+
+// Contra Capacity: one byte code
+#define CONTRA_CAPACITY_CUSTOMER 0x43                                // Customer
+#define CONTRA_CAPACITY_FIRM 0x46                                    // Firm
+#define CONTRA_CAPACITY_MARKET_MAKER 0x4D                            // Market Maker
+#define CONTRA_CAPACITY_OTHER_EXCHANGE_REGISTERED_MARKET_MAKER 0x4F  // Other Exchange Registered Market Maker
+#define CONTRA_CAPACITY_PROFESSIONAL_CUSTOMER 0x50                   // Professional Customer
+#define CONTRA_CAPACITY_BROKER_DEALER_CUSTOMER 0x42                  // Broker Dealer Customer
+#define CONTRA_CAPACITY_BROKER_DEALER_FIRM 0x4B                      // Broker Dealer Firm
+#define CONTRA_CAPACITY_JOINT_BACK_OFFICE 0x4A                       // Joint Back Office
+#define CONTRA_CAPACITY_RETAIL 0x52                                  // Retail
+#define CONTRA_CAPACITY_PROPRIETARY_CUSTOMER 0x45                    // Proprietary Customer
+#define CONTRA_CAPACITY_NA 0x20                                      // Na
+
+// Contra Stock Leg Short Sale: one byte code
+#define CONTRA_STOCK_LEG_SHORT_SALE_NOT_APPLICABLE 0x4E     // Not Applicable
+#define CONTRA_STOCK_LEG_SHORT_SALE_SELL_SHORT 0x48         // Sell Short
+#define CONTRA_STOCK_LEG_SHORT_SALE_SELL_SHORT_EXEMPT 0x45  // Sell Short Exempt
+
+// Kill Action: one byte code
+#define KILL_ACTION_BLOCK_ENTRY_OF_NEW_REQUESTS_AND_DELETE_ALL_OPEN_ORDERS 0x41  // Block Entry Of New Requests And Delete All Open Orders
+#define KILL_ACTION_KILL_SWITCH_BLOCK_REMOVED_BY_EXCHANGE 0x52                   // Kill Switch Block Removed By Exchange
+#define KILL_ACTION_BLOCK_ENTRY_OF_NEW_REQUESTS 0x42                             // Block Entry Of New Requests
+
+// Reject Code: 2 byte code
+#define REJECT_CODE_INVALID_FIRM 0x000A               // Invalid Firm
+#define REJECT_CODE_INVALID_INSTRUMENT 0x000B         // Invalid Instrument
+#define REJECT_CODE_INVALID_INSTRUMENT_TYPE 0x000C    // Invalid Instrument Type
+#define REJECT_CODE_INVALID_QUANTITY 0x000D           // Invalid Quantity
+#define REJECT_CODE_INVALID_PRICE 0x000E              // Invalid Price
+#define REJECT_CODE_INVALID_SIDE 0x000F               // Invalid Side
+#define REJECT_CODE_INVALID_TIF 0x0010                // Invalid Tif
+#define REJECT_CODE_INVALID_ISO 0x0011                // Invalid Iso
+#define REJECT_CODE_INVALID_AUCTION_TYPE 0x0012       // Invalid Auction Type
+#define REJECT_CODE_INVALID_AUCTION_ID 0x0013         // Invalid Auction Id
+#define REJECT_CODE_INVALID_ORDER_TYPE 0x0014         // Invalid Order Type
+#define REJECT_CODE_INVALID_PREF_PARTY 0x0015         // Invalid Pref Party
+#define REJECT_CODE_INVALID_ALO 0x0016                // Invalid Alo
+#define REJECT_CODE_INVALID_CAPACITY 0x0017           // Invalid Capacity
+#define REJECT_CODE_INVALID_FLASH_INST 0x0018         // Invalid Flash Inst
+#define REJECT_CODE_INVALID_TRADE 0x0019              // Invalid Trade
+#define REJECT_CODE_INVALID_FORMAT 0x001A             // Invalid Format
+#define REJECT_CODE_INVALID_CROSS_TYPE 0x001B         // Invalid Cross Type
+#define REJECT_CODE_INVALID_MIN_QUANTITY 0x001C       // Invalid Min Quantity
+#define REJECT_CODE_INVALID_PRICE_PROTECTION 0x001D   // Invalid Price Protection
+#define REJECT_CODE_INVALID_RESERVE 0x001E            // Invalid Reserve
+#define REJECT_CODE_INVALID_PERSIST 0x001F            // Invalid Persist
+#define REJECT_CODE_INVALID_SHORT_SALE_IND 0x0020     // Invalid Short Sale Ind
+#define REJECT_CODE_INVALID_PRODUCT 0x0021            // Invalid Product
+#define REJECT_CODE_INVALID_SCOPE 0x0022              // Invalid Scope
+#define REJECT_CODE_INVALID_CLEARING_INFO 0x0023      // Invalid Clearing Info
+#define REJECT_CODE_INVALID_POSITION_EFFECT 0x0024    // Invalid Position Effect
+#define REJECT_CODE_INVALID_CROSS_ID 0x0025           // Invalid Cross Id
+#define REJECT_CODE_INVALID_MATCH_ID 0x0026           // Invalid Match Id
+#define REJECT_CODE_INVALID_CLIENT_ORDER_ID 0x0027    // Invalid Client Order Id
+#define REJECT_CODE_INVALID_KILLSWITCH_ACTION 0x0028  // Invalid Killswitch Action
+#define REJECT_CODE_INVALID_LEG_COUNT 0x0029          // Invalid Leg Count
+#define REJECT_CODE_INVALID_LEG_TYPE 0x002A           // Invalid Leg Type
+#define REJECT_CODE_INVALID_LEG_RATIO 0x002B          // Invalid Leg Ratio
+#define REJECT_CODE_INVALID_MPID 0x002C               // Invalid Mpid
+#define REJECT_CODE_INVALID_TIME 0x002D               // Invalid Time
+#define REJECT_CODE_INVALID_MSG_TYPE 0x002E           // Invalid Msg Type
+#define REJECT_CODE_INVALID_DISCLOSURE_MASK 0x002F    // Invalid Disclosure Mask
+#define REJECT_CODE_POST_ONLY_REPRICE 0x0030          // Post Only Reprice
+#define REJECT_CODE_UN_AUTHORIZED_GIVE_UP 0x0031      // Un Authorized Give Up
+#define REJECT_CODE_NOT_FREE_TRADING 0x0065           // Not Free Trading
+#define REJECT_CODE_PREF_NOT_ALLOWED 0x0066           // Pref Not Allowed
+#define REJECT_CODE_STOCK_COMBO_NOT_ALLOWED 0x0067    // Stock Combo Not Allowed
+#define REJECT_CODE_INSTRUMENT_HALTED 0x0068          // Instrument Halted
+#define REJECT_CODE_KILL_SWITCH_IN_EFFECT 0x0069      // Kill Switch In Effect
+#define REJECT_CODE_SYSTEM_CLOSED 0x006A              // System Closed
+#define REJECT_CODE_TEST_MODE 0x006B                  // Test Mode
+#define REJECT_CODE_ORDER_NOT_FOUND 0x006C            // Order Not Found
+#define REJECT_CODE_TOO_LATE_TO_ACT 0x006D            // Too Late To Act
+#define REJECT_CODE_INSTRUMENT_CLOSED 0x006E          // Instrument Closed
+#define REJECT_CODE_INSTRUMENT_STATE 0x006F           // Instrument State
+#define REJECT_CODE_ACTION_NOT_ALLOWED 0x0070         // Action Not Allowed
+#define REJECT_CODE_LULD_IN_EFFECT 0x0071             // Luld In Effect
+#define REJECT_CODE_TOO_MANY_COMBOS 0x0072            // Too Many Combos
+#define REJECT_CODE_REQUEST_CANCELLED 0x0073          // Request Cancelled
+
+// Pending Reason: one byte code
+#define PENDING_REASON_REQUEST_IN_PROGRESS 0x41  // Request In Progress
+
+// ---- Types -------------------------------------------------------------------
+
+// Debug packets are intended to provide human readable text that may aid in debugging problems
+typedef struct _DebugPacket (UINT16 packet_length) where (packet_length >= 1) {
+  UINT8 debug_text[(((UINT32) packet_length) - 1)];
+} DebugPacket;
 
 // The SoupBinTCP server sends a Login Accepted Packet in response to receiving a valid Login Request from the client
-entrypoint typedef struct _LoginAcceptedPacket {
+typedef struct _LoginAcceptedPacket {
   UINT8 accepted_session[10];          // bytes 0 to 9
   UINT8 accepted_sequence_number[20];  // bytes 10 to 29
 } LoginAcceptedPacket;
 
-// ---- Login Rejected Packet: 1 byte -------------------------------------------
-
 // The SoupBinTCP server sends this packet in response to an invalid Login Request Packet from the client
-entrypoint typedef struct _LoginRejectedPacket {
+typedef struct _LoginRejectedPacket {
   UINT8 reject_reason_code;  // byte 0
 } LoginRejectedPacket;
 
-// ---- System Event Message: 9 bytes -------------------------------------------
-
 // System Event message informs of a market or a session-level event.
-entrypoint typedef struct _SystemEventMessage {
+typedef struct _SystemEventMessage {
   UINT64BE timestamp;  // bytes 0 to 7
   UINT8 event_code;    // byte 8
 } SystemEventMessage;
 
-// ---- Simple Instrument Directory Message: 51 bytes ---------------------------
-
 // At the start of each trading day and during intra-day market state changes, the system disseminates directory messages for all symbols trading on the system.
-entrypoint typedef struct _SimpleInstrumentDirectoryMessage {
+typedef struct _SimpleInstrumentDirectoryMessage {
   UINT64BE timestamp;        // bytes 0 to 7
   UINT16BE product_id;       // bytes 8 to 9
   UINT8 product_name[13];    // bytes 10 to 22
@@ -70,20 +469,35 @@ entrypoint typedef struct _SimpleInstrumentDirectoryMessage {
   UINT8 security_symbol[5];  // bytes 46 to 50
 } SimpleInstrumentDirectoryMessage;
 
-// ---- Instrument Trading Action Message: 15 bytes -----------------------------
+// Leg Definitions (2-10)
+typedef struct _ComplexDirectoryLegs {
+  UINT8 leg_type;              // byte 0
+  UINT32BE leg_instrument_id;  // bytes 1 to 4
+  UINT8 leg_side;              // byte 5
+  UINT16BE leg_ratio;          // bytes 6 to 7
+  UINT8 leg_id;                // byte 8
+} ComplexDirectoryLegs;
+
+// This message is sent whenever new complex strategy is created on the system. - InstrumentId of a complex strategy is unique for the trading day across both simple and complex instruments.
+typedef struct _ComplexInstrumentDirectoryMessage {
+  UINT64BE timestamp;                                                                 // bytes 0 to 7
+  UINT16BE product_id;                                                                // bytes 8 to 9
+  UINT8 product_name[13];                                                             // bytes 10 to 22
+  UINT32BE instrument_id;                                                             // bytes 23 to 26
+  UINT8 num_legs;                                                                     // byte 27
+  ComplexDirectoryLegs complex_directory_legs[:byte-size (((UINT32) num_legs) * 9)];
+} ComplexInstrumentDirectoryMessage;
 
 // This message notifies of changes to the trading status of an instrument.
-entrypoint typedef struct _InstrumentTradingActionMessage {
+typedef struct _InstrumentTradingActionMessage {
   UINT64BE timestamp;      // bytes 0 to 7
   UINT16BE product_id;     // bytes 8 to 9
   UINT32BE instrument_id;  // bytes 10 to 13
   UINT8 trading_state;     // byte 14
 } InstrumentTradingActionMessage;
 
-// ---- Auction Notification Message: 59 bytes ----------------------------------
-
 // Auction Notification message announces that a new Auction has started in the market for Nasdasq ISE (ISE), Nasdaq GEMX (GEMX), Nasdaq MRX (MRX) and Nasdaq BX (BX).
-entrypoint typedef struct _AuctionNotificationMessage {
+typedef struct _AuctionNotificationMessage {
   UINT64BE timestamp;            // bytes 0 to 7
   UINT8 instrument_type;         // byte 8
   UINT32BE instrument_id;        // bytes 9 to 12
@@ -103,10 +517,8 @@ entrypoint typedef struct _AuctionNotificationMessage {
   UINT32BE best_response_size;   // bytes 55 to 58
 } AuctionNotificationMessage;
 
-// ---- Order Accepted Long Form Message: 110 bytes -----------------------------
-
 // This message is used to acknowledge a valid order submitted via New Order (Long Form).
-entrypoint typedef struct _OrderAcceptedLongFormMessage {
+typedef struct _OrderAcceptedLongFormMessage {
   UINT64BE timestamp;             // bytes 0 to 7
   UINT8 firm_id[4];               // bytes 8 to 11
   UINT32BE instrument_id;         // bytes 12 to 15
@@ -141,10 +553,8 @@ entrypoint typedef struct _OrderAcceptedLongFormMessage {
   UINT8 persist_inst;             // byte 109
 } OrderAcceptedLongFormMessage;
 
-// ---- Order Accepted Short Form Message: 64 bytes -----------------------------
-
 // This message is used to acknowledge a valid order submitted via New Order (Short Form).
-entrypoint typedef struct _OrderAcceptedShortFormMessage {
+typedef struct _OrderAcceptedShortFormMessage {
   UINT64BE timestamp;             // bytes 0 to 7
   UINT8 firm_id[4];               // bytes 8 to 11
   UINT32BE instrument_id;         // bytes 12 to 15
@@ -164,10 +574,8 @@ entrypoint typedef struct _OrderAcceptedShortFormMessage {
   UINT16BE position_effect_mask;  // bytes 62 to 63
 } OrderAcceptedShortFormMessage;
 
-// ---- Order Replaced Message: 84 bytes ----------------------------------------
-
 // This message acknowledges the receipt and acceptance of a valid Replace Order Message. Like Order Accepted Message, Order Replaced Message always comes before any Order Executed Messages or Order Cancelled Messages for the replacement.
-entrypoint typedef struct _OrderReplacedMessage {
+typedef struct _OrderReplacedMessage {
   UINT64BE timestamp;             // bytes 0 to 7
   UINT8 firm_id[4];               // bytes 8 to 11
   UINT32BE instrument_id;         // bytes 12 to 15
@@ -189,10 +597,8 @@ entrypoint typedef struct _OrderReplacedMessage {
   UINT8 price_protection;         // byte 83
 } OrderReplacedMessage;
 
-// ---- Order Cancelled Message: 25 bytes ---------------------------------------
-
 // An Order Cancelled Message informs you that an order has been fully cancelled. This could be acknowledging a Cancel Order Message, or it could be the result of the order being cancelled automatically by the system.
-entrypoint typedef struct _OrderCancelledMessage {
+typedef struct _OrderCancelledMessage {
   UINT64BE timestamp;      // bytes 0 to 7
   UINT8 firm_id[4];        // bytes 8 to 11
   UINT32BE instrument_id;  // bytes 12 to 15
@@ -200,10 +606,8 @@ entrypoint typedef struct _OrderCancelledMessage {
   UINT8 cancel_reason;     // byte 24
 } OrderCancelledMessage;
 
-// ---- Order Executed Message: 56 bytes ----------------------------------------
-
 // Order Executed Message informs you that all or part of an order has been executed. This message is used for simple as well as complex instruments.
-entrypoint typedef struct _OrderExecutedMessage {
+typedef struct _OrderExecutedMessage {
   UINT64BE timestamp;          // bytes 0 to 7
   UINT8 firm_id[4];            // bytes 8 to 11
   UINT16BE product_id;         // bytes 12 to 13
@@ -222,10 +626,8 @@ entrypoint typedef struct _OrderExecutedMessage {
   UINT8 liquidity_ind;         // byte 55
 } OrderExecutedMessage;
 
-// ---- Trade Details Message: 107 bytes ----------------------------------------
-
 // A Trade Details message contains additional details, specifically clearing information. This message is sent out with a nominal delay after Order Executed message.
-entrypoint typedef struct _TradeDetailsMessage {
+typedef struct _TradeDetailsMessage {
   UINT64BE timestamp;          // bytes 0 to 7
   UINT8 firm_id[4];            // bytes 8 to 11
   UINT16BE product_id;         // bytes 12 to 13
@@ -256,10 +658,8 @@ entrypoint typedef struct _TradeDetailsMessage {
   UINT8 open_close;            // byte 106
 } TradeDetailsMessage;
 
-// ---- Cross Order Accepted Message: 168 bytes ---------------------------------
-
 // This message acknowledges the receipt and acceptance of a valid New Cross Order.
-entrypoint typedef struct _CrossOrderAcceptedMessage {
+typedef struct _CrossOrderAcceptedMessage {
   UINT64BE timestamp;                     // bytes 0 to 7
   UINT8 firm_id[4];                       // bytes 8 to 11
   UINT32BE instrument_id;                 // bytes 12 to 15
@@ -299,10 +699,8 @@ entrypoint typedef struct _CrossOrderAcceptedMessage {
   UINT8 contra_stock_leg_mpid[4];         // bytes 164 to 167
 } CrossOrderAcceptedMessage;
 
-// ---- Member Kill Switch Notification Message: 33 bytes -----------------------
-
 // The Member Kill Switch Notification informs of:
-entrypoint typedef struct _MemberKillSwitchNotificationMessage {
+typedef struct _MemberKillSwitchNotificationMessage {
   UINT64BE timestamp;       // bytes 0 to 7
   UINT8 firm_id[4];         // bytes 8 to 11
   UINT8 cl_request_id[16];  // bytes 12 to 27
@@ -310,10 +708,8 @@ entrypoint typedef struct _MemberKillSwitchNotificationMessage {
   UINT8 kill_action;        // byte 32
 } MemberKillSwitchNotificationMessage;
 
-// ---- Mass Cancel Response Message: 36 bytes ----------------------------------
-
 // Mass Cancel Response is sent out upon completion of processing of a valid Mass Cancel Request.
-entrypoint typedef struct _MassCancelResponseMessage {
+typedef struct _MassCancelResponseMessage {
   UINT64BE timestamp;       // bytes 0 to 7
   UINT8 firm_id[4];         // bytes 8 to 11
   UINT8 cl_request_id[16];  // bytes 12 to 27
@@ -321,20 +717,16 @@ entrypoint typedef struct _MassCancelResponseMessage {
   UINT32BE num_pending;     // bytes 32 to 35
 } MassCancelResponseMessage;
 
-// ---- Add Complex Instrument Response Message: 32 bytes -----------------------
-
 // Add Complex Instrument Response is sent out when new or existing complex strategy requested via Add Complex Instrument Request is successfully created.
-entrypoint typedef struct _AddComplexInstrumentResponseMessage {
+typedef struct _AddComplexInstrumentResponseMessage {
   UINT64BE timestamp;       // bytes 0 to 7
   UINT8 firm_id[4];         // bytes 8 to 11
   UINT8 cl_request_id[16];  // bytes 12 to 27
   UINT32BE instrument_id;   // bytes 28 to 31
 } AddComplexInstrumentResponseMessage;
 
-// ---- Modify Trade Response Message: 52 bytes ---------------------------------
-
 // Modify Trade Response is sent when a valid Modify Trade Request is accepted.
-entrypoint typedef struct _ModifyTradeResponseMessage {
+typedef struct _ModifyTradeResponseMessage {
   UINT64BE timestamp;       // bytes 0 to 7
   UINT8 firm_id[4];         // bytes 8 to 11
   UINT8 cl_request_id[16];  // bytes 12 to 27
@@ -343,29 +735,23 @@ entrypoint typedef struct _ModifyTradeResponseMessage {
   UINT32BE match_id;        // bytes 48 to 51
 } ModifyTradeResponseMessage;
 
-// ---- Subscription Response Message: 28 bytes ---------------------------------
-
 // Subscription Response is sent after a valid Subscription Request has been processed.
-entrypoint typedef struct _SubscriptionResponseMessage {
+typedef struct _SubscriptionResponseMessage {
   UINT64BE timestamp;       // bytes 0 to 7
   UINT8 firm_id[4];         // bytes 8 to 11
   UINT8 cl_request_id[16];  // bytes 12 to 27
 } SubscriptionResponseMessage;
 
-// ---- Reject Message: 27 bytes ------------------------------------------------
-
 // Reject is sent in response to a Request that is deemed invalid. Reject message contains error code explaining the reason for rejection
-entrypoint typedef struct _RejectMessage {
+typedef struct _RejectMessage {
   UINT64BE timestamp;     // bytes 0 to 7
   UINT8 reject_msg_type;  // byte 8
   UINT8 cl_ord_id[16];    // bytes 9 to 24
   UINT16BE reject_code;   // bytes 25 to 26
 } RejectMessage;
 
-// ---- Pending Response Message: 34 bytes --------------------------------------
-
 // A Pending Response is sent when a request cannot be immediately, fully processed or validated, and indicates that the final status of the request is not yet known.
-entrypoint typedef struct _PendingResponseMessage {
+typedef struct _PendingResponseMessage {
   UINT64BE timestamp;      // bytes 0 to 7
   UINT8 firm_id[4];        // bytes 8 to 11
   UINT32BE instrument_id;  // bytes 12 to 15
@@ -373,4 +759,63 @@ entrypoint typedef struct _PendingResponseMessage {
   UINT8 cl_ord_id[16];     // bytes 17 to 32
   UINT8 pending_reason;    // byte 33
 } PendingResponseMessage;
+
+// The sequenced (server to client) message carried by the packet, opaque bytes unless an application source dispatches it
+casetype _SequencedMessage (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x7A: SystemEventMessage system_event_message;
+    case 0x6F: SimpleInstrumentDirectoryMessage simple_instrument_directory_message;
+    case 0x73: ComplexInstrumentDirectoryMessage complex_instrument_directory_message;
+    case 0x69: InstrumentTradingActionMessage instrument_trading_action_message;
+    case 0x6E: AuctionNotificationMessage auction_notification_message;
+    case 0x61: OrderAcceptedLongFormMessage order_accepted_long_form_message;
+    case 0x62: OrderAcceptedShortFormMessage order_accepted_short_form_message;
+    case 0x72: OrderReplacedMessage order_replaced_message;
+    case 0x63: OrderCancelledMessage order_cancelled_message;
+    case 0x65: OrderExecutedMessage order_executed_message;
+    case 0x74: TradeDetailsMessage trade_details_message;
+    case 0x78: CrossOrderAcceptedMessage cross_order_accepted_message;
+    case 0x6B: MemberKillSwitchNotificationMessage member_kill_switch_notification_message;
+    case 0x75: MassCancelResponseMessage mass_cancel_response_message;
+    case 0x64: AddComplexInstrumentResponseMessage add_complex_instrument_response_message;
+    case 0x6D: ModifyTradeResponseMessage modify_trade_response_message;
+    case 0x66: SubscriptionResponseMessage subscription_response_message;
+    case 0x6A: RejectMessage reject_message;
+    case 0x70: PendingResponseMessage pending_response_message;
+    default: UINT8 unknown[available];
+  }
+} SequencedMessage;
+
+// The Sequenced Data Packets act as an envelope to carry the actual sequenced data messages that are transferred from the server to the client. Each Sequenced Data Packet carries one message from the higher-lever protocol
+typedef struct _SequencedDataPacket (UINT16 packet_length) where (packet_length >= 2) {
+  UINT8 sequenced_message_type;                                                                                                                                // byte 0
+  SequencedMessage(sequenced_message_type, (((UINT32) packet_length) - 2)) sequenced_message[:byte-size-single-element-array (((UINT32) packet_length) - 2)];
+} SequencedDataPacket;
+
+// Branch
+casetype _ServerPayload (UINT8 selector, UINT32 length, UINT16 packet_length, UINT32 available) {
+  switch (selector) {
+    case 0x2B: DebugPacket(packet_length) debug_packet;
+    case 0x41: LoginAcceptedPacket login_accepted_packet;
+    case 0x4A: LoginRejectedPacket login_rejected_packet;
+    case 0x53: SequencedDataPacket(packet_length) sequenced_data_packet[:byte-size-single-element-array length];
+    case 0x48: unit server_heartbeat_packet;
+    case 0x5A: unit end_of_session_packet;
+    default: UINT8 unknown[available];
+  }
+} ServerPayload;
+
+// Soup Bin Tcp Packet sent by the server
+typedef struct _ServerSoupBinTcpPacket {
+  UINT16BE packet_length { packet_length >= 1 };                                                                                                                                                                // bytes 0 to 1
+  UINT8 server_packet_type;                                                                                                                                                                                     // byte 2
+  ServerPayload(server_packet_type, (((UINT32) packet_length) - 1), packet_length, ((((UINT32) packet_length) + 2) - 3)) server_payload[:byte-size-single-element-array ((((UINT32) packet_length) + 2) - 3)];
+} ServerSoupBinTcpPacket;
+
+// ---- Packet: ServerPacket ----------------------------------------------------
+
+// SoupBinTCP Packet sent by the server
+entrypoint typedef struct _ServerPacket (UINT32 available) {
+  ServerSoupBinTcpPacket server_soup_bin_tcp_packet[:byte-size available];
+} ServerPacket;
 

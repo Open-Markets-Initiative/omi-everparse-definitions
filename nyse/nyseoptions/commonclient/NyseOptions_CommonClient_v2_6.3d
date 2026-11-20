@@ -1,45 +1,102 @@
-// New York Stock Exchange Common Client
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nyse NyseOptions CommonClient Pillar v2.6
 //
+// Protocol:
+//   Organization: New York Stock Exchange
+//   Protocol: Common Client
+//   Encoding: Pillar
+//   Version: 2.6
+//   Date: 8/3/2022
+//   Specification: Pillar_Options_Common_Client_Specification.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out NyseOptions_CommonClient_v2_6.3d
-//
-// What this definition does not state, and the model does:
-// - the dispatch that chooses a message by its type
-// - a run filling what frames it
-//
-// License: MIT No Attribution
 
-// ---- Send Time: 8 bytes ------------------------------------------------------
+// ---- Values ------------------------------------------------------------------
+
+// Delivery Flag: one byte code
+#define DELIVERY_FLAG_HEARTBEAT 0x01                        // Heartbeat
+#define DELIVERY_FLAG_PILLAR_FAILOVER 0x0A                  // Pillar Failover
+#define DELIVERY_FLAG_ORIGINAL_MESSAGE 0x0B                 // Original Message
+#define DELIVERY_FLAG_SEQUENCE_NUMBER_RESET_MESSAGE 0x0C    // Sequence Number Reset Message
+#define DELIVERY_FLAG_ONE_RETRANSMISSION_PACKET 0x0D        // One Retransmission Packet
+#define DELIVERY_FLAG_RETRANSMISSION_SEQUENCE_MESSAGE 0x0F  // Retransmission Sequence Message
+#define DELIVERY_FLAG_ONE_REFRESH_PACKET 0x11               // One Refresh Packet
+#define DELIVERY_FLAG_REFRESH_SEQUENCE_START 0x12           // Refresh Sequence Start
+#define DELIVERY_FLAG_REFRESH_SEQUENCE_MESSAGE 0x13         // Refresh Sequence Message
+#define DELIVERY_FLAG_REFRESH_SEQUENCE_END 0x14             // Refresh Sequence End
+#define DELIVERY_FLAG_MESSAGE_UNAVAILABLE 0x15              // Message Unavailable
+
+// ---- Types -------------------------------------------------------------------
 
 // The time when this packet was published to the multicast channel
-entrypoint typedef struct _SendTime {
+typedef struct _SendTime {
   UINT32 seconds;      // bytes 0 to 3
   UINT32 nanoseconds;  // bytes 4 to 7
 } SendTime;
 
-// ---- Packet Header: 16 bytes -------------------------------------------------
+// Pillar message
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16 message_size { message_size >= 4 };                                                                                                                       // bytes 0 to 1
+  UINT16 message_type;                                                                                                                                             // bytes 2 to 3
+  UINT8 payload[(((UINT32) message_size) - 4)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
 
-// Pillar common client udp packet header
-entrypoint typedef struct _PacketHeader {
-  UINT16 pkt_size;      // bytes 0 to 1
-  UINT8 delivery_flag;  // byte 2
-  UINT8 number_msgs;    // byte 3
-  UINT32 seq_num;       // bytes 4 to 7
-  SendTime send_time;   // bytes 8 to 15
-} PacketHeader;
+// Pillar message
+typedef struct _MessageRun (UINT8 number_msgs, UINT32 available, mutable UINT32 * tally) {
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size available];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) number_msgs); };
+} MessageRun;
 
-// ---- Message Header: 4 bytes -------------------------------------------------
+// Branch
+casetype _Messages (UINT8 selector, UINT8 number_msgs, UINT32 available, mutable UINT32 * tally) {
+  switch (selector) {
+    case 0x01: unit heartbeat;
+    default: MessageRun(number_msgs, available, tally) message;
+  }
+} Messages;
 
-// Pillar message header
-entrypoint typedef struct _MessageHeader {
-  UINT16 message_size;  // bytes 0 to 1
-  UINT16 message_type;  // bytes 2 to 3
-} MessageHeader;
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Pillar common client udp packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 16) {
+  UINT16 pkt_size;                                                                                                           // bytes 0 to 1
+  UINT8 delivery_flag;                                                                                                       // byte 2
+  UINT8 number_msgs;                                                                                                         // byte 3
+  UINT32 seq_num;                                                                                                            // bytes 4 to 7
+  SendTime send_time;                                                                                                        // bytes 8 to 15
+  Messages(delivery_flag, number_msgs, (available - 16), tally) messages[:byte-size-single-element-array (available - 16)];
+} Packet;
 

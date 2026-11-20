@@ -1,42 +1,149 @@
-// Financial Industry Regulatory Authority Securitized Products Dissemination Service for 144A Transactions
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Finra Trace Spds144A Dfi v2.1
 //
+// Protocol:
+//   Organization: Financial Industry Regulatory Authority
+//   Protocol: Securitized Products Dissemination Service for 144A Transactions
+//   Encoding: FINRA Data Feed Interface
+//   Version: 2.1
+//   Date: 11/19/2024
+//   Specification: FINRA SPDS-144A Specification (MOLD 1.0).pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out Trace_Spds144A_v2_1.3d
-//
-// What this definition does not state, and the model does:
-// - a run counted by a field
-// - the dispatch that chooses a message by its type
-// - a length prefix framing what follows
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 20 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-entrypoint typedef struct _PacketHeader {
-  UINT8 session[10];  // bytes 0 to 9
-  UINT64BE sequence;  // bytes 10 to 17
-  UINT16BE count;     // bytes 18 to 19
-} PacketHeader;
+// Message Category: one byte code
+#define MESSAGE_CATEGORY_TRADE 0x54           // Trade
+#define MESSAGE_CATEGORY_ADMINISTRATIVE 0x41  // Administrative
+#define MESSAGE_CATEGORY_CONTROL 0x43         // Control
 
-// ---- Mold Udp64: 3 bytes -----------------------------------------------------
+// Trade Message Type: one byte code
+#define TRADE_MESSAGE_TYPE_TRADE_REPORT_MESSAGE 0x4D      // Trade Report Message
+#define TRADE_MESSAGE_TYPE_TRADE_CANCEL_MESSAGE 0x4E      // Trade Cancel Message
+#define TRADE_MESSAGE_TYPE_TRADE_CORRECTION_MESSAGE 0x4F  // Trade Correction Message
 
-// Mold Udp64 Dfi Message Header
-entrypoint typedef struct _MoldUdp64 {
-  UINT16BE length;         // bytes 0 to 1
-  UINT8 message_category;  // byte 2
-} MoldUdp64;
+// Market Center Originator Id: one byte code
+#define MARKET_CENTER_ORIGINATOR_ID_OVER_THE_COUNTER 0x4F  // Over The Counter
 
-// ---- Datetime: 14 bytes ------------------------------------------------------
+// Quantity Indicator: one byte code
+#define QUANTITY_INDICATOR_ACTUAL 0x41     // Actual
+#define QUANTITY_INDICATOR_ESTIMATED 0x45  // Estimated
+
+// Remuneration: one byte code
+#define REMUNERATION_COMMISSION_IS_INCLUDED_IN_THE_PRICE 0x43                        // Commission Is Included In The Price
+#define REMUNERATION_A_MARKUP_OR_MARKDOWN_IS_INCLUDED_IN_THE_PRICE 0x4D              // A Markup Or Markdown Is Included In The Price
+#define REMUNERATION_NO_COMMISSION_OR_MARKUP_MARKDOWN_IS_INCLUDED_IN_THE_PRICE 0x4E  // No Commission Or Markup Markdown Is Included In The Price
+#define REMUNERATION_NO_VALUE_ASSIGNED_ON_INTER_DEALER_TRADES 0x20                   // No Value Assigned On Inter Dealer Trades
+
+// Special Price Indicator: one byte code
+#define SPECIAL_PRICE_INDICATOR_SPECIAL_PRICE_TRADE 0x59        // Special Price Trade
+#define SPECIAL_PRICE_INDICATOR_NOT_A_SPECIAL_PRICE_TRADE 0x20  // Not A Special Price Trade
+
+// Side: one byte code
+#define SIDE_REPORTING_PARTY_BOUGHT_FROM_CONTRA_PARTY 0x42  // Reporting Party Bought From Contra Party
+#define SIDE_REPORTING_PARTY_SOLD_TO_CONTRA_PARTY 0x53      // Reporting Party Sold To Contra Party
+
+// As Of Indicator: one byte code
+#define AS_OF_INDICATOR_AS_OF_TRADE 0x41        // As Of Trade
+#define AS_OF_INDICATOR_REVERSAL 0x52           // Reversal
+#define AS_OF_INDICATOR_CURRENT_DAY_TRADE 0x20  // Current Day Trade
+
+// Sale Condition 3: one byte code
+#define SALE_CONDITION_3_TRADE_REPORTED_AFTER_MARKET_HOURS 0x54       // Trade Reported After Market Hours
+#define SALE_CONDITION_3_TRADE_REPORTED_LATE_OUT_OF_SEQUENCE 0x5A     // Trade Reported Late Out Of Sequence
+#define SALE_CONDITION_3_TRADE_REPORTED_LATE_AFTER_MARKET_HOURS 0x55  // Trade Reported Late After Market Hours
+#define SALE_CONDITION_3_NO_MODIFIER 0x20                             // No Modifier
+
+// Sale Condition 4: one byte code
+#define SALE_CONDITION_4_REGULAR_TRADE 0x20               // Regular Trade
+#define SALE_CONDITION_4_SPECIFIED_POOL_TRANSACTION 0x4F  // Specified Pool Transaction
+#define SALE_CONDITION_4_STIPULATION_TRANSACTION 0x4E     // Stipulation Transaction
+#define SALE_CONDITION_4_DOLLAR_ROLL_WO_STIPULATION 0x44  // Dollar Roll Wo Stipulation
+#define SALE_CONDITION_4_STIPULATED_DOLLAR_ROLL 0x4C      // Stipulated Dollar Roll
+#define SALE_CONDITION_4_WEIGHTED_AVERAGE_PRICE 0x57      // Weighted Average Price
+
+// Reporting Party Type: one byte code
+#define REPORTING_PARTY_TYPE_REPORTING_PARTY_IS_A_BROKER_DEALER 0x44                    // Reporting Party Is A Broker Dealer
+#define REPORTING_PARTY_TYPE_REPORTING_PARTY_IS_AN_ALTERNATIVE_TRADING_SYSTEM_ATS 0x54  // Reporting Party Is An Alternative Trading System Ats
+
+// Contra Party Type: one byte code
+#define CONTRA_PARTY_TYPE_CONTRA_PARTY_IS_A_BROKER_DEALER 0x44                    // Contra Party Is A Broker Dealer
+#define CONTRA_PARTY_TYPE_CONTRA_PARTY_IS_A_CUSTOMER_NON_FINRA_MEMBER 0x43        // Contra Party Is A Customer Non Finra Member
+#define CONTRA_PARTY_TYPE_CONTRA_PARTY_IS_A_NON_MEMBER_AFFILIATE 0x41             // Contra Party Is A Non Member Affiliate
+#define CONTRA_PARTY_TYPE_CONTRA_PARTY_IS_AN_ALTERNATIVE_TRADING_SYSTEM_ATS 0x54  // Contra Party Is An Alternative Trading System Ats
+
+// Ats Indicator: one byte code
+#define ATS_INDICATOR_ATS_TRADE 0x59         // Ats Trade
+#define ATS_INDICATOR_NOT_AN_ATS_TRADE 0x20  // Not An Ats Trade
+
+// Change Indicator: one byte code
+#define CHANGE_INDICATOR_NO_CHANGED 0x30                         // No Changed
+#define CHANGE_INDICATOR_LAST_PRICE_CHANGED 0x31                 // Last Price Changed
+#define CHANGE_INDICATOR_LOW_PRICE_CHANGED 0x32                  // Low Price Changed
+#define CHANGE_INDICATOR_LAST_PRICE_AND_LOW_PRICE_CHANGED 0x33   // Last Price And Low Price Changed
+#define CHANGE_INDICATOR_HIGH_PRICE_CHANGED 0x34                 // High Price Changed
+#define CHANGE_INDICATOR_LAST_PRICE_AND_HIGH_PRICE_CHANGED 0x35  // Last Price And High Price Changed
+#define CHANGE_INDICATOR_HIGH_PRICE_AND_LOW_PRICE_CHANGED 0x36   // High Price And Low Price Changed
+#define CHANGE_INDICATOR_ALL_PRICES_CHANGED 0x37                 // All Prices Changed
+
+// Report Function: one byte code
+#define REPORT_FUNCTION_CANCEL 0x43      // Cancel
+#define REPORT_FUNCTION_ERROR 0x45       // Error
+#define REPORT_FUNCTION_CORRECTION 0x4E  // Correction
+
+// Administrative Message Type: one byte code
+#define ADMINISTRATIVE_MESSAGE_TYPE_DAILY_TRADE_SUMMARY_MESSAGE 0x45     // Daily Trade Summary Message
+#define ADMINISTRATIVE_MESSAGE_TYPE_TRADING_HALT_MESSAGE 0x48            // Trading Halt Message
+#define ADMINISTRATIVE_MESSAGE_TYPE_GENERAL_ADMINISTRATIVE_MESSAGE 0x41  // General Administrative Message
+
+// Action: one byte code
+#define ACTION_TRADING_HALT 0x48        // Trading Halt
+#define ACTION_TRADING_RESUMPTION 0x52  // Trading Resumption
+
+// Control Message Type: one byte code
+#define CONTROL_MESSAGE_TYPE_START_OF_DAY_MESSAGE 0x49            // Start Of Day Message
+#define CONTROL_MESSAGE_TYPE_END_OF_DAY_MESSAGE 0x4A              // End Of Day Message
+#define CONTROL_MESSAGE_TYPE_MARKET_SESSION_OPEN_MESSAGE 0x4F     // Market Session Open Message
+#define CONTROL_MESSAGE_TYPE_MARKET_SESSION_CLOSE_MESSAGE 0x43    // Market Session Close Message
+#define CONTROL_MESSAGE_TYPE_END_OF_TRADE_REPORTING_MESSAGE 0x58  // End Of Trade Reporting Message
+#define CONTROL_MESSAGE_TYPE_END_OF_TRANSMISSIONS_MESSAGE 0x5A    // End Of Transmissions Message
+
+// ---- Types -------------------------------------------------------------------
 
 // Datetime
-entrypoint typedef struct _Datetime {
+typedef struct _Datetime {
   UINT8 year[4];    // bytes 0 to 3
   UINT8 month[2];   // bytes 4 to 5
   UINT8 day[2];     // bytes 6 to 7
@@ -45,38 +152,30 @@ entrypoint typedef struct _Datetime {
   UINT8 second[2];  // bytes 12 to 13
 } Datetime;
 
-// ---- Message Header: 22 bytes ------------------------------------------------
-
 // Message Header
-entrypoint typedef struct _MessageHeader {
+typedef struct _MessageHeader {
   UINT8 trade_identifier[7];          // bytes 0 to 6
   UINT8 market_center_originator_id;  // byte 7
   Datetime datetime;                  // bytes 8 to 21
 } MessageHeader;
 
-// ---- Label: 40 bytes ---------------------------------------------------------
-
 // Label
-entrypoint typedef struct _Label {
+typedef struct _Label {
   UINT8 symbol[14];           // bytes 0 to 13
   UINT8 cusip[9];             // bytes 14 to 22
   UINT8 bsym[12];             // bytes 23 to 34
   UINT8 sub_product_type[5];  // bytes 35 to 39
 } Label;
 
-// ---- Original Dissemination Date: 8 bytes ------------------------------------
-
 // Original Dissemination Date
-entrypoint typedef struct _OriginalDisseminationDate {
+typedef struct _OriginalDisseminationDate {
   UINT8 year[4];   // bytes 0 to 3
   UINT8 month[2];  // bytes 4 to 5
   UINT8 day[2];    // bytes 6 to 7
 } OriginalDisseminationDate;
 
-// ---- Execution Datetime: 14 bytes --------------------------------------------
-
 // Execution Datetime
-entrypoint typedef struct _ExecutionDatetime {
+typedef struct _ExecutionDatetime {
   UINT8 year[4];    // bytes 0 to 3
   UINT8 month[2];   // bytes 4 to 5
   UINT8 day[2];     // bytes 6 to 7
@@ -85,19 +184,15 @@ entrypoint typedef struct _ExecutionDatetime {
   UINT8 second[2];  // bytes 12 to 13
 } ExecutionDatetime;
 
-// ---- Settlement Date: 8 bytes ------------------------------------------------
-
 // Settlement Date
-entrypoint typedef struct _SettlementDate {
+typedef struct _SettlementDate {
   UINT8 year[4];   // bytes 0 to 3
   UINT8 month[2];  // bytes 4 to 5
   UINT8 day[2];    // bytes 6 to 7
 } SettlementDate;
 
-// ---- Trade Information: 71 bytes ---------------------------------------------
-
 // Trade Information
-entrypoint typedef struct _TradeInformation {
+typedef struct _TradeInformation {
   UINT8 quantity_indicator;              // byte 0
   UINT8 quantity[14];                    // bytes 1 to 14
   UINT8 price[11];                       // bytes 15 to 25
@@ -116,10 +211,8 @@ entrypoint typedef struct _TradeInformation {
   UINT8 ats_indicator;                   // byte 70
 } TradeInformation;
 
-// ---- Trade Report Message: 142 bytes -----------------------------------------
-
 // Used to transmit trade transaction information for Abs and certain Cmo transactions
-entrypoint typedef struct _TradeReportMessage {
+typedef struct _TradeReportMessage {
   MessageHeader message_header;                           // bytes 0 to 21
   Label label;                                            // bytes 22 to 61
   OriginalDisseminationDate original_dissemination_date;  // bytes 62 to 69
@@ -127,10 +220,8 @@ entrypoint typedef struct _TradeReportMessage {
   UINT8 change_indicator;                                 // byte 141
 } TradeReportMessage;
 
-// ---- Original Trade Information: 71 bytes ------------------------------------
-
 // Original Trade Information
-entrypoint typedef struct _OriginalTradeInformation {
+typedef struct _OriginalTradeInformation {
   UINT8 quantity_indicator;              // byte 0
   UINT8 quantity[14];                    // bytes 1 to 14
   UINT8 price[11];                       // bytes 15 to 25
@@ -149,20 +240,16 @@ entrypoint typedef struct _OriginalTradeInformation {
   UINT8 ats_indicator;                   // byte 70
 } OriginalTradeInformation;
 
-// ---- Trade Summary Information: 34 bytes -------------------------------------
-
 // Trade Summary Information
-entrypoint typedef struct _TradeSummaryInformation {
+typedef struct _TradeSummaryInformation {
   UINT8 high_price[11];       // bytes 0 to 10
   UINT8 low_price[11];        // bytes 11 to 21
   UINT8 last_sale_price[11];  // bytes 22 to 32
   UINT8 change_indicator;     // byte 33
 } TradeSummaryInformation;
 
-// ---- Trade Cancel Message: 183 bytes -----------------------------------------
-
 // Notifies subscribers that a trade report entered during the past 20 business days has been cancelled
-entrypoint typedef struct _TradeCancelMessage {
+typedef struct _TradeCancelMessage {
   MessageHeader message_header;                           // bytes 0 to 21
   Label label;                                            // bytes 22 to 61
   OriginalDisseminationDate original_dissemination_date;  // bytes 62 to 69
@@ -172,10 +259,8 @@ entrypoint typedef struct _TradeCancelMessage {
   TradeSummaryInformation trade_summary_information;      // bytes 149 to 182
 } TradeCancelMessage;
 
-// ---- Correction Trade Information: 71 bytes ----------------------------------
-
 // Correction Trade Information
-entrypoint typedef struct _CorrectionTradeInformation {
+typedef struct _CorrectionTradeInformation {
   UINT8 quantity_indicator;              // byte 0
   UINT8 quantity[14];                    // bytes 1 to 14
   UINT8 price[11];                       // bytes 15 to 25
@@ -194,10 +279,8 @@ entrypoint typedef struct _CorrectionTradeInformation {
   UINT8 ats_indicator;                   // byte 70
 } CorrectionTradeInformation;
 
-// ---- Trade Correction Message: 254 bytes -------------------------------------
-
 // Notifies subscribers that a trade report entered during the past 20 business days has been corrected
-entrypoint typedef struct _TradeCorrectionMessage {
+typedef struct _TradeCorrectionMessage {
   MessageHeader message_header;                             // bytes 0 to 21
   Label label;                                              // bytes 22 to 61
   OriginalDisseminationDate original_dissemination_date;    // bytes 62 to 69
@@ -208,10 +291,24 @@ entrypoint typedef struct _TradeCorrectionMessage {
   TradeSummaryInformation trade_summary_information;        // bytes 220 to 253
 } TradeCorrectionMessage;
 
-// ---- Daily Trade Summary Message: 95 bytes -----------------------------------
+// Branch
+casetype _TradeMessagePayload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x4D: TradeReportMessage trade_report_message;
+    case 0x4E: TradeCancelMessage trade_cancel_message;
+    case 0x4F: TradeCorrectionMessage trade_correction_message;
+    default: UINT8 unknown[available];
+  }
+} TradeMessagePayload;
+
+// Trade Messages Header
+typedef struct _TradeMessage (UINT32 available) where (available >= 1) {
+  UINT8 trade_message_type;                                                                                                         // byte 0
+  TradeMessagePayload(trade_message_type, (available - 1)) trade_message_payload[:byte-size-single-element-array (available - 1)];
+} TradeMessage;
 
 // Price summary disseminated for each security that traded during the normal trading hours
-entrypoint typedef struct _DailyTradeSummaryMessage {
+typedef struct _DailyTradeSummaryMessage {
   MessageHeader message_header;  // bytes 0 to 21
   Label label;                   // bytes 22 to 61
   UINT8 daily_high_price[11];    // bytes 62 to 72
@@ -219,10 +316,8 @@ entrypoint typedef struct _DailyTradeSummaryMessage {
   UINT8 daily_close_price[11];   // bytes 84 to 94
 } DailyTradeSummaryMessage;
 
-// ---- Action Datetime: 14 bytes -----------------------------------------------
-
 // Action Datetime
-entrypoint typedef struct _ActionDatetime {
+typedef struct _ActionDatetime {
   UINT8 year[4];    // bytes 0 to 3
   UINT8 month[2];   // bytes 4 to 5
   UINT8 day[2];     // bytes 6 to 7
@@ -231,10 +326,8 @@ entrypoint typedef struct _ActionDatetime {
   UINT8 second[2];  // bytes 12 to 13
 } ActionDatetime;
 
-// ---- Trading Halt Message: 111 bytes -----------------------------------------
-
 // Disseminated when a trading halt is instituted or removed for a security
-entrypoint typedef struct _TradingHaltMessage {
+typedef struct _TradingHaltMessage {
   MessageHeader message_header;    // bytes 0 to 21
   Label label;                     // bytes 22 to 61
   UINT8 issuer[30];                // bytes 62 to 91
@@ -243,45 +336,103 @@ entrypoint typedef struct _TradingHaltMessage {
   UINT8 halt_reason[4];            // bytes 107 to 110
 } TradingHaltMessage;
 
-// ---- Start Of Day Message: 22 bytes ------------------------------------------
+// Free-form text message format to relay general administrative information
+typedef struct _GeneralAdministrativeMessage (UINT16 length) where (length >= 24) {
+  MessageHeader message_header;          // bytes 0 to 21
+  UINT8 text[(((UINT32) length) - 24)];
+} GeneralAdministrativeMessage;
+
+// Branch
+casetype _AdministrativeMessagePayload (UINT8 selector, UINT16 length, UINT32 available) {
+  switch (selector) {
+    case 0x45: DailyTradeSummaryMessage daily_trade_summary_message;
+    case 0x48: TradingHaltMessage trading_halt_message;
+    case 0x41: GeneralAdministrativeMessage(length) general_administrative_message;
+    default: UINT8 unknown[available];
+  }
+} AdministrativeMessagePayload;
+
+// Administrative Messages Header
+typedef struct _AdministrativeMessage (UINT16 length, UINT32 available) where (available >= 1) {
+  UINT8 administrative_message_type;                                                                                                                                   // byte 0
+  AdministrativeMessagePayload(administrative_message_type, length, (available - 1)) administrative_message_payload[:byte-size-single-element-array (available - 1)];
+} AdministrativeMessage;
 
 // Signifies the beginning of Finra's daily operational cycle
-entrypoint typedef struct _StartOfDayMessage {
+typedef struct _StartOfDayMessage {
   MessageHeader message_header;  // bytes 0 to 21
 } StartOfDayMessage;
 
-// ---- End Of Day Message: 22 bytes --------------------------------------------
-
 // Signals the end of activity for the operational cycle
-entrypoint typedef struct _EndOfDayMessage {
+typedef struct _EndOfDayMessage {
   MessageHeader message_header;  // bytes 0 to 21
 } EndOfDayMessage;
 
-// ---- Market Session Open Message: 22 bytes -----------------------------------
-
 // Signifies the opening of the market for the session indicated in the message header
-entrypoint typedef struct _MarketSessionOpenMessage {
+typedef struct _MarketSessionOpenMessage {
   MessageHeader message_header;  // bytes 0 to 21
 } MarketSessionOpenMessage;
 
-// ---- Market Session Close Message: 22 bytes ----------------------------------
-
 // Signals the closing of the market for the session indicated in the message header
-entrypoint typedef struct _MarketSessionCloseMessage {
+typedef struct _MarketSessionCloseMessage {
   MessageHeader message_header;  // bytes 0 to 21
 } MarketSessionCloseMessage;
 
-// ---- End Of Trade Reporting Message: 22 bytes --------------------------------
-
 // Signals that no further trade reports or corrections will be sent for that market session
-entrypoint typedef struct _EndOfTradeReportingMessage {
+typedef struct _EndOfTradeReportingMessage {
   MessageHeader message_header;  // bytes 0 to 21
 } EndOfTradeReportingMessage;
 
-// ---- End Of Transmissions Message: 22 bytes ----------------------------------
-
 // Signals that there will be no further transmissions of data
-entrypoint typedef struct _EndOfTransmissionsMessage {
+typedef struct _EndOfTransmissionsMessage {
   MessageHeader message_header;  // bytes 0 to 21
 } EndOfTransmissionsMessage;
+
+// Branch
+casetype _ControlMessagePayload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x49: StartOfDayMessage start_of_day_message;
+    case 0x4A: EndOfDayMessage end_of_day_message;
+    case 0x4F: MarketSessionOpenMessage market_session_open_message;
+    case 0x43: MarketSessionCloseMessage market_session_close_message;
+    case 0x58: EndOfTradeReportingMessage end_of_trade_reporting_message;
+    case 0x5A: EndOfTransmissionsMessage end_of_transmissions_message;
+    default: UINT8 unknown[available];
+  }
+} ControlMessagePayload;
+
+// Control Messages Header
+typedef struct _ControlMessage (UINT32 available) where (available >= 1) {
+  UINT8 control_message_type;                                                                                                             // byte 0
+  ControlMessagePayload(control_message_type, (available - 1)) control_message_payload[:byte-size-single-element-array (available - 1)];
+} ControlMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT16 length, UINT32 available) {
+  switch (selector) {
+    case 0x54: TradeMessage(available) trade_message;
+    case 0x41: AdministrativeMessage(length, available) administrative_message;
+    case 0x43: ControlMessage(available) control_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16BE length { length >= 1 };                                                                                                                                 // bytes 0 to 1
+  UINT8 message_category;                                                                                                                                          // byte 2
+  Payload(message_category, length, (((UINT32) length) - 1)) payload[:byte-size-single-element-array (((UINT32) length) - 1)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Mold Udp64 Dfi Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 20) {
+  UINT8 session[10];                                                                                                // bytes 0 to 9
+  UINT64BE sequence;                                                                                                // bytes 10 to 17
+  UINT16BE count;                                                                                                   // bytes 18 to 19
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size (available - 20)];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) count); };
+} Packet;
 

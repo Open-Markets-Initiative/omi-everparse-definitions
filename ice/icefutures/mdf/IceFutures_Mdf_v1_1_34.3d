@@ -1,5 +1,34 @@
-// Intercontinental Exchange Multicast Data Feed
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Ice IceFutures Mdf iMpact v1.1.34
 //
+// Protocol:
+//   Organization: Intercontinental Exchange
+//   Protocol: Multicast Data Feed
+//   Encoding: Ice iMpact Binary Encoding
+//   Version: 1.1.34
+//   Date: 9/4/2018
+//   Specification: ICE_iMpact_Multicast_Feed_Message_Spec_1.1.34.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
 // writes a C validator for each record below and proves, of that C, that it reads no byte
 // outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
@@ -7,6 +36,8 @@
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out IceFutures_Mdf_v1_1_34.3d
 //
@@ -14,8 +45,321 @@
 // - the dispatch that chooses a message by its type
 // - a run filling what frames it
 // - a run counted by a field
-//
-// License: MIT No Attribution
+// - the packet as a whole, which is what is left of a frame, after a member of no fixed or computed width, at packet.messages.message.extradata
+
+// ---- Values ------------------------------------------------------------------
+
+// Message Type: one byte code
+#define MESSAGE_TYPE_MARKET_SNAPSHOT_MESSAGE 0x43                               // Market Snapshot Message
+#define MESSAGE_TYPE_TRADE_MESSAGE 0x47                                         // Trade Message
+#define MESSAGE_TYPE_SPOT_MARKET_TRADE_MESSAGE 0x59                             // Spot Market Trade Message
+#define MESSAGE_TYPE_INVESTIGATED_TRADE_MESSAGE 0x48                            // Investigated Trade Message
+#define MESSAGE_TYPE_CANCELLED_TRADE_MESSAGE 0x49                               // Cancelled Trade Message
+#define MESSAGE_TYPE_MARKET_STATISTICS_MESSAGE 0x4A                             // Market Statistics Message
+#define MESSAGE_TYPE_MARKET_STATE_CHANGE_MESSAGE 0x4B                           // Market State Change Message
+#define MESSAGE_TYPE_SYSTEM_TEXT_MESSAGE 0x4C                                   // System Text Message
+#define MESSAGE_TYPE_OPEN_INTEREST_MESSAGE 0x4D                                 // Open Interest Message
+#define MESSAGE_TYPE_OPEN_PRICE_MESSAGE 0x4E                                    // Open Price Message
+#define MESSAGE_TYPE_CLOSE_PRICE_MESSAGE 0x63                                   // Close Price Message
+#define MESSAGE_TYPE_SETTLEMENT_PRICE_MESSAGE 0x4F                              // Settlement Price Message
+#define MESSAGE_TYPE_INDEX_PRICES_MESSAGE 0x7A                                  // Index Prices Message
+#define MESSAGE_TYPE_END_OF_DAY_MARKET_SUMMARY_MESSAGE 0x75                     // End Of Day Market Summary Message
+#define MESSAGE_TYPE_MARKET_EVENT_MESSAGE 0x66                                  // Market Event Message
+#define MESSAGE_TYPE_PRE_OPEN_PRICE_INDICATOR_MESSAGE 0x67                      // Pre Open Price Indicator Message
+#define MESSAGE_TYPE_STRIP_INFO_MESSAGE 0x69                                    // Strip Info Message
+#define MESSAGE_TYPE_INTERVAL_PRICE_LIMIT_NOTIFICATION_MESSAGE 0x56             // Interval Price Limit Notification Message
+#define MESSAGE_TYPE_NEW_FUTURES_STRATEGY_DEFINITION_MESSAGE 0x39               // New Futures Strategy Definition Message
+#define MESSAGE_TYPE_NEW_EXPIRY_MESSAGE 0x52                                    // New Expiry Message
+#define MESSAGE_TYPE_SPECIAL_FIELD_MESSAGE 0x62                                 // Special Field Message
+#define MESSAGE_TYPE_MARKET_SNAPSHOT_ORDER_MESSAGE 0x44                         // Market Snapshot Order Message
+#define MESSAGE_TYPE_ADD_OR_MODIFY_ORDER_MESSAGE 0x45                           // Add Or Modify Order Message
+#define MESSAGE_TYPE_DELETE_ORDER_MESSAGE 0x46                                  // Delete Order Message
+#define MESSAGE_TYPE_MESSAGE_BUNDLE_MARKER 0x54                                 // Message Bundle Marker
+#define MESSAGE_TYPE_FIXING_TRANSITION_MESSAGE 0x33                             // Fixing Transition Message
+#define MESSAGE_TYPE_FIXING_LOCKDOWN_MESSAGE 0x34                               // Fixing Lockdown Message
+#define MESSAGE_TYPE_FIXING_INDICATIVE_PRICE_MESSAGE_MESSAGE 0x30               // Fixing Indicative Price Message Message
+#define MESSAGE_TYPE_TRANSACTION_END_MARKER_FOR_EMPTY_LAST_BUNDLE_MESSAGE 0x65  // Transaction End Marker For Empty Last Bundle Message
+#define MESSAGE_TYPE_MARKET_SNAPSHOT_PRICE_LEVEL_MESSAGE 0x6D                   // Market Snapshot Price Level Message
+#define MESSAGE_TYPE_ADD_PRICE_LEVEL_MESSAGE 0x74                               // Add Price Level Message
+#define MESSAGE_TYPE_CHANGE_PRICE_LEVEL_MESSAGE 0x73                            // Change Price Level Message
+#define MESSAGE_TYPE_DELETE_PRICE_LEVEL_MESSAGE 0x72                            // Delete Price Level Message
+#define MESSAGE_TYPE_NEW_OPTIONS_STRATEGY_DEFINITION_MESSAGE 0x55               // New Options Strategy Definition Message
+#define MESSAGE_TYPE_NEW_OPTIONS_MARKET_DEFINITION_MESSAGE 0x6C                 // New Options Market Definition Message
+#define MESSAGE_TYPE_RFQ_MESSAGE 0x6B                                           // Rfq Message
+#define MESSAGE_TYPE_OPTION_OPEN_INTEREST_MESSAGE 0x76                          // Option Open Interest Message
+#define MESSAGE_TYPE_OPTION_SETTLEMENT_PRICE_MESSAGE 0x77                       // Option Settlement Price Message
+#define MESSAGE_TYPE_OLD_STYLE_OPTIONS_TRADE_AND_MARKET_STATS_MESSAGE 0x57      // Old Style Options Trade And Market Stats Message
+
+// Trading Status: one byte code
+#define TRADING_STATUS_OPEN 0x4F       // Open
+#define TRADING_STATUS_CLOSE 0x43      // Close
+#define TRADING_STATUS_EXPIRED 0x45    // Expired
+#define TRADING_STATUS_PRE_OPEN 0x31   // Pre Open
+#define TRADING_STATUS_PRE_CLOSE 0x32  // Pre Close
+
+// Is Settle Price Official: one byte code
+#define IS_SETTLE_PRICE_OFFICIAL_YES 0x59  // Yes
+#define IS_SETTLE_PRICE_OFFICIAL_NO 0x4E   // No
+
+// Has Previous Day Settlement Price: one byte code
+#define HAS_PREVIOUS_DAY_SETTLEMENT_PRICE_NO 0x4E   // No
+#define HAS_PREVIOUS_DAY_SETTLEMENT_PRICE_YES 0x59  // Yes
+
+// Is System Priced Leg: one byte code
+#define IS_SYSTEM_PRICED_LEG_YES 0x59  // Yes
+#define IS_SYSTEM_PRICED_LEG_NO 0x4E   // No
+
+// Off Market Trade Indicator: one byte code
+#define OFF_MARKET_TRADE_INDICATOR_REGULAR 0x20           // Regular
+#define OFF_MARKET_TRADE_INDICATOR_BLOCK 0x4B             // Block
+#define OFF_MARKET_TRADE_INDICATOR_EFS 0x53               // Efs
+#define OFF_MARKET_TRADE_INDICATOR_EFP 0x45               // Efp
+#define OFF_MARKET_TRADE_INDICATOR_EFP_EFS 0x4F           // Efp Efs
+#define OFF_MARKET_TRADE_INDICATOR_EOO 0x51               // Eoo
+#define OFF_MARKET_TRADE_INDICATOR_EFM 0x49               // Efm
+#define OFF_MARKET_TRADE_INDICATOR_GUARANTEED_CROSS 0x35  // Guaranteed Cross
+#define OFF_MARKET_TRADE_INDICATOR_BASIS 0x34             // Basis
+
+// System Priced Leg Type: one byte code
+#define SYSTEM_PRICED_LEG_TYPE_SYSTEM_PRICED_CRACK_SPREAD_LEG 0x43  // System Priced Crack Spread Leg
+#define SYSTEM_PRICED_LEG_TYPE_SYSTEM_PRICED_LEG 0x53               // System Priced Leg
+
+// Aggressor Side: one byte code
+#define AGGRESSOR_SIDE_NONE 0x20  // None
+#define AGGRESSOR_SIDE_BUY 0x31   // Buy
+#define AGGRESSOR_SIDE_SELL 0x32  // Sell
+
+// Investigation Status: one byte code
+#define INVESTIGATION_STATUS_UNDER_INVESTIGATION 0x31      // Under Investigation
+#define INVESTIGATION_STATUS_INVESTIGATION_COMPLETED 0x32  // Investigation Completed
+
+// Is Official: one byte code
+#define IS_OFFICIAL_YES 0x59  // Yes
+#define IS_OFFICIAL_NO 0x4E   // No
+
+// Status: one byte code
+#define STATUS_CLOSED 0x43    // Closed
+#define STATUS_PREOPEN 0x50   // Preopen
+#define STATUS_LOCKDOWN 0x4C  // Lockdown
+
+// Ipl Hold Type: one byte code
+#define IPL_HOLD_TYPE_IPL_HOLD_START 0x53  // Ipl Hold Start
+#define IPL_HOLD_TYPE_IPL_HOLD_END 0x45    // Ipl Hold End
+
+// Is Up: one byte code
+#define IS_UP_IPL_UPPER_BOUND_VIOLATION 0x59  // Ipl Upper Bound Violation
+#define IS_UP_IPL_LOWER_BOUND_VIOLATION 0x4E  // Ipl Lower Bound Violation
+
+// Market Type Id: 2 byte code
+#define MARKET_TYPE_ID_FINANCIAL_GAS 0x0000                                      // Financial Gas
+#define MARKET_TYPE_ID_FINANCIAL_POWER 0x0001                                    // Financial Power
+#define MARKET_TYPE_ID_OIL 0x0002                                                // Oil
+#define MARKET_TYPE_ID_IPE_NATURAL_GAS_FUTURES 0x0003                            // Ipe Natural Gas Futures
+#define MARKET_TYPE_ID_IPE_GAS_OIL_FUTURES 0x0004                                // Ipe Gas Oil Futures
+#define MARKET_TYPE_ID_IPE_BRENT_FUTURES 0x0005                                  // Ipe Brent Futures
+#define MARKET_TYPE_ID_IPE_UK_ELECTRICITY_FUTURES_PEAK 0x0007                    // Ipe Uk Electricity Futures Peak
+#define MARKET_TYPE_ID_IPE_UK_ELECTRICITY_FUTURES_BASE 0x0008                    // Ipe Uk Electricity Futures Base
+#define MARKET_TYPE_ID_ICE_WTI_CRUDE_FUTURES 0x0009                              // Ice Wti Crude Futures
+#define MARKET_TYPE_ID_G_C_NEWCASTLE_COAL_FUTURES 0x000A                         // G C Newcastle Coal Futures
+#define MARKET_TYPE_ID_ICE_BRENT_WTI_FUTURES_SPREAD 0x000B                       // Ice Brent Wti Futures Spread
+#define MARKET_TYPE_ID_IPEECX_EUROPEAN_EMISSIONS 0x000C                          // Ipeecx European Emissions
+#define MARKET_TYPE_ID_ICE_HEATING_OIL_FUTURES 0x000D                            // Ice Heating Oil Futures
+#define MARKET_TYPE_ID_ICE_HEATING_OIL_WTI_FUTURES_CRACK 0x000E                  // Ice Heating Oil Wti Futures Crack
+#define MARKET_TYPE_ID_ICE_NYH_RBOB_GASOLINE_FUTURES 0x000F                      // Ice Nyh Rbob Gasoline Futures
+#define MARKET_TYPE_ID_ICE_NYH_RBOB_GASOLINE_WTI_FUTURES_CRACK 0x0010            // Ice Nyh Rbob Gasoline Wti Futures Crack
+#define MARKET_TYPE_ID_ICE_ROTTERDAM_COAL_FUTURES 0x0011                         // Ice Rotterdam Coal Futures
+#define MARKET_TYPE_ID_ICE_RICHARDS_BAY_COAL_FUTURES 0x0012                      // Ice Richards Bay Coal Futures
+#define MARKET_TYPE_ID_ICE_ROTTERDAM_RICHARDS_BAY_COAL_FUTURES_SPREAD 0x0013     // Ice Rotterdam Richards Bay Coal Futures Spread
+#define MARKET_TYPE_ID_COCOA 0x0014                                              // Cocoa
+#define MARKET_TYPE_ID_COFFEE_C 0x0015                                           // Coffee C
+#define MARKET_TYPE_ID_COTTON_NO_2 0x0016                                        // Cotton No 2
+#define MARKET_TYPE_ID_FCOJ_A 0x0017                                             // Fcoj A
+#define MARKET_TYPE_ID_SUGAR_NO_11 0x0018                                        // Sugar No 11
+#define MARKET_TYPE_ID_HEAT_RATE_SPREAD 0x0019                                   // Heat Rate Spread
+#define MARKET_TYPE_ID_US_DOLLAR_INDEX 0x001A                                    // Us Dollar Index
+#define MARKET_TYPE_ID_CANADIAN_OILSEEDS 0x0024                                  // Canadian Oilseeds
+#define MARKET_TYPE_ID_ECX_CER_FUTURES 0x0026                                    // Ecx Cer Futures
+#define MARKET_TYPE_ID_FOREIGN_EXCHANGE 0x0027                                   // Foreign Exchange
+#define MARKET_TYPE_ID_FINANCIAL_INDEX_DATA 0x0028                               // Financial Index Data
+#define MARKET_TYPE_ID_SUGAR_NO_16 0x0029                                        // Sugar No 16
+#define MARKET_TYPE_ID_ECX_EUACER_FUTURES_SPREAD 0x002A                          // Ecx Euacer Futures Spread
+#define MARKET_TYPE_ID_HENRY_HUB 0x002C                                          // Henry Hub
+#define MARKET_TYPE_ID_DUTCH_TTF_GAS_FUTURES 0x0030                              // Dutch Ttf Gas Futures
+#define MARKET_TYPE_ID_GERMAN_NATURAL_GAS_FUTURES 0x0032                         // German Natural Gas Futures
+#define MARKET_TYPE_ID_EUROPEAN_GAS_SPREADS 0x0033                               // European Gas Spreads
+#define MARKET_TYPE_ID_CANADIAN_FINANCIAL_GAS 0x0035                             // Canadian Financial Gas
+#define MARKET_TYPE_ID_NGX_CANADIAN_PHYSICAL_CRUDE 0x0036                        // Ngx Canadian Physical Crude
+#define MARKET_TYPE_ID_US_COAL_FUTURES 0x0037                                    // Us Coal Futures
+#define MARKET_TYPE_ID_FOB_INDO_SUBBIT_COAL_FUTURES 0x0039                       // Fob Indo Subbit Coal Futures
+#define MARKET_TYPE_ID_HEATING_OIL_BRENT_FUTURES_CRACK 0x003A                    // Heating Oil Brent Futures Crack
+#define MARKET_TYPE_ID_NYH_RBOB_GASOLINE_BRENT_FUTURES_CRACK 0x003B              // Nyh Rbob Gasoline Brent Futures Crack
+#define MARKET_TYPE_ID_WET_FREIGHT 0x003C                                        // Wet Freight
+#define MARKET_TYPE_ID_DRY_FREIGHT 0x003D                                        // Dry Freight
+#define MARKET_TYPE_ID_FERROUS_METALS 0x003E                                     // Ferrous Metals
+#define MARKET_TYPE_ID_PLATTS_VARIABLE_OIL 0x003F                                // Platts Variable Oil
+#define MARKET_TYPE_ID_NYH_RBOB_GASOLINE_HEATING_OIL_SPREAD 0x0042               // Nyh Rbob Gasoline Heating Oil Spread
+#define MARKET_TYPE_ID_PHYSICAL_ENVIRONMENTAL 0x0045                             // Physical Environmental
+#define MARKET_TYPE_ID_HEATING_OIL_LS_GASOIL_FUTURES_SPREAD 0x0046               // Heating Oil Ls Gasoil Futures Spread
+#define MARKET_TYPE_ID_LS_GASOIL_BRENT_FUTURES_CRACK 0x0047                      // Ls Gasoil Brent Futures Crack
+#define MARKET_TYPE_ID_NYH_RBOB_GASOLINE_LS_GASOIL_FUTURES_SPREAD 0x0048         // Nyh Rbob Gasoline Ls Gasoil Futures Spread
+#define MARKET_TYPE_ID_ECX_EUAA_FUTURES 0x0054                                   // Ecx Euaa Futures
+#define MARKET_TYPE_ID_ECX_CEREUAA_FUTURES_SPREAD 0x0055                         // Ecx Cereuaa Futures Spread
+#define MARKET_TYPE_ID_ECX_EUAAEUA_FUTURES_SPREAD 0x0056                         // Ecx Euaaeua Futures Spread
+#define MARKET_TYPE_ID_SOYBEAN 0x0059                                            // Soybean
+#define MARKET_TYPE_ID_ECX_EUA_EIB_AUCTION 0x005C                                // Ecx Eua Eib Auction
+#define MARKET_TYPE_ID_FINANCIAL_LNG 0x005D                                      // Financial Lng
+#define MARKET_TYPE_ID_EUA_UK_AUCTION 0x005F                                     // Eua Uk Auction
+#define MARKET_TYPE_ID_EUAA_UK_AUCTION 0x0060                                    // Euaa Uk Auction
+#define MARKET_TYPE_ID_CFR_SOUTH_CHINA_COAL_FUTURES 0x0061                       // Cfr South China Coal Futures
+#define MARKET_TYPE_ID_BELGIAN_POWER_FUTURES 0x0062                              // Belgian Power Futures
+#define MARKET_TYPE_ID_DUTCH_POWER_FUTURES 0x0063                                // Dutch Power Futures
+#define MARKET_TYPE_ID_G_C_NEWCASTLE_FOB_INDO_SUBBIT_COAL_FUTURES_SPREAD 0x0064  // G C Newcastle Fob Indo Subbit Coal Futures Spread
+#define MARKET_TYPE_ID_RICHARDS_BAYG_C_NEWCASTLE_COAL_FUTURES_SPREAD 0x0065      // Richards Bayg C Newcastle Coal Futures Spread
+#define MARKET_TYPE_ID_FCOJ_A_MINI 0x0066                                        // Fcoj A Mini
+#define MARKET_TYPE_ID_CIF_US 0x0068                                             // Cif Us
+#define MARKET_TYPE_ID_D_6_RIN 0x006C                                            // D 6 Rin
+#define MARKET_TYPE_ID_EUROPEAN_POWER_SPREADS 0x006F                             // European Power Spreads
+#define MARKET_TYPE_ID_TAQA 0x0070                                               // Taqa
+#define MARKET_TYPE_ID_BELGIAN_ZTP_GAS_SPOT 0x0071                               // Belgian Ztp Gas Spot
+#define MARKET_TYPE_ID_DUTCH_TTF_GAS_SPOT 0x0072                                 // Dutch Ttf Gas Spot
+#define MARKET_TYPE_ID_DUTCH_TTF_GAS_STORAGE 0x0073                              // Dutch Ttf Gas Storage
+#define MARKET_TYPE_ID_EUROPEAN_GAS_SPOT_SPREADS 0x0074                          // European Gas Spot Spreads
+#define MARKET_TYPE_ID_BELGIAN_ZTP_GAS_FUTURES 0x0075                            // Belgian Ztp Gas Futures
+#define MARKET_TYPE_ID_UK_OCM_GAS_SPOT 0x0076                                    // Uk Ocm Gas Spot
+#define MARKET_TYPE_ID_BELGIAN_GAS_SPREADS 0x0077                                // Belgian Gas Spreads
+#define MARKET_TYPE_ID_FINANCIAL_OLEFINS 0x007C                                  // Financial Olefins
+#define MARKET_TYPE_ID_FINANCIAL_MONOMERS 0x007D                                 // Financial Monomers
+#define MARKET_TYPE_ID_PLATTS_VARIABLE_OIL_URALS 0x007E                          // Platts Variable Oil Urals
+#define MARKET_TYPE_ID_ENDEX_SPOT_MARKET_INDICES 0x007F                          // Endex Spot Market Indices
+#define MARKET_TYPE_ID_INTEREST_RATE_FUTURES 0x0083                              // Interest Rate Futures
+#define MARKET_TYPE_ID_SINGAPORE_ENERGY 0x0085                                   // Singapore Energy
+#define MARKET_TYPE_ID_SINGAPORE_FINANCIALS 0x0086                               // Singapore Financials
+#define MARKET_TYPE_ID_SINGAPORE_METALS 0x0087                                   // Singapore Metals
+#define MARKET_TYPE_ID_ITALIAN_NATURAL_GAS_FUTURES 0x0088                        // Italian Natural Gas Futures
+#define MARKET_TYPE_ID_ITALIAN_POWER_FUTURES 0x0089                              // Italian Power Futures
+#define MARKET_TYPE_ID_CREDIT_SWAP_DATA 0x008B                                   // Credit Swap Data
+#define MARKET_TYPE_ID_GOLD_FIXING 0x008C                                        // Gold Fixing
+#define MARKET_TYPE_ID_NORTH_SEA_PARTIALS 0x008D                                 // North Sea Partials
+#define MARKET_TYPE_ID_EU_FINANCIAL_POWER_SPREADS 0x008E                         // Eu Financial Power Spreads
+#define MARKET_TYPE_ID_EU_FINANCIAL_POWER_FUTURES 0x008F                         // Eu Financial Power Futures
+#define MARKET_TYPE_ID_OIL_CAD 0x0090                                            // Oil Cad
+#define MARKET_TYPE_ID_SILVER_FIXING 0x0093                                      // Silver Fixing
+#define MARKET_TYPE_ID_UK_SPARK_SPREAD 0x0095                                    // Uk Spark Spread
+#define MARKET_TYPE_ID_UK_OCM_PHYSICAL_GAS_SPOT 0x0096                           // Uk Ocm Physical Gas Spot
+#define MARKET_TYPE_ID_JAPAN_DOMESTIC_WATERBORNE 0x0098                          // Japan Domestic Waterborne
+#define MARKET_TYPE_ID_DAILY_METALS 0x009A                                       // Daily Metals
+#define MARKET_TYPE_ID_BRIX_ENERGIA_FIN 0x009B                                   // Brix Energia Fin
+#define MARKET_TYPE_ID_JAPAN_DOMESTIC_RACK 0x009C                                // Japan Domestic Rack
+#define MARKET_TYPE_ID_FINANCIAL_US_LNG 0x009D                                   // Financial Us Lng
+#define MARKET_TYPE_ID_ICE_ROTTERDAM_NEWCASTLE_COAL_FUTURES_SPREAD 0x00A0        // Ice Rotterdam Newcastle Coal Futures Spread
+#define MARKET_TYPE_ID_OIL_AMERICAS 0x00A5                                       // Oil Americas
+#define MARKET_TYPE_ID_PLATTS_PETROCHEMICAL 0x00A7                               // Platts Petrochemical
+#define MARKET_TYPE_ID_PERMIAN_WTI_FUTURES 0x00A8                                // Permian Wti Futures
+#define MARKET_TYPE_ID_ENDEX_EQUITY_INDICES 0x00AA                               // Endex Equity Indices
+#define MARKET_TYPE_ID_ENDEX_SINGLE_STOCK_OPTIONS 0x00AB                         // Endex Single Stock Options
+#define MARKET_TYPE_ID_IFUS_ICE_INDICES 0x00AC                                   // Ifus Ice Indices
+#define MARKET_TYPE_ID_PLATTS_ASIA_BUNKER 0x00AD                                 // Platts Asia Bunker
+#define MARKET_TYPE_ID_SOFR_FUTURES 0x00B1                                       // Sofr Futures
+#define MARKET_TYPE_ID_DIGITAL_ASSET_FUTURES 0x00B2                              // Digital Asset Futures
+#define MARKET_TYPE_ID_PERMIAN_BRENT_FUTURES_SPREAD 0x00B3                       // Permian Brent Futures Spread
+#define MARKET_TYPE_ID_PERMIAN_WTI_FUTURES_SPREAD 0x00B4                         // Permian Wti Futures Spread
+#define MARKET_TYPE_ID_LIFFE_STI_RS 0x00C8                                       // Liffe Sti Rs
+#define MARKET_TYPE_ID_LIFFE_BONDS 0x00CA                                        // Liffe Bonds
+#define MARKET_TYPE_ID_LIFFE_SWAPNOTES 0x00CB                                    // Liffe Swapnotes
+#define MARKET_TYPE_ID_LIFFE_COMMODITIES 0x00CD                                  // Liffe Commodities
+#define MARKET_TYPE_ID_METALS 0x00CE                                             // Metals
+#define MARKET_TYPE_ID_IFUS_EQUITY_INDICES 0x00CF                                // Ifus Equity Indices
+#define MARKET_TYPE_ID_GCF_REPO 0x00D0                                           // Gcf Repo
+#define MARKET_TYPE_ID_LIFFE_THREE_MONTH_EURO_AND_EONIA 0x00D1                   // Liffe Three Month Euro And Eonia
+#define MARKET_TYPE_ID_EURODOLLAR 0x00D2                                         // Eurodollar
+#define MARKET_TYPE_ID_LIFFE_EQUITY_DERIVATIVES_NON_US_BASED 0x00D3              // Liffe Equity Derivatives Non Us Based
+#define MARKET_TYPE_ID_LIFFE_EQUITY_DERIVATIVES_US_BASED 0x00D4                  // Liffe Equity Derivatives Us Based
+#define MARKET_TYPE_ID_LIFFE_INDEX_OPTIONS 0x00D5                                // Liffe Index Options
+#define MARKET_TYPE_ID_LIFFE_INDEX_FUTURES_US_RESTRICTED 0x00D6                  // Liffe Index Futures Us Restricted
+#define MARKET_TYPE_ID_LIFFE_INDEX_FUTURES_NON_US_RESTRICTED 0x00D7              // Liffe Index Futures Non Us Restricted
+#define MARKET_TYPE_ID_PHYSICAL_GAS 0x0131                                       // Physical Gas
+#define MARKET_TYPE_ID_POWER 0x0132                                              // Power
+#define MARKET_TYPE_ID_NGX_PHYSICAL_GAS 0x013A                                   // Ngx Physical Gas
+#define MARKET_TYPE_ID_NGX_FINANCIAL_POWER 0x013B                                // Ngx Financial Power
+#define MARKET_TYPE_ID_NGX_FINANCIAL_GAS 0x013C                                  // Ngx Financial Gas
+#define MARKET_TYPE_ID_FINANCIAL_NGL 0x013D                                      // Financial Ngl
+#define MARKET_TYPE_ID_OLEFINS_POLYMERS 0x013E                                   // Olefins Polymers
+#define MARKET_TYPE_ID_PHYSICAL_NGL 0x013F                                       // Physical Ngl
+#define MARKET_TYPE_ID_PHYSICAL_OIL 0x0140                                       // Physical Oil
+#define MARKET_TYPE_ID_TEST_IPE 0x0258                                           // Test Ipe
+#define MARKET_TYPE_ID_TEST_NYBOT 0x0259                                         // Test Nybot
+#define MARKET_TYPE_ID_TEST_NDEX 0x025A                                          // Test Ndex
+#define MARKET_TYPE_ID_TEST_LIFFEUK_1 0x025B                                     // Test Liffeuk 1
+#define MARKET_TYPE_ID_TEST_LIFFEUK_2 0x025C                                     // Test Liffeuk 2
+
+// Settlement Type: one byte code
+#define SETTLEMENT_TYPE_FINANCIAL 0x30  // Financial
+#define SETTLEMENT_TYPE_PHYSICAL 0x31   // Physical
+
+// Gt Allowed: one byte code
+#define GT_ALLOWED_YES 0x59  // Yes
+#define GT_ALLOWED_NO 0x4E   // No
+
+// Cross Order Supported: one byte code
+#define CROSS_ORDER_SUPPORTED_YES 0x59  // Yes
+#define CROSS_ORDER_SUPPORTED_NO 0x4E   // No
+
+// Mifid Regulated Market: one byte code
+#define MIFID_REGULATED_MARKET_YES 0x59  // Yes
+#define MIFID_REGULATED_MARKET_NO 0x4E   // No
+
+// Side: one byte code
+#define SIDE_NONE 0x20   // None
+#define SIDE_BID 0x31    // Bid
+#define SIDE_OFFER 0x32  // Offer
+
+// Start Or End: one byte code
+#define START_OR_END_START 0x53  // Start
+#define START_OR_END_END 0x45    // End
+
+// Is Transaction End: one byte code
+#define IS_TRANSACTION_END_YES 0x59  // Yes
+#define IS_TRANSACTION_END_NO 0x4E   // No
+
+// Is Balanced: one byte code
+#define IS_BALANCED_YES 0x59  // Yes
+#define IS_BALANCED_NO 0x4E   // No
+
+// Is Final: one byte code
+#define IS_FINAL_YES 0x59  // Yes
+#define IS_FINAL_NO 0x4E   // No
+
+// Option Type: one byte code
+#define OPTION_TYPE_CALL 0x43  // Call
+#define OPTION_TYPE_PUT 0x50   // Put
+
+// Options Style: one byte code
+#define OPTIONS_STYLE_AMERICAN 0x41  // American
+#define OPTIONS_STYLE_EUROPEAN 0x45  // European
+#define OPTIONS_STYLE_NONE 0x30      // None
+#define OPTIONS_STYLE_ASIAN 0x33     // Asian
+#define OPTIONS_STYLE_ONE_TIME 0x34  // One Time
+
+// Options Expiration Type: one byte code
+#define OPTIONS_EXPIRATION_TYPE_MONTHLY 0x4D  // Monthly
+#define OPTIONS_EXPIRATION_TYPE_DAILY 0x44    // Daily
+
+// Is Block Only: one byte code
+#define IS_BLOCK_ONLY_YES 0x59  // Yes
+#define IS_BLOCK_ONLY_NO 0x4E   // No
+
+// Guaranteed Cross Supported: one byte code
+#define GUARANTEED_CROSS_SUPPORTED_YES 0x59  // Yes
+#define GUARANTEED_CROSS_SUPPORTED_NO 0x4E   // No
+
+// Is Tradable: one byte code
+#define IS_TRADABLE_YES 0x59  // Yes
+#define IS_TRADABLE_NO 0x4E   // No
+
+// Event Code: one byte code
+#define EVENT_CODE_NORMAL_TRADE 0x30     // Normal Trade
+#define EVENT_CODE_CANCELLED_TRADE 0x31  // Cancelled Trade
+#define EVENT_CODE_ADJUSTED_TRADE 0x32   // Adjusted Trade
 
 // ---- Packet Header: 16 bytes -------------------------------------------------
 
@@ -31,7 +375,7 @@ entrypoint typedef struct _PacketHeader {
 
 // iMpact message header
 entrypoint typedef struct _MessageHeader {
-  UINT8 message_type;  // byte 0
+  UINT8 message_type;  // byte 0, values MESSAGE_TYPE_
   UINT16BE length;     // bytes 1 to 2
 } MessageHeader;
 
@@ -41,7 +385,7 @@ entrypoint typedef struct _MessageHeader {
 entrypoint typedef struct _MarketSnapshotMessage {
   UINT32BE market_id;                                   // bytes 0 to 3, signed, read here as unsigned
   UINT16BE market_type;                                 // bytes 4 to 5, signed, read here as unsigned
-  UINT8 trading_status;                                 // byte 6
+  UINT8 trading_status;                                 // byte 6, values TRADING_STATUS_
   UINT32BE volume;                                      // bytes 7 to 10, signed, read here as unsigned
   UINT32BE block_volume;                                // bytes 11 to 14, signed, read here as unsigned
   UINT32BE efs_volume;                                  // bytes 15 to 18, signed, read here as unsigned
@@ -60,9 +404,9 @@ entrypoint typedef struct _MarketSnapshotMessage {
   UINT32BE last_message_sequence_id;                    // bytes 99 to 102, signed, read here as unsigned
   UINT8 reserved_2[2];                                  // bytes 103 to 104
   UINT8 open_interest_date[10];                         // bytes 105 to 114
-  UINT8 is_settle_price_official;                       // byte 115
+  UINT8 is_settle_price_official;                       // byte 115, values IS_SETTLE_PRICE_OFFICIAL_
   UINT64BE settlement_price;                            // bytes 116 to 123, signed, read here as unsigned
-  UINT8 has_previous_day_settlement_price;              // byte 124
+  UINT8 has_previous_day_settlement_price;              // byte 124, values HAS_PREVIOUS_DAY_SETTLEMENT_PRICE_
   UINT64BE previous_day_settlement_price;               // bytes 125 to 132, signed, read here as unsigned
 } MarketSnapshotMessage;
 
@@ -72,15 +416,15 @@ entrypoint typedef struct _MarketSnapshotMessage {
 entrypoint typedef struct _TradeMessage {
   UINT32BE market_id;                      // bytes 0 to 3, signed, read here as unsigned
   UINT64BE trade_id;                       // bytes 4 to 11, signed, read here as unsigned
-  UINT8 is_system_priced_leg;              // byte 12
+  UINT8 is_system_priced_leg;              // byte 12, values IS_SYSTEM_PRICED_LEG_
   UINT64BE price;                          // bytes 13 to 20, signed, read here as unsigned
   UINT32BE quantity;                       // bytes 21 to 24, signed, read here as unsigned
-  UINT8 off_market_trade_indicator;        // byte 25
+  UINT8 off_market_trade_indicator;        // byte 25, values OFF_MARKET_TRADE_INDICATOR_
   UINT64BE transact_date_time;             // bytes 26 to 33, signed, read here as unsigned
-  UINT8 system_priced_leg_type;            // byte 34
+  UINT8 system_priced_leg_type;            // byte 34, values SYSTEM_PRICED_LEG_TYPE_
   UINT8 is_implied_spread_at_market_open;  // byte 35
   UINT8 is_adjusted_trade;                 // byte 36
-  UINT8 aggressor_side;                    // byte 37
+  UINT8 aggressor_side;                    // byte 37, values AGGRESSOR_SIDE_
   UINT8 extra_flags;                       // byte 38, signed, read here as unsigned
   UINT8 off_market_trade_type[3];          // bytes 39 to 41
   UINT32BE sequence_within_millis;         // bytes 42 to 45, signed, read here as unsigned
@@ -98,7 +442,7 @@ entrypoint typedef struct _SpotMarketTradeMessage {
   UINT8 extra_flags;                  // byte 32, signed, read here as unsigned
   UINT64BE delivery_begin_date_time;  // bytes 33 to 40, signed, read here as unsigned
   UINT64BE delivery_end_date_time;    // bytes 41 to 48, signed, read here as unsigned
-  UINT8 is_system_priced_leg;         // byte 49
+  UINT8 is_system_priced_leg;         // byte 49, values IS_SYSTEM_PRICED_LEG_
 } SpotMarketTradeMessage;
 
 // ---- Investigated Trade Message: 37 bytes ------------------------------------
@@ -109,9 +453,9 @@ entrypoint typedef struct _InvestigatedTradeMessage {
   UINT64BE trade_id;                 // bytes 4 to 11, signed, read here as unsigned
   UINT64BE price;                    // bytes 12 to 19, signed, read here as unsigned
   UINT32BE quantity;                 // bytes 20 to 23, signed, read here as unsigned
-  UINT8 off_market_trade_indicator;  // byte 24
+  UINT8 off_market_trade_indicator;  // byte 24, values OFF_MARKET_TRADE_INDICATOR_
   UINT64BE message_date_time;        // bytes 25 to 32, signed, read here as unsigned
-  UINT8 investigation_status;        // byte 33
+  UINT8 investigation_status;        // byte 33, values INVESTIGATION_STATUS_
   UINT8 off_market_trade_type[3];    // bytes 34 to 36
 } InvestigatedTradeMessage;
 
@@ -123,7 +467,7 @@ entrypoint typedef struct _CancelledTradeMessage {
   UINT64BE trade_id;                 // bytes 4 to 11, signed, read here as unsigned
   UINT64BE price;                    // bytes 12 to 19, signed, read here as unsigned
   UINT32BE quantity;                 // bytes 20 to 23, signed, read here as unsigned
-  UINT8 off_market_trade_indicator;  // byte 24
+  UINT8 off_market_trade_indicator;  // byte 24, values OFF_MARKET_TRADE_INDICATOR_
   UINT64BE message_date_time;        // bytes 25 to 32, signed, read here as unsigned
   UINT8 off_market_trade_type[3];    // bytes 33 to 35
 } CancelledTradeMessage;
@@ -148,7 +492,7 @@ entrypoint typedef struct _MarketStatisticsMessage {
 // Market State Change Message
 entrypoint typedef struct _MarketStateChangeMessage {
   UINT32BE market_id;          // bytes 0 to 3, signed, read here as unsigned
-  UINT8 trading_status;        // byte 4
+  UINT8 trading_status;        // byte 4, values TRADING_STATUS_
   UINT64BE message_date_time;  // bytes 5 to 12, signed, read here as unsigned
 } MarketStateChangeMessage;
 
@@ -197,7 +541,7 @@ entrypoint typedef struct _SettlementPriceMessage {
   UINT32BE market_id;                                   // bytes 0 to 3, signed, read here as unsigned
   UINT64BE settlement_price_with_deal_price_precision;  // bytes 4 to 11, signed, read here as unsigned
   UINT64BE message_date_time;                           // bytes 12 to 19, signed, read here as unsigned
-  UINT8 is_official;                                    // byte 20
+  UINT8 is_official;                                    // byte 20, values IS_OFFICIAL_
   UINT64BE valuation_date_time;                         // bytes 21 to 28, signed, read here as unsigned
   UINT64BE settlement_price;                            // bytes 29 to 36, signed, read here as unsigned
 } SettlementPriceMessage;
@@ -211,7 +555,7 @@ entrypoint typedef struct _IndexPricesMessage {
   UINT8 short_name[30];                    // bytes 12 to 41
   UINT64BE published_date_time;            // bytes 42 to 49, signed, read here as unsigned
   UINT8 valuation_date_applying_date[10];  // bytes 50 to 59
-  UINT8 status;                            // byte 60
+  UINT8 status;                            // byte 60, values STATUS_
   UINT32BE quantity;                       // bytes 61 to 64, signed, read here as unsigned
 } IndexPricesMessage;
 
@@ -275,9 +619,9 @@ entrypoint typedef struct _StripInfoMessage {
 // Interval Price Limit (IPL) might be enabled for certain markets. IPL check is to prevent sudden movements (in both directions) in the market during a short period of time.
 entrypoint typedef struct _IntervalPriceLimitNotificationMessage {
   UINT32BE market_id;               // bytes 0 to 3, signed, read here as unsigned
-  UINT8 ipl_hold_type;              // byte 4
+  UINT8 ipl_hold_type;              // byte 4, values IPL_HOLD_TYPE_
   UINT64BE notification_date_time;  // bytes 5 to 12, signed, read here as unsigned
-  UINT8 is_up;                      // byte 13
+  UINT8 is_up;                      // byte 13, values IS_UP_
   UINT32BE ipl_hold_duration;       // bytes 14 to 17, signed, read here as unsigned
   UINT64BE ipl_up;                  // bytes 18 to 25, signed, read here as unsigned
   UINT64BE ipl_down;                // bytes 26 to 33, signed, read here as unsigned
@@ -288,7 +632,7 @@ entrypoint typedef struct _IntervalPriceLimitNotificationMessage {
 // New Expiry message will be sent out when a new equity market is created during the day.
 entrypoint typedef struct _NewExpiryMessage {
   UINT32BE market_id;                            // bytes 0 to 3, signed, read here as unsigned
-  UINT16BE market_type_id;                       // bytes 4 to 5, signed, read here as unsigned
+  UINT16BE market_type_id;                       // bytes 4 to 5, values MARKET_TYPE_ID_, signed, read here as unsigned
   UINT8 order_price_denominator;                 // byte 6
   UINT32BE increment_price;                      // bytes 7 to 10, signed, read here as unsigned
   UINT32BE increment_qty;                        // bytes 11 to 14, signed, read here as unsigned
@@ -321,11 +665,11 @@ entrypoint typedef struct _NewExpiryMessage {
   UINT8 isin[12];                                // bytes 452 to 463
   UINT8 num_decimals_options_price;              // byte 464
   UINT32BE hedge_market_id;                      // bytes 465 to 468, signed, read here as unsigned
-  UINT8 settlement_type;                         // byte 469
-  UINT8 gt_allowed;                              // byte 470
-  UINT8 cross_order_supported;                   // byte 471
+  UINT8 settlement_type;                         // byte 469, values SETTLEMENT_TYPE_
+  UINT8 gt_allowed;                              // byte 470, values GT_ALLOWED_
+  UINT8 cross_order_supported;                   // byte 471, values CROSS_ORDER_SUPPORTED_
   UINT8 unit_of_measure[30];                     // bytes 472 to 501
-  UINT8 mifid_regulated_market;                  // byte 502
+  UINT8 mifid_regulated_market;                  // byte 502, values MIFID_REGULATED_MARKET_
   UINT16BE screen_last_trade_year;               // bytes 503 to 504, signed, read here as unsigned
   UINT16BE screen_last_trade_month;              // bytes 505 to 506, signed, read here as unsigned
   UINT16BE screen_last_trade_day;                // bytes 507 to 508, signed, read here as unsigned
@@ -338,7 +682,7 @@ entrypoint typedef struct _MarketSnapshotOrderMessage {
   UINT32BE market_id;               // bytes 0 to 3, signed, read here as unsigned
   UINT64BE order_id;                // bytes 4 to 11, signed, read here as unsigned
   UINT16BE order_sequence_id;       // bytes 12 to 13, signed, read here as unsigned
-  UINT8 side;                       // byte 14
+  UINT8 side;                       // byte 14, values SIDE_
   UINT64BE price;                   // bytes 15 to 22, signed, read here as unsigned
   UINT32BE quantity;                // bytes 23 to 26, signed, read here as unsigned
   UINT8 is_implied;                 // byte 27
@@ -354,7 +698,7 @@ entrypoint typedef struct _AddOrModifyOrderMessage {
   UINT32BE market_id;               // bytes 0 to 3, signed, read here as unsigned
   UINT64BE order_id;                // bytes 4 to 11, signed, read here as unsigned
   UINT16BE order_sequence_id;       // bytes 12 to 13, signed, read here as unsigned
-  UINT8 side;                       // byte 14
+  UINT8 side;                       // byte 14, values SIDE_
   UINT64BE price;                   // bytes 15 to 22, signed, read here as unsigned
   UINT32BE quantity;                // bytes 23 to 26, signed, read here as unsigned
   UINT8 is_implied;                 // byte 27
@@ -379,9 +723,9 @@ entrypoint typedef struct _DeleteOrderMessage {
 
 // This message indicates where a bundle of messages starts or ends.
 entrypoint typedef struct _MessageBundleMarker {
-  UINT8 start_or_end;             // byte 0
+  UINT8 start_or_end;             // byte 0, values START_OR_END_
   UINT64BE trade_transaction_id;  // bytes 1 to 8, signed, read here as unsigned
-  UINT8 is_transaction_end;       // byte 9
+  UINT8 is_transaction_end;       // byte 9, values IS_TRANSACTION_END_
 } MessageBundleMarker;
 
 // ---- Fixing Transition Message: 25 bytes -------------------------------------
@@ -389,7 +733,7 @@ entrypoint typedef struct _MessageBundleMarker {
 // This message supports ICE Benchmark Administration s (IBA) electronic Gold Auction and it is disseminated when there is a transition of the fixing market.
 entrypoint typedef struct _FixingTransitionMessage {
   UINT32BE market_id;                // bytes 0 to 3, signed, read here as unsigned
-  UINT8 status;                      // byte 4
+  UINT8 status;                      // byte 4, values STATUS_
   UINT64BE auction_end_time;         // bytes 5 to 12, signed, read here as unsigned
   UINT32BE threshold_imbalance_qty;  // bytes 13 to 16, signed, read here as unsigned
   UINT64BE message_date_time;        // bytes 17 to 24, signed, read here as unsigned
@@ -407,8 +751,8 @@ entrypoint typedef struct _FixingLockdownMessage {
   UINT32BE agg_bid_qty;        // bytes 44 to 47, signed, read here as unsigned
   UINT32BE agg_offer_qty;      // bytes 48 to 51, signed, read here as unsigned
   UINT64BE usd_price;          // bytes 52 to 59, signed, read here as unsigned
-  UINT8 is_balanced;           // byte 60
-  UINT8 is_final;              // byte 61
+  UINT8 is_balanced;           // byte 60, values IS_BALANCED_
+  UINT8 is_final;              // byte 61, values IS_FINAL_
   UINT64BE gbp_price;          // bytes 62 to 69, signed, read here as unsigned
   UINT64BE eur_price;          // bytes 70 to 77, signed, read here as unsigned
 } FixingLockdownMessage;
@@ -437,7 +781,7 @@ entrypoint typedef struct _TransactionEndMarkerForEmptyLastBundleMessage {
 // This message is for price level in snapshot only.
 entrypoint typedef struct _MarketSnapshotPriceLevelMessage {
   UINT32BE market_id;            // bytes 0 to 3, signed, read here as unsigned
-  UINT8 side;                    // byte 4
+  UINT8 side;                    // byte 4, values SIDE_
   UINT8 price_level_position;    // byte 5, signed, read here as unsigned
   UINT64BE price;                // bytes 6 to 13, signed, read here as unsigned
   UINT32BE quantity;             // bytes 14 to 17, signed, read here as unsigned
@@ -451,7 +795,7 @@ entrypoint typedef struct _MarketSnapshotPriceLevelMessage {
 // Upon receipt of this message, client should add/insert a price level at the specified position in the book for the given market, and push down the price levels that were previously at or below that position.
 entrypoint typedef struct _AddPriceLevelMessage {
   UINT32BE market_id;            // bytes 0 to 3, signed, read here as unsigned
-  UINT8 side;                    // byte 4
+  UINT8 side;                    // byte 4, values SIDE_
   UINT8 price_level_position;    // byte 5, signed, read here as unsigned
   UINT64BE price;                // bytes 6 to 13, signed, read here as unsigned
   UINT32BE quantity;             // bytes 14 to 17, signed, read here as unsigned
@@ -466,7 +810,7 @@ entrypoint typedef struct _AddPriceLevelMessage {
 // Upon receipt of this message, client should update the price level at the specified position in its book for the given market.
 entrypoint typedef struct _ChangePriceLevelMessage {
   UINT32BE market_id;            // bytes 0 to 3, signed, read here as unsigned
-  UINT8 side;                    // byte 4
+  UINT8 side;                    // byte 4, values SIDE_
   UINT8 price_level_position;    // byte 5, signed, read here as unsigned
   UINT64BE price;                // bytes 6 to 13, signed, read here as unsigned
   UINT32BE quantity;             // bytes 14 to 17, signed, read here as unsigned
@@ -481,7 +825,7 @@ entrypoint typedef struct _ChangePriceLevelMessage {
 // Upon receipt of this message, client should remove the price level at the specified position in its book for the given market.
 entrypoint typedef struct _DeletePriceLevelMessage {
   UINT32BE market_id;          // bytes 0 to 3, signed, read here as unsigned
-  UINT8 side;                  // byte 4
+  UINT8 side;                  // byte 4, values SIDE_
   UINT8 price_level_position;  // byte 5, signed, read here as unsigned
   UINT64BE timestamp;          // bytes 6 to 13, signed, read here as unsigned
 } DeletePriceLevelMessage;
@@ -493,12 +837,12 @@ entrypoint typedef struct _NewOptionsMarketDefinitionMessage {
   UINT32BE market_id;                 // bytes 0 to 3, signed, read here as unsigned
   UINT32BE underlying_market_id;      // bytes 4 to 7, signed, read here as unsigned
   UINT8 futures_contract_symbol[70];  // bytes 8 to 77
-  UINT8 trading_status;               // byte 78
+  UINT8 trading_status;               // byte 78, values TRADING_STATUS_
   UINT8 order_price_denominator;      // byte 79
   UINT32BE increment_qty;             // bytes 80 to 83, signed, read here as unsigned
   UINT32BE lot_size;                  // bytes 84 to 87, signed, read here as unsigned
   UINT8 market_desc[120];             // bytes 88 to 207
-  UINT8 option_type;                  // byte 208
+  UINT8 option_type;                  // byte 208, values OPTION_TYPE_
   UINT64BE strike_price;              // bytes 209 to 216, signed, read here as unsigned
   UINT8 deal_price_denominator;       // byte 217
   UINT32BE min_qty;                   // bytes 218 to 221, signed, read here as unsigned
@@ -510,24 +854,24 @@ entrypoint typedef struct _NewOptionsMarketDefinitionMessage {
   UINT16BE options_expiration_year;   // bytes 263 to 264, signed, read here as unsigned
   UINT16BE options_expiration_month;  // bytes 265 to 266, signed, read here as unsigned
   UINT16BE options_expiration_day;    // bytes 267 to 268, signed, read here as unsigned
-  UINT8 options_style;                // byte 269
-  UINT8 options_expiration_type;      // byte 270
+  UINT8 options_style;                // byte 269, values OPTIONS_STYLE_
+  UINT8 options_expiration_type;      // byte 270, values OPTIONS_EXPIRATION_TYPE_
   UINT32BE hedge_market_id;           // bytes 271 to 274, signed, read here as unsigned
   UINT8 settle_price_denominator;     // byte 275
   UINT8 unit_qty_denominator;         // byte 276
   UINT64BE tick_value;                // bytes 277 to 284, signed, read here as unsigned
   UINT8 flex_allowed;                 // byte 285
-  UINT8 settlement_type;              // byte 286
-  UINT8 is_block_only;                // byte 287
-  UINT8 gt_allowed;                   // byte 288
-  UINT8 cross_order_supported;        // byte 289
-  UINT8 guaranteed_cross_supported;   // byte 290
+  UINT8 settlement_type;              // byte 286, values SETTLEMENT_TYPE_
+  UINT8 is_block_only;                // byte 287, values IS_BLOCK_ONLY_
+  UINT8 gt_allowed;                   // byte 288, values GT_ALLOWED_
+  UINT8 cross_order_supported;        // byte 289, values CROSS_ORDER_SUPPORTED_
+  UINT8 guaranteed_cross_supported;   // byte 290, values GUARANTEED_CROSS_SUPPORTED_
   UINT8 unit_of_measure[30];          // bytes 291 to 320
-  UINT8 mifid_regulated_market;       // byte 321
+  UINT8 mifid_regulated_market;       // byte 321, values MIFID_REGULATED_MARKET_
   UINT16BE screen_last_trade_year;    // bytes 322 to 323, signed, read here as unsigned
   UINT16BE screen_last_trade_month;   // bytes 324 to 325, signed, read here as unsigned
   UINT16BE screen_last_trade_day;     // bytes 326 to 327, signed, read here as unsigned
-  UINT8 is_tradable;                  // byte 328
+  UINT8 is_tradable;                  // byte 328, values IS_TRADABLE_
 } NewOptionsMarketDefinitionMessage;
 
 // ---- Rfq Message: 31 bytes ---------------------------------------------------
@@ -537,10 +881,10 @@ entrypoint typedef struct _RfqMessage {
   UINT32BE market_id;             // bytes 0 to 3, signed, read here as unsigned
   UINT64BE message_timestamp;     // bytes 4 to 11, signed, read here as unsigned
   UINT64BE rfq_system_id;         // bytes 12 to 19, signed, read here as unsigned
-  UINT16BE market_type_id;        // bytes 20 to 21, signed, read here as unsigned
+  UINT16BE market_type_id;        // bytes 20 to 21, values MARKET_TYPE_ID_, signed, read here as unsigned
   UINT32BE underlying_market_id;  // bytes 22 to 25, signed, read here as unsigned
   UINT32BE quantity;              // bytes 26 to 29, signed, read here as unsigned
-  UINT8 side;                     // byte 30
+  UINT8 side;                     // byte 30, values SIDE_
 } RfqMessage;
 
 // ---- Option Open Interest Message: 26 bytes ----------------------------------
@@ -560,7 +904,7 @@ entrypoint typedef struct _OptionSettlementPriceMessage {
   UINT32BE market_id;                                   // bytes 0 to 3, signed, read here as unsigned
   UINT64BE settlement_price_with_deal_price_precision;  // bytes 4 to 11, signed, read here as unsigned
   UINT64BE message_date_time;                           // bytes 12 to 19, signed, read here as unsigned
-  UINT8 is_official;                                    // byte 20
+  UINT8 is_official;                                    // byte 20, values IS_OFFICIAL_
   UINT64BE valuation_date_time;                         // bytes 21 to 28, signed, read here as unsigned
   UINT64BE volatility;                                  // bytes 29 to 36, signed, read here as unsigned
   UINT64BE settlement_price;                            // bytes 37 to 44, signed, read here as unsigned
@@ -575,11 +919,11 @@ entrypoint typedef struct _OldStyleOptionsTradeAndMarketStatsMessage {
   UINT64BE trade_id;                 // bytes 4 to 11, signed, read here as unsigned
   UINT64BE price;                    // bytes 12 to 19, signed, read here as unsigned
   UINT32BE quantity;                 // bytes 20 to 23, signed, read here as unsigned
-  UINT8 off_market_trade_indicator;  // byte 24
+  UINT8 off_market_trade_indicator;  // byte 24, values OFF_MARKET_TRADE_INDICATOR_
   UINT64BE transact_date_time;       // bytes 25 to 32, signed, read here as unsigned
-  UINT8 option_type;                 // byte 33
+  UINT8 option_type;                 // byte 33, values OPTION_TYPE_
   UINT64BE strike_price;             // bytes 34 to 41, signed, read here as unsigned
-  UINT8 event_code;                  // byte 42
+  UINT8 event_code;                  // byte 42, values EVENT_CODE_
   UINT32BE total_volume;             // bytes 43 to 46, signed, read here as unsigned
   UINT32BE block_volume;             // bytes 47 to 50, signed, read here as unsigned
   UINT32BE efs_volume;               // bytes 51 to 54, signed, read here as unsigned

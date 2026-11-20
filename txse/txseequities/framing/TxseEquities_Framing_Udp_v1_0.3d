@@ -1,27 +1,78 @@
-// Texas Stock Exchange
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Txse TxseEquities Framing Udp v1.0
 //
+// Protocol:
+//   Organization: Texas Stock Exchange
+//   Protocol:
+//   Encoding: User Datagram Protocol
+//   Version: 1.0
+//   Date: 6/12/2026
+//   Specification: TXSE RAKE TCP and UDP.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out TxseEquities_Framing_Udp_v1_0.3d
-//
-// What this definition does not state, and the model does:
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Udp Header: 19 bytes ----------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Rake Udp packet header
-entrypoint typedef struct _UdpHeader {
-  UINT64 session;        // bytes 0 to 7
-  UINT64 sequence;       // bytes 8 to 15
-  UINT16 message_count;  // bytes 16 to 17
-  UINT8 packet_type;     // byte 18
-} UdpHeader;
+// Packet Type: one byte code
+#define PACKET_TYPE_SEQUENCED_DATA 0x00     // Sequenced Data
+#define PACKET_TYPE_HEARTBEAT 0x01          // Heartbeat
+#define PACKET_TYPE_START_OF_SESSION 0x02   // Start Of Session
+#define PACKET_TYPE_END_OF_SESSION 0x03     // End Of Session
+#define PACKET_TYPE_GAP_FILL_REQUEST 0x04   // Gap Fill Request
+#define PACKET_TYPE_GAP_FILL_RESPONSE 0x05  // Gap Fill Response
+
+// ---- Types -------------------------------------------------------------------
+
+// Each individual message has a length, a stream id, a message type, and an application payload.
+typedef struct _UdpSequencedMessage (mutable UINT32 * tally) {
+  UINT16 message_length { message_length >= 2 };                                                                                                                   // bytes 0 to 1
+  UINT8 stream_id;                                                                                                                                                 // byte 2
+  UINT8 message_type;                                                                                                                                              // byte 3
+  UINT8 payload[(((UINT32) message_length) - 2)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} UdpSequencedMessage;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Rake Udp Packet: UdpHeader followed by MessageCount UdpSequencedMessage(s)
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 19) {
+  UINT64 session;                                                                                                                         // bytes 0 to 7
+  UINT64 sequence;                                                                                                                        // bytes 8 to 15
+  UINT16 message_count;                                                                                                                   // bytes 16 to 17
+  UINT8 packet_type;                                                                                                                      // byte 18
+  unit udp_sequenced_message_tally_start {:on-success *tally = 0; return true; };
+  UdpSequencedMessage(tally) udp_sequenced_message[:byte-size (available - 19)];
+  unit udp_sequenced_message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} Packet;
 

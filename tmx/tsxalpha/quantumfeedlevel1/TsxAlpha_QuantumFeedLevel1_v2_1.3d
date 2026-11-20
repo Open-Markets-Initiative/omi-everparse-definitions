@@ -1,5 +1,34 @@
-// TMX Group Quantum Feed Level 1
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Tmx TsxAlpha QuantumFeedLevel1 Xmt v2.1
 //
+// Protocol:
+//   Organization: TMX Group
+//   Protocol: Quantum Feed Level 1
+//   Encoding: eXtreme Message Transfer
+//   Version: 2.1
+//   Date: 10/20/2020
+//   Specification: Alpha Level 1 QuantumFeed Business Message Specification.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
 // writes a C validator for each record below and proves, of that C, that it reads no byte
 // outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
@@ -7,14 +36,79 @@
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out TsxAlpha_QuantumFeedLevel1_v2_1.3d
 //
 // What this definition does not state, and the model does:
 // - a length prefix framing what follows
 // - a run counted by a field
-//
-// License: MIT No Attribution
+// - the packet as a whole, which is an arm not leading with what the choice is made on, at packet.packetbody.businessbodies
+
+// ---- Values ------------------------------------------------------------------
+
+// Ack Required Poss Dup: one byte code
+#define ACK_REQUIRED_POSS_DUP_UNUSED 0x30        // Unused
+#define ACK_REQUIRED_POSS_DUP_ACK_REQUIRED 0x41  // Ack Required
+#define ACK_REQUIRED_POSS_DUP_POSS_DUP 0x44      // Poss Dup
+
+// Msg Type: one byte code
+#define MSG_TYPE_HEARTBEAT 0x30                // Heartbeat
+#define MSG_TYPE_SYMBOL_STATUS_MESSAGE 0x4A    // Symbol Status Message
+#define MSG_TYPE_TRADE_MESSAGE 0x73            // Trade Message
+#define MSG_TYPE_TRADE_CANCELLED_MESSAGE 0x74  // Trade Cancelled Message
+#define MSG_TYPE_STOCK_STATUS_MESSAGE 0x76     // Stock Status Message
+#define MSG_TYPE_EQUITY_QUOTE_MESSAGE 0x77     // Equity Quote Message
+
+// Source Id: one byte code
+#define SOURCE_ID_NON_SOURCE_RELATED 0x30  // Non Source Related
+#define SOURCE_ID_T_S_X 0x51               // TSX
+#define SOURCE_ID_T_S_X_VENTURE 0x56       // TSX Venture
+#define SOURCE_ID_ALPHA 0x41               // Alpha
+
+// Listing Market: one byte code
+#define LISTING_MARKET_TSX 0x54   // Tsx
+#define LISTING_MARKET_TSXV 0x56  // Tsxv
+
+// Product Type: one byte code
+#define PRODUCT_TYPE_DEBENTURE 0x42    // Debenture
+#define PRODUCT_TYPE_EQUITY 0x45       // Equity
+#define PRODUCT_TYPE_MUTUAL_FUND 0x4D  // Mutual Fund
+#define PRODUCT_TYPE_ETF 0x46          // Etf
+
+// Currency: one byte code
+#define CURRENCY_USD 0x55  // Usd
+#define CURRENCY_CAD 0x43  // Cad
+
+// Test Symbol: one byte code
+#define TEST_SYMBOL_YES 0x59  // Yes
+#define TEST_SYMBOL_NO 0x4E   // No
+
+// Bypass: one byte code
+#define BYPASS_THE_ORDER_IS_A_BYPASS 0x59      // The Order Is A Bypass
+#define BYPASS_THE_ORDER_IS_NOT_A_BYPASS 0x4E  // The Order Is Not A Bypass
+
+// Settlement Terms: one byte code
+#define SETTLEMENT_TERMS_CASH 0x43                                                           // Cash
+#define SETTLEMENT_TERMS_NN 0x4E                                                             // Nn
+#define SETTLEMENT_TERMS_MS_DERIVATIVES_RELATED_CONTINGENT_EQUITY_TRADE 0x4D                 // Ms Derivatives Related Contingent Equity Trade
+#define SETTLEMENT_TERMS_CT_CASH_TODAY 0x54                                                  // Ct Cash Today
+#define SETTLEMENT_TERMS_IF_THERE_IS_A_VALID_SETTLEMENT_DATE_ASSOCIATED_WITH_THE_ORDER 0x44  // If There Is A Valid Settlement Date Associated With The Order
+#define SETTLEMENT_TERMS_NO_SETTLEMENT_TERMS 0x20                                            // No Settlement Terms
+
+// Cross Type: one byte code
+#define CROSS_TYPE_INTERNAL 0x49                       // Internal
+#define CROSS_TYPE_BASIS 0x42                          // Basis
+#define CROSS_TYPE_CONTINGENT 0x43                     // Contingent
+#define CROSS_TYPE_DERIVATIVE_RELATED 0x44             // Derivative Related
+#define CROSS_TYPE_REGULAR 0x52                        // Regular
+#define CROSS_TYPE_VOLUME_WEIGHTED_AVERAGE_PRICE 0x56  // Volume Weighted Average Price
+#define CROSS_TYPE_DEFAULT_TRADE_WAS_NOT_A_CROSS 0x20  // Default Trade Was Not A Cross
+
+// Opening Trade: one byte code
+#define OPENING_TRADE_YES 0x59  // Yes
+#define OPENING_TRADE_NO 0x4E   // No
 
 // ---- Frame Header: 11 bytes --------------------------------------------------
 
@@ -25,7 +119,7 @@ entrypoint typedef struct _FrameHeader {
   UINT8 protocol_version;       // byte 2
   UINT16 message_length;        // bytes 3 to 4
   UINT32 session_id;            // bytes 5 to 8
-  UINT8 ack_required_poss_dup;  // byte 9
+  UINT8 ack_required_poss_dup;  // byte 9, values ACK_REQUIRED_POSS_DUP_
   UINT8 num_body;               // byte 10
 } FrameHeader;
 
@@ -34,7 +128,7 @@ entrypoint typedef struct _FrameHeader {
 // Xmt Body Header
 entrypoint typedef struct _BodyHeader {
   UINT16 msg_length;  // bytes 0 to 1
-  UINT8 msg_type;     // byte 2
+  UINT8 msg_type;     // byte 2, values MSG_TYPE_
 } BodyHeader;
 
 // ---- Business Header: 9 bytes ------------------------------------------------
@@ -42,7 +136,7 @@ entrypoint typedef struct _BodyHeader {
 // Xmt Business Header
 entrypoint typedef struct _BusinessHeader {
   UINT8 msg_version;  // byte 0
-  UINT8 source_id;    // byte 1
+  UINT8 source_id;    // byte 1, values SOURCE_ID_
   UINT16 stream_id;   // bytes 2 to 3
   UINT8 sequence_0;   // byte 4
   UINT32 sequence_1;  // bytes 5 to 8
@@ -53,16 +147,16 @@ entrypoint typedef struct _BusinessHeader {
 entrypoint typedef struct _SymbolStatusMessage {
   UINT8 symbol[12];      // bytes 0 to 11
   UINT8 stock_group;     // byte 12
-  UINT8 listing_market;  // byte 13
-  UINT8 product_type;    // byte 14
+  UINT8 listing_market;  // byte 13, values LISTING_MARKET_
+  UINT8 product_type;    // byte 14, values PRODUCT_TYPE_
   UINT8 cusip[12];       // bytes 15 to 26
   UINT16 board_lot;      // bytes 27 to 28
-  UINT8 currency;        // byte 29
+  UINT8 currency;        // byte 29, values CURRENCY_
   UINT64 face_value;     // bytes 30 to 37
   UINT64 last_sale;      // bytes 38 to 45
   UINT32 min_po_qty;     // bytes 46 to 49
   UINT8 stock_state[2];  // bytes 50 to 51
-  UINT8 test_symbol;     // byte 52
+  UINT8 test_symbol;     // byte 52, values TEST_SYMBOL_
 } SymbolStatusMessage;
 
 // ---- Trade Message: 49 bytes -------------------------------------------------
@@ -73,12 +167,12 @@ entrypoint typedef struct _TradeMessage {
   UINT32 volume;              // bytes 20 to 23
   UINT16 buy_broker_number;   // bytes 24 to 25
   UINT16 sell_broker_number;  // bytes 26 to 27
-  UINT8 bypass;               // byte 28
+  UINT8 bypass;               // byte 28, values BYPASS_
   UINT32 trade_time_stamp;    // bytes 29 to 32
-  UINT8 settlement_terms;     // byte 33
-  UINT8 cross_type;           // byte 34
+  UINT8 settlement_terms;     // byte 33, values SETTLEMENT_TERMS_
+  UINT8 cross_type;           // byte 34, values CROSS_TYPE_
   UINT64 last_sale;           // bytes 35 to 42
-  UINT8 opening_trade;        // byte 43
+  UINT8 opening_trade;        // byte 43, values OPENING_TRADE_
   UINT8 is_dark;              // byte 44
   UINT32 trade_number;        // bytes 45 to 48
 } TradeMessage;

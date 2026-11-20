@@ -1,59 +1,99 @@
-// Philippine Stock Exchange Pse Equities Itch Index
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Pse PseEquities Index Itch v2.3
 //
+// Protocol:
+//   Organization: Philippine Stock Exchange
+//   Protocol: Pse Equities Itch Index
+//   Encoding: Itch
+//   Version: 2.3
+//   Date: 10/5/2018
+//   Specification: PSE_Equities_Feed_Specification_v2.3.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out PseEquities_Index_v2_3.3d
-//
-// What this definition does not state, and the model does:
-// - the dispatch that chooses a message by its type
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 20 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Itch Mold Udp 64 Packet Header
-entrypoint typedef struct _PacketHeader {
-  UINT8 session[10];         // bytes 0 to 9
-  UINT64BE sequence_number;  // bytes 10 to 17
-  UINT16BE message_count;    // bytes 18 to 19
-} PacketHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_TIME_STAMP_SECONDS_MESSAGE 0x54      // Time Stamp Seconds Message
+#define MESSAGE_TYPE_SYSTEM_EVENT_MESSAGE 0x53            // System Event Message
+#define MESSAGE_TYPE_ORDERBOOK_DIRECTORY_MESSAGE 0x52     // Orderbook Directory Message
+#define MESSAGE_TYPE_INDEX_MEMBER_DIRECTORY_MESSAGE 0x59  // Index Member Directory Message
+#define MESSAGE_TYPE_INDEX_VALUE_MESSAGE 0x5A             // Index Value Message
 
-// ---- Message Header: 3 bytes -------------------------------------------------
+// Event Code: one byte code
+#define EVENT_CODE_START_OF_MESSAGES 0x4F                 // Start Of Messages
+#define EVENT_CODE_START_OF_SYSTEM_HOURS 0x53             // Start Of System Hours
+#define EVENT_CODE_PRE_OPEN_NO_CANCELLATION_PERIOD 0x52   // Pre Open No Cancellation Period
+#define EVENT_CODE_START_OF_MARKET_HOURS 0x51             // Start Of Market Hours
+#define EVENT_CODE_SCHEDULED_BREAK_BEGINS 0x41            // Scheduled Break Begins
+#define EVENT_CODE_SCHEDULED_BREAK_ENDS 0x42              // Scheduled Break Ends
+#define EVENT_CODE_PRE_CLOSE_COMMENCES 0x4C               // Pre Close Commences
+#define EVENT_CODE_PRE_CLOSE_NO_CANCELLATION_PERIOD 0x4A  // Pre Close No Cancellation Period
+#define EVENT_CODE_TRADING_AT_LAST 0x50                   // Trading At Last
+#define EVENT_CODE_END_OF_MARKET_HOURS 0x4D               // End Of Market Hours
+#define EVENT_CODE_END_OF_TRADING 0x45                    // End Of Trading
+#define EVENT_CODE_END_OF_SYSTEM_MESSAGES 0x43            // End Of System Messages
 
-// Mold Udp 64 Message Header
-entrypoint typedef struct _MessageHeader {
-  UINT16BE message_length;  // bytes 0 to 1
-  UINT8 message_type;       // byte 2
-} MessageHeader;
+// Price Type: one byte code
+#define PRICE_TYPE_PER_UNIT 0x55    // Per Unit
+#define PRICE_TYPE_PERCENTAGE 0x50  // Percentage
 
-// ---- Time Stamp Seconds Message: 4 bytes -------------------------------------
+// Instrument Type: one byte code
+#define INSTRUMENT_TYPE_COMMON_STOCK 0x43     // Common Stock
+#define INSTRUMENT_TYPE_PREFERRED_STOCK 0x50  // Preferred Stock
+#define INSTRUMENT_TYPE_WARRANT 0x57          // Warrant
+#define INSTRUMENT_TYPE_ETF 0x45              // Etf
+#define INSTRUMENT_TYPE_PDR 0x44              // Pdr
+#define INSTRUMENT_TYPE_INDEX 0x49            // Index
+
+// ---- Types -------------------------------------------------------------------
 
 // Time Stamp - Seconds Message.
-entrypoint typedef struct _TimeStampSecondsMessage {
+typedef struct _TimeStampSecondsMessage {
   UINT32BE second;  // bytes 0 to 3
 } TimeStampSecondsMessage;
 
-// ---- System Event Message: 17 bytes ------------------------------------------
-
 // System Event Message.
-entrypoint typedef struct _SystemEventMessage {
+typedef struct _SystemEventMessage {
   UINT32BE timestamp;  // bytes 0 to 3
   UINT8 group[8];      // bytes 4 to 11
   UINT8 event_code;    // byte 12
   UINT32BE orderbook;  // bytes 13 to 16
 } SystemEventMessage;
 
-// ---- Orderbook Directory Message: 89 bytes -----------------------------------
-
 // Orderbook Directory Message.
-entrypoint typedef struct _OrderbookDirectoryMessage {
+typedef struct _OrderbookDirectoryMessage {
   UINT32BE timestamp;                    // bytes 0 to 3
   UINT32BE orderbook;                    // bytes 4 to 7
   UINT8 price_type;                      // byte 8
@@ -72,22 +112,64 @@ entrypoint typedef struct _OrderbookDirectoryMessage {
   UINT8 product_code[8];                 // bytes 81 to 88
 } OrderbookDirectoryMessage;
 
-// ---- Index Member Directory Message: 20 bytes --------------------------------
-
 // Index Member Directory Message.
-entrypoint typedef struct _IndexMemberDirectoryMessage {
+typedef struct _IndexMemberDirectoryMessage {
   UINT32BE timestamp;            // bytes 0 to 3
   UINT32BE index_orderbook;      // bytes 4 to 7
   UINT32BE member_orderbook;     // bytes 8 to 11
   UINT64BE index_member_weight;  // bytes 12 to 19
 } IndexMemberDirectoryMessage;
 
-// ---- Index Value Message: 16 bytes -------------------------------------------
-
 // Index Value Message.
-entrypoint typedef struct _IndexValueMessage {
+typedef struct _IndexValueMessage {
   UINT32BE timestamp;        // bytes 0 to 3
   UINT32BE index_orderbook;  // bytes 4 to 7
   UINT64BE value;            // bytes 8 to 15
 } IndexValueMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x54: TimeStampSecondsMessage time_stamp_seconds_message;
+    case 0x53: SystemEventMessage system_event_message;
+    case 0x52: OrderbookDirectoryMessage orderbook_directory_message;
+    case 0x59: IndexMemberDirectoryMessage index_member_directory_message;
+    case 0x5A: IndexValueMessage index_value_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// Mold Udp64 Message
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16BE message_length { message_length >= 1 };                                                                                                                 // bytes 0 to 1
+  UINT8 message_type;                                                                                                                                              // byte 2
+  Payload(message_type, (((UINT32) message_length) - 1)) payload[:byte-size-single-element-array (((UINT32) message_length) - 1)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// Mold Udp64 Message
+typedef struct _MessageRun (UINT16 message_count, UINT32 available, mutable UINT32 * tally) {
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size available];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} MessageRun;
+
+// Branch
+casetype _Messages (UINT16 selector, UINT16 message_count, UINT32 available, mutable UINT32 * tally) {
+  switch (selector) {
+    case 0x0000: unit heartbeat;
+    case 0xFFFF: unit end_of_session;
+    default: MessageRun(message_count, available, tally) message;
+  }
+} Messages;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Itch Mold Udp 64 Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 20) {
+  UINT8 session[10];                                                                                                           // bytes 0 to 9
+  UINT64BE sequence_number;                                                                                                    // bytes 10 to 17
+  UINT16BE message_count;                                                                                                      // bytes 18 to 19
+  Messages(message_count, message_count, (available - 20), tally) messages[:byte-size-single-element-array (available - 20)];
+} Packet;
 

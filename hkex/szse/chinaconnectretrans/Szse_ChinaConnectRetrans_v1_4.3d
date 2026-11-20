@@ -1,93 +1,127 @@
-// Hong Kong Exchanges and Clearing Orion Market Data China Connect Retransmission
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Hkex Szse ChinaConnectRetrans Omd v1.4
 //
+// Protocol:
+//   Organization: Hong Kong Exchanges and Clearing
+//   Protocol: Orion Market Data China Connect Retransmission
+//   Encoding: Orion Market Data
+//   Version: 1.4
+//   Date: 4/22/2022
+//   Specification: OMD_Interface_Specification_China_Connect_Securities (v1.4).pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out Szse_ChinaConnectRetrans_v1_4.3d
-//
-// What this definition does not state, and the model does:
-// - a Reassemble rule
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 16 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Omd packet header (byte-identical to the Udp form; SeqNum and SendTime set to 0 on Tcp per 3.5)
-entrypoint typedef struct _PacketHeader {
-  UINT16 pkt_size;   // bytes 0 to 1
-  UINT8 msg_count;   // byte 2
-  UINT8 filler;      // byte 3
-  UINT32 seq_num;    // bytes 4 to 7
-  UINT64 send_time;  // bytes 8 to 15
-} PacketHeader;
+// Msg Type: 2 byte code
+#define MSG_TYPE_SEQUENCE_RESET_MESSAGE 0x0064            // Sequence Reset Message
+#define MSG_TYPE_DISASTER_RECOVERY_SIGNAL_MESSAGE 0x0069  // Disaster Recovery Signal Message
+#define MSG_TYPE_MARKET_DEFINITION_MESSAGE 0x0262         // Market Definition Message
+#define MSG_TYPE_LOGON_MESSAGE 0x0065                     // Logon Message
+#define MSG_TYPE_LOGON_RESPONSE_MESSAGE 0x0066            // Logon Response Message
+#define MSG_TYPE_RETRANSMISSION_REQUEST_MESSAGE 0x00C9    // Retransmission Request Message
+#define MSG_TYPE_RETRANSMISSION_RESPONSE_MESSAGE 0x00CA   // Retransmission Response Message
+#define MSG_TYPE_SECURITY_DEFINITION_MESSAGE 0x0263       // Security Definition Message
+#define MSG_TYPE_SECURITY_STATUS_MESSAGE 0x026D           // Security Status Message
+#define MSG_TYPE_STATISTICS_MESSAGE 0x0294                // Statistics Message
+#define MSG_TYPE_TOP_OF_BOOK_MESSAGE 0x028F               // Top Of Book Message
 
-// ---- Msg Header: 4 bytes -----------------------------------------------------
+// Dr Status: 4 byte code
+#define DR_STATUS_DR_IN_PROGRESS 0x00000001  // Dr In Progress
+#define DR_STATUS_DR_COMPLETED 0x00000002    // Dr Completed
 
-// Omd message header
-entrypoint typedef struct _MsgHeader {
-  UINT16 msg_size;  // bytes 0 to 1
-  UINT16 msg_type;  // bytes 2 to 3
-} MsgHeader;
+// Session Status: one byte code
+#define SESSION_STATUS_SESSION_ACTIVE 0x00                  // Session Active
+#define SESSION_STATUS_INVALID_USERNAME_OR_IP_ADDRESS 0x05  // Invalid Username Or Ip Address
+#define SESSION_STATUS_USER_ALREADY_CONNECTED 0x64          // User Already Connected
 
-// ---- Sequence Reset Message: 4 bytes -----------------------------------------
+// Retrans Status: one byte code
+#define RETRANS_STATUS_REQUEST_ACCEPTED 0x00                    // Request Accepted
+#define RETRANS_STATUS_UNKNOWN_OR_UNAUTHORIZED_CHANNEL_ID 0x01  // Unknown Or Unauthorized Channel Id
+#define RETRANS_STATUS_MESSAGES_NOT_AVAILABLE 0x02              // Messages Not Available
+#define RETRANS_STATUS_EXCEEDS_MAXIMUM_SEQUENCE_RANGE 0x64      // Exceeds Maximum Sequence Range
+#define RETRANS_STATUS_EXCEEDS_MAXIMUM_REQUESTS_IN_A_DAY 0x65   // Exceeds Maximum Requests In A Day
+
+// Shortsell Flag: one byte code
+#define SHORTSELL_FLAG_SHORT_SELL_ALLOWED 0x59      // Short Sell Allowed
+#define SHORTSELL_FLAG_SHORT_SELL_NOT_ALLOWED 0x4E  // Short Sell Not Allowed
+
+// Security Trading Status: one byte code
+#define SECURITY_TRADING_STATUS_TRADING_HALT 0x02  // Trading Halt
+#define SECURITY_TRADING_STATUS_RESUME 0x03        // Resume
+
+// ---- Types -------------------------------------------------------------------
 
 // The Sequence Reset message is sent on each multicast channel at start of day. The client must ignore the sequence number of the Sequence Reset message itself, and set the next expected sequence number to NewSeqNo. On receipt clients must clear all cached data for all eligible instruments traded in SSE and SZSE and then subscribe to the refresh channels.
-entrypoint typedef struct _SequenceResetMessage {
+typedef struct _SequenceResetMessage {
   UINT32 new_seq_no;  // bytes 0 to 3
 } SequenceResetMessage;
 
-// ---- Disaster Recovery Signal Message: 4 bytes -------------------------------
-
 // The Disaster Recovery (DR) Signal message is sent on a dedicated multicast channel whenever site failover is triggered.
-entrypoint typedef struct _DisasterRecoverySignalMessage {
+typedef struct _DisasterRecoverySignalMessage {
   UINT32 dr_status;  // bytes 0 to 3
 } DisasterRecoverySignalMessage;
 
-// ---- Market Definition Message: 36 bytes -------------------------------------
-
 // The Market Definition message is generated at the start of the business day for each market (SSE or SZSE). Market Definition messages for different markets are sent via different channels.
-entrypoint typedef struct _MarketDefinitionMessage {
+typedef struct _MarketDefinitionMessage {
   UINT8 market_code[4];         // bytes 0 to 3
   UINT8 market_name[25];        // bytes 4 to 28
   UINT8 currency_code[3];       // bytes 29 to 31
   UINT32 number_of_securities;  // bytes 32 to 35
 } MarketDefinitionMessage;
 
-// ---- Logon Message: 12 bytes -------------------------------------------------
-
 // The Logon message enables client authentication. Not required for multicast channels; only used for retransmission requests. Client sends Logon containing username to OMD-CC which responds with Logon Response.
-entrypoint typedef struct _LogonMessage {
+typedef struct _LogonMessage {
   UINT8 username[12];  // bytes 0 to 11
 } LogonMessage;
 
-// ---- Logon Response Message: 4 bytes -----------------------------------------
-
 // Response to a Logon request indicating session status.
-entrypoint typedef struct _LogonResponseMessage {
+typedef struct _LogonResponseMessage {
   UINT8 session_status;  // byte 0
   UINT8 filler_3[3];     // bytes 1 to 3
 } LogonResponseMessage;
 
-// ---- Retransmission Request Message: 12 bytes --------------------------------
-
 // Client-initiated request to retransmit a range of messages from a specific multicast channel.
-entrypoint typedef struct _RetransmissionRequestMessage {
+typedef struct _RetransmissionRequestMessage {
   UINT16 channel_id;     // bytes 0 to 1
   UINT8 filler_2[2];     // bytes 2 to 3
   UINT32 begin_seq_num;  // bytes 4 to 7
   UINT32 end_seq_num;    // bytes 8 to 11
 } RetransmissionRequestMessage;
 
-// ---- Retransmission Response Message: 12 bytes -------------------------------
-
 // Server response to a Retransmission Request indicating whether the range can be resent.
-entrypoint typedef struct _RetransmissionResponseMessage {
+typedef struct _RetransmissionResponseMessage {
   UINT16 channel_id;     // bytes 0 to 1
   UINT8 retrans_status;  // byte 2
   UINT8 filler_1;        // byte 3
@@ -95,10 +129,8 @@ entrypoint typedef struct _RetransmissionResponseMessage {
   UINT32 end_seq_num;    // bytes 8 to 11
 } RetransmissionResponseMessage;
 
-// ---- Security Definition Message: 216 bytes ----------------------------------
-
 // The Security Definition message contains all the reference data for a security. Security Definition messages for different markets (SSE and SZSE) are sent via different channels.
-entrypoint typedef struct _SecurityDefinitionMessage {
+typedef struct _SecurityDefinitionMessage {
   UINT32 security_code;           // bytes 0 to 3
   UINT8 market_code[4];           // bytes 4 to 7
   UINT8 isin_code[12];            // bytes 8 to 19
@@ -117,20 +149,16 @@ entrypoint typedef struct _SecurityDefinitionMessage {
   UINT8 filler_7[7];              // bytes 209 to 215
 } SecurityDefinitionMessage;
 
-// ---- Security Status Message: 16 bytes ---------------------------------------
-
 // The Security Status message is generated at the start of the business day if the security is halted, and whenever a security state or trading phase changes. Security Status messages for different markets (SSE and SZSE) are sent via different channels.
-entrypoint typedef struct _SecurityStatusMessage {
+typedef struct _SecurityStatusMessage {
   UINT32 security_code;           // bytes 0 to 3
   UINT8 security_trading_status;  // byte 4
   UINT8 filler_3[3];              // bytes 5 to 7
   UINT8 trading_phase_code[8];    // bytes 8 to 15
 } SecurityStatusMessage;
 
-// ---- Statistics Message: 48 bytes --------------------------------------------
-
 // The Statistics message provides statistics including turnover. Statistics messages for different markets (SSE and SZSE) are sent via different channels.
-entrypoint typedef struct _StatisticsMessage {
+typedef struct _StatisticsMessage {
   UINT32 security_code;  // bytes 0 to 3
   UINT64 shares_traded;  // bytes 4 to 11
   UINT64 turnover;       // bytes 12 to 19, signed, read here as unsigned
@@ -141,10 +169,8 @@ entrypoint typedef struct _StatisticsMessage {
   UINT8 filler_12[12];   // bytes 36 to 47
 } StatisticsMessage;
 
-// ---- Top Of Book Message: 36 bytes -------------------------------------------
-
 // The Top Of Book (TOB) message is generated when the top price level has been modified. TOB messages for different markets (SSE and SZSE) are sent via different channels.
-entrypoint typedef struct _TopOfBookMessage {
+typedef struct _TopOfBookMessage {
   UINT32 security_code;           // bytes 0 to 3
   UINT64 aggregate_bid_quantity;  // bytes 4 to 11
   UINT64 aggregate_ask_quantity;  // bytes 12 to 19
@@ -152,4 +178,43 @@ entrypoint typedef struct _TopOfBookMessage {
   UINT32 ask_price;               // bytes 24 to 27, signed, read here as unsigned
   UINT8 filler_8[8];              // bytes 28 to 35
 } TopOfBookMessage;
+
+// Branch
+casetype _Payload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x0064: SequenceResetMessage sequence_reset_message;
+    case 0x0069: DisasterRecoverySignalMessage disaster_recovery_signal_message;
+    case 0x0262: MarketDefinitionMessage market_definition_message;
+    case 0x0065: LogonMessage logon_message;
+    case 0x0066: LogonResponseMessage logon_response_message;
+    case 0x00C9: RetransmissionRequestMessage retransmission_request_message;
+    case 0x00CA: RetransmissionResponseMessage retransmission_response_message;
+    case 0x0263: SecurityDefinitionMessage security_definition_message;
+    case 0x026D: SecurityStatusMessage security_status_message;
+    case 0x0294: StatisticsMessage statistics_message;
+    case 0x028F: TopOfBookMessage top_of_book_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16 msg_size { msg_size >= 4 };                                                                                                                               // bytes 0 to 1
+  UINT16 msg_type;                                                                                                                                                 // bytes 2 to 3
+  Payload(msg_type, (((UINT32) msg_size) - 4)) payload[:byte-size-single-element-array (((UINT32) msg_size) - 4)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Omd Tcp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 16) {
+  UINT16 pkt_size;                                                                                                      // bytes 0 to 1
+  UINT8 msg_count;                                                                                                      // byte 2
+  UINT8 filler;                                                                                                         // byte 3
+  UINT32 seq_num;                                                                                                       // bytes 4 to 7
+  UINT64 send_time;                                                                                                     // bytes 8 to 15
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size (available - 16)];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) msg_count); };
+} Packet;
 

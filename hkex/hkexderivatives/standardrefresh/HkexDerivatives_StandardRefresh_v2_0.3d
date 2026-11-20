@@ -1,44 +1,278 @@
-// Hong Kong Exchanges and Clearing Orion Market Data Derivatives Standard Refresh
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Hkex HkexDerivatives StandardRefresh Omd v2.0
 //
+// Protocol:
+//   Organization: Hong Kong Exchanges and Clearing
+//   Protocol: Orion Market Data Derivatives Standard Refresh
+//   Encoding: Orion Market Data
+//   Version: 2.0
+//   Date: 9/16/2025
+//   Specification: HKEX_OMD_Derivatives_Binary_Interface_Specifications_v2.0.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out HkexDerivatives_StandardRefresh_v2_0.3d
-//
-// What this definition does not state, and the model does:
-// - a field filling what is left of what holds it
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 16 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Omd packet header (byte 3 is Compression Mode indicator)
-entrypoint typedef struct _PacketHeader {
-  UINT16 pkt_size;         // bytes 0 to 1
-  UINT8 msg_count;         // byte 2
-  UINT8 compression_mode;  // byte 3
-  UINT32 seq_num;          // bytes 4 to 7
-  UINT64 send_time;        // bytes 8 to 15
-} PacketHeader;
+// Compression Mode: one byte code
+#define COMPRESSION_MODE_NO_COMPRESSION_APPLIED 0x00  // No Compression Applied
+#define COMPRESSION_MODE_COMPRESSION_APPLIED 0x01     // Compression Applied
 
-// ---- Msg Header: 4 bytes -----------------------------------------------------
+// Msg Type: 2 byte code
+#define MSG_TYPE_AGGREGATE_IMPLIED_ORDER 0x0151              // Aggregate Implied Order
+#define MSG_TYPE_AGGREGATE_ORDER_BOOK_UPDATE_MESSAGE 0x0161  // Aggregate Order Book Update Message
+#define MSG_TYPE_CALCULATED_OPENING_PRICE_MESSAGE 0x016C     // Calculated Opening Price Message
+#define MSG_TYPE_MARKET_ALERT_MESSAGE 0x0143                 // Market Alert Message
+#define MSG_TYPE_OPEN_INTEREST_MESSAGE 0x016E                // Open Interest Message
+#define MSG_TYPE_COMMODITY_DEFINITION 0x012D                 // Commodity Definition
+#define MSG_TYPE_CLASS_DEFINITION 0x012E                     // Class Definition
+#define MSG_TYPE_INSTRUMENT_DEFINITION 0x0130                // Instrument Definition
+#define MSG_TYPE_COMBINATION_DEFINITION 0x0131               // Combination Definition
+#define MSG_TYPE_REFRESH_COMPLETE 0x00CB                     // Refresh Complete
+#define MSG_TYPE_MARKET_STATUS 0x0140                        // Market Status
+#define MSG_TYPE_INSTRUMENT_STATUS 0x0141                    // Instrument Status
+#define MSG_TYPE_COMMODITY_AND_CLASS_STATUS 0x0142           // Commodity And Class Status
+#define MSG_TYPE_VCM_TRIGGER 0x0144                          // Vcm Trigger
+#define MSG_TYPE_VCM_END 0x0145                              // Vcm End
+#define MSG_TYPE_THM_TRIGGER 0x0146                          // Thm Trigger
+#define MSG_TYPE_TRADE_STATISTICS_MESSAGE 0x0168             // Trade Statistics Message
 
-// Omd message header
-entrypoint typedef struct _MsgHeader {
-  UINT16 msg_size;  // bytes 0 to 1
-  UINT16 msg_type;  // bytes 2 to 3
-} MsgHeader;
+// Side: one byte code
+#define SIDE_BID 0x00    // Bid
+#define SIDE_OFFER 0x01  // Offer
 
-// ---- Aggregate Implied Order: 22 bytes ---------------------------------------
+// Update Action: one byte code
+#define UPDATE_ACTION_NEW 0x00     // New
+#define UPDATE_ACTION_CHANGE 0x01  // Change
+#define UPDATE_ACTION_DELETE 0x02  // Delete
+#define UPDATE_ACTION_CLEAR 0x4A   // Clear
+
+// Source: one byte code
+#define SOURCE_TRADING_SYSTEM 0x48  // Trading System
+
+// Last Fragment: one byte code
+#define LAST_FRAGMENT_COMPLETE 0x59      // Complete
+#define LAST_FRAGMENT_NOT_COMPLETE 0x4E  // Not Complete
+
+// Priority: one byte code
+#define PRIORITY_CRITICAL 0x00   // Critical
+#define PRIORITY_IMPORTANT 0x01  // Important
+#define PRIORITY_NORMAL 0x02     // Normal
+
+// Day Indicator: 2 byte code
+#define DAY_INDICATOR_CURRENT_TRADING_DAY 0x0000   // Current Trading Day
+#define DAY_INDICATOR_PREVIOUS_TRADING_DAY 0x0001  // Previous Trading Day
+
+// Underlying Type: one byte code
+#define UNDERLYING_TYPE_STOCK 0x53         // Stock
+#define UNDERLYING_TYPE_CURRENCY 0x43      // Currency
+#define UNDERLYING_TYPE_FIXED_INCOME 0x49  // Fixed Income
+#define UNDERLYING_TYPE_ENERGY_POWER 0x45  // Energy Power
+#define UNDERLYING_TYPE_COMMODITY 0x41     // Commodity
+#define UNDERLYING_TYPE_METAL 0x4D         // Metal
+
+// Effective Tomorrow: one byte code
+#define EFFECTIVE_TOMORROW_FALSE 0x00  // False
+#define EFFECTIVE_TOMORROW_TRUE 0x01   // True
+
+// Key Type: one byte code
+#define KEY_TYPE_INSTRUMENT_CLASS 0x30  // Instrument Class
+#define KEY_TYPE_COMBO_CLASS 0x31       // Combo Class
+
+// Market: 2 byte code
+#define MARKET_CESC_INDEX_FUTURES_OPTIONS 0x0001                                                        // Cesc Index Futures Options
+#define MARKET_STOCK_FUTURES 0x0002                                                                     // Stock Futures
+#define MARKET_THREE_YEAR_EXCHANGE_FUND_NOTE_FUTURES 0x0003                                             // Three Year Exchange Fund Note Futures
+#define MARKET_MINI_HANG_SENG_INDEX_FUTURES_OPTIONS 0x0010                                              // Mini Hang Seng Index Futures Options
+#define MARKET_STOCK_OPTIONS 0x0014                                                                     // Stock Options
+#define MARKET_HIBOR 0x0018                                                                             // Hibor
+#define MARKET_DIVIDEND_FUTURES 0x001B                                                                  // Dividend Futures
+#define MARKET_PHYSICALLY_SETTLED_OPTIONS_ON_FUTURES_CONTRACTS_ON_HANG_SENG_INDEX_FUTURES 0x0020        // Physically Settled Options On Futures Contracts On Hang Seng Index Futures
+#define MARKET_HANG_SENG_INDEX_FUTURES_OPTIONS 0x0022                                                   // Hang Seng Index Futures Options
+#define MARKET_FLEXIBLE_HANG_SENG_INDEX_OPTIONS 0x0023                                                  // Flexible Hang Seng Index Options
+#define MARKET_FLEXIBLE_HANG_SENG_CHINA_ENTERPRISES_INDEX_OPTIONS 0x0025                                // Flexible Hang Seng China Enterprises Index Options
+#define MARKET_HANG_SENG_CHINA_ENTERPRISES_INDEX_FUTURES_OPTIONS 0x0026                                 // Hang Seng China Enterprises Index Futures Options
+#define MARKET_WEEKLY_HANG_SENG_INDEX_OPTIONS 0x0027                                                    // Weekly Hang Seng Index Options
+#define MARKET_PHYSICALLY_SETTLED_OPTIONS_ON_FUTURES_CONTRACTS_ON_HANG_SENG_CHINA_ENTERP_93ralb 0x0028  // Physically Settled Options On Futures Contracts On Hang Seng China Enterprises Index Futures
+#define MARKET_HSI_VOLATILITY_INDEX_FUTURES 0x0033                                                      // Hsi Volatility Index Futures
+#define MARKET_SECTOR_INDEX_FUTURES 0x003C                                                              // Sector Index Futures
+#define MARKET_RENMINBI_CURRENCY_FUTURES_OPTIONS 0x0046                                                 // Renminbi Currency Futures Options
+#define MARKET_HANG_SENG_TECH_INDEX_FUTURES_OPTIONS_HANG_SENG_INDEX_HANG_SENG_CHINA_ENTE_381m75 0x0056  // Hang Seng Tech Index Futures Options Hang Seng Index Hang Seng China Enterprises Index Gross Net Total Return Index Futures
+#define MARKET_WEEKLY_HANG_SENG_CHINA_ENTERPRISES_INDEX_OPTIONS 0x0057                                  // Weekly Hang Seng China Enterprises Index Options
+#define MARKET_IBOVESPA_INDEX_FUTURES 0x005D                                                            // Ibovespa Index Futures
+#define MARKET_SP_BSE_SENSEX_INDEX_FUTURES 0x0060                                                       // Sp Bse Sensex Index Futures
+#define MARKET_FTSEJSE_TOP_40_INDEX_FUTURES 0x0063                                                      // Ftsejse Top 40 Index Futures
+#define MARKET_MICEX_INDEX_FUTURES 0x0066                                                               // Micex Index Futures
+#define MARKET_MSCI_AX_J_FUTURES_NTR 0x006C                                                             // Msci Ax J Futures Ntr
+#define MARKET_PHYSICALLY_SETTLED_USD_SILVER_FUTURES 0x006F                                             // Physically Settled Usd Silver Futures
+#define MARKET_PHYSICALLY_SETTLED_CNH_SILVER_FUTURES 0x0070                                             // Physically Settled Cnh Silver Futures
+#define MARKET_PHYSICALLY_SETTLED_CNH_GOLD_FUTURES 0x0073                                               // Physically Settled Cnh Gold Futures
+#define MARKET_PHYSICALLY_SETTLED_USD_GOLD_FUTURES 0x0074                                               // Physically Settled Usd Gold Futures
+#define MARKET_MOF_T_BOND_FUTURES 0x0075                                                                // Mof T Bond Futures
+#define MARKET_USD_BASE_AND_FERROUS_FUTURES 0x0076                                                      // Usd Base And Ferrous Futures
+#define MARKET_CNH_LONDON_METAL_MINI_FUTURES 0x0078                                                     // Cnh London Metal Mini Futures
+#define MARKET_CASH_SETTLED_RMB_CURRENCY_FUTURES 0x007A                                                 // Cash Settled Rmb Currency Futures
+#define MARKET_CASH_SETTLED_CNHUSD_FUTURES 0x007D                                                       // Cash Settled Cnhusd Futures
+#define MARKET_MSCI_CHINA_A_50_CONNECT_INDEX_FUTURES 0x0099                                             // Msci China A 50 Connect Index Futures
+#define MARKET_MSCI_JPY_INDEX_FUTURES_PRICE_NTR 0x00A0                                                  // Msci Jpy Index Futures Price Ntr
+#define MARKET_MSCI_USD_INDEX_FUTURES_NTR 0x00A1                                                        // Msci Usd Index Futures Ntr
+#define MARKET_MSCI_USD_INDEX_FUTURES_OPTIONS_PRICE_MARKET_163 0x00A3                                   // Msci Usd Index Futures Options Price Market 163
+#define MARKET_MSCI_USD_INDEX_FUTURES_OPTIONS_PRICE_MARKET_164 0x00A4                                   // Msci Usd Index Futures Options Price Market 164
+#define MARKET_MSCI_USD_INDEX_FUTURES_OPTIONS_PRICE_MARKET_166 0x00A6                                   // Msci Usd Index Futures Options Price Market 166
+#define MARKET_MSCI_USD_INDEX_FUTURES_OPTIONS_PRICE_MARKET_168 0x00A8                                   // Msci Usd Index Futures Options Price Market 168
+#define MARKET_MSCI_SGD_INDEX_FUTURES_PRICE 0x00AA                                                      // Msci Sgd Index Futures Price
+
+// Instrument Group: 2 byte code
+#define INSTRUMENT_GROUP_FUTURES 0x0004                                                                         // Futures
+#define INSTRUMENT_GROUP_CALL_AMERICAN_STYLE 0x0006                                                             // Call American Style
+#define INSTRUMENT_GROUP_PUT_AMERICAN_STYLE 0x0007                                                              // Put American Style
+#define INSTRUMENT_GROUP_CALL_EUROPEAN_STYLE 0x0016                                                             // Call European Style
+#define INSTRUMENT_GROUP_PUT_EUROPEAN_STYLE 0x0017                                                              // Put European Style
+#define INSTRUMENT_GROUP_OPTIONS_STRADDLE 0x00AA                                                                // Options Straddle
+#define INSTRUMENT_GROUP_OPTIONS_STRANGLE 0x00AB                                                                // Options Strangle
+#define INSTRUMENT_GROUP_STANDARD_COMBINATION_INSTRUMENT_FOR_STOCK_OPTIONS_MARKET_SOM_SYNTHETIC_FUTURES 0x00AC  // Standard Combination Instrument For Stock Options Market Som Synthetic Futures
+#define INSTRUMENT_GROUP_TIME_SPREAD_LEVEL_01 0x00C9                                                            // Time Spread Level 01
+#define INSTRUMENT_GROUP_TIME_SPREAD_LEVEL_02 0x00CA                                                            // Time Spread Level 02
+#define INSTRUMENT_GROUP_TIME_SPREAD_LEVEL_03 0x00CB                                                            // Time Spread Level 03
+#define INSTRUMENT_GROUP_TIME_SPREAD_LEVEL_04 0x00CC                                                            // Time Spread Level 04
+#define INSTRUMENT_GROUP_TIME_SPREAD_LEVEL_05 0x00CD                                                            // Time Spread Level 05
+#define INSTRUMENT_GROUP_TIME_SPREAD_LEVEL_06 0x00CE                                                            // Time Spread Level 06
+#define INSTRUMENT_GROUP_TIME_SPREAD_LEVEL_07 0x00CF                                                            // Time Spread Level 07
+#define INSTRUMENT_GROUP_TIME_SPREAD_LEVEL_08 0x00D0                                                            // Time Spread Level 08
+#define INSTRUMENT_GROUP_TIME_SPREAD_LEVEL_09 0x00D1                                                            // Time Spread Level 09
+#define INSTRUMENT_GROUP_TIME_SPREAD_LEVEL_10 0x00D2                                                            // Time Spread Level 10
+#define INSTRUMENT_GROUP_TIME_SPREAD_LEVEL_11 0x00D3                                                            // Time Spread Level 11
+#define INSTRUMENT_GROUP_TIME_SPREAD_LEVEL_12 0x00D4                                                            // Time Spread Level 12
+#define INSTRUMENT_GROUP_TIME_SPREAD_LEVEL_13 0x00D5                                                            // Time Spread Level 13
+#define INSTRUMENT_GROUP_TIME_SPREAD_LEVEL_14 0x00D6                                                            // Time Spread Level 14
+#define INSTRUMENT_GROUP_TIME_SPREAD_LEVEL_15 0x00D7                                                            // Time Spread Level 15
+#define INSTRUMENT_GROUP_TIME_SPREAD_LEVEL_16 0x00D8                                                            // Time Spread Level 16
+#define INSTRUMENT_GROUP_TIME_SPREAD_LEVEL_17 0x00D9                                                            // Time Spread Level 17
+#define INSTRUMENT_GROUP_TIME_SPREAD_LEVEL_18 0x00DA                                                            // Time Spread Level 18
+#define INSTRUMENT_GROUP_TIME_SPREAD_LEVEL_19 0x00DB                                                            // Time Spread Level 19
+#define INSTRUMENT_GROUP_TIME_SPREAD_LEVEL_20 0x00DC                                                            // Time Spread Level 20
+#define INSTRUMENT_GROUP_TIME_SPREAD_LEVEL_21 0x00DD                                                            // Time Spread Level 21
+#define INSTRUMENT_GROUP_TIME_SPREAD_LEVEL_22 0x00DE                                                            // Time Spread Level 22
+#define INSTRUMENT_GROUP_TIME_SPREAD_LEVEL_23 0x00DF                                                            // Time Spread Level 23
+#define INSTRUMENT_GROUP_TAILOR_MADE_COMBINATION 0x00FA                                                         // Tailor Made Combination
+#define INSTRUMENT_GROUP_EXCHANGE_RATE 0x00FE                                                                   // Exchange Rate
+#define INSTRUMENT_GROUP_PAYMENT_CURRENCY 0x00FF                                                                // Payment Currency
+
+// Tradable: one byte code
+#define TRADABLE_YES 0x01  // Yes
+#define TRADABLE_NO 0x02   // No
+
+// Instrument Status Code: one byte code
+#define INSTRUMENT_STATUS_CODE_ACTIVE 0x01     // Active
+#define INSTRUMENT_STATUS_CODE_SUSPENDED 0x02  // Suspended
+#define INSTRUMENT_STATUS_CODE_DELISTED 0x04   // Delisted
+
+// Vcm Flag: one byte code
+#define VCM_FLAG_NOT_APPLICABLE 0x00  // Not Applicable
+#define VCM_FLAG_APPLICABLE 0x01      // Applicable
+
+// Leg Side: one byte code
+#define LEG_SIDE_AS_DEFINED 0x42  // As Defined
+#define LEG_SIDE_OPPOSITE 0x43    // Opposite
+
+// State Level: one byte code
+#define STATE_LEVEL_EXCHANGE 0x45          // Exchange
+#define STATE_LEVEL_MARKET 0x4D            // Market
+#define STATE_LEVEL_INSTRUMENT_TYPE 0x54   // Instrument Type
+#define STATE_LEVEL_COMBO_TYPE 0x74        // Combo Type
+#define STATE_LEVEL_INSTRUMENT_CLASS 0x43  // Instrument Class
+#define STATE_LEVEL_COMBO_CLASS 0x63       // Combo Class
+
+// Status Market: 4 byte code
+#define STATUS_MARKET_IF_NOT_AVAILABLE 0x00000000                                                                  // If Not Available
+#define STATUS_MARKET_CESC_INDEX_FUTURES_OPTIONS 0x00000001                                                        // Cesc Index Futures Options
+#define STATUS_MARKET_STOCK_FUTURES 0x00000002                                                                     // Stock Futures
+#define STATUS_MARKET_THREE_YEAR_EXCHANGE_FUND_NOTE_FUTURES 0x00000003                                             // Three Year Exchange Fund Note Futures
+#define STATUS_MARKET_MINI_HANG_SENG_INDEX_FUTURES_OPTIONS 0x00000010                                              // Mini Hang Seng Index Futures Options
+#define STATUS_MARKET_STOCK_OPTIONS 0x00000014                                                                     // Stock Options
+#define STATUS_MARKET_HIBOR 0x00000018                                                                             // Hibor
+#define STATUS_MARKET_DIVIDEND_FUTURES 0x0000001B                                                                  // Dividend Futures
+#define STATUS_MARKET_PHYSICALLY_SETTLED_OPTIONS_ON_FUTURES_CONTRACTS_ON_HANG_SENG_INDEX_FUTURES 0x00000020        // Physically Settled Options On Futures Contracts On Hang Seng Index Futures
+#define STATUS_MARKET_HANG_SENG_INDEX_FUTURES_OPTIONS 0x00000022                                                   // Hang Seng Index Futures Options
+#define STATUS_MARKET_FLEXIBLE_HANG_SENG_INDEX_OPTIONS 0x00000023                                                  // Flexible Hang Seng Index Options
+#define STATUS_MARKET_FLEXIBLE_HANG_SENG_CHINA_ENTERPRISES_INDEX_OPTIONS 0x00000025                                // Flexible Hang Seng China Enterprises Index Options
+#define STATUS_MARKET_HANG_SENG_CHINA_ENTERPRISES_INDEX_FUTURES_OPTIONS 0x00000026                                 // Hang Seng China Enterprises Index Futures Options
+#define STATUS_MARKET_WEEKLY_HANG_SENG_INDEX_OPTIONS 0x00000027                                                    // Weekly Hang Seng Index Options
+#define STATUS_MARKET_PHYSICALLY_SETTLED_OPTIONS_ON_FUTURES_CONTRACTS_ON_HANG_SENG_CHINA_ENTERP_93ralb 0x00000028  // Physically Settled Options On Futures Contracts On Hang Seng China Enterprises Index Futures
+#define STATUS_MARKET_HSI_VOLATILITY_INDEX_FUTURES 0x00000033                                                      // Hsi Volatility Index Futures
+#define STATUS_MARKET_SECTOR_INDEX_FUTURES 0x0000003C                                                              // Sector Index Futures
+#define STATUS_MARKET_RENMINBI_CURRENCY_FUTURES_OPTIONS 0x00000046                                                 // Renminbi Currency Futures Options
+#define STATUS_MARKET_HANG_SENG_TECH_INDEX_FUTURES_OPTIONS_HANG_SENG_INDEX_HANG_SENG_CHINA_ENTE_381m75 0x00000056  // Hang Seng Tech Index Futures Options Hang Seng Index Hang Seng China Enterprises Index Gross Net Total Return Index Futures
+#define STATUS_MARKET_WEEKLY_HANG_SENG_CHINA_ENTERPRISES_INDEX_OPTIONS 0x00000057                                  // Weekly Hang Seng China Enterprises Index Options
+#define STATUS_MARKET_IBOVESPA_INDEX_FUTURES 0x0000005D                                                            // Ibovespa Index Futures
+#define STATUS_MARKET_SP_BSE_SENSEX_INDEX_FUTURES 0x00000060                                                       // Sp Bse Sensex Index Futures
+#define STATUS_MARKET_FTSEJSE_TOP_40_INDEX_FUTURES 0x00000063                                                      // Ftsejse Top 40 Index Futures
+#define STATUS_MARKET_MICEX_INDEX_FUTURES 0x00000066                                                               // Micex Index Futures
+#define STATUS_MARKET_MSCI_AX_J_FUTURES_NTR 0x0000006C                                                             // Msci Ax J Futures Ntr
+#define STATUS_MARKET_PHYSICALLY_SETTLED_USD_SILVER_FUTURES 0x0000006F                                             // Physically Settled Usd Silver Futures
+#define STATUS_MARKET_PHYSICALLY_SETTLED_CNH_SILVER_FUTURES 0x00000070                                             // Physically Settled Cnh Silver Futures
+#define STATUS_MARKET_PHYSICALLY_SETTLED_CNH_GOLD_FUTURES 0x00000073                                               // Physically Settled Cnh Gold Futures
+#define STATUS_MARKET_PHYSICALLY_SETTLED_USD_GOLD_FUTURES 0x00000074                                               // Physically Settled Usd Gold Futures
+#define STATUS_MARKET_MOF_T_BOND_FUTURES 0x00000075                                                                // Mof T Bond Futures
+#define STATUS_MARKET_USD_BASE_AND_FERROUS_FUTURES 0x00000076                                                      // Usd Base And Ferrous Futures
+#define STATUS_MARKET_CNH_LONDON_METAL_MINI_FUTURES 0x00000078                                                     // Cnh London Metal Mini Futures
+#define STATUS_MARKET_CASH_SETTLED_RMB_CURRENCY_FUTURES 0x0000007A                                                 // Cash Settled Rmb Currency Futures
+#define STATUS_MARKET_CASH_SETTLED_CNHUSD_FUTURES 0x0000007D                                                       // Cash Settled Cnhusd Futures
+#define STATUS_MARKET_MSCI_CHINA_A_50_CONNECT_INDEX_FUTURES 0x00000099                                             // Msci China A 50 Connect Index Futures
+#define STATUS_MARKET_MSCI_JPY_INDEX_FUTURES_PRICE_NTR 0x000000A0                                                  // Msci Jpy Index Futures Price Ntr
+#define STATUS_MARKET_MSCI_USD_INDEX_FUTURES_NTR 0x000000A1                                                        // Msci Usd Index Futures Ntr
+#define STATUS_MARKET_MSCI_USD_INDEX_FUTURES_OPTIONS_PRICE_MARKET_163 0x000000A3                                   // Msci Usd Index Futures Options Price Market 163
+#define STATUS_MARKET_MSCI_USD_INDEX_FUTURES_OPTIONS_PRICE_MARKET_164 0x000000A4                                   // Msci Usd Index Futures Options Price Market 164
+#define STATUS_MARKET_MSCI_USD_INDEX_FUTURES_OPTIONS_PRICE_MARKET_166 0x000000A6                                   // Msci Usd Index Futures Options Price Market 166
+#define STATUS_MARKET_MSCI_USD_INDEX_FUTURES_OPTIONS_PRICE_MARKET_168 0x000000A8                                   // Msci Usd Index Futures Options Price Market 168
+#define STATUS_MARKET_MSCI_SGD_INDEX_FUTURES_PRICE 0x000000AA                                                      // Msci Sgd Index Futures Price
+
+// Suspension Indicator: one byte code
+#define SUSPENSION_INDICATOR_SUSPENDED_FOR_TRADING 0x01  // Suspended For Trading
+#define SUSPENSION_INDICATOR_NOT_SUSPENDED 0x02          // Not Suspended
+
+// Suspended: one byte code
+#define SUSPENDED_YES 0x59  // Yes
+#define SUSPENDED_NO 0x4E   // No
+
+// Session: one byte code
+#define SESSION_T_SESSION 0x00           // T Session
+#define SESSION_T_PLUS_ONE_SESSION 0x01  // T Plus One Session
+
+// ---- Types -------------------------------------------------------------------
 
 // Generated whenever there is an update on implied order at the given implied price.
-entrypoint typedef struct _AggregateImpliedOrder {
+typedef struct _AggregateImpliedOrder {
   UINT32 orderbook_id;      // bytes 0 to 3
   UINT64 implied_price;     // bytes 4 to 11, signed, read here as unsigned
   UINT64 implied_quantity;  // bytes 12 to 19
@@ -46,20 +280,46 @@ entrypoint typedef struct _AggregateImpliedOrder {
   UINT8 filler_1;           // byte 21
 } AggregateImpliedOrder;
 
-// ---- Calculated Opening Price Message: 24 bytes ------------------------------
+// The aggregate order book is sent whenever there is a orderbook change
+typedef struct _BookEntry {
+  UINT64 aggregate_quantity;  // bytes 0 to 7
+  UINT64 price;               // bytes 8 to 15, signed, read here as unsigned
+  UINT32 number_of_orders;    // bytes 16 to 19
+  UINT8 side;                 // byte 20
+  UINT8 filler_1;             // byte 21
+  UINT8 price_level;          // byte 22
+  UINT8 update_action;        // byte 23
+} BookEntry;
+
+// The aggregate order book is sent whenever there is a orderbook change
+typedef struct _AggregateOrderBookUpdateMessage {
+  UINT32 orderbook_id;                                            // bytes 0 to 3
+  UINT8 filler_3[3];                                              // bytes 4 to 6
+  UINT8 no_entries;                                               // byte 7
+  BookEntry book_entry[:byte-size (((UINT32) no_entries) * 24)];
+} AggregateOrderBookUpdateMessage;
 
 // The Calculated Opening Price (COP) message indicates an instrument's theoretical opening price during the pre-opening phases of the market prior to an auction
-entrypoint typedef struct _CalculatedOpeningPriceMessage {
+typedef struct _CalculatedOpeningPriceMessage {
   UINT32 orderbook_id;                 // bytes 0 to 3
   UINT64 calculated_opening_price;     // bytes 4 to 11, signed, read here as unsigned
   UINT8 filler_4[4];                   // bytes 12 to 15
   UINT64 calculated_opening_quantity;  // bytes 16 to 23
 } CalculatedOpeningPriceMessage;
 
-// ---- Open Interest Message: 24 bytes -----------------------------------------
+// The Market Alert message is generated periodically to relay market announcements and alerts
+typedef struct _MarketAlertMessage {
+  UINT64 alert_id;                               // bytes 0 to 7
+  UINT8 source;                                  // byte 8
+  UINT8 header[320];                             // bytes 9 to 328
+  UINT8 last_fragment;                           // byte 329
+  UINT8 priority;                                // byte 330
+  UINT8 noof_lines;                              // byte 331
+  UINT8 content[(((UINT32) noof_lines) * 320)];
+} MarketAlertMessage;
 
 // Issued to show the Previous Day settlement price and open interest
-entrypoint typedef struct _OpenInterestMessage {
+typedef struct _OpenInterestMessage {
   UINT16 day_indicator;     // bytes 0 to 1
   UINT8 filler_6[6];        // bytes 2 to 7
   UINT32 orderbook_id;      // bytes 8 to 11
@@ -68,10 +328,8 @@ entrypoint typedef struct _OpenInterestMessage {
   UINT32 net_oi;            // bytes 20 to 23, signed, read here as unsigned
 } OpenInterestMessage;
 
-// ---- Commodity Definition: 82 bytes ------------------------------------------
-
 // Describes individual commodities available from the OMD-D system
-entrypoint typedef struct _CommodityDefinition {
+typedef struct _CommodityDefinition {
   UINT32 commodity_code;               // bytes 0 to 3
   UINT8 commodity_name[40];            // bytes 4 to 43
   UINT8 commodity_id[6];               // bytes 44 to 49
@@ -83,10 +341,8 @@ entrypoint typedef struct _CommodityDefinition {
   UINT8 filler_5[5];                   // bytes 77 to 81
 } CommodityDefinition;
 
-// ---- Class Definition: 116 bytes ---------------------------------------------
-
 // Describes individual instrument classes available from the OMD-D system.
-entrypoint typedef struct _ClassDefinition {
+typedef struct _ClassDefinition {
   UINT8 instrument_class_id[14];    // bytes 0 to 13
   UINT32 instrument_class_key;      // bytes 14 to 17
   UINT8 key_type;                   // byte 18
@@ -111,10 +367,8 @@ entrypoint typedef struct _ClassDefinition {
   UINT8 filler_2[2];                // bytes 114 to 115
 } ClassDefinition;
 
-// ---- Instrument Definition: 116 bytes ----------------------------------------
-
 // Describes instrument static data.
-entrypoint typedef struct _InstrumentDefinition {
+typedef struct _InstrumentDefinition {
   UINT32 orderbook_id;                       // bytes 0 to 3
   UINT8 symbol[32];                          // bytes 4 to 35
   UINT32 instrument_class_key;               // bytes 36 to 39
@@ -139,10 +393,8 @@ entrypoint typedef struct _InstrumentDefinition {
   UINT8 second_filler_3[3];                  // bytes 113 to 115
 } InstrumentDefinition;
 
-// ---- Combination Definition: 16 bytes ----------------------------------------
-
 // Describes the composition of a combination instrument.
-entrypoint typedef struct _CombinationDefinition {
+typedef struct _CombinationDefinition {
   UINT32 combo_orderbook_id;  // bytes 0 to 3
   UINT32 leg_orderbook_id;    // bytes 4 to 7
   UINT8 filler_3[3];          // bytes 8 to 10
@@ -150,17 +402,13 @@ entrypoint typedef struct _CombinationDefinition {
   UINT32 leg_ratio;           // bytes 12 to 15, signed, read here as unsigned
 } CombinationDefinition;
 
-// ---- Refresh Complete: 4 bytes -----------------------------------------------
-
 // RefreshComplete
-entrypoint typedef struct _RefreshComplete {
+typedef struct _RefreshComplete {
   UINT32 last_seq_num;  // bytes 0 to 3
 } RefreshComplete;
 
-// ---- Market Status: 36 bytes -------------------------------------------------
-
 // Indicates the state of the Exchange, Market, Instrument Type, or Class.
-entrypoint typedef struct _MarketStatus {
+typedef struct _MarketStatus {
   UINT8 state_level;            // byte 0
   UINT32 status_market;         // bytes 1 to 4
   UINT32 instrument_type_key;   // bytes 5 to 8
@@ -172,30 +420,24 @@ entrypoint typedef struct _MarketStatus {
   UINT8 filler_1;               // byte 35
 } MarketStatus;
 
-// ---- Instrument Status: 8 bytes ----------------------------------------------
-
 // Generated whenever there is a change to suspension indicator or instrument status.
-entrypoint typedef struct _InstrumentStatus {
+typedef struct _InstrumentStatus {
   UINT32 orderbook_id;           // bytes 0 to 3
   UINT8 suspension_indicator;    // byte 4
   UINT8 instrument_status_code;  // byte 5
   UINT8 filler_2[2];             // bytes 6 to 7
 } InstrumentStatus;
 
-// ---- Commodity And Class Status: 10 bytes ------------------------------------
-
 // Generated whenever a commodity and / or instrument class status changes.
-entrypoint typedef struct _CommodityAndClassStatus {
+typedef struct _CommodityAndClassStatus {
   UINT32 commodity_code;        // bytes 0 to 3
   UINT32 instrument_class_key;  // bytes 4 to 7
   UINT8 suspended;              // byte 8
   UINT8 filler_1;               // byte 9
 } CommodityAndClassStatus;
 
-// ---- Vcm Trigger: 46 bytes ---------------------------------------------------
-
 // Generated when VCM is triggered on a particular instrument.
-entrypoint typedef struct _VcmTrigger {
+typedef struct _VcmTrigger {
   UINT32 orderbook_id;            // bytes 0 to 3
   UINT64 cooling_off_start_time;  // bytes 4 to 11
   UINT64 cooling_off_end_time;    // bytes 12 to 19
@@ -205,27 +447,21 @@ entrypoint typedef struct _VcmTrigger {
   UINT8 filler_2[2];              // bytes 44 to 45
 } VcmTrigger;
 
-// ---- Vcm End: 20 bytes -------------------------------------------------------
-
 // Generated when VCM is ended on a particular instrument.
-entrypoint typedef struct _VcmEnd {
+typedef struct _VcmEnd {
   UINT32 orderbook_id;            // bytes 0 to 3
   UINT64 cooling_off_start_time;  // bytes 4 to 11
   UINT64 cooling_off_end_time;    // bytes 12 to 19
 } VcmEnd;
 
-// ---- Thm Trigger: 14 bytes ---------------------------------------------------
-
 // Generated when trading halt is triggered on a particular instrument class.
-entrypoint typedef struct _ThmTrigger {
+typedef struct _ThmTrigger {
   UINT32 instrument_class_key;  // bytes 0 to 3
   UINT8 filler_10[10];          // bytes 4 to 13
 } ThmTrigger;
 
-// ---- Trade Statistics Message: 56 bytes --------------------------------------
-
 // Trade information for completed deals
-entrypoint typedef struct _TradeStatisticsMessage {
+typedef struct _TradeStatisticsMessage {
   UINT32 orderbook_id;         // bytes 0 to 3
   UINT64 last_price;           // bytes 4 to 11, signed, read here as unsigned
   UINT8 session;               // byte 12
@@ -236,4 +472,54 @@ entrypoint typedef struct _TradeStatisticsMessage {
   UINT64 turnover;             // bytes 45 to 52
   UINT8 filler_3[3];           // bytes 53 to 55
 } TradeStatisticsMessage;
+
+// Branch
+casetype _Payload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x0151: AggregateImpliedOrder aggregate_implied_order;
+    case 0x0161: AggregateOrderBookUpdateMessage aggregate_order_book_update_message;
+    case 0x016C: CalculatedOpeningPriceMessage calculated_opening_price_message;
+    case 0x0143: MarketAlertMessage market_alert_message;
+    case 0x016E: OpenInterestMessage open_interest_message;
+    case 0x012D: CommodityDefinition commodity_definition;
+    case 0x012E: ClassDefinition class_definition;
+    case 0x0130: InstrumentDefinition instrument_definition;
+    case 0x0131: CombinationDefinition combination_definition;
+    case 0x00CB: RefreshComplete refresh_complete;
+    case 0x0140: MarketStatus market_status;
+    case 0x0141: InstrumentStatus instrument_status;
+    case 0x0142: CommodityAndClassStatus commodity_and_class_status;
+    case 0x0144: VcmTrigger vcm_trigger;
+    case 0x0145: VcmEnd vcm_end;
+    case 0x0146: ThmTrigger thm_trigger;
+    case 0x0168: TradeStatisticsMessage trade_statistics_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16 msg_size { msg_size >= 4 };                                                                                                                               // bytes 0 to 1
+  UINT16 msg_type;                                                                                                                                                 // bytes 2 to 3
+  Payload(msg_type, (((UINT32) msg_size) - 4)) payload[:byte-size-single-element-array (((UINT32) msg_size) - 4)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// The packet's message area: the messages it counts, or one ZliB block holding them
+typedef struct _MessageBuffer (UINT8 msg_count, UINT32 available, mutable UINT32 * tally) {
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size available];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) msg_count); };
+} MessageBuffer;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Omd Udp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 16) {
+  UINT16 pkt_size;                                                                                                     // bytes 0 to 1
+  UINT8 msg_count;                                                                                                     // byte 2
+  UINT8 compression_mode;                                                                                              // byte 3
+  UINT32 seq_num;                                                                                                      // bytes 4 to 7
+  UINT64 send_time;                                                                                                    // bytes 8 to 15
+  MessageBuffer(msg_count, (available - 16), tally) message_buffer[:byte-size-single-element-array (available - 16)];
+} Packet;
 

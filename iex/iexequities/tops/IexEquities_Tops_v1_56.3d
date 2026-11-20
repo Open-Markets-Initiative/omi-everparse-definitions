@@ -1,43 +1,146 @@
-// Investors Exchange Top Of Book
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Iex IexEquities Tops IexTp v1.56
 //
+// Protocol:
+//   Organization: Investors Exchange
+//   Protocol: Top Of Book
+//   Encoding: Investors Exchange Transport Protocol
+//   Version: 1.56
+//   Date: 9/23/2016
+//   Specification: IEX TOPS Specification.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out IexEquities_Tops_v1_56.3d
-//
-// What this definition does not state, and the model does:
-// - the dispatch that chooses a message by its type
-// - a run counted by a field
-// - a field read in bits
-//
-// License: MIT No Attribution
 
-// ---- Iextp Header: 40 bytes --------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// IexTp packet header
-entrypoint typedef struct _IextpHeader {
-  UINT8 version;                         // byte 0
-  UINT8 reserved;                        // byte 1
-  UINT16 message_protocol_id;            // bytes 2 to 3
-  UINT32 channel_id;                     // bytes 4 to 7
-  UINT32 session_id;                     // bytes 8 to 11
-  UINT16 payload_length;                 // bytes 12 to 13
-  UINT16 message_count;                  // bytes 14 to 15
-  UINT64 stream_offset;                  // bytes 16 to 23
-  UINT64 first_message_sequence_number;  // bytes 24 to 31
-  UINT64 send_time;                      // bytes 32 to 39
-} IextpHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_QUOTE_UPDATE_MESSAGE 0x51  // Quote Update Message
+#define MESSAGE_TYPE_TRADE_REPORT_MESSAGE 0x54  // Trade Report Message
+#define MESSAGE_TYPE_TRADE_BREAK_MESSAGE 0x42   // Trade Break Message
 
-// ---- Message Header: 3 bytes -------------------------------------------------
+// ---- Types -------------------------------------------------------------------
 
-// IexTp message header
-entrypoint typedef struct _MessageHeader {
-  UINT16 message_length;  // bytes 0 to 1
-  UINT8 message_type;     // byte 2
-} MessageHeader;
+// Tops broadcasts a real-time Quote Update Message each time IEX's best bid or offer quotation is updated during the trading day
+typedef struct _QuoteUpdateMessage {
+  UINT8 unused_6 : 6;             // byte 0
+  UINT8 market_session : 1;       // byte 0
+  UINT8 symbol_availability : 1;  // byte 0
+  UINT64 timestamp;               // bytes 1 to 8, signed, read here as unsigned
+  UINT8 symbol[8];                // bytes 9 to 16
+  UINT32 bid_size;                // bytes 17 to 20
+  UINT64 bid_price;               // bytes 21 to 28, signed, read here as unsigned
+  UINT64 ask_price;               // bytes 29 to 36, signed, read here as unsigned
+  UINT32 ask_size;                // bytes 37 to 40
+} QuoteUpdateMessage;
+
+// Trade Report Messages are sent when an order on the IEX Order Book is executed in whole or in part
+typedef struct _TradeReportMessage {
+  UINT8 unused_4 : 4;              // byte 0
+  UINT8 trade_through_exempt : 1;  // byte 0
+  UINT8 odd_lot : 1;               // byte 0
+  UINT8 extended_hours : 1;        // byte 0
+  UINT8 intermarket_sweep : 1;     // byte 0
+  UINT64 timestamp;                // bytes 1 to 8, signed, read here as unsigned
+  UINT8 symbol[8];                 // bytes 9 to 16
+  UINT32 size;                     // bytes 17 to 20
+  UINT64 price;                    // bytes 21 to 28, signed, read here as unsigned
+  UINT64 trade_id;                 // bytes 29 to 36
+  UINT8 reserved_4[4];             // bytes 37 to 40
+} TradeReportMessage;
+
+// Trade Break Messages are sent when an execution on IEX is broken on that same trading day
+typedef struct _TradeBreakMessage {
+  UINT8 unused_4 : 4;              // byte 0
+  UINT8 trade_through_exempt : 1;  // byte 0
+  UINT8 odd_lot : 1;               // byte 0
+  UINT8 extended_hours : 1;        // byte 0
+  UINT8 intermarket_sweep : 1;     // byte 0
+  UINT64 timestamp;                // bytes 1 to 8, signed, read here as unsigned
+  UINT8 symbol[8];                 // bytes 9 to 16
+  UINT32 size;                     // bytes 17 to 20
+  UINT64 price;                    // bytes 21 to 28, signed, read here as unsigned
+  UINT64 trade_id;                 // bytes 29 to 36
+  UINT8 reserved_4[4];             // bytes 37 to 40
+} TradeBreakMessage;
+
+// Branch
+casetype _MessageData (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x51: QuoteUpdateMessage quote_update_message;
+    case 0x54: TradeReportMessage trade_report_message;
+    case 0x42: TradeBreakMessage trade_break_message;
+    default: UINT8 unknown[available];
+  }
+} MessageData;
+
+// IexTp message
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16 message_length { message_length >= 1 };                                                                                                                   // bytes 0 to 1
+  UINT8 message_type;                                                                                                                                              // byte 2
+  MessageData(message_type, ((((UINT32) message_length) + 2) - 3)) message_data[:byte-size-single-element-array ((((UINT32) message_length) + 2) - 3)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// IexTp message
+typedef struct _MessageRun (UINT16 message_count, UINT32 available, mutable UINT32 * tally) {
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size available];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} MessageRun;
+
+// Branch
+casetype _Messages (UINT16 selector, UINT16 message_count, UINT32 available, mutable UINT32 * tally) {
+  switch (selector) {
+    case 0x0000: unit heartbeat;
+    default: MessageRun(message_count, available, tally) message;
+  }
+} Messages;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// IexTp Udp Packet
+entrypoint typedef struct _Packet (mutable UINT32 * tally) {
+  UINT8 version;                                                                                                                                 // byte 0
+  UINT8 reserved;                                                                                                                                // byte 1
+  UINT16 message_protocol_id;                                                                                                                    // bytes 2 to 3
+  UINT32 channel_id;                                                                                                                             // bytes 4 to 7
+  UINT32 session_id;                                                                                                                             // bytes 8 to 11
+  UINT16 payload_length;                                                                                                                         // bytes 12 to 13
+  UINT16 message_count;                                                                                                                          // bytes 14 to 15
+  UINT64 stream_offset;                                                                                                                          // bytes 16 to 23
+  UINT64 first_message_sequence_number;                                                                                                          // bytes 24 to 31
+  UINT64 send_time;                                                                                                                              // bytes 32 to 39
+  Messages(message_count, message_count, ((UINT32) payload_length), tally) messages[:byte-size-single-element-array ((UINT32) payload_length)];
+} Packet;
 

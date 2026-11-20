@@ -1,33 +1,111 @@
-// Eurex Exchange Extended Derivatives Clearing Interface
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Eurex T7 Edci Fbe v13.1
 //
+// Protocol:
+//   Organization: Eurex Exchange
+//   Protocol: Extended Derivatives Clearing Interface
+//   Encoding: Flat Binary Encoding
+//   Version: 13.1
+//   Date: 3/6/2025
+//   Specification: T7_R.13.1_Enhanced_Drop_Copy_Interface_-_Derivatives_Message_Reference_Version_1.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ClientPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out Eurex_T7_Edci_v13_1_Client.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a length prefix framing what follows
-//
-// License: MIT No Attribution
 
-// ---- Message Header: 6 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Eurex T7 Edci message header
-entrypoint typedef struct _MessageHeader {
-  UINT32 body_len;     // bytes 0 to 3
-  UINT16 template_id;  // bytes 4 to 5
-} MessageHeader;
+// Template Id: 2 byte code
+#define TEMPLATE_ID_DELETE_ORDER_BROADCAST 0x2A96       // Delete Order Broadcast
+#define TEMPLATE_ID_FORCED_LOGOUT_NOTIFICATION 0x271C   // Forced Logout Notification
+#define TEMPLATE_ID_HEARTBEAT 0x271B                    // Heartbeat
+#define TEMPLATE_ID_HEARTBEAT_NOTIFICATION 0x2727       // Heartbeat Notification
+#define TEMPLATE_ID_LOGON_REQUEST 0x2710                // Logon Request
+#define TEMPLATE_ID_LOGON_RESPONSE 0x2711               // Logon Response
+#define TEMPLATE_ID_LOGOUT_REQUEST 0x2712               // Logout Request
+#define TEMPLATE_ID_LOGOUT_RESPONSE 0x2713              // Logout Response
+#define TEMPLATE_ID_ORDER_EXEC_REPORT_BROADCAST 0x2A95  // Order Exec Report Broadcast
+#define TEMPLATE_ID_PARTITION_LIST_NOTIFICATION 0x2735  // Partition List Notification
+#define TEMPLATE_ID_REJECT 0x271A                       // Reject
+#define TEMPLATE_ID_SESSION_LIST_NOTIFICATION 0x2734    // Session List Notification
+#define TEMPLATE_ID_SESSION_STATUS_BROADCAST 0x2A97     // Session Status Broadcast
 
-// ---- Request Header Comp: 8 bytes --------------------------------------------
+// ---- Types -------------------------------------------------------------------
 
-entrypoint typedef struct _RequestHeaderComp {
+typedef struct _Heartbeat {
+  UINT8 pad2[2];  // bytes 0 to 1
+} Heartbeat;
+
+typedef struct _RequestHeaderComp {
   UINT32 msg_seq_num;  // bytes 0 to 3
   UINT8 pad4[4];       // bytes 4 to 7
 } RequestHeaderComp;
+
+typedef struct _LogonRequest {
+  UINT8 pad2[2];                          // bytes 0 to 1
+  RequestHeaderComp request_header_comp;  // bytes 2 to 9
+  UINT32 heart_bt_int;                    // bytes 10 to 13
+  UINT32 party_id_session_id;             // bytes 14 to 17
+  UINT8 default_cstm_appl_ver_id[30];     // bytes 18 to 47
+  UINT8 password[32];                     // bytes 48 to 79
+  UINT8 pad2v2[2];                        // bytes 80 to 81
+} LogonRequest;
+
+typedef struct _LogoutRequest {
+  UINT8 pad2[2];                          // bytes 0 to 1
+  RequestHeaderComp request_header_comp;  // bytes 2 to 9
+} LogoutRequest;
+
+// Eurex T7 Edci message body sent by the participant to Eurex
+casetype _ClientPayload (UINT16 selector, UINT32 length, UINT32 length_2, UINT32 length_3, UINT32 available) {
+  switch (selector) {
+    case 0x271B: Heartbeat heartbeat[:byte-size-single-element-array length];
+    case 0x2710: LogonRequest logon_request[:byte-size-single-element-array length_2];
+    case 0x2712: LogoutRequest logout_request[:byte-size-single-element-array length_3];
+    default: UINT8 unknown[available];
+  }
+} ClientPayload;
+
+// Eurex T7 Edci Message sent by the participant to Eurex
+typedef struct _ClientMessage {
+  UINT32 body_len { body_len >= 6 };                                                                                                                          // bytes 0 to 3
+  UINT16 template_id;                                                                                                                                         // bytes 4 to 5
+  ClientPayload(template_id, (body_len - 6), (body_len - 6), (body_len - 6), (body_len - 6)) client_payload[:byte-size-single-element-array (body_len - 6)];
+} ClientMessage;
+
+// ---- Packet: ClientPacket ----------------------------------------------------
+
+// T7 Tcp Message Block sent by the participant to Eurex
+entrypoint typedef struct _ClientPacket (UINT32 available) {
+  ClientMessage client_message[:byte-size available];
+} ClientPacket;
 

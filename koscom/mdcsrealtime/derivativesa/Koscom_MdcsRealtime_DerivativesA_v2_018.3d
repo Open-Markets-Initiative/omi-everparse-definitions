@@ -1,33 +1,180 @@
-// Koscom Co., Ltd. MDCS Realtime Derivatives A
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Koscom MdcsRealtime DerivativesA Exture v2.018
 //
+// Protocol:
+//   Organization: Koscom Co., Ltd.
+//   Protocol: MDCS Realtime Derivatives A
+//   Encoding: Exture
+//   Version: 2.018
+//   Date: 5/18/2026
+//   Specification: 2. KRX Next Generation System_SPEC_KRX Market data_v2.018.xlsx
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out Koscom_MdcsRealtime_DerivativesA_v2_018.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a run of a stated number of entries
-//
-// License: MIT No Attribution
 
-// ---- Polling Data Message: 5 bytes -------------------------------------------
+// ---- Values ------------------------------------------------------------------
+
+// End Keyword: one byte code
+#define END_KEYWORD_END_OF_MESSAGE 0xFF  // End Of Message
+
+// Final Ask Bid Type Code: one byte code
+#define FINAL_ASK_BID_TYPE_CODE_SINGLE_PRICE 0x20    // Single Price
+#define FINAL_ASK_BID_TYPE_CODE_NOT_APPLICABLE 0x30  // Not Applicable
+#define FINAL_ASK_BID_TYPE_CODE_ASK 0x31             // Ask
+#define FINAL_ASK_BID_TYPE_CODE_BID 0x32             // Bid
+
+// ---- Types -------------------------------------------------------------------
 
 // Polling Data. Transmitted at one-minute intervals on every market data line, all markets, 24 hours a day.
-entrypoint typedef struct _PollingDataMessage {
+typedef struct _PollingDataMessage {
   UINT8 current_time_1_minute_interval[4];  // bytes 0 to 3
   UINT8 end_keyword;                        // byte 4
 } PollingDataMessage;
 
-// ---- Derivatives Order Filled Message: 168 bytes -----------------------------
+// One of the book's best 5 levels: price, volume and order count of each side (empty level: volume 0)
+typedef struct _FiveLevels {
+  UINT8 ask_price[9];         // bytes 0 to 8
+  UINT8 bid_price[9];         // bytes 9 to 17
+  UINT8 ask_volume[9];        // bytes 18 to 26
+  UINT8 bid_volume[9];        // bytes 27 to 35
+  UINT8 ask_order_counts[5];  // bytes 36 to 40
+  UINT8 bid_order_counts[5];  // bytes 41 to 45
+} FiveLevels;
+
+// Derivatives Quote (Five levels). Multi-level bid/ask quotes for futures, options, and other derivatives. Five levels of depth.
+typedef struct _DerivativesQuoteFiveLevelsMessage {
+  UINT8 message_sequence_number[8];             // bytes 0 to 7
+  UINT8 board_id[2];                            // bytes 8 to 9
+  UINT8 session_id[2];                          // bytes 10 to 11
+  UINT8 isin_code[12];                          // bytes 12 to 23
+  UINT8 a_designated_number_for_an_issue[6];    // bytes 24 to 29
+  UINT8 processing_time_of_trading_system[12];  // bytes 30 to 41
+  UINT8 five_levels[230];                       // bytes 42 to 271
+  UINT8 ask_total_volume[9];                    // bytes 272 to 280
+  UINT8 bid_total_volume[9];                    // bytes 281 to 289
+  UINT8 ask_price_valid_counts[5];              // bytes 290 to 294
+  UINT8 bid_price_valid_counts[5];              // bytes 295 to 299
+  UINT8 estimated_trading_price[9];             // bytes 300 to 308
+  UINT8 estimated_trading_volume[9];            // bytes 309 to 317
+  UINT8 end_keyword;                            // byte 318
+} DerivativesQuoteFiveLevelsMessage;
+
+// One of the book's best 10 levels: price, volume and order count of each side (empty level: volume 0)
+typedef struct _TenLevels {
+  UINT8 ask_price[9];         // bytes 0 to 8
+  UINT8 bid_price[9];         // bytes 9 to 17
+  UINT8 ask_volume[9];        // bytes 18 to 26
+  UINT8 bid_volume[9];        // bytes 27 to 35
+  UINT8 ask_order_counts[5];  // bytes 36 to 40
+  UINT8 bid_order_counts[5];  // bytes 41 to 45
+} TenLevels;
+
+// Derivatives Quote (Ten levels). Multi-level bid/ask quotes with ten levels of depth.
+typedef struct _DerivativesQuoteTenLevelsMessage {
+  UINT8 message_sequence_number[8];             // bytes 0 to 7
+  UINT8 board_id[2];                            // bytes 8 to 9
+  UINT8 session_id[2];                          // bytes 10 to 11
+  UINT8 isin_code[12];                          // bytes 12 to 23
+  UINT8 a_designated_number_for_an_issue[6];    // bytes 24 to 29
+  UINT8 processing_time_of_trading_system[12];  // bytes 30 to 41
+  UINT8 ten_levels[460];                        // bytes 42 to 501
+  UINT8 ask_total_volume[9];                    // bytes 502 to 510
+  UINT8 bid_total_volume[9];                    // bytes 511 to 519
+  UINT8 ask_price_valid_counts[5];              // bytes 520 to 524
+  UINT8 bid_price_valid_counts[5];              // bytes 525 to 529
+  UINT8 estimated_trading_price[9];             // bytes 530 to 538
+  UINT8 estimated_trading_volume[9];            // bytes 539 to 547
+  UINT8 end_keyword;                            // byte 548
+} DerivativesQuoteTenLevelsMessage;
+
+// Derivatives Market Data Snapshot (Five Levels). Periodic full state snapshot with five levels of depth.
+typedef struct _DerivativesSnapshotFiveLevelsMessage {
+  UINT8 board_id[2];                              // bytes 0 to 1
+  UINT8 session_id[2];                            // bytes 2 to 3
+  UINT8 isin_code[12];                            // bytes 4 to 15
+  UINT8 a_designated_number_for_an_issue[6];      // bytes 16 to 21
+  UINT8 upper_limit_price[9];                     // bytes 22 to 30
+  UINT8 lower_limit_price[9];                     // bytes 31 to 39
+  UINT8 trading_price[9];                         // bytes 40 to 48
+  UINT8 nearby_month_contract_trading_price[9];   // bytes 49 to 57
+  UINT8 distant_month_contract_trading_price[9];  // bytes 58 to 66
+  UINT8 opening_price[9];                         // bytes 67 to 75
+  UINT8 todays_high[9];                           // bytes 76 to 84
+  UINT8 todays_low[9];                            // bytes 85 to 93
+  UINT8 open_interest[10];                        // bytes 94 to 103
+  UINT8 accumulated_trading_volume[12];           // bytes 104 to 115
+  UINT8 accumulated_trading_value[22];            // bytes 116 to 137
+  UINT8 final_ask_bid_type_code;                  // byte 138
+  UINT8 five_levels[230];                         // bytes 139 to 368
+  UINT8 ask_total_volume[9];                      // bytes 369 to 377
+  UINT8 bid_total_volume[9];                      // bytes 378 to 386
+  UINT8 ask_price_valid_counts[5];                // bytes 387 to 391
+  UINT8 bid_price_valid_counts[5];                // bytes 392 to 396
+  UINT8 estimated_trading_price[9];               // bytes 397 to 405
+  UINT8 estimated_trading_volume[9];              // bytes 406 to 414
+  UINT8 end_keyword;                              // byte 415
+} DerivativesSnapshotFiveLevelsMessage;
+
+// Derivatives Market Data Snapshot (Ten Levels). Periodic full state snapshot with ten levels of depth.
+typedef struct _DerivativesSnapshotTenLevelsMessage {
+  UINT8 board_id[2];                              // bytes 0 to 1
+  UINT8 session_id[2];                            // bytes 2 to 3
+  UINT8 isin_code[12];                            // bytes 4 to 15
+  UINT8 a_designated_number_for_an_issue[6];      // bytes 16 to 21
+  UINT8 upper_limit_price[9];                     // bytes 22 to 30
+  UINT8 lower_limit_price[9];                     // bytes 31 to 39
+  UINT8 trading_price[9];                         // bytes 40 to 48
+  UINT8 nearby_month_contract_trading_price[9];   // bytes 49 to 57
+  UINT8 distant_month_contract_trading_price[9];  // bytes 58 to 66
+  UINT8 opening_price[9];                         // bytes 67 to 75
+  UINT8 todays_high[9];                           // bytes 76 to 84
+  UINT8 todays_low[9];                            // bytes 85 to 93
+  UINT8 open_interest[10];                        // bytes 94 to 103
+  UINT8 accumulated_trading_volume[12];           // bytes 104 to 115
+  UINT8 accumulated_trading_value[22];            // bytes 116 to 137
+  UINT8 final_ask_bid_type_code;                  // byte 138
+  UINT8 ten_levels[460];                          // bytes 139 to 598
+  UINT8 ask_total_volume[9];                      // bytes 599 to 607
+  UINT8 bid_total_volume[9];                      // bytes 608 to 616
+  UINT8 ask_price_valid_counts[5];                // bytes 617 to 621
+  UINT8 bid_price_valid_counts[5];                // bytes 622 to 626
+  UINT8 estimated_trading_price[9];               // bytes 627 to 635
+  UINT8 estimated_trading_volume[9];              // bytes 636 to 644
+  UINT8 end_keyword;                              // byte 645
+} DerivativesSnapshotTenLevelsMessage;
 
 // Derivatives Order Filled. Real-time trade prints with running totals for futures and options.
-entrypoint typedef struct _DerivativesOrderFilledMessage {
+typedef struct _DerivativesOrderFilledMessage {
   UINT8 message_sequence_number[8];               // bytes 0 to 7
   UINT8 board_id[2];                              // bytes 8 to 9
   UINT8 session_id[2];                            // bytes 10 to 11
@@ -50,10 +197,112 @@ entrypoint typedef struct _DerivativesOrderFilledMessage {
   UINT8 end_keyword;                              // byte 167
 } DerivativesOrderFilledMessage;
 
-// ---- Derivatives Negotiated Trade Message: 56 bytes --------------------------
+// Derivatives Order Filled plus Quote (Five levels). Trade print followed by full five-level quote state.
+typedef struct _DerivativesOrderFilledPlusQuoteFiveLevelsMessage {
+  UINT8 message_sequence_number[8];               // bytes 0 to 7
+  UINT8 board_id[2];                              // bytes 8 to 9
+  UINT8 session_id[2];                            // bytes 10 to 11
+  UINT8 isin_code[12];                            // bytes 12 to 23
+  UINT8 a_designated_number_for_an_issue[6];      // bytes 24 to 29
+  UINT8 processing_time_of_trading_system[12];    // bytes 30 to 41
+  UINT8 trading_price[9];                         // bytes 42 to 50
+  UINT8 trading_volume[9];                        // bytes 51 to 59
+  UINT8 nearby_month_contract_trading_price[9];   // bytes 60 to 68
+  UINT8 distant_month_contract_trading_price[9];  // bytes 69 to 77
+  UINT8 opening_price[9];                         // bytes 78 to 86
+  UINT8 todays_high[9];                           // bytes 87 to 95
+  UINT8 todays_low[9];                            // bytes 96 to 104
+  UINT8 previous_price[9];                        // bytes 105 to 113
+  UINT8 accumulated_trading_volume[12];           // bytes 114 to 125
+  UINT8 accumulated_trading_value[22];            // bytes 126 to 147
+  UINT8 final_ask_bid_type_code;                  // byte 148
+  UINT8 upper_limit_of_dynamic_price_range[9];    // bytes 149 to 157
+  UINT8 lower_limit_of_dynamic_price_range[9];    // bytes 158 to 166
+  UINT8 five_levels[230];                         // bytes 167 to 396
+  UINT8 ask_total_volume[9];                      // bytes 397 to 405
+  UINT8 bid_total_volume[9];                      // bytes 406 to 414
+  UINT8 ask_price_valid_counts[5];                // bytes 415 to 419
+  UINT8 bid_price_valid_counts[5];                // bytes 420 to 424
+  UINT8 end_keyword;                              // byte 425
+} DerivativesOrderFilledPlusQuoteFiveLevelsMessage;
+
+// Derivatives Order Filled plus Quote (Ten levels). Trade print followed by full ten-level quote state.
+typedef struct _DerivativesOrderFilledPlusQuoteTenLevelsMessage {
+  UINT8 message_sequence_number[8];               // bytes 0 to 7
+  UINT8 board_id[2];                              // bytes 8 to 9
+  UINT8 session_id[2];                            // bytes 10 to 11
+  UINT8 isin_code[12];                            // bytes 12 to 23
+  UINT8 a_designated_number_for_an_issue[6];      // bytes 24 to 29
+  UINT8 processing_time_of_trading_system[12];    // bytes 30 to 41
+  UINT8 trading_price[9];                         // bytes 42 to 50
+  UINT8 trading_volume[9];                        // bytes 51 to 59
+  UINT8 nearby_month_contract_trading_price[9];   // bytes 60 to 68
+  UINT8 distant_month_contract_trading_price[9];  // bytes 69 to 77
+  UINT8 opening_price[9];                         // bytes 78 to 86
+  UINT8 todays_high[9];                           // bytes 87 to 95
+  UINT8 todays_low[9];                            // bytes 96 to 104
+  UINT8 previous_price[9];                        // bytes 105 to 113
+  UINT8 accumulated_trading_volume[12];           // bytes 114 to 125
+  UINT8 accumulated_trading_value[22];            // bytes 126 to 147
+  UINT8 final_ask_bid_type_code;                  // byte 148
+  UINT8 upper_limit_of_dynamic_price_range[9];    // bytes 149 to 157
+  UINT8 lower_limit_of_dynamic_price_range[9];    // bytes 158 to 166
+  UINT8 ten_levels[460];                          // bytes 167 to 626
+  UINT8 ask_total_volume[9];                      // bytes 627 to 635
+  UINT8 bid_total_volume[9];                      // bytes 636 to 644
+  UINT8 ask_price_valid_counts[5];                // bytes 645 to 649
+  UINT8 bid_price_valid_counts[5];                // bytes 650 to 654
+  UINT8 end_keyword;                              // byte 655
+} DerivativesOrderFilledPlusQuoteTenLevelsMessage;
+
+// Derivatives Market Operation TS plus Quote (Five levels). Per-issue session-state event followed by full five-level quote state.
+typedef struct _DerivativesMarketOperationTsPlusQuoteFiveLevelsMessage {
+  UINT8 message_sequence_number[8];             // bytes 0 to 7
+  UINT8 board_id[2];                            // bytes 8 to 9
+  UINT8 session_id[2];                          // bytes 10 to 11
+  UINT8 isin_code[12];                          // bytes 12 to 23
+  UINT8 a_designated_number_for_an_issue[6];    // bytes 24 to 29
+  UINT8 processing_time_of_trading_system[12];  // bytes 30 to 41
+  UINT8 board_event_id[3];                      // bytes 42 to 44
+  UINT8 start_time_of_a_board_event[9];         // bytes 45 to 53
+  UINT8 board_event_group_code[5];              // bytes 54 to 58
+  UINT8 upper_limit_of_dynamic_price_range[9];  // bytes 59 to 67
+  UINT8 lower_limit_of_dynamic_price_range[9];  // bytes 68 to 76
+  UINT8 five_levels[230];                       // bytes 77 to 306
+  UINT8 ask_total_volume[9];                    // bytes 307 to 315
+  UINT8 bid_total_volume[9];                    // bytes 316 to 324
+  UINT8 ask_price_valid_counts[5];              // bytes 325 to 329
+  UINT8 bid_price_valid_counts[5];              // bytes 330 to 334
+  UINT8 estimated_trading_price[9];             // bytes 335 to 343
+  UINT8 estimated_trading_volume[9];            // bytes 344 to 352
+  UINT8 end_keyword;                            // byte 353
+} DerivativesMarketOperationTsPlusQuoteFiveLevelsMessage;
+
+// Derivatives Market Operation TS plus Quote (Ten levels). Per-issue session-state event followed by full ten-level quote state.
+typedef struct _DerivativesMarketOperationTsPlusQuoteTenLevelsMessage {
+  UINT8 message_sequence_number[8];             // bytes 0 to 7
+  UINT8 board_id[2];                            // bytes 8 to 9
+  UINT8 session_id[2];                          // bytes 10 to 11
+  UINT8 isin_code[12];                          // bytes 12 to 23
+  UINT8 a_designated_number_for_an_issue[6];    // bytes 24 to 29
+  UINT8 processing_time_of_trading_system[12];  // bytes 30 to 41
+  UINT8 board_event_id[3];                      // bytes 42 to 44
+  UINT8 start_time_of_a_board_event[9];         // bytes 45 to 53
+  UINT8 board_event_group_code[5];              // bytes 54 to 58
+  UINT8 upper_limit_of_dynamic_price_range[9];  // bytes 59 to 67
+  UINT8 lower_limit_of_dynamic_price_range[9];  // bytes 68 to 76
+  UINT8 ten_levels[460];                        // bytes 77 to 536
+  UINT8 ask_total_volume[9];                    // bytes 537 to 545
+  UINT8 bid_total_volume[9];                    // bytes 546 to 554
+  UINT8 ask_price_valid_counts[5];              // bytes 555 to 559
+  UINT8 bid_price_valid_counts[5];              // bytes 560 to 564
+  UINT8 estimated_trading_price[9];             // bytes 565 to 573
+  UINT8 estimated_trading_volume[9];            // bytes 574 to 582
+  UINT8 end_keyword;                            // byte 583
+} DerivativesMarketOperationTsPlusQuoteTenLevelsMessage;
 
 // Derivatives Negotiated Trade Data. Off-book negotiated trades for futures and options.
-entrypoint typedef struct _DerivativesNegotiatedTradeMessage {
+typedef struct _DerivativesNegotiatedTradeMessage {
   UINT8 isin_code[12];                         // bytes 0 to 11
   UINT8 a_designated_number_for_an_issue[6];   // bytes 12 to 17
   UINT8 total_accumulated_trading_volume[15];  // bytes 18 to 32
@@ -61,10 +310,8 @@ entrypoint typedef struct _DerivativesNegotiatedTradeMessage {
   UINT8 end_keyword;                           // byte 55
 } DerivativesNegotiatedTradeMessage;
 
-// ---- Derivatives Market Operation Ts Message: 63 bytes -----------------------
-
 // Derivatives Market Operation TS. Per-issue session-state events for futures, options, and other derivatives.
-entrypoint typedef struct _DerivativesMarketOperationTsMessage {
+typedef struct _DerivativesMarketOperationTsMessage {
   UINT8 message_sequence_number[8];             // bytes 0 to 7
   UINT8 board_id[2];                            // bytes 8 to 9
   UINT8 session_id[2];                          // bytes 10 to 11
@@ -78,10 +325,8 @@ entrypoint typedef struct _DerivativesMarketOperationTsMessage {
   UINT8 end_keyword;                            // byte 62
 } DerivativesMarketOperationTsMessage;
 
-// ---- Derivatives Issue Closing Message: 73 bytes -----------------------------
-
 // Derivatives Issue Closing. Per-issue closing event for futures and options.
-entrypoint typedef struct _DerivativesIssueClosingMessage {
+typedef struct _DerivativesIssueClosingMessage {
   UINT8 message_sequence_number[8];           // bytes 0 to 7
   UINT8 board_id[2];                          // bytes 8 to 9
   UINT8 isin_code[12];                        // bytes 10 to 21
@@ -93,10 +338,8 @@ entrypoint typedef struct _DerivativesIssueClosingMessage {
   UINT8 end_keyword;                          // byte 72
 } DerivativesIssueClosingMessage;
 
-// ---- Derivatives Market Operation Schedule Message: 78 bytes -----------------
-
 // Derivatives Market Operation Schedule. Session-level schedule and configuration changes.
-entrypoint typedef struct _DerivativesMarketOperationScheduleMessage {
+typedef struct _DerivativesMarketOperationScheduleMessage {
   UINT8 market_operation_product_id[3];                        // bytes 0 to 2
   UINT8 board_id[2];                                           // bytes 3 to 4
   UINT8 board_event_id[3];                                     // bytes 5 to 7
@@ -115,10 +358,8 @@ entrypoint typedef struct _DerivativesMarketOperationScheduleMessage {
   UINT8 end_keyword;                                           // byte 77
 } DerivativesMarketOperationScheduleMessage;
 
-// ---- Derivatives Dynamic Upper Lower Limit Message: 60 bytes -----------------
-
 // Derivatives Applying/Removing Dynamic Upper/Lower Limit. Per-issue dynamic price-limit application or removal.
-entrypoint typedef struct _DerivativesDynamicUpperLowerLimitMessage {
+typedef struct _DerivativesDynamicUpperLowerLimitMessage {
   UINT8 message_sequence_number[8];             // bytes 0 to 7
   UINT8 board_id[2];                            // bytes 8 to 9
   UINT8 isin_code[12];                          // bytes 10 to 21
@@ -130,10 +371,8 @@ entrypoint typedef struct _DerivativesDynamicUpperLowerLimitMessage {
   UINT8 end_keyword;                            // byte 59
 } DerivativesDynamicUpperLowerLimitMessage;
 
-// ---- Derivatives Price Limit Range Increase Message: 60 bytes ----------------
-
 // Derivatives Increasing Price Limit Range. Per-issue price-limit range expansion event.
-entrypoint typedef struct _DerivativesPriceLimitRangeIncreaseMessage {
+typedef struct _DerivativesPriceLimitRangeIncreaseMessage {
   UINT8 message_sequence_number[8];            // bytes 0 to 7
   UINT8 board_id[2];                           // bytes 8 to 9
   UINT8 isin_code[12];                         // bytes 10 to 21
@@ -146,10 +385,8 @@ entrypoint typedef struct _DerivativesPriceLimitRangeIncreaseMessage {
   UINT8 end_keyword;                           // byte 59
 } DerivativesPriceLimitRangeIncreaseMessage;
 
-// ---- Derivatives Quantity Allocation Message: 40 bytes -----------------------
-
 // Derivatives Quantity Allocation. Reports the quantity allocated to each price level at a single price trade match.
-entrypoint typedef struct _DerivativesQuantityAllocationMessage {
+typedef struct _DerivativesQuantityAllocationMessage {
   UINT8 message_sequence_number[8];           // bytes 0 to 7
   UINT8 board_id[2];                          // bytes 8 to 9
   UINT8 isin_code[12];                        // bytes 10 to 21
@@ -160,10 +397,8 @@ entrypoint typedef struct _DerivativesQuantityAllocationMessage {
   UINT8 end_keyword;                          // byte 39
 } DerivativesQuantityAllocationMessage;
 
-// ---- Derivatives Group Order Acceptance Halt Message: 28 bytes ---------------
-
 // Derivatives Group Order Acceptance Halt/Release. Matching engine group-order halt and release events for futures and options.
-entrypoint typedef struct _DerivativesGroupOrderAcceptanceHaltMessage {
+typedef struct _DerivativesGroupOrderAcceptanceHaltMessage {
   UINT8 market_id[3];                    // bytes 0 to 2
   UINT8 me_group_number[5];              // bytes 3 to 7
   UINT8 board_id[2];                     // bytes 8 to 9
@@ -173,10 +408,8 @@ entrypoint typedef struct _DerivativesGroupOrderAcceptanceHaltMessage {
   UINT8 end_keyword;                     // byte 27
 } DerivativesGroupOrderAcceptanceHaltMessage;
 
-// ---- Derivatives Batch Data Message: 1313 bytes ------------------------------
-
 // Derivatives Batch Data. Comprehensive per-issue reference data dumped at start-of-day for futures, options, and other derivatives.
-entrypoint typedef struct _DerivativesBatchDataMessage {
+typedef struct _DerivativesBatchDataMessage {
   UINT8 message_sequence_number[8];                                            // bytes 0 to 7
   UINT8 total_number_of_instruments_of_the_contract[6];                        // bytes 8 to 13
   UINT8 business_date[8];                                                      // bytes 14 to 21
@@ -300,10 +533,8 @@ entrypoint typedef struct _DerivativesBatchDataMessage {
   UINT8 end_keyword;                                                           // byte 1312
 } DerivativesBatchDataMessage;
 
-// ---- Equity Derivatives Adjustment Details Message: 151 bytes ----------------
-
 // Equity Derivatives Adjustment Details. Corporate-action and contract-spec adjustments to equity-derivatives positions.
-entrypoint typedef struct _EquityDerivativesAdjustmentDetailsMessage {
+typedef struct _EquityDerivativesAdjustmentDetailsMessage {
   UINT8 message_sequence_number[8];                                                  // bytes 0 to 7
   UINT8 business_date[8];                                                            // bytes 8 to 15
   UINT8 isin_code[12];                                                               // bytes 16 to 27
@@ -317,10 +548,8 @@ entrypoint typedef struct _EquityDerivativesAdjustmentDetailsMessage {
   UINT8 end_keyword;                                                                 // byte 150
 } EquityDerivativesAdjustmentDetailsMessage;
 
-// ---- Commodity Futures Settlement Reference Ktb Message: 66 bytes ------------
-
 // Commodity Futures Settlement Reference for KTB.
-entrypoint typedef struct _CommodityFuturesSettlementReferenceKtbMessage {
+typedef struct _CommodityFuturesSettlementReferenceKtbMessage {
   UINT8 message_sequence_number[8];          // bytes 0 to 7
   UINT8 application_date[8];                 // bytes 8 to 15
   UINT8 underlying_asset_id[3];              // bytes 16 to 18
@@ -330,10 +559,8 @@ entrypoint typedef struct _CommodityFuturesSettlementReferenceKtbMessage {
   UINT8 end_keyword;                         // byte 65
 } CommodityFuturesSettlementReferenceKtbMessage;
 
-// ---- Derivatives Investor Activities Message: 161 bytes ----------------------
-
 // Investor Activities per Derivatives. Aggregated bid/ask volumes and values by investor category per derivatives product.
-entrypoint typedef struct _DerivativesInvestorActivitiesMessage {
+typedef struct _DerivativesInvestorActivitiesMessage {
   UINT8 date[8];                          // bytes 0 to 7
   UINT8 calculation_time_activities[6];   // bytes 8 to 13
   UINT8 transaction_status_type_code[2];  // bytes 14 to 15
@@ -351,10 +578,8 @@ entrypoint typedef struct _DerivativesInvestorActivitiesMessage {
   UINT8 end_keyword;                      // byte 160
 } DerivativesInvestorActivitiesMessage;
 
-// ---- Derivatives Open Interest Message: 39 bytes -----------------------------
-
 // Derivatives Open Interest. Total open interest per derivatives contract.
-entrypoint typedef struct _DerivativesOpenInterestMessage {
+typedef struct _DerivativesOpenInterestMessage {
   UINT8 isin_code[12];                        // bytes 0 to 11
   UINT8 a_designated_number_for_an_issue[6];  // bytes 12 to 17
   UINT8 open_interest_type_code[2];           // bytes 18 to 19
@@ -363,10 +588,8 @@ entrypoint typedef struct _DerivativesOpenInterestMessage {
   UINT8 end_keyword;                          // byte 38
 } DerivativesOpenInterestMessage;
 
-// ---- Futures Settled Price Message: 58 bytes ---------------------------------
-
 // Futures Settled Price. Daily settled price for futures contracts.
-entrypoint typedef struct _FuturesSettledPriceMessage {
+typedef struct _FuturesSettledPriceMessage {
   UINT8 isin_code[12];                        // bytes 0 to 11
   UINT8 a_designated_number_for_an_issue[6];  // bytes 12 to 17
   UINT8 settlement_price[18];                 // bytes 18 to 35
@@ -376,10 +599,8 @@ entrypoint typedef struct _FuturesSettledPriceMessage {
   UINT8 end_keyword;                          // byte 57
 } FuturesSettledPriceMessage;
 
-// ---- Options Base Price Of Clearing Margins Message: 58 bytes ----------------
-
 // Options Base Price of Clearing Margins. Base price used for margin calculation.
-entrypoint typedef struct _OptionsBasePriceOfClearingMarginsMessage {
+typedef struct _OptionsBasePriceOfClearingMarginsMessage {
   UINT8 isin_code[12];                                             // bytes 0 to 11
   UINT8 a_designated_number_for_an_issue[6];                       // bytes 12 to 17
   UINT8 base_price_of_clearing_margins[18];                        // bytes 18 to 35
@@ -389,10 +610,8 @@ entrypoint typedef struct _OptionsBasePriceOfClearingMarginsMessage {
   UINT8 end_keyword;                                               // byte 57
 } OptionsBasePriceOfClearingMarginsMessage;
 
-// ---- Options Implied Volatility Message: 45 bytes ----------------------------
-
 // Options Implied Volatility per option contract.
-entrypoint typedef struct _OptionsImpliedVolatilityMessage {
+typedef struct _OptionsImpliedVolatilityMessage {
   UINT8 call_averaged_implied_volatility[11];   // bytes 0 to 10
   UINT8 put_averaged_implied_volatility[11];    // bytes 11 to 21
   UINT8 representative_implied_volatility[11];  // bytes 22 to 32
@@ -400,10 +619,8 @@ entrypoint typedef struct _OptionsImpliedVolatilityMessage {
   UINT8 end_keyword;                            // byte 44
 } OptionsImpliedVolatilityMessage;
 
-// ---- Options Sensitivity Message: 140 bytes ----------------------------------
-
 // Options Sensitivity. Greeks (Delta, Gamma, Theta, Vega, Rho) per option contract.
-entrypoint typedef struct _OptionsSensitivityMessage {
+typedef struct _OptionsSensitivityMessage {
   UINT8 isin_code[12];                        // bytes 0 to 11
   UINT8 a_designated_number_for_an_issue[6];  // bytes 12 to 17
   UINT8 calculating_date[8];                  // bytes 18 to 25
@@ -418,10 +635,8 @@ entrypoint typedef struct _OptionsSensitivityMessage {
   UINT8 end_keyword;                          // byte 139
 } OptionsSensitivityMessage;
 
-// ---- Commodity Futures Spot Settlement Reference Message: 55 bytes -----------
-
 // Commodity Futures Spot Market Info Settlement Reference.
-entrypoint typedef struct _CommodityFuturesSpotSettlementReferenceMessage {
+typedef struct _CommodityFuturesSpotSettlementReferenceMessage {
   UINT8 bis_announcement_date[8];             // bytes 0 to 7
   UINT8 bis_announcement_time[6];             // bytes 8 to 13
   UINT8 underlying_asset_id[3];               // bytes 14 to 16
@@ -432,10 +647,8 @@ entrypoint typedef struct _CommodityFuturesSpotSettlementReferenceMessage {
   UINT8 end_keyword;                          // byte 54
 } CommodityFuturesSpotSettlementReferenceMessage;
 
-// ---- Daily Disclosed Rfr Message: 82 bytes -----------------------------------
-
 // Daily disclosed Risk-Free Rate (RFR) reference.
-entrypoint typedef struct _DailyDisclosedRfrMessage {
+typedef struct _DailyDisclosedRfrMessage {
   UINT8 base_date[8];               // bytes 0 to 7
   UINT8 disclosure_type[2];         // bytes 8 to 9
   UINT8 disclosure_date[14];        // bytes 10 to 23
@@ -446,4 +659,360 @@ entrypoint typedef struct _DailyDisclosedRfrMessage {
   UINT8 interest_rate_180_day[12];  // bytes 69 to 80
   UINT8 end_keyword;                // byte 81
 } DailyDisclosedRfrMessage;
+
+// Branch
+casetype _Payload (UINT64 selector, UINT32 available) {
+  switch (selector) {
+    case 0x4932303030: PollingDataMessage polling_data_message;
+    case 0x4236303146: DerivativesQuoteFiveLevelsMessage derivatives_quote_five_levels_message;
+    case 0x4236303246: DerivativesQuoteFiveLevelsMessage derivatives_quote_five_levels_message_2;
+    case 0x4236303346: DerivativesQuoteFiveLevelsMessage derivatives_quote_five_levels_message_3;
+    case 0x4236303646: DerivativesQuoteFiveLevelsMessage derivatives_quote_five_levels_message_4;
+    case 0x4236303746: DerivativesQuoteFiveLevelsMessage derivatives_quote_five_levels_message_5;
+    case 0x4236303846: DerivativesQuoteFiveLevelsMessage derivatives_quote_five_levels_message_6;
+    case 0x4236303946: DerivativesQuoteFiveLevelsMessage derivatives_quote_five_levels_message_7;
+    case 0x4236313046: DerivativesQuoteFiveLevelsMessage derivatives_quote_five_levels_message_8;
+    case 0x4236313146: DerivativesQuoteFiveLevelsMessage derivatives_quote_five_levels_message_9;
+    case 0x4236313246: DerivativesQuoteFiveLevelsMessage derivatives_quote_five_levels_message_10;
+    case 0x4236313346: DerivativesQuoteFiveLevelsMessage derivatives_quote_five_levels_message_11;
+    case 0x4236313546: DerivativesQuoteFiveLevelsMessage derivatives_quote_five_levels_message_12;
+    case 0x4236313646: DerivativesQuoteFiveLevelsMessage derivatives_quote_five_levels_message_13;
+    case 0x4236313746: DerivativesQuoteFiveLevelsMessage derivatives_quote_five_levels_message_14;
+    case 0x4236303446: DerivativesQuoteTenLevelsMessage derivatives_quote_ten_levels_message;
+    case 0x4236303546: DerivativesQuoteTenLevelsMessage derivatives_quote_ten_levels_message_2;
+    case 0x4236313846: DerivativesQuoteTenLevelsMessage derivatives_quote_ten_levels_message_3;
+    case 0x4232303146: DerivativesSnapshotFiveLevelsMessage derivatives_snapshot_five_levels_message;
+    case 0x4232303246: DerivativesSnapshotFiveLevelsMessage derivatives_snapshot_five_levels_message_2;
+    case 0x4232303346: DerivativesSnapshotFiveLevelsMessage derivatives_snapshot_five_levels_message_3;
+    case 0x4232303646: DerivativesSnapshotFiveLevelsMessage derivatives_snapshot_five_levels_message_4;
+    case 0x4232303746: DerivativesSnapshotFiveLevelsMessage derivatives_snapshot_five_levels_message_5;
+    case 0x4232303846: DerivativesSnapshotFiveLevelsMessage derivatives_snapshot_five_levels_message_6;
+    case 0x4232303946: DerivativesSnapshotFiveLevelsMessage derivatives_snapshot_five_levels_message_7;
+    case 0x4232313046: DerivativesSnapshotFiveLevelsMessage derivatives_snapshot_five_levels_message_8;
+    case 0x4232313146: DerivativesSnapshotFiveLevelsMessage derivatives_snapshot_five_levels_message_9;
+    case 0x4232313246: DerivativesSnapshotFiveLevelsMessage derivatives_snapshot_five_levels_message_10;
+    case 0x4232313346: DerivativesSnapshotFiveLevelsMessage derivatives_snapshot_five_levels_message_11;
+    case 0x4232313546: DerivativesSnapshotFiveLevelsMessage derivatives_snapshot_five_levels_message_12;
+    case 0x4232313646: DerivativesSnapshotFiveLevelsMessage derivatives_snapshot_five_levels_message_13;
+    case 0x4232313746: DerivativesSnapshotFiveLevelsMessage derivatives_snapshot_five_levels_message_14;
+    case 0x4232303446: DerivativesSnapshotTenLevelsMessage derivatives_snapshot_ten_levels_message;
+    case 0x4232303546: DerivativesSnapshotTenLevelsMessage derivatives_snapshot_ten_levels_message_2;
+    case 0x4232313846: DerivativesSnapshotTenLevelsMessage derivatives_snapshot_ten_levels_message_3;
+    case 0x4133303146: DerivativesOrderFilledMessage derivatives_order_filled_message;
+    case 0x4133303246: DerivativesOrderFilledMessage derivatives_order_filled_message_2;
+    case 0x4133303346: DerivativesOrderFilledMessage derivatives_order_filled_message_3;
+    case 0x4133303446: DerivativesOrderFilledMessage derivatives_order_filled_message_4;
+    case 0x4133303546: DerivativesOrderFilledMessage derivatives_order_filled_message_5;
+    case 0x4133303646: DerivativesOrderFilledMessage derivatives_order_filled_message_6;
+    case 0x4133303746: DerivativesOrderFilledMessage derivatives_order_filled_message_7;
+    case 0x4133303846: DerivativesOrderFilledMessage derivatives_order_filled_message_8;
+    case 0x4133303946: DerivativesOrderFilledMessage derivatives_order_filled_message_9;
+    case 0x4133313046: DerivativesOrderFilledMessage derivatives_order_filled_message_10;
+    case 0x4133313146: DerivativesOrderFilledMessage derivatives_order_filled_message_11;
+    case 0x4133313246: DerivativesOrderFilledMessage derivatives_order_filled_message_12;
+    case 0x4133313346: DerivativesOrderFilledMessage derivatives_order_filled_message_13;
+    case 0x4133313546: DerivativesOrderFilledMessage derivatives_order_filled_message_14;
+    case 0x4133313646: DerivativesOrderFilledMessage derivatives_order_filled_message_15;
+    case 0x4133313746: DerivativesOrderFilledMessage derivatives_order_filled_message_16;
+    case 0x4133313846: DerivativesOrderFilledMessage derivatives_order_filled_message_17;
+    case 0x4737303146: DerivativesOrderFilledPlusQuoteFiveLevelsMessage derivatives_order_filled_plus_quote_five_levels_message;
+    case 0x4737303246: DerivativesOrderFilledPlusQuoteFiveLevelsMessage derivatives_order_filled_plus_quote_five_levels_message_2;
+    case 0x4737303346: DerivativesOrderFilledPlusQuoteFiveLevelsMessage derivatives_order_filled_plus_quote_five_levels_message_3;
+    case 0x4737303646: DerivativesOrderFilledPlusQuoteFiveLevelsMessage derivatives_order_filled_plus_quote_five_levels_message_4;
+    case 0x4737303746: DerivativesOrderFilledPlusQuoteFiveLevelsMessage derivatives_order_filled_plus_quote_five_levels_message_5;
+    case 0x4737303846: DerivativesOrderFilledPlusQuoteFiveLevelsMessage derivatives_order_filled_plus_quote_five_levels_message_6;
+    case 0x4737303946: DerivativesOrderFilledPlusQuoteFiveLevelsMessage derivatives_order_filled_plus_quote_five_levels_message_7;
+    case 0x4737313046: DerivativesOrderFilledPlusQuoteFiveLevelsMessage derivatives_order_filled_plus_quote_five_levels_message_8;
+    case 0x4737313146: DerivativesOrderFilledPlusQuoteFiveLevelsMessage derivatives_order_filled_plus_quote_five_levels_message_9;
+    case 0x4737313246: DerivativesOrderFilledPlusQuoteFiveLevelsMessage derivatives_order_filled_plus_quote_five_levels_message_10;
+    case 0x4737313346: DerivativesOrderFilledPlusQuoteFiveLevelsMessage derivatives_order_filled_plus_quote_five_levels_message_11;
+    case 0x4737313546: DerivativesOrderFilledPlusQuoteFiveLevelsMessage derivatives_order_filled_plus_quote_five_levels_message_12;
+    case 0x4737313646: DerivativesOrderFilledPlusQuoteFiveLevelsMessage derivatives_order_filled_plus_quote_five_levels_message_13;
+    case 0x4737313746: DerivativesOrderFilledPlusQuoteFiveLevelsMessage derivatives_order_filled_plus_quote_five_levels_message_14;
+    case 0x4737303446: DerivativesOrderFilledPlusQuoteTenLevelsMessage derivatives_order_filled_plus_quote_ten_levels_message;
+    case 0x4737303546: DerivativesOrderFilledPlusQuoteTenLevelsMessage derivatives_order_filled_plus_quote_ten_levels_message_2;
+    case 0x4737313846: DerivativesOrderFilledPlusQuoteTenLevelsMessage derivatives_order_filled_plus_quote_ten_levels_message_3;
+    case 0x5231303146: DerivativesMarketOperationTsPlusQuoteFiveLevelsMessage derivatives_market_operation_ts_plus_quote_five_levels_message;
+    case 0x5231303246: DerivativesMarketOperationTsPlusQuoteFiveLevelsMessage derivatives_market_operation_ts_plus_quote_five_levels_message_2;
+    case 0x5231303346: DerivativesMarketOperationTsPlusQuoteFiveLevelsMessage derivatives_market_operation_ts_plus_quote_five_levels_message_3;
+    case 0x5231303646: DerivativesMarketOperationTsPlusQuoteFiveLevelsMessage derivatives_market_operation_ts_plus_quote_five_levels_message_4;
+    case 0x5231303746: DerivativesMarketOperationTsPlusQuoteFiveLevelsMessage derivatives_market_operation_ts_plus_quote_five_levels_message_5;
+    case 0x5231303846: DerivativesMarketOperationTsPlusQuoteFiveLevelsMessage derivatives_market_operation_ts_plus_quote_five_levels_message_6;
+    case 0x5231303946: DerivativesMarketOperationTsPlusQuoteFiveLevelsMessage derivatives_market_operation_ts_plus_quote_five_levels_message_7;
+    case 0x5231313046: DerivativesMarketOperationTsPlusQuoteFiveLevelsMessage derivatives_market_operation_ts_plus_quote_five_levels_message_8;
+    case 0x5231313146: DerivativesMarketOperationTsPlusQuoteFiveLevelsMessage derivatives_market_operation_ts_plus_quote_five_levels_message_9;
+    case 0x5231313246: DerivativesMarketOperationTsPlusQuoteFiveLevelsMessage derivatives_market_operation_ts_plus_quote_five_levels_message_10;
+    case 0x5231313346: DerivativesMarketOperationTsPlusQuoteFiveLevelsMessage derivatives_market_operation_ts_plus_quote_five_levels_message_11;
+    case 0x5231313546: DerivativesMarketOperationTsPlusQuoteFiveLevelsMessage derivatives_market_operation_ts_plus_quote_five_levels_message_12;
+    case 0x5231313646: DerivativesMarketOperationTsPlusQuoteFiveLevelsMessage derivatives_market_operation_ts_plus_quote_five_levels_message_13;
+    case 0x5231313746: DerivativesMarketOperationTsPlusQuoteFiveLevelsMessage derivatives_market_operation_ts_plus_quote_five_levels_message_14;
+    case 0x5231303446: DerivativesMarketOperationTsPlusQuoteTenLevelsMessage derivatives_market_operation_ts_plus_quote_ten_levels_message;
+    case 0x5231303546: DerivativesMarketOperationTsPlusQuoteTenLevelsMessage derivatives_market_operation_ts_plus_quote_ten_levels_message_2;
+    case 0x5231313846: DerivativesMarketOperationTsPlusQuoteTenLevelsMessage derivatives_market_operation_ts_plus_quote_ten_levels_message_3;
+    case 0x4334303146: DerivativesNegotiatedTradeMessage derivatives_negotiated_trade_message;
+    case 0x4334303246: DerivativesNegotiatedTradeMessage derivatives_negotiated_trade_message_2;
+    case 0x4334303346: DerivativesNegotiatedTradeMessage derivatives_negotiated_trade_message_3;
+    case 0x4334303446: DerivativesNegotiatedTradeMessage derivatives_negotiated_trade_message_4;
+    case 0x4334303546: DerivativesNegotiatedTradeMessage derivatives_negotiated_trade_message_5;
+    case 0x4334303646: DerivativesNegotiatedTradeMessage derivatives_negotiated_trade_message_6;
+    case 0x4334303746: DerivativesNegotiatedTradeMessage derivatives_negotiated_trade_message_7;
+    case 0x4334303846: DerivativesNegotiatedTradeMessage derivatives_negotiated_trade_message_8;
+    case 0x4334303946: DerivativesNegotiatedTradeMessage derivatives_negotiated_trade_message_9;
+    case 0x4334313046: DerivativesNegotiatedTradeMessage derivatives_negotiated_trade_message_10;
+    case 0x4334313146: DerivativesNegotiatedTradeMessage derivatives_negotiated_trade_message_11;
+    case 0x4334313246: DerivativesNegotiatedTradeMessage derivatives_negotiated_trade_message_12;
+    case 0x4334313346: DerivativesNegotiatedTradeMessage derivatives_negotiated_trade_message_13;
+    case 0x4334313546: DerivativesNegotiatedTradeMessage derivatives_negotiated_trade_message_14;
+    case 0x4334313646: DerivativesNegotiatedTradeMessage derivatives_negotiated_trade_message_15;
+    case 0x4334313746: DerivativesNegotiatedTradeMessage derivatives_negotiated_trade_message_16;
+    case 0x4334313846: DerivativesNegotiatedTradeMessage derivatives_negotiated_trade_message_17;
+    case 0x4137303153: DerivativesMarketOperationTsMessage derivatives_market_operation_ts_message;
+    case 0x4137303253: DerivativesMarketOperationTsMessage derivatives_market_operation_ts_message_2;
+    case 0x4137303353: DerivativesMarketOperationTsMessage derivatives_market_operation_ts_message_3;
+    case 0x4137303453: DerivativesMarketOperationTsMessage derivatives_market_operation_ts_message_4;
+    case 0x4137303553: DerivativesMarketOperationTsMessage derivatives_market_operation_ts_message_5;
+    case 0x4137303151: DerivativesMarketOperationTsMessage derivatives_market_operation_ts_message_6;
+    case 0x4137303158: DerivativesMarketOperationTsMessage derivatives_market_operation_ts_message_7;
+    case 0x4137303142: DerivativesMarketOperationTsMessage derivatives_market_operation_ts_message_8;
+    case 0x413730314D: DerivativesMarketOperationTsMessage derivatives_market_operation_ts_message_9;
+    case 0x413730314B: DerivativesMarketOperationTsMessage derivatives_market_operation_ts_message_10;
+    case 0x4137303152: DerivativesMarketOperationTsMessage derivatives_market_operation_ts_message_11;
+    case 0x4137303146: DerivativesMarketOperationTsMessage derivatives_market_operation_ts_message_12;
+    case 0x4137303246: DerivativesMarketOperationTsMessage derivatives_market_operation_ts_message_13;
+    case 0x4137303346: DerivativesMarketOperationTsMessage derivatives_market_operation_ts_message_14;
+    case 0x4137303446: DerivativesMarketOperationTsMessage derivatives_market_operation_ts_message_15;
+    case 0x4137303546: DerivativesMarketOperationTsMessage derivatives_market_operation_ts_message_16;
+    case 0x4137303646: DerivativesMarketOperationTsMessage derivatives_market_operation_ts_message_17;
+    case 0x4137303746: DerivativesMarketOperationTsMessage derivatives_market_operation_ts_message_18;
+    case 0x4137303846: DerivativesMarketOperationTsMessage derivatives_market_operation_ts_message_19;
+    case 0x4137303946: DerivativesMarketOperationTsMessage derivatives_market_operation_ts_message_20;
+    case 0x4137313046: DerivativesMarketOperationTsMessage derivatives_market_operation_ts_message_21;
+    case 0x4137313146: DerivativesMarketOperationTsMessage derivatives_market_operation_ts_message_22;
+    case 0x4137313246: DerivativesMarketOperationTsMessage derivatives_market_operation_ts_message_23;
+    case 0x4137313346: DerivativesMarketOperationTsMessage derivatives_market_operation_ts_message_24;
+    case 0x4137313546: DerivativesMarketOperationTsMessage derivatives_market_operation_ts_message_25;
+    case 0x4137313646: DerivativesMarketOperationTsMessage derivatives_market_operation_ts_message_26;
+    case 0x4137313746: DerivativesMarketOperationTsMessage derivatives_market_operation_ts_message_27;
+    case 0x4137313846: DerivativesMarketOperationTsMessage derivatives_market_operation_ts_message_28;
+    case 0x4137303147: DerivativesMarketOperationTsMessage derivatives_market_operation_ts_message_29;
+    case 0x4137303145: DerivativesMarketOperationTsMessage derivatives_market_operation_ts_message_30;
+    case 0x4136303146: DerivativesIssueClosingMessage derivatives_issue_closing_message;
+    case 0x4136303246: DerivativesIssueClosingMessage derivatives_issue_closing_message_2;
+    case 0x4136303346: DerivativesIssueClosingMessage derivatives_issue_closing_message_3;
+    case 0x4136303446: DerivativesIssueClosingMessage derivatives_issue_closing_message_4;
+    case 0x4136303546: DerivativesIssueClosingMessage derivatives_issue_closing_message_5;
+    case 0x4136303646: DerivativesIssueClosingMessage derivatives_issue_closing_message_6;
+    case 0x4136303746: DerivativesIssueClosingMessage derivatives_issue_closing_message_7;
+    case 0x4136303846: DerivativesIssueClosingMessage derivatives_issue_closing_message_8;
+    case 0x4136303946: DerivativesIssueClosingMessage derivatives_issue_closing_message_9;
+    case 0x4136313046: DerivativesIssueClosingMessage derivatives_issue_closing_message_10;
+    case 0x4136313146: DerivativesIssueClosingMessage derivatives_issue_closing_message_11;
+    case 0x4136313246: DerivativesIssueClosingMessage derivatives_issue_closing_message_12;
+    case 0x4136313346: DerivativesIssueClosingMessage derivatives_issue_closing_message_13;
+    case 0x4136313546: DerivativesIssueClosingMessage derivatives_issue_closing_message_14;
+    case 0x4136313646: DerivativesIssueClosingMessage derivatives_issue_closing_message_15;
+    case 0x4136313746: DerivativesIssueClosingMessage derivatives_issue_closing_message_16;
+    case 0x4136313846: DerivativesIssueClosingMessage derivatives_issue_closing_message_17;
+    case 0x4D34303153: DerivativesMarketOperationScheduleMessage derivatives_market_operation_schedule_message;
+    case 0x4D34303253: DerivativesMarketOperationScheduleMessage derivatives_market_operation_schedule_message_2;
+    case 0x4D34303353: DerivativesMarketOperationScheduleMessage derivatives_market_operation_schedule_message_3;
+    case 0x4D34303453: DerivativesMarketOperationScheduleMessage derivatives_market_operation_schedule_message_4;
+    case 0x4D34303553: DerivativesMarketOperationScheduleMessage derivatives_market_operation_schedule_message_5;
+    case 0x4D34303151: DerivativesMarketOperationScheduleMessage derivatives_market_operation_schedule_message_6;
+    case 0x4D34303158: DerivativesMarketOperationScheduleMessage derivatives_market_operation_schedule_message_7;
+    case 0x4D34303142: DerivativesMarketOperationScheduleMessage derivatives_market_operation_schedule_message_8;
+    case 0x4D3430314D: DerivativesMarketOperationScheduleMessage derivatives_market_operation_schedule_message_9;
+    case 0x4D3430314B: DerivativesMarketOperationScheduleMessage derivatives_market_operation_schedule_message_10;
+    case 0x4D34303152: DerivativesMarketOperationScheduleMessage derivatives_market_operation_schedule_message_11;
+    case 0x4D34303146: DerivativesMarketOperationScheduleMessage derivatives_market_operation_schedule_message_12;
+    case 0x4D34303246: DerivativesMarketOperationScheduleMessage derivatives_market_operation_schedule_message_13;
+    case 0x4D34303346: DerivativesMarketOperationScheduleMessage derivatives_market_operation_schedule_message_14;
+    case 0x4D34303446: DerivativesMarketOperationScheduleMessage derivatives_market_operation_schedule_message_15;
+    case 0x4D34303546: DerivativesMarketOperationScheduleMessage derivatives_market_operation_schedule_message_16;
+    case 0x4D34303646: DerivativesMarketOperationScheduleMessage derivatives_market_operation_schedule_message_17;
+    case 0x4D34303746: DerivativesMarketOperationScheduleMessage derivatives_market_operation_schedule_message_18;
+    case 0x4D34303846: DerivativesMarketOperationScheduleMessage derivatives_market_operation_schedule_message_19;
+    case 0x4D34303946: DerivativesMarketOperationScheduleMessage derivatives_market_operation_schedule_message_20;
+    case 0x4D34313046: DerivativesMarketOperationScheduleMessage derivatives_market_operation_schedule_message_21;
+    case 0x4D34313146: DerivativesMarketOperationScheduleMessage derivatives_market_operation_schedule_message_22;
+    case 0x4D34313246: DerivativesMarketOperationScheduleMessage derivatives_market_operation_schedule_message_23;
+    case 0x4D34313346: DerivativesMarketOperationScheduleMessage derivatives_market_operation_schedule_message_24;
+    case 0x4D34313546: DerivativesMarketOperationScheduleMessage derivatives_market_operation_schedule_message_25;
+    case 0x4D34313646: DerivativesMarketOperationScheduleMessage derivatives_market_operation_schedule_message_26;
+    case 0x4D34313746: DerivativesMarketOperationScheduleMessage derivatives_market_operation_schedule_message_27;
+    case 0x4D34313846: DerivativesMarketOperationScheduleMessage derivatives_market_operation_schedule_message_28;
+    case 0x4D34303147: DerivativesMarketOperationScheduleMessage derivatives_market_operation_schedule_message_29;
+    case 0x4D34303145: DerivativesMarketOperationScheduleMessage derivatives_market_operation_schedule_message_30;
+    case 0x5132303146: DerivativesDynamicUpperLowerLimitMessage derivatives_dynamic_upper_lower_limit_message;
+    case 0x5132303246: DerivativesDynamicUpperLowerLimitMessage derivatives_dynamic_upper_lower_limit_message_2;
+    case 0x5132303346: DerivativesDynamicUpperLowerLimitMessage derivatives_dynamic_upper_lower_limit_message_3;
+    case 0x5132303446: DerivativesDynamicUpperLowerLimitMessage derivatives_dynamic_upper_lower_limit_message_4;
+    case 0x5132303646: DerivativesDynamicUpperLowerLimitMessage derivatives_dynamic_upper_lower_limit_message_5;
+    case 0x5132303846: DerivativesDynamicUpperLowerLimitMessage derivatives_dynamic_upper_lower_limit_message_6;
+    case 0x5132303946: DerivativesDynamicUpperLowerLimitMessage derivatives_dynamic_upper_lower_limit_message_7;
+    case 0x5132313046: DerivativesDynamicUpperLowerLimitMessage derivatives_dynamic_upper_lower_limit_message_8;
+    case 0x5132313146: DerivativesDynamicUpperLowerLimitMessage derivatives_dynamic_upper_lower_limit_message_9;
+    case 0x5132313246: DerivativesDynamicUpperLowerLimitMessage derivatives_dynamic_upper_lower_limit_message_10;
+    case 0x5132313646: DerivativesDynamicUpperLowerLimitMessage derivatives_dynamic_upper_lower_limit_message_11;
+    case 0x5132313746: DerivativesDynamicUpperLowerLimitMessage derivatives_dynamic_upper_lower_limit_message_12;
+    case 0x5631303146: DerivativesPriceLimitRangeIncreaseMessage derivatives_price_limit_range_increase_message;
+    case 0x5631303246: DerivativesPriceLimitRangeIncreaseMessage derivatives_price_limit_range_increase_message_2;
+    case 0x5631303346: DerivativesPriceLimitRangeIncreaseMessage derivatives_price_limit_range_increase_message_3;
+    case 0x5631303446: DerivativesPriceLimitRangeIncreaseMessage derivatives_price_limit_range_increase_message_4;
+    case 0x5631303546: DerivativesPriceLimitRangeIncreaseMessage derivatives_price_limit_range_increase_message_5;
+    case 0x5631303846: DerivativesPriceLimitRangeIncreaseMessage derivatives_price_limit_range_increase_message_6;
+    case 0x5631303946: DerivativesPriceLimitRangeIncreaseMessage derivatives_price_limit_range_increase_message_7;
+    case 0x5631313146: DerivativesPriceLimitRangeIncreaseMessage derivatives_price_limit_range_increase_message_8;
+    case 0x5631313246: DerivativesPriceLimitRangeIncreaseMessage derivatives_price_limit_range_increase_message_9;
+    case 0x5631313346: DerivativesPriceLimitRangeIncreaseMessage derivatives_price_limit_range_increase_message_10;
+    case 0x5631313546: DerivativesPriceLimitRangeIncreaseMessage derivatives_price_limit_range_increase_message_11;
+    case 0x5631313646: DerivativesPriceLimitRangeIncreaseMessage derivatives_price_limit_range_increase_message_12;
+    case 0x5631313746: DerivativesPriceLimitRangeIncreaseMessage derivatives_price_limit_range_increase_message_13;
+    case 0x5631313846: DerivativesPriceLimitRangeIncreaseMessage derivatives_price_limit_range_increase_message_14;
+    case 0x4F36303153: DerivativesQuantityAllocationMessage derivatives_quantity_allocation_message;
+    case 0x4F36303353: DerivativesQuantityAllocationMessage derivatives_quantity_allocation_message_2;
+    case 0x4F36303453: DerivativesQuantityAllocationMessage derivatives_quantity_allocation_message_3;
+    case 0x4F36303553: DerivativesQuantityAllocationMessage derivatives_quantity_allocation_message_4;
+    case 0x4F36303151: DerivativesQuantityAllocationMessage derivatives_quantity_allocation_message_5;
+    case 0x4F36303158: DerivativesQuantityAllocationMessage derivatives_quantity_allocation_message_6;
+    case 0x4F36303146: DerivativesQuantityAllocationMessage derivatives_quantity_allocation_message_7;
+    case 0x4F36303246: DerivativesQuantityAllocationMessage derivatives_quantity_allocation_message_8;
+    case 0x4F36303346: DerivativesQuantityAllocationMessage derivatives_quantity_allocation_message_9;
+    case 0x4F36303446: DerivativesQuantityAllocationMessage derivatives_quantity_allocation_message_10;
+    case 0x4F36303546: DerivativesQuantityAllocationMessage derivatives_quantity_allocation_message_11;
+    case 0x4F36303646: DerivativesQuantityAllocationMessage derivatives_quantity_allocation_message_12;
+    case 0x4F36303746: DerivativesQuantityAllocationMessage derivatives_quantity_allocation_message_13;
+    case 0x4F36303846: DerivativesQuantityAllocationMessage derivatives_quantity_allocation_message_14;
+    case 0x4F36303946: DerivativesQuantityAllocationMessage derivatives_quantity_allocation_message_15;
+    case 0x4F36313046: DerivativesQuantityAllocationMessage derivatives_quantity_allocation_message_16;
+    case 0x4F36313146: DerivativesQuantityAllocationMessage derivatives_quantity_allocation_message_17;
+    case 0x4F36313246: DerivativesQuantityAllocationMessage derivatives_quantity_allocation_message_18;
+    case 0x4F36313346: DerivativesQuantityAllocationMessage derivatives_quantity_allocation_message_19;
+    case 0x4F36313546: DerivativesQuantityAllocationMessage derivatives_quantity_allocation_message_20;
+    case 0x4F36313646: DerivativesQuantityAllocationMessage derivatives_quantity_allocation_message_21;
+    case 0x4F36313746: DerivativesQuantityAllocationMessage derivatives_quantity_allocation_message_22;
+    case 0x4F36313846: DerivativesQuantityAllocationMessage derivatives_quantity_allocation_message_23;
+    case 0x4946303153: DerivativesGroupOrderAcceptanceHaltMessage derivatives_group_order_acceptance_halt_message;
+    case 0x4946303253: DerivativesGroupOrderAcceptanceHaltMessage derivatives_group_order_acceptance_halt_message_2;
+    case 0x4946303353: DerivativesGroupOrderAcceptanceHaltMessage derivatives_group_order_acceptance_halt_message_3;
+    case 0x4946303453: DerivativesGroupOrderAcceptanceHaltMessage derivatives_group_order_acceptance_halt_message_4;
+    case 0x4946303553: DerivativesGroupOrderAcceptanceHaltMessage derivatives_group_order_acceptance_halt_message_5;
+    case 0x4946303151: DerivativesGroupOrderAcceptanceHaltMessage derivatives_group_order_acceptance_halt_message_6;
+    case 0x4946303146: DerivativesGroupOrderAcceptanceHaltMessage derivatives_group_order_acceptance_halt_message_7;
+    case 0x4946303246: DerivativesGroupOrderAcceptanceHaltMessage derivatives_group_order_acceptance_halt_message_8;
+    case 0x4946303346: DerivativesGroupOrderAcceptanceHaltMessage derivatives_group_order_acceptance_halt_message_9;
+    case 0x4946303446: DerivativesGroupOrderAcceptanceHaltMessage derivatives_group_order_acceptance_halt_message_10;
+    case 0x4946303546: DerivativesGroupOrderAcceptanceHaltMessage derivatives_group_order_acceptance_halt_message_11;
+    case 0x4946303646: DerivativesGroupOrderAcceptanceHaltMessage derivatives_group_order_acceptance_halt_message_12;
+    case 0x4946303746: DerivativesGroupOrderAcceptanceHaltMessage derivatives_group_order_acceptance_halt_message_13;
+    case 0x4946303846: DerivativesGroupOrderAcceptanceHaltMessage derivatives_group_order_acceptance_halt_message_14;
+    case 0x4946303946: DerivativesGroupOrderAcceptanceHaltMessage derivatives_group_order_acceptance_halt_message_15;
+    case 0x4946313046: DerivativesGroupOrderAcceptanceHaltMessage derivatives_group_order_acceptance_halt_message_16;
+    case 0x4946313146: DerivativesGroupOrderAcceptanceHaltMessage derivatives_group_order_acceptance_halt_message_17;
+    case 0x4946313246: DerivativesGroupOrderAcceptanceHaltMessage derivatives_group_order_acceptance_halt_message_18;
+    case 0x4946313346: DerivativesGroupOrderAcceptanceHaltMessage derivatives_group_order_acceptance_halt_message_19;
+    case 0x4946313546: DerivativesGroupOrderAcceptanceHaltMessage derivatives_group_order_acceptance_halt_message_20;
+    case 0x4946313646: DerivativesGroupOrderAcceptanceHaltMessage derivatives_group_order_acceptance_halt_message_21;
+    case 0x4946313746: DerivativesGroupOrderAcceptanceHaltMessage derivatives_group_order_acceptance_halt_message_22;
+    case 0x4946313846: DerivativesGroupOrderAcceptanceHaltMessage derivatives_group_order_acceptance_halt_message_23;
+    case 0x4130303146: DerivativesBatchDataMessage derivatives_batch_data_message;
+    case 0x4130303246: DerivativesBatchDataMessage derivatives_batch_data_message_2;
+    case 0x4130303346: DerivativesBatchDataMessage derivatives_batch_data_message_3;
+    case 0x4130303446: DerivativesBatchDataMessage derivatives_batch_data_message_4;
+    case 0x4130303546: DerivativesBatchDataMessage derivatives_batch_data_message_5;
+    case 0x4130303646: DerivativesBatchDataMessage derivatives_batch_data_message_6;
+    case 0x4130303746: DerivativesBatchDataMessage derivatives_batch_data_message_7;
+    case 0x4130303846: DerivativesBatchDataMessage derivatives_batch_data_message_8;
+    case 0x4130303946: DerivativesBatchDataMessage derivatives_batch_data_message_9;
+    case 0x4130313046: DerivativesBatchDataMessage derivatives_batch_data_message_10;
+    case 0x4130313146: DerivativesBatchDataMessage derivatives_batch_data_message_11;
+    case 0x4130313246: DerivativesBatchDataMessage derivatives_batch_data_message_12;
+    case 0x4130313346: DerivativesBatchDataMessage derivatives_batch_data_message_13;
+    case 0x4130313546: DerivativesBatchDataMessage derivatives_batch_data_message_14;
+    case 0x4130313646: DerivativesBatchDataMessage derivatives_batch_data_message_15;
+    case 0x4130313746: DerivativesBatchDataMessage derivatives_batch_data_message_16;
+    case 0x4130313846: DerivativesBatchDataMessage derivatives_batch_data_message_17;
+    case 0x4834303446: EquityDerivativesAdjustmentDetailsMessage equity_derivatives_adjustment_details_message;
+    case 0x4834303546: EquityDerivativesAdjustmentDetailsMessage equity_derivatives_adjustment_details_message_2;
+    case 0x4834313846: EquityDerivativesAdjustmentDetailsMessage equity_derivatives_adjustment_details_message_3;
+    case 0x4836303646: CommodityFuturesSettlementReferenceKtbMessage commodity_futures_settlement_reference_ktb_message;
+    case 0x4831303146: DerivativesInvestorActivitiesMessage derivatives_investor_activities_message;
+    case 0x4831303246: DerivativesInvestorActivitiesMessage derivatives_investor_activities_message_2;
+    case 0x4831303346: DerivativesInvestorActivitiesMessage derivatives_investor_activities_message_3;
+    case 0x4831303446: DerivativesInvestorActivitiesMessage derivatives_investor_activities_message_4;
+    case 0x4831303546: DerivativesInvestorActivitiesMessage derivatives_investor_activities_message_5;
+    case 0x4831303646: DerivativesInvestorActivitiesMessage derivatives_investor_activities_message_6;
+    case 0x4831303746: DerivativesInvestorActivitiesMessage derivatives_investor_activities_message_7;
+    case 0x4831303846: DerivativesInvestorActivitiesMessage derivatives_investor_activities_message_8;
+    case 0x4831303946: DerivativesInvestorActivitiesMessage derivatives_investor_activities_message_9;
+    case 0x4831313046: DerivativesInvestorActivitiesMessage derivatives_investor_activities_message_10;
+    case 0x4831313146: DerivativesInvestorActivitiesMessage derivatives_investor_activities_message_11;
+    case 0x4831313246: DerivativesInvestorActivitiesMessage derivatives_investor_activities_message_12;
+    case 0x4831313346: DerivativesInvestorActivitiesMessage derivatives_investor_activities_message_13;
+    case 0x4831313546: DerivativesInvestorActivitiesMessage derivatives_investor_activities_message_14;
+    case 0x4831313646: DerivativesInvestorActivitiesMessage derivatives_investor_activities_message_15;
+    case 0x4831313746: DerivativesInvestorActivitiesMessage derivatives_investor_activities_message_16;
+    case 0x4831313846: DerivativesInvestorActivitiesMessage derivatives_investor_activities_message_17;
+    case 0x4832303146: DerivativesOpenInterestMessage derivatives_open_interest_message;
+    case 0x4832303246: DerivativesOpenInterestMessage derivatives_open_interest_message_2;
+    case 0x4832303346: DerivativesOpenInterestMessage derivatives_open_interest_message_3;
+    case 0x4832303446: DerivativesOpenInterestMessage derivatives_open_interest_message_4;
+    case 0x4832303546: DerivativesOpenInterestMessage derivatives_open_interest_message_5;
+    case 0x4832303646: DerivativesOpenInterestMessage derivatives_open_interest_message_6;
+    case 0x4832303746: DerivativesOpenInterestMessage derivatives_open_interest_message_7;
+    case 0x4832303846: DerivativesOpenInterestMessage derivatives_open_interest_message_8;
+    case 0x4832303946: DerivativesOpenInterestMessage derivatives_open_interest_message_9;
+    case 0x4832313046: DerivativesOpenInterestMessage derivatives_open_interest_message_10;
+    case 0x4832313146: DerivativesOpenInterestMessage derivatives_open_interest_message_11;
+    case 0x4832313246: DerivativesOpenInterestMessage derivatives_open_interest_message_12;
+    case 0x4832313346: DerivativesOpenInterestMessage derivatives_open_interest_message_13;
+    case 0x4832313546: DerivativesOpenInterestMessage derivatives_open_interest_message_14;
+    case 0x4832313646: DerivativesOpenInterestMessage derivatives_open_interest_message_15;
+    case 0x4832313746: DerivativesOpenInterestMessage derivatives_open_interest_message_16;
+    case 0x4832313846: DerivativesOpenInterestMessage derivatives_open_interest_message_17;
+    case 0x4833303146: FuturesSettledPriceMessage futures_settled_price_message;
+    case 0x4833303246: FuturesSettledPriceMessage futures_settled_price_message_2;
+    case 0x4833303446: FuturesSettledPriceMessage futures_settled_price_message_3;
+    case 0x4833303646: FuturesSettledPriceMessage futures_settled_price_message_4;
+    case 0x4833303846: FuturesSettledPriceMessage futures_settled_price_message_5;
+    case 0x4833303946: FuturesSettledPriceMessage futures_settled_price_message_6;
+    case 0x4833313046: FuturesSettledPriceMessage futures_settled_price_message_7;
+    case 0x4833313146: FuturesSettledPriceMessage futures_settled_price_message_8;
+    case 0x4833313346: FuturesSettledPriceMessage futures_settled_price_message_9;
+    case 0x4944303346: OptionsBasePriceOfClearingMarginsMessage options_base_price_of_clearing_margins_message;
+    case 0x4944303546: OptionsBasePriceOfClearingMarginsMessage options_base_price_of_clearing_margins_message_2;
+    case 0x4944303746: OptionsBasePriceOfClearingMarginsMessage options_base_price_of_clearing_margins_message_3;
+    case 0x4944313246: OptionsBasePriceOfClearingMarginsMessage options_base_price_of_clearing_margins_message_4;
+    case 0x4944313546: OptionsBasePriceOfClearingMarginsMessage options_base_price_of_clearing_margins_message_5;
+    case 0x4944313646: OptionsBasePriceOfClearingMarginsMessage options_base_price_of_clearing_margins_message_6;
+    case 0x4944313746: OptionsBasePriceOfClearingMarginsMessage options_base_price_of_clearing_margins_message_7;
+    case 0x4944313846: OptionsBasePriceOfClearingMarginsMessage options_base_price_of_clearing_margins_message_8;
+    case 0x5031303346: OptionsImpliedVolatilityMessage options_implied_volatility_message;
+    case 0x5031313246: OptionsImpliedVolatilityMessage options_implied_volatility_message_2;
+    case 0x5031313546: OptionsImpliedVolatilityMessage options_implied_volatility_message_3;
+    case 0x5031313646: OptionsImpliedVolatilityMessage options_implied_volatility_message_4;
+    case 0x5031313746: OptionsImpliedVolatilityMessage options_implied_volatility_message_5;
+    case 0x4E37303346: OptionsSensitivityMessage options_sensitivity_message;
+    case 0x4E37303546: OptionsSensitivityMessage options_sensitivity_message_2;
+    case 0x4E37303746: OptionsSensitivityMessage options_sensitivity_message_3;
+    case 0x4E37313246: OptionsSensitivityMessage options_sensitivity_message_4;
+    case 0x4E37313546: OptionsSensitivityMessage options_sensitivity_message_5;
+    case 0x4E37313646: OptionsSensitivityMessage options_sensitivity_message_6;
+    case 0x4E37313746: OptionsSensitivityMessage options_sensitivity_message_7;
+    case 0x4E37313846: OptionsSensitivityMessage options_sensitivity_message_8;
+    case 0x4835303646: CommodityFuturesSpotSettlementReferenceMessage commodity_futures_spot_settlement_reference_message;
+    case 0x4835393946: CommodityFuturesSpotSettlementReferenceMessage commodity_futures_spot_settlement_reference_message_2;
+    case 0x4841303646: DailyDisclosedRfrMessage daily_disclosed_rfr_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Koscom MDCS Exture Udp Packet
+entrypoint typedef struct _Packet (UINT32 available) where (available >= 5) {
+  UINT32BE tr_code_0;                                                                                                                       // bytes 0 to 3, the first 4 of 5 characters a choice is made on
+  UINT8 tr_code_1;                                                                                                                          // byte 4
+  Payload(((((UINT64) tr_code_0) << 8) | ((UINT64) tr_code_1)), (available - 5)) payload[:byte-size-single-element-array (available - 5)];
+} Packet;
 

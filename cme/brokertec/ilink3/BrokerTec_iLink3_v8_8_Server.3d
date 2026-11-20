@@ -1,46 +1,370 @@
-// CME Group iLink 3
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Cme BrokerTec iLink3 Sbe v8.8
 //
+// Protocol:
+//   Organization: CME Group
+//   Protocol: iLink 3
+//   Encoding: Simple Binary Encoding
+//   Version: 8.8
+//   Date: 5/31/2022
+//   Specification: ilinkbinary.xml
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ServerPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out BrokerTec_iLink3_v8_8_Server.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a field present only on a condition
-// - a block whose stated length holds more than its fields
-// - a run counted by a field
-// - a field read in bits
-//
-// License: MIT No Attribution
 
-// ---- Simple Open Framing Header: 4 bytes -------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Simple Open Framing Header
-entrypoint typedef struct _SimpleOpenFramingHeader {
-  UINT16 message_length;  // bytes 0 to 1
-  UINT16 encoding_type;   // bytes 2 to 3
-} SimpleOpenFramingHeader;
+// Template Id: 2 byte code
+#define TEMPLATE_ID_NEGOTIATE 0x01F4                                   // Negotiate
+#define TEMPLATE_ID_NEGOTIATION_RESPONSE 0x01F5                        // Negotiation Response
+#define TEMPLATE_ID_NEGOTIATION_REJECT 0x01F6                          // Negotiation Reject
+#define TEMPLATE_ID_ESTABLISH 0x01F7                                   // Establish
+#define TEMPLATE_ID_ESTABLISHMENT_ACK 0x01F8                           // Establishment Ack
+#define TEMPLATE_ID_ESTABLISHMENT_REJECT 0x01F9                        // Establishment Reject
+#define TEMPLATE_ID_SEQUENCE 0x01FA                                    // Sequence
+#define TEMPLATE_ID_TERMINATE 0x01FB                                   // Terminate
+#define TEMPLATE_ID_RETRANSMIT_REQUEST 0x01FC                          // Retransmit Request
+#define TEMPLATE_ID_RETRANSMISSION 0x01FD                              // Retransmission
+#define TEMPLATE_ID_RETRANSMIT_REJECT 0x01FE                           // Retransmit Reject
+#define TEMPLATE_ID_NOT_APPLIED 0x0201                                 // Not Applied
+#define TEMPLATE_ID_NEW_ORDER_SINGLE 0x0202                            // New Order Single
+#define TEMPLATE_ID_ORDER_CANCEL_REPLACE_REQUEST 0x0203                // Order Cancel Replace Request
+#define TEMPLATE_ID_ORDER_CANCEL_REQUEST 0x0204                        // Order Cancel Request
+#define TEMPLATE_ID_MASS_QUOTE 0x0205                                  // Mass Quote
+#define TEMPLATE_ID_PARTY_DETAILS_DEFINITION_REQUEST 0x0206            // Party Details Definition Request
+#define TEMPLATE_ID_PARTY_DETAILS_DEFINITION_REQUEST_ACK 0x0207        // Party Details Definition Request Ack
+#define TEMPLATE_ID_BUSINESS_REJECT 0x0209                             // Business Reject
+#define TEMPLATE_ID_EXECUTION_REPORT_NEW 0x020A                        // Execution Report New
+#define TEMPLATE_ID_EXECUTION_REPORT_REJECT 0x020B                     // Execution Report Reject
+#define TEMPLATE_ID_EXECUTION_REPORT_ELIMINATION 0x020C                // Execution Report Elimination
+#define TEMPLATE_ID_EXECUTION_REPORT_TRADE_OUTRIGHT 0x020D             // Execution Report Trade Outright
+#define TEMPLATE_ID_EXECUTION_REPORT_TRADE_SPREAD 0x020E               // Execution Report Trade Spread
+#define TEMPLATE_ID_EXECUTION_REPORT_TRADE_SPREAD_LEG 0x020F           // Execution Report Trade Spread Leg
+#define TEMPLATE_ID_QUOTE_CANCEL 0x0210                                // Quote Cancel
+#define TEMPLATE_ID_ORDER_MASS_ACTION_REQUEST 0x0211                   // Order Mass Action Request
+#define TEMPLATE_ID_ORDER_MASS_STATUS_REQUEST 0x0212                   // Order Mass Status Request
+#define TEMPLATE_ID_EXECUTION_REPORT_MODIFY 0x0213                     // Execution Report Modify
+#define TEMPLATE_ID_EXECUTION_REPORT_STATUS 0x0214                     // Execution Report Status
+#define TEMPLATE_ID_ORDER_STATUS_REQUEST 0x0215                        // Order Status Request
+#define TEMPLATE_ID_EXECUTION_REPORT_CANCEL 0x0216                     // Execution Report Cancel
+#define TEMPLATE_ID_ORDER_CANCEL_REJECT 0x0217                         // Order Cancel Reject
+#define TEMPLATE_ID_ORDER_CANCEL_REPLACE_REJECT 0x0218                 // Order Cancel Replace Reject
+#define TEMPLATE_ID_PARTY_DETAILS_LIST_REQUEST 0x0219                  // Party Details List Request
+#define TEMPLATE_ID_PARTY_DETAILS_LIST_REPORT 0x021A                   // Party Details List Report
+#define TEMPLATE_ID_EXECUTION_ACK 0x021B                               // Execution Ack
+#define TEMPLATE_ID_REQUEST_FOR_QUOTE 0x021F                           // Request For Quote
+#define TEMPLATE_ID_NEW_ORDER_CROSS 0x0220                             // New Order Cross
+#define TEMPLATE_ID_MASS_QUOTE_ACK 0x0221                              // Mass Quote Ack
+#define TEMPLATE_ID_REQUEST_FOR_QUOTE_ACK 0x0222                       // Request For Quote Ack
+#define TEMPLATE_ID_EXECUTION_REPORT_TRADE_ADDENDUM_OUTRIGHT 0x0224    // Execution Report Trade Addendum Outright
+#define TEMPLATE_ID_EXECUTION_REPORT_TRADE_ADDENDUM_SPREAD 0x0225      // Execution Report Trade Addendum Spread
+#define TEMPLATE_ID_EXECUTION_REPORT_TRADE_ADDENDUM_SPREAD_LEG 0x0226  // Execution Report Trade Addendum Spread Leg
+#define TEMPLATE_ID_SECURITY_DEFINITION_REQUEST 0x0230                 // Security Definition Request
+#define TEMPLATE_ID_SECURITY_DEFINITION_RESPONSE 0x0231                // Security Definition Response
+#define TEMPLATE_ID_ORDER_MASS_ACTION_REPORT 0x0232                    // Order Mass Action Report
+#define TEMPLATE_ID_QUOTE_CANCEL_ACK 0x0233                            // Quote Cancel Ack
+#define TEMPLATE_ID_EXECUTION_REPORT_PENDING_CANCEL 0x0234             // Execution Report Pending Cancel
+#define TEMPLATE_ID_EXECUTION_REPORT_PENDING_REPLACE 0x0235            // Execution Report Pending Replace
 
-// ---- Message Header: 8 bytes -------------------------------------------------
+// Fault Tolerance Indicator: one byte code
+#define FAULT_TOLERANCE_INDICATOR_BACKUP 0x00   // Backup
+#define FAULT_TOLERANCE_INDICATOR_PRIMARY 0x01  // Primary
 
-// Template ID and length of message root
-entrypoint typedef struct _MessageHeader {
-  UINT16 block_length;  // bytes 0 to 1
-  UINT16 template_id;   // bytes 2 to 3
-  UINT16 schema_id;     // bytes 4 to 5
-  UINT16 version;       // bytes 6 to 7
-} MessageHeader;
+// Split Msg: one byte code
+#define SPLIT_MSG_SPLIT_MESSAGE_DELAYED 0x00        // Split Message Delayed
+#define SPLIT_MSG_OUTOF_ORDER_MESSAGE_DELAYED 0x01  // Outof Order Message Delayed
+#define SPLIT_MSG_COMPLETE_MESSAGE_DELAYED 0x02     // Complete Message Delayed
 
-// ---- Negotiation Reject: 68 bytes --------------------------------------------
+// Keep Alive Interval Lapsed: one byte code
+#define KEEP_ALIVE_INTERVAL_LAPSED_NOT_LAPSED 0x00  // Not Lapsed
+#define KEEP_ALIVE_INTERVAL_LAPSED_LAPSED 0x01      // Lapsed
+
+// Cust Order Capacity: one byte code
+#define CUST_ORDER_CAPACITY_MEMBERTRADINGFORTHEIROWNACCOUNT 0x01            // Membertradingfortheirownaccount
+#define CUST_ORDER_CAPACITY_MEMBERFIRMTRADINGFORITSPROPRIETARYACCOUNT 0x02  // Memberfirmtradingforitsproprietaryaccount
+#define CUST_ORDER_CAPACITY_MEMBERTRADINGFORANOTHERMEMBERORNONMEMBER 0x03   // Membertradingforanothermemberornonmember
+#define CUST_ORDER_CAPACITY_ALLOTHER 0x04                                   // Allother
+
+// Clearing Account Type: one byte code
+#define CLEARING_ACCOUNT_TYPE_CUSTOMER 0x00  // Customer
+#define CLEARING_ACCOUNT_TYPE_FIRM 0x01      // Firm
+
+// Self Match Prevention Instruction: one byte code
+#define SELF_MATCH_PREVENTION_INSTRUCTION_CANCEL_NEWEST 0x4E  // Cancel Newest
+#define SELF_MATCH_PREVENTION_INSTRUCTION_CANCEL_OLDEST 0x4F  // Cancel Oldest
+
+// Avg Px Indicator: one byte code
+#define AVG_PX_INDICATOR_NO_AVERAGE_PRICING 0x00                                                 // No Average Pricing
+#define AVG_PX_INDICATOR_TRADEISPARTOFAN_AVERAGE_PRICE_GROUP_IDENTIFIEDBYTHE_AVG_PX_GRP_ID 0x01  // Tradeispartofan Average Price Group Identifiedbythe Avg Px Grp Id
+#define AVG_PX_INDICATOR_TRADEISPARTOFA_NOTIONAL_VALUE_AVERAGE_PRICE_GROUP 0x03                  // Tradeispartofa Notional Value Average Price Group
+
+// Clearing Trade Price Type: one byte code
+#define CLEARING_TRADE_PRICE_TYPE_TRADE_CLEARINGAT_EXECUTION_PRICE 0x00           // Trade Clearingat Execution Price
+#define CLEARING_TRADE_PRICE_TYPE_TRADE_CLEARINGAT_ALTERNATE_CLEARING_PRICE 0x01  // Trade Clearingat Alternate Clearing Price
+
+// Cmta Giveup Cd: one byte code
+#define CMTA_GIVEUP_CD_GIVE_UP 0x47     // Give Up
+#define CMTA_GIVEUP_CD_SG_XOFFSET 0x53  // Sg Xoffset
+
+// Cust Order Handling Inst: one byte code
+#define CUST_ORDER_HANDLING_INST_FC_MPROVIDEDSCREEN 0x43   // Fc Mprovidedscreen
+#define CUST_ORDER_HANDLING_INST_OTHERPROVIDEDSCREEN 0x44  // Otherprovidedscreen
+#define CUST_ORDER_HANDLING_INST_FCMAP_IOR_FIX 0x47        // Fcmap Ior Fix
+#define CUST_ORDER_HANDLING_INST_ALGO_ENGINE 0x48          // Algo Engine
+#define CUST_ORDER_HANDLING_INST_DESK_ELECTRONIC 0x57      // Desk Electronic
+#define CUST_ORDER_HANDLING_INST_CLIENT_ELECTRONIC 0x59    // Client Electronic
+
+// List Update Action: one byte code
+#define LIST_UPDATE_ACTION_ADD 0x41     // Add
+#define LIST_UPDATE_ACTION_DELETE 0x44  // Delete
+
+// Poss Retrans Flag: one byte code
+#define POSS_RETRANS_FLAG_FALSE 0x00  // False
+#define POSS_RETRANS_FLAG_TRUE 0x01   // True
+
+// Party Detail Role: 2 byte code
+#define PARTY_DETAIL_ROLE_EXECUTING_FIRM 0x0001    // Executing Firm
+#define PARTY_DETAIL_ROLE_CUSTOMER_ACCOUNT 0x0018  // Customer Account
+#define PARTY_DETAIL_ROLE_TAKE_UP_FIRM 0x0060      // Take Up Firm
+#define PARTY_DETAIL_ROLE_OPERATOR 0x0076          // Operator
+#define PARTY_DETAIL_ROLE_TAKE_UP_ACCOUNT 0x03E8   // Take Up Account
+
+// Manual Order Indicator Optional: one byte code
+#define MANUAL_ORDER_INDICATOR_OPTIONAL_AUTOMATED 0x00  // Automated
+#define MANUAL_ORDER_INDICATOR_OPTIONAL_MANUAL 0x01     // Manual
+
+// Ord Type Optional: one byte code
+#define ORD_TYPE_OPTIONAL_MARKET_WITH_PROTECTION 0x31         // Market With Protection
+#define ORD_TYPE_OPTIONAL_LIMIT 0x32                          // Limit
+#define ORD_TYPE_OPTIONAL_STOP_LIMIT 0x34                     // Stop Limit
+#define ORD_TYPE_OPTIONAL_MARKET_WITH_LEFTOVER_AS_LIMIT 0x4B  // Market With Leftover As Limit
+
+// Side: one byte code
+#define SIDE_BUY 0x01          // Buy
+#define SIDE_SELL 0x02         // Sell
+#define SIDE_UNDISCLOSED 0x07  // Undisclosed
+
+// Time In Force: one byte code
+#define TIME_IN_FORCE_DAY 0x00               // Day
+#define TIME_IN_FORCE_GOOD_TILL_CANCEL 0x01  // Good Till Cancel
+#define TIME_IN_FORCE_FILL_AND_KILL 0x03     // Fill And Kill
+#define TIME_IN_FORCE_FILL_OR_KILL 0x04      // Fill Or Kill
+#define TIME_IN_FORCE_GOOD_TILL_DATE 0x06    // Good Till Date
+#define TIME_IN_FORCE_GOOD_FOR_SESSION 0x63  // Good For Session
+
+// Manual Order Indicator: one byte code
+#define MANUAL_ORDER_INDICATOR_AUTOMATED 0x00  // Automated
+#define MANUAL_ORDER_INDICATOR_MANUAL 0x01     // Manual
+
+// Execution Mode: one byte code
+#define EXECUTION_MODE_AGGRESSIVE 0x41  // Aggressive
+#define EXECUTION_MODE_PASSIVE 0x50     // Passive
+
+// Liquidity Flag: one byte code
+#define LIQUIDITY_FLAG_FALSE 0x00  // False
+#define LIQUIDITY_FLAG_TRUE 0x01   // True
+
+// Managed Order: one byte code
+#define MANAGED_ORDER_FALSE 0x00  // False
+#define MANAGED_ORDER_TRUE 0x01   // True
+
+// Short Sale Type: one byte code
+#define SHORT_SALE_TYPE_LONG_SELL 0x00                                        // Long Sell
+#define SHORT_SALE_TYPE_SHORT_SALE_WITH_NO_EXEMPTION_SESH 0x01                // Short Sale With No Exemption Sesh
+#define SHORT_SALE_TYPE_SHORT_SALE_WITH_EXEMPTION_SSEX 0x02                   // Short Sale With Exemption Ssex
+#define SHORT_SALE_TYPE_UNDISCLOSED_SELL_INFORMATION_NOT_AVAILABLE_UNDI 0x03  // Undisclosed Sell Information Not Available Undi
+
+// Ord Status Trd: one byte code
+#define ORD_STATUS_TRD_PARTIALLY_FILLED 0x01  // Partially Filled
+#define ORD_STATUS_TRD_FILLED 0x02            // Filled
+
+// Aggressor Indicator: one byte code
+#define AGGRESSOR_INDICATOR_FALSE 0x00  // False
+#define AGGRESSOR_INDICATOR_TRUE 0x01   // True
+
+// Exec Restatement Reason: one byte code
+#define EXEC_RESTATEMENT_REASON_MARKET_EXCHANGE_OPTION 0x08                                        // Market Exchange Option
+#define EXEC_RESTATEMENT_REASON_CANCELLED_NOT_BEST 0x09                                            // Cancelled Not Best
+#define EXEC_RESTATEMENT_REASON_CANCEL_ON_DISCONNECT 0x64                                          // Cancel On Disconnect
+#define EXEC_RESTATEMENT_REASON_SELF_MATCH_PREVENTION_OLDEST_ORDER_CANCELLED 0x67                  // Self Match Prevention Oldest Order Cancelled
+#define EXEC_RESTATEMENT_REASON_CANCEL_ON_GLOBEX_CREDIT_CONTROLS_VIOLATION 0x68                    // Cancel On Globex Credit Controls Violation
+#define EXEC_RESTATEMENT_REASON_CANCEL_FROM_FIRMSOFT 0x69                                          // Cancel From Firmsoft
+#define EXEC_RESTATEMENT_REASON_CANCEL_FROM_RISK_MANAGEMENT_API 0x6A                               // Cancel From Risk Management Api
+#define EXEC_RESTATEMENT_REASON_SELF_MATCH_PREVENTION_NEWEST_ORDER_CANCELLED 0x6B                  // Self Match Prevention Newest Order Cancelled
+#define EXEC_RESTATEMENT_REASON_CANCELDUETOVOLQUOTEDOPTIONORDERRESTEDQTYLESSTHANMINORDERSIZE 0x6C  // Cancelduetovolquotedoptionorderrestedqtylessthanminordersize
+#define EXEC_RESTATEMENT_REASON_CANCEL_RFC_ORDER 0x6D                                              // Cancel Rfc Order
+#define EXEC_RESTATEMENT_REASON_CANCEL_UPON_CONTRACT_EXPIRATION 0x6E                               // Cancel Upon Contract Expiration
+#define EXEC_RESTATEMENT_REASON_SYSTEM_CANCEL 0x6F                                                 // System Cancel
+
+// Order Event Type: one byte code
+#define ORDER_EVENT_TYPE_PARTIALLY_FILLED 0x04  // Partially Filled
+#define ORDER_EVENT_TYPE_FILLED 0x05            // Filled
+
+// Leg Side: one byte code
+#define LEG_SIDE_BUY 0x01          // Buy
+#define LEG_SIDE_SELL 0x02         // Sell
+#define LEG_SIDE_UNDISCLOSED 0x07  // Undisclosed
+
+// Ord Status: one byte code
+#define ORD_STATUS_NEW 0x30               // New
+#define ORD_STATUS_PARTIALLY_FILLED 0x31  // Partially Filled
+#define ORD_STATUS_FILLED 0x32            // Filled
+#define ORD_STATUS_CANCELLED 0x34         // Cancelled
+#define ORD_STATUS_REPLACED 0x35          // Replaced
+#define ORD_STATUS_PENDING_CANCEL 0x36    // Pending Cancel
+#define ORD_STATUS_REJECTED 0x38          // Rejected
+#define ORD_STATUS_EXPIRED 0x43           // Expired
+#define ORD_STATUS_PENDING_REPLACE 0x45   // Pending Replace
+#define ORD_STATUS_UNDEFINED 0x55         // Undefined
+
+// Last Rpt Requested: one byte code
+#define LAST_RPT_REQUESTED_FALSE 0x00  // False
+#define LAST_RPT_REQUESTED_TRUE 0x01   // True
+
+// Request Result: one byte code
+#define REQUEST_RESULT_VALID_REQUEST 0x00                                  // Valid Request
+#define REQUEST_RESULT_NO_DATA_FOUND_THAT_MATCHED_SELECTION_CRITERIA 0x02  // No Data Found That Matched Selection Criteria
+#define REQUEST_RESULT_NOT_AUTHORIZEDTO_RETRIEVE_DATA 0x03                 // Not Authorizedto Retrieve Data
+#define REQUEST_RESULT_DATA_TEMPORARILY_UNAVAILABLE 0x04                   // Data Temporarily Unavailable
+
+// Last Fragment: one byte code
+#define LAST_FRAGMENT_FALSE 0x00  // False
+#define LAST_FRAGMENT_TRUE 0x01   // True
+
+// Quote Ack Status: one byte code
+#define QUOTE_ACK_STATUS_ACCEPTED 0x00  // Accepted
+#define QUOTE_ACK_STATUS_REJECTED 0x05  // Rejected
+
+// Mm Protection Reset: one byte code
+#define MM_PROTECTION_RESET_FALSE 0x00  // False
+#define MM_PROTECTION_RESET_TRUE 0x01   // True
+
+// Quote Entry Open: one byte code
+#define QUOTE_ENTRY_OPEN_FALSE 0x00  // False
+#define QUOTE_ENTRY_OPEN_TRUE 0x01   // True
+
+// Ord Status Trd Cxl: one byte code
+#define ORD_STATUS_TRD_CXL_TRADE_CORRECTION 0x47  // Trade Correction
+#define ORD_STATUS_TRD_CXL_TRADE_CANCEL 0x48      // Trade Cancel
+
+// Exec Type: one byte code
+#define EXEC_TYPE_TRADE_CORRECTION 0x47  // Trade Correction
+#define EXEC_TYPE_TRADE_CANCEL 0x48      // Trade Cancel
+
+// Trade Addendum: one byte code
+#define TRADE_ADDENDUM_PARTIALLY_FILLED 0x04  // Partially Filled
+#define TRADE_ADDENDUM_FILLED 0x05            // Filled
+#define TRADE_ADDENDUM_TRADE_CANCEL 0x64      // Trade Cancel
+#define TRADE_ADDENDUM_TRADE_CORRECTION 0x65  // Trade Correction
+
+// Security Response Type: one byte code
+#define SECURITY_RESPONSE_TYPE_ACCEPT_SECURITY_PROPOSALASIS 0x01                                 // Accept Security Proposalasis
+#define SECURITY_RESPONSE_TYPE_ACCEPT_SECURITYPROPOSALWITHREVISIONSASINDICATEDINTHEMESSAGE 0x02  // Accept Securityproposalwithrevisionsasindicatedinthemessage
+#define SECURITY_RESPONSE_TYPE_REJECT_SECURITY_PROPOSAL 0x05                                     // Reject Security Proposal
+
+// Expiration Cycle: one byte code
+#define EXPIRATION_CYCLE_EXPIRE_ON_TRADING_SESSION_CLOSE 0x00  // Expire On Trading Session Close
+#define EXPIRATION_CYCLE_EXPIRATIONATGIVENDATE 0x02            // Expirationatgivendate
+
+// Auto Quote Request: one byte code
+#define AUTO_QUOTE_REQUEST_FALSE 0x00  // False
+#define AUTO_QUOTE_REQUEST_TRUE 0x01   // True
+
+// Mass Action Response: one byte code
+#define MASS_ACTION_RESPONSE_REJECTED 0x00  // Rejected
+#define MASS_ACTION_RESPONSE_ACCEPTED 0x01  // Accepted
+
+// Mass Action Scope: one byte code
+#define MASS_ACTION_SCOPE_INSTRUMENT 0x01         // Instrument
+#define MASS_ACTION_SCOPE_ALL 0x07                // All
+#define MASS_ACTION_SCOPE_MARKET_SEGMENT_ID 0x09  // Market Segment Id
+#define MASS_ACTION_SCOPE_INSTRUMENT_GROUP 0x0A   // Instrument Group
+#define MASS_ACTION_SCOPE_QUOTE_SET_ID 0x64       // Quote Set Id
+
+// Mass Cancel Request Type: one byte code
+#define MASS_CANCEL_REQUEST_TYPE_SENDER_SUB_ID 0x64  // Sender Sub Id
+#define MASS_CANCEL_REQUEST_TYPE_ACCOUNT 0x65        // Account
+
+// Side Optional: one byte code
+#define SIDE_OPTIONAL_BUY 0x01   // Buy
+#define SIDE_OPTIONAL_SELL 0x02  // Sell
+
+// Mass Action Ord Typ: one byte code
+#define MASS_ACTION_ORD_TYP_LIMIT 0x32       // Limit
+#define MASS_ACTION_ORD_TYP_STOP_LIMIT 0x34  // Stop Limit
+
+// Mass Cancel Tif: one byte code
+#define MASS_CANCEL_TIF_DAY 0x00               // Day
+#define MASS_CANCEL_TIF_GOOD_TILL_CANCEL 0x01  // Good Till Cancel
+#define MASS_CANCEL_TIF_GOOD_TILL_DATE 0x06    // Good Till Date
+
+// Quote Cxl Status: one byte code
+#define QUOTE_CXL_STATUS_CANCELPER_INSTRUMENT 0x01       // Cancelper Instrument
+#define QUOTE_CXL_STATUS_CANCELPER_INSTRUMENTGROUP 0x03  // Cancelper Instrumentgroup
+#define QUOTE_CXL_STATUS_CANCELALLQUOTES 0x04            // Cancelallquotes
+#define QUOTE_CXL_STATUS_REJECTED 0x05                   // Rejected
+#define QUOTE_CXL_STATUS_CANCELPER_QUOTE_SET 0x64        // Cancelper Quote Set
+
+// ---- Types -------------------------------------------------------------------
+
+// Variable Length Data
+casetype _OptionalCredentialsData (Bool present, UINT32 length) {
+  switch (present) {
+    case true: UINT8 credentials_data[length];
+    case false: unit absent;
+  }
+} OptionalCredentialsData;
+
+// Not used and will be set to 0
+typedef struct _Credentials {
+  UINT16 credentials_length;                                                                               // bytes 0 to 1
+  OptionalCredentialsData((credentials_length > 0x0000), ((UINT32) credentials_length)) credentials_data;
+} Credentials;
+
+// The Negotiation Response message is sent when a Negotiate message from the customer is accepted by CME.
+typedef struct _NegotiationResponse {
+  UINT64 uuid;                             // bytes 0 to 7
+  UINT64 request_timestamp;                // bytes 8 to 15
+  UINT16 secret_key_secure_id_expiration;  // bytes 16 to 17
+  UINT8 fault_tolerance_indicator;         // byte 18
+  UINT8 split_msg;                         // byte 19
+  UINT32 previous_seq_no;                  // bytes 20 to 23
+  UINT64 previous_uuid;                    // bytes 24 to 31
+  Credentials credentials;
+} NegotiationResponse;
 
 // The Negotiation Reject message is sent when CME rejects a Negotiate message sent by the customer.
-entrypoint typedef struct _NegotiationReject {
+typedef struct _NegotiationReject {
   UINT8 reason[48];                 // bytes 0 to 47
   UINT64 uuid;                      // bytes 48 to 55
   UINT64 request_timestamp;         // bytes 56 to 63
@@ -49,10 +373,8 @@ entrypoint typedef struct _NegotiationReject {
   UINT8 split_msg;                  // byte 67
 } NegotiationReject;
 
-// ---- Establishment Ack: 38 bytes ---------------------------------------------
-
 // The Establishment Acknowledgment message is sent when an Establish message from a customer is accepted by CME.
-entrypoint typedef struct _EstablishmentAck {
+typedef struct _EstablishmentAck {
   UINT64 uuid;                             // bytes 0 to 7
   UINT64 request_timestamp;                // bytes 8 to 15
   UINT32 next_seq_no;                      // bytes 16 to 19
@@ -64,10 +386,8 @@ entrypoint typedef struct _EstablishmentAck {
   UINT8 split_msg;                         // byte 37
 } EstablishmentAck;
 
-// ---- Establishment Reject: 72 bytes ------------------------------------------
-
 // The Establishment Reject message is sent when an Establish message from the customer is rejected by CME.
-entrypoint typedef struct _EstablishmentReject {
+typedef struct _EstablishmentReject {
   UINT8 reason[48];                 // bytes 0 to 47
   UINT64 uuid;                      // bytes 48 to 55
   UINT64 request_timestamp;         // bytes 56 to 63
@@ -77,20 +397,16 @@ entrypoint typedef struct _EstablishmentReject {
   UINT8 split_msg;                  // byte 71
 } EstablishmentReject;
 
-// ---- Sequence: 14 bytes ------------------------------------------------------
-
 // The Sequence message is used in both Recoverable (CME to customer) and Idempotent (customer to CME) flows.
-entrypoint typedef struct _Sequence {
+typedef struct _Sequence {
   UINT64 uuid;                       // bytes 0 to 7
   UINT32 next_seq_no;                // bytes 8 to 11
   UINT8 fault_tolerance_indicator;   // byte 12
   UINT8 keep_alive_interval_lapsed;  // byte 13
 } Sequence;
 
-// ---- Terminate: 67 bytes -----------------------------------------------------
-
 // The Terminate message is sent to indicate that the sender is going to disconnect the TCP socket connection.
-entrypoint typedef struct _Terminate {
+typedef struct _Terminate {
   UINT8 reason[48];          // bytes 0 to 47
   UINT64 uuid;               // bytes 48 to 55
   UINT64 request_timestamp;  // bytes 56 to 63
@@ -98,10 +414,8 @@ entrypoint typedef struct _Terminate {
   UINT8 split_msg;           // byte 66
 } Terminate;
 
-// ---- Retransmission: 31 bytes ------------------------------------------------
-
 // The Retransmission message is sent when a Retransmit Request message from the customer is accepted by CME.
-entrypoint typedef struct _Retransmission {
+typedef struct _Retransmission {
   UINT64 uuid;               // bytes 0 to 7
   UINT64 last_uuid;          // bytes 8 to 15
   UINT64 request_timestamp;  // bytes 16 to 23
@@ -110,10 +424,8 @@ entrypoint typedef struct _Retransmission {
   UINT8 split_msg;           // byte 30
 } Retransmission;
 
-// ---- Retransmit Reject: 75 bytes ---------------------------------------------
-
 // CME Globex sends a Retransmit Reject message when a Retransmit Request message from the customer is rejected.
-entrypoint typedef struct _RetransmitReject {
+typedef struct _RetransmitReject {
   UINT8 reason[48];          // bytes 0 to 47
   UINT64 uuid;               // bytes 48 to 55
   UINT64 last_uuid;          // bytes 56 to 63
@@ -122,28 +434,69 @@ entrypoint typedef struct _RetransmitReject {
   UINT8 split_msg;           // byte 74
 } RetransmitReject;
 
-// ---- Not Applied: 17 bytes ---------------------------------------------------
-
 // The Not Applied message is sent when CME detects a sequence gap from the customer.
-entrypoint typedef struct _NotApplied {
+typedef struct _NotApplied {
   UINT64 uuid;         // bytes 0 to 7
   UINT32 from_seq_no;  // bytes 8 to 11
   UINT32 msg_count;    // bytes 12 to 15
   UINT8 split_msg;     // byte 16
 } NotApplied;
 
-// ---- Group Size: 3 bytes -----------------------------------------------------
+// Number of party details. More than one occurrence of the same party role is not allowed and will be rejected
+typedef struct _PartyDetailsGroup {
+  UINT8 party_detail_id[20];  // bytes 0 to 19
+  UINT16 party_detail_role;   // bytes 20 to 21
+} PartyDetailsGroup;
 
-// Repeating group dimensions
-entrypoint typedef struct _GroupSize {
-  UINT16 block_length;  // bytes 0 to 1
-  UINT8 num_in_group;   // byte 2
-} GroupSize;
+// NoPartyDetails Block
+typedef struct _PartyDetailsGroups {
+  UINT16 block_length;                                                               // bytes 0 to 1
+  UINT8 num_in_group;                                                                // byte 2
+  PartyDetailsGroup party_details_group[:byte-size (((UINT32) num_in_group) * 22)];
+} PartyDetailsGroups;
 
-// ---- Business Reject: 330 bytes ----------------------------------------------
+// Number of regulatory publication rules in repeating group. Should always be 1 if being used otherwise set to 0
+typedef struct _TrdRegPublicationsGroup {
+  UINT8 trd_reg_publication_type;    // byte 0
+  UINT8 trd_reg_publication_reason;  // byte 1
+} TrdRegPublicationsGroup;
+
+// NoTrdRegPublications Block
+typedef struct _TrdRegPublicationsGroups {
+  UINT16 block_length;                                                                           // bytes 0 to 1
+  UINT8 num_in_group;                                                                            // byte 2
+  TrdRegPublicationsGroup trd_reg_publications_group[:byte-size (((UINT32) num_in_group) * 2)];
+} TrdRegPublicationsGroups;
+
+// Used to respond to the Party Details Definition Request message indicating whether the request has been accepted.
+typedef struct _PartyDetailsDefinitionRequestAck {
+  UINT32 seq_num;                                        // bytes 0 to 3
+  UINT64 uuid;                                           // bytes 4 to 11
+  UINT8 memo[75];                                        // bytes 12 to 86
+  UINT8 avg_px_group_id[20];                             // bytes 87 to 106
+  UINT64 party_details_list_req_id;                      // bytes 107 to 114
+  UINT64 sending_time_epoch;                             // bytes 115 to 122
+  UINT64 self_match_prevention_id;                       // bytes 123 to 130
+  UINT8 party_detail_request_status;                     // byte 131
+  UINT8 cust_order_capacity;                             // byte 132
+  UINT8 clearing_account_type;                           // byte 133
+  UINT8 self_match_prevention_instruction;               // byte 134
+  UINT8 avg_px_indicator;                                // byte 135
+  UINT8 clearing_trade_price_type;                       // byte 136
+  UINT8 cmta_giveup_cd;                                  // byte 137
+  UINT8 cust_order_handling_inst;                        // byte 138
+  UINT8 list_update_action;                              // byte 139
+  UINT8 party_detail_definition_status;                  // byte 140
+  UINT64 executor;                                       // bytes 141 to 148
+  UINT64 idm_short_code;                                 // bytes 149 to 156
+  UINT8 poss_retrans_flag;                               // byte 157
+  UINT8 split_msg;                                       // byte 158
+  PartyDetailsGroups party_details_groups;
+  TrdRegPublicationsGroups trd_reg_publications_groups;
+} PartyDetailsDefinitionRequestAck;
 
 // The Business Message Reject message can reject an application-level message, which fulfills session level rules but fails the business rules.
-entrypoint typedef struct _BusinessReject {
+typedef struct _BusinessReject {
   UINT32 seq_num;                             // bytes 0 to 3
   UINT64 uuid;                                // bytes 4 to 11
   UINT8 text[256];                            // bytes 12 to 267
@@ -161,74 +514,558 @@ entrypoint typedef struct _BusinessReject {
   UINT8 split_msg;                            // byte 329
 } BusinessReject;
 
-// ---- Calculated Ccy Last Qty: 9 bytes ----------------------------------------
+// Execution Report - New message is sent in response to New Order Single as well as activation of stop orders.
+typedef struct _ExecutionReportNew {
+  UINT32 seq_num;                    // bytes 0 to 3
+  UINT64 uuid;                       // bytes 4 to 11
+  UINT8 exec_id[40];                 // bytes 12 to 51
+  UINT8 sender_id[20];               // bytes 52 to 71
+  UINT8 cl_ord_id[20];               // bytes 72 to 91
+  UINT64 party_details_list_req_id;  // bytes 92 to 99
+  UINT64 order_id;                   // bytes 100 to 107
+  UINT64 price;                      // bytes 108 to 115, signed, read here as unsigned
+  UINT64 stop_px;                    // bytes 116 to 123, signed, read here as unsigned
+  UINT64 transact_time;              // bytes 124 to 131
+  UINT64 sending_time_epoch;         // bytes 132 to 139
+  UINT64 order_request_id;           // bytes 140 to 147
+  UINT64 cross_id_optional;          // bytes 148 to 155
+  UINT64 host_cross_id;              // bytes 156 to 163
+  UINT8 location[5];                 // bytes 164 to 168
+  UINT32 security_id;                // bytes 169 to 172, signed, read here as unsigned
+  UINT32 order_qty;                  // bytes 173 to 176
+  UINT32 min_qty;                    // bytes 177 to 180
+  UINT32 display_qty;                // bytes 181 to 184
+  UINT16 expire_date;                // bytes 185 to 186
+  UINT16 delay_duration;             // bytes 187 to 188
+  UINT8 ord_type_optional;           // byte 189
+  UINT8 side;                        // byte 190
+  UINT8 time_in_force;               // byte 191
+  UINT8 manual_order_indicator;      // byte 192
+  UINT8 poss_retrans_flag;           // byte 193
+  UINT8 split_msg;                   // byte 194
+  UINT8 cross_type;                  // byte 195
+  UINT8 aon : 1;                     // byte 196
+  UINT8 ob : 1;                      // byte 196
+  UINT8 nh : 1;                      // byte 196
+  UINT8 exec_inst_reserved_1 : 1;    // byte 196
+  UINT8 exec_inst_reserved_2 : 1;    // byte 196
+  UINT8 exec_inst_reserved_3 : 1;    // byte 196
+  UINT8 exec_inst_reserved_4 : 1;    // byte 196
+  UINT8 exec_inst_reserved_5 : 1;    // byte 196
+  UINT8 execution_mode;              // byte 197
+  UINT8 liquidity_flag;              // byte 198
+  UINT8 managed_order;               // byte 199
+  UINT8 short_sale_type;             // byte 200
+  UINT64 delay_to_time;              // bytes 201 to 208
+  UINT64 discretion_price;           // bytes 209 to 216, signed, read here as unsigned
+  UINT64 reservation_price;          // bytes 217 to 224, signed, read here as unsigned
+  UINT8 priority_indicator;          // byte 225
+} ExecutionReportNew;
+
+// The Execution Report - Reject message notifies the client system of a rejected order.
+typedef struct _ExecutionReportReject {
+  UINT32 seq_num;                    // bytes 0 to 3
+  UINT64 uuid;                       // bytes 4 to 11
+  UINT8 text[256];                   // bytes 12 to 267
+  UINT8 exec_id[40];                 // bytes 268 to 307
+  UINT8 sender_id[20];               // bytes 308 to 327
+  UINT8 cl_ord_id[20];               // bytes 328 to 347
+  UINT64 party_details_list_req_id;  // bytes 348 to 355
+  UINT64 order_id;                   // bytes 356 to 363
+  UINT64 price_optional;             // bytes 364 to 371, signed, read here as unsigned
+  UINT64 stop_px;                    // bytes 372 to 379, signed, read here as unsigned
+  UINT64 transact_time;              // bytes 380 to 387
+  UINT64 sending_time_epoch;         // bytes 388 to 395
+  UINT64 order_request_id;           // bytes 396 to 403
+  UINT64 cross_id_optional;          // bytes 404 to 411
+  UINT64 host_cross_id;              // bytes 412 to 419
+  UINT8 location[5];                 // bytes 420 to 424
+  UINT32 security_id;                // bytes 425 to 428, signed, read here as unsigned
+  UINT32 order_qty;                  // bytes 429 to 432
+  UINT32 min_qty;                    // bytes 433 to 436
+  UINT32 display_qty;                // bytes 437 to 440
+  UINT16 ord_rej_reason;             // bytes 441 to 442
+  UINT16 expire_date;                // bytes 443 to 444
+  UINT16 delay_duration;             // bytes 445 to 446
+  UINT8 ord_type_optional;           // byte 447
+  UINT8 side;                        // byte 448
+  UINT8 time_in_force;               // byte 449
+  UINT8 manual_order_indicator;      // byte 450
+  UINT8 poss_retrans_flag;           // byte 451
+  UINT8 split_msg;                   // byte 452
+  UINT8 cross_type;                  // byte 453
+  UINT8 aon : 1;                     // byte 454
+  UINT8 ob : 1;                      // byte 454
+  UINT8 nh : 1;                      // byte 454
+  UINT8 exec_inst_reserved_1 : 1;    // byte 454
+  UINT8 exec_inst_reserved_2 : 1;    // byte 454
+  UINT8 exec_inst_reserved_3 : 1;    // byte 454
+  UINT8 exec_inst_reserved_4 : 1;    // byte 454
+  UINT8 exec_inst_reserved_5 : 1;    // byte 454
+  UINT8 execution_mode;              // byte 455
+  UINT8 liquidity_flag;              // byte 456
+  UINT8 managed_order;               // byte 457
+  UINT8 short_sale_type;             // byte 458
+  UINT64 delay_to_time;              // bytes 459 to 466
+  UINT64 discretion_price;           // bytes 467 to 474, signed, read here as unsigned
+  UINT64 reservation_price;          // bytes 475 to 482, signed, read here as unsigned
+} ExecutionReportReject;
+
+// The Execution Report - Elimination message is sent at order elimination.
+typedef struct _ExecutionReportElimination {
+  UINT32 seq_num;                    // bytes 0 to 3
+  UINT64 uuid;                       // bytes 4 to 11
+  UINT8 exec_id[40];                 // bytes 12 to 51
+  UINT8 sender_id[20];               // bytes 52 to 71
+  UINT8 cl_ord_id[20];               // bytes 72 to 91
+  UINT64 party_details_list_req_id;  // bytes 92 to 99
+  UINT64 order_id;                   // bytes 100 to 107
+  UINT64 price;                      // bytes 108 to 115, signed, read here as unsigned
+  UINT64 stop_px;                    // bytes 116 to 123, signed, read here as unsigned
+  UINT64 transact_time;              // bytes 124 to 131
+  UINT64 sending_time_epoch;         // bytes 132 to 139
+  UINT64 order_request_id;           // bytes 140 to 147
+  UINT64 cross_id_optional;          // bytes 148 to 155
+  UINT64 host_cross_id;              // bytes 156 to 163
+  UINT8 location[5];                 // bytes 164 to 168
+  UINT32 security_id;                // bytes 169 to 172, signed, read here as unsigned
+  UINT32 cum_qty;                    // bytes 173 to 176
+  UINT32 order_qty;                  // bytes 177 to 180
+  UINT32 min_qty;                    // bytes 181 to 184
+  UINT32 display_qty;                // bytes 185 to 188
+  UINT16 expire_date;                // bytes 189 to 190
+  UINT8 ord_type_optional;           // byte 191
+  UINT8 side;                        // byte 192
+  UINT8 time_in_force;               // byte 193
+  UINT8 manual_order_indicator;      // byte 194
+  UINT8 poss_retrans_flag;           // byte 195
+  UINT8 cross_type;                  // byte 196
+  UINT8 aon : 1;                     // byte 197
+  UINT8 ob : 1;                      // byte 197
+  UINT8 nh : 1;                      // byte 197
+  UINT8 exec_inst_reserved_1 : 1;    // byte 197
+  UINT8 exec_inst_reserved_2 : 1;    // byte 197
+  UINT8 exec_inst_reserved_3 : 1;    // byte 197
+  UINT8 exec_inst_reserved_4 : 1;    // byte 197
+  UINT8 exec_inst_reserved_5 : 1;    // byte 197
+  UINT8 execution_mode;              // byte 198
+  UINT8 liquidity_flag;              // byte 199
+  UINT8 managed_order;               // byte 200
+  UINT8 short_sale_type;             // byte 201
+  UINT64 discretion_price;           // bytes 202 to 209, signed, read here as unsigned
+  UINT64 reservation_price;          // bytes 210 to 217, signed, read here as unsigned
+  UINT8 priority_indicator;          // byte 218
+} ExecutionReportElimination;
 
 // ExecutionReportTradeOutright
-entrypoint typedef struct _CalculatedCcyLastQty {
+typedef struct _CalculatedCcyLastQty {
   UINT64 mantissa;  // bytes 0 to 7, signed, read here as unsigned
   UINT8 exponent;   // byte 8, signed, read here as unsigned
 } CalculatedCcyLastQty;
 
-// ---- Gross Trade Amt: 9 bytes ------------------------------------------------
+// Specifies the number of fill reasons included in this Execution Report
+typedef struct _FillsGroup {
+  UINT64 fill_px;         // bytes 0 to 7, signed, read here as unsigned
+  UINT32 fill_qty;        // bytes 8 to 11
+  UINT8 fill_exec_id[2];  // bytes 12 to 13
+  UINT8 fill_yield_type;  // byte 14
+} FillsGroup;
 
-// ExecutionReportTradeOutright
-entrypoint typedef struct _GrossTradeAmt {
-  UINT64 mantissa;  // bytes 0 to 7, signed, read here as unsigned
-  UINT8 exponent;   // byte 8, signed, read here as unsigned
-} GrossTradeAmt;
-
-// ---- Contra Gross Trade Amt: 9 bytes -----------------------------------------
+// NoFills Block
+typedef struct _FillsGroups {
+  UINT16 block_length;                                                // bytes 0 to 1
+  UINT8 num_in_group;                                                 // byte 2
+  FillsGroup fills_group[:byte-size (((UINT32) num_in_group) * 15)];
+} FillsGroups;
 
 // Number of fills which comprise fill quantity
-entrypoint typedef struct _ContraGrossTradeAmt {
+typedef struct _ContraGrossTradeAmt {
   UINT64 mantissa;  // bytes 0 to 7, signed, read here as unsigned
   UINT8 exponent;   // byte 8, signed, read here as unsigned
 } ContraGrossTradeAmt;
 
-// ---- Contra Calculated Ccy Last Qty: 9 bytes ---------------------------------
+// Number of fills which comprise fill quantity
+typedef struct _OutrightOrderEventsGroup {
+  UINT64 order_event_px;                               // bytes 0 to 7, signed, read here as unsigned
+  UINT8 order_event_text[5];                           // bytes 8 to 12
+  UINT32 order_event_exec_id;                          // bytes 13 to 16
+  UINT32 order_event_qty;                              // bytes 17 to 20
+  UINT8 order_event_type;                              // byte 21
+  UINT8 order_event_reason;                            // byte 22
+  ContraGrossTradeAmt contra_gross_trade_amt;          // bytes 23 to 31
+  ContraGrossTradeAmt contra_calculated_ccy_last_qty;  // bytes 32 to 40
+} OutrightOrderEventsGroup;
+
+// NoOrderEvents Block
+typedef struct _OutrightOrderEventsGroups {
+  UINT16 block_length;                                                                              // bytes 0 to 1
+  UINT8 num_in_group;                                                                               // byte 2
+  OutrightOrderEventsGroup outright_order_events_group[:byte-size (((UINT32) num_in_group) * 41)];
+} OutrightOrderEventsGroups;
+
+// The Execution Report - Trade Outright message is sent upon fill or partial fill of a client order for outright instruments.
+typedef struct _ExecutionReportTradeOutright {
+  UINT32 seq_num;                                          // bytes 0 to 3
+  UINT64 uuid;                                             // bytes 4 to 11
+  UINT8 exec_id[40];                                       // bytes 12 to 51
+  UINT8 sender_id[20];                                     // bytes 52 to 71
+  UINT8 cl_ord_id[20];                                     // bytes 72 to 91
+  UINT64 party_details_list_req_id;                        // bytes 92 to 99
+  UINT64 last_px;                                          // bytes 100 to 107, signed, read here as unsigned
+  UINT64 order_id;                                         // bytes 108 to 115
+  UINT64 price;                                            // bytes 116 to 123, signed, read here as unsigned
+  UINT64 stop_px;                                          // bytes 124 to 131, signed, read here as unsigned
+  UINT64 transact_time;                                    // bytes 132 to 139
+  UINT64 sending_time_epoch;                               // bytes 140 to 147
+  UINT64 order_request_id;                                 // bytes 148 to 155
+  UINT64 sec_exec_id;                                      // bytes 156 to 163
+  UINT64 cross_id_optional;                                // bytes 164 to 171
+  UINT64 host_cross_id;                                    // bytes 172 to 179
+  UINT8 location[5];                                       // bytes 180 to 184
+  UINT32 security_id;                                      // bytes 185 to 188, signed, read here as unsigned
+  UINT32 order_qty;                                        // bytes 189 to 192
+  UINT32 last_qty;                                         // bytes 193 to 196
+  UINT32 cum_qty;                                          // bytes 197 to 200
+  UINT32 md_trade_entry_id;                                // bytes 201 to 204
+  UINT32 side_trade_id;                                    // bytes 205 to 208
+  UINT32 trade_link_id;                                    // bytes 209 to 212
+  UINT32 leaves;                                           // bytes 213 to 216
+  UINT16 trade_date;                                       // bytes 217 to 218
+  UINT16 expire_date;                                      // bytes 219 to 220
+  UINT8 ord_status_trd;                                    // byte 221
+  UINT8 ord_type_optional;                                 // byte 222
+  UINT8 side;                                              // byte 223
+  UINT8 time_in_force;                                     // byte 224
+  UINT8 manual_order_indicator;                            // byte 225
+  UINT8 poss_retrans_flag;                                 // byte 226
+  UINT8 aggressor_indicator;                               // byte 227
+  UINT8 cross_type;                                        // byte 228
+  UINT8 aon : 1;                                           // byte 229
+  UINT8 ob : 1;                                            // byte 229
+  UINT8 nh : 1;                                            // byte 229
+  UINT8 exec_inst_reserved_1 : 1;                          // byte 229
+  UINT8 exec_inst_reserved_2 : 1;                          // byte 229
+  UINT8 exec_inst_reserved_3 : 1;                          // byte 229
+  UINT8 exec_inst_reserved_4 : 1;                          // byte 229
+  UINT8 exec_inst_reserved_5 : 1;                          // byte 229
+  UINT8 execution_mode;                                    // byte 230
+  UINT8 liquidity_flag;                                    // byte 231
+  UINT8 managed_order;                                     // byte 232
+  UINT8 short_sale_type;                                   // byte 233
+  UINT8 ownership;                                         // byte 234
+  UINT64 discretion_price;                                 // bytes 235 to 242, signed, read here as unsigned
+  UINT16 trd_type;                                         // bytes 243 to 244
+  UINT8 exec_restatement_reason;                           // byte 245
+  UINT16 settl_date;                                       // bytes 246 to 247
+  UINT16 maturity_date;                                    // bytes 248 to 249
+  CalculatedCcyLastQty calculated_ccy_last_qty;            // bytes 250 to 258
+  CalculatedCcyLastQty gross_trade_amt;                    // bytes 259 to 267
+  UINT64 benchmark_price;                                  // bytes 268 to 275, signed, read here as unsigned
+  UINT64 reservation_price;                                // bytes 276 to 283, signed, read here as unsigned
+  UINT8 priority_indicator;                                // byte 284
+  UINT64 display_limit_price;                              // bytes 285 to 292, signed, read here as unsigned
+  FillsGroups fills_groups;
+  OutrightOrderEventsGroups outright_order_events_groups;
+} ExecutionReportTradeOutright;
+
+// Number of Leg executions; Will currently be set to 0 and in future will contain the leg fills for the spread when spread leg fills are consolidated with the spread fill as a single message
+typedef struct _TradeLegsGroup {
+  UINT64 leg_exec_id;      // bytes 0 to 7
+  UINT64 leg_last_px;      // bytes 8 to 15, signed, read here as unsigned
+  UINT32 leg_security_id;  // bytes 16 to 19, signed, read here as unsigned
+  UINT32 leg_trade_id;     // bytes 20 to 23
+  UINT32 leg_last_qty;     // bytes 24 to 27
+  UINT8 leg_side;          // byte 28
+} TradeLegsGroup;
+
+// NoLegs Block
+typedef struct _TradeLegsGroups {
+  UINT16 block_length;                                                         // bytes 0 to 1
+  UINT8 num_in_group;                                                          // byte 2
+  TradeLegsGroup trade_legs_group[:byte-size (((UINT32) num_in_group) * 29)];
+} TradeLegsGroups;
 
 // Number of fills which comprise fill quantity
-entrypoint typedef struct _ContraCalculatedCcyLastQty {
-  UINT64 mantissa;  // bytes 0 to 7, signed, read here as unsigned
-  UINT8 exponent;   // byte 8, signed, read here as unsigned
-} ContraCalculatedCcyLastQty;
+typedef struct _SpreadOrderEventsGroup {
+  UINT64 order_event_px;       // bytes 0 to 7, signed, read here as unsigned
+  UINT8 order_event_text[5];   // bytes 8 to 12
+  UINT32 order_event_exec_id;  // bytes 13 to 16
+  UINT32 order_event_qty;      // bytes 17 to 20
+  UINT8 order_event_type;      // byte 21
+  UINT8 order_event_reason;    // byte 22
+} SpreadOrderEventsGroup;
 
-// ---- Volatility: 9 bytes -----------------------------------------------------
+// NoOrderEvents Block
+typedef struct _SpreadOrderEventsGroups {
+  UINT16 block_length;                                                                          // bytes 0 to 1
+  UINT8 num_in_group;                                                                           // byte 2
+  SpreadOrderEventsGroup spread_order_events_group[:byte-size (((UINT32) num_in_group) * 23)];
+} SpreadOrderEventsGroups;
+
+// The Execution Report - Trade Spread message is sent upon fill or partial fill of a client order for spread instruments.
+typedef struct _ExecutionReportTradeSpread {
+  UINT32 seq_num;                                      // bytes 0 to 3
+  UINT64 uuid;                                         // bytes 4 to 11
+  UINT8 exec_id[40];                                   // bytes 12 to 51
+  UINT8 sender_id[20];                                 // bytes 52 to 71
+  UINT8 cl_ord_id[20];                                 // bytes 72 to 91
+  UINT64 party_details_list_req_id;                    // bytes 92 to 99
+  UINT64 last_px;                                      // bytes 100 to 107, signed, read here as unsigned
+  UINT64 order_id;                                     // bytes 108 to 115
+  UINT64 price;                                        // bytes 116 to 123, signed, read here as unsigned
+  UINT64 stop_px;                                      // bytes 124 to 131, signed, read here as unsigned
+  UINT64 transact_time;                                // bytes 132 to 139
+  UINT64 sending_time_epoch;                           // bytes 140 to 147
+  UINT64 order_request_id;                             // bytes 148 to 155
+  UINT64 sec_exec_id;                                  // bytes 156 to 163
+  UINT64 cross_id_optional;                            // bytes 164 to 171
+  UINT64 host_cross_id;                                // bytes 172 to 179
+  UINT8 location[5];                                   // bytes 180 to 184
+  UINT32 security_id;                                  // bytes 185 to 188, signed, read here as unsigned
+  UINT32 order_qty;                                    // bytes 189 to 192
+  UINT32 last_qty;                                     // bytes 193 to 196
+  UINT32 cum_qty;                                      // bytes 197 to 200
+  UINT32 md_trade_entry_id;                            // bytes 201 to 204
+  UINT32 side_trade_id;                                // bytes 205 to 208
+  UINT32 leaves;                                       // bytes 209 to 212
+  UINT16 trade_date;                                   // bytes 213 to 214
+  UINT16 expire_date;                                  // bytes 215 to 216
+  UINT8 ord_status_trd;                                // byte 217
+  UINT8 ord_type_optional;                             // byte 218
+  UINT8 side;                                          // byte 219
+  UINT8 time_in_force;                                 // byte 220
+  UINT8 manual_order_indicator;                        // byte 221
+  UINT8 poss_retrans_flag;                             // byte 222
+  UINT8 aggressor_indicator;                           // byte 223
+  UINT8 cross_type;                                    // byte 224
+  UINT8 total_num_securities;                          // byte 225
+  UINT8 aon : 1;                                       // byte 226
+  UINT8 ob : 1;                                        // byte 226
+  UINT8 nh : 1;                                        // byte 226
+  UINT8 exec_inst_reserved_1 : 1;                      // byte 226
+  UINT8 exec_inst_reserved_2 : 1;                      // byte 226
+  UINT8 exec_inst_reserved_3 : 1;                      // byte 226
+  UINT8 exec_inst_reserved_4 : 1;                      // byte 226
+  UINT8 exec_inst_reserved_5 : 1;                      // byte 226
+  UINT8 execution_mode;                                // byte 227
+  UINT8 liquidity_flag;                                // byte 228
+  UINT8 short_sale_type;                               // byte 229
+  FillsGroups fills_groups;
+  TradeLegsGroups trade_legs_groups;
+  SpreadOrderEventsGroups spread_order_events_groups;
+} ExecutionReportTradeSpread;
 
 // ExecutionReportTradeSpreadLeg
-entrypoint typedef struct _Volatility {
+typedef struct _Volatility {
   UINT64 mantissa;  // bytes 0 to 7, signed, read here as unsigned
   UINT8 exponent;   // byte 8, signed, read here as unsigned
 } Volatility;
 
-// ---- Option Delta: 5 bytes ---------------------------------------------------
-
 // ExecutionReportTradeSpreadLeg
-entrypoint typedef struct _OptionDelta {
+typedef struct _OptionDelta {
   UINT32 mantissa_32;  // bytes 0 to 3, signed, read here as unsigned
   UINT8 exponent;      // byte 4, signed, read here as unsigned
 } OptionDelta;
 
-// ---- Time To Expiration: 5 bytes ---------------------------------------------
+// NoOrderEvents Block
+typedef struct _SpreadLegOrderEventsGroups {
+  UINT16 block_length;                                                                              // bytes 0 to 1
+  UINT8 num_in_group;                                                                               // byte 2
+  SpreadOrderEventsGroup spread_leg_order_events_group[:byte-size (((UINT32) num_in_group) * 23)];
+} SpreadLegOrderEventsGroups;
 
-// ExecutionReportTradeSpreadLeg
-entrypoint typedef struct _TimeToExpiration {
-  UINT32 mantissa_32;  // bytes 0 to 3, signed, read here as unsigned
-  UINT8 exponent;      // byte 4, signed, read here as unsigned
-} TimeToExpiration;
+// The Execution Report - Trade Spread Leg message is sent upon fill or partial fill of a client order for spread leg instruments.
+typedef struct _ExecutionReportTradeSpreadLeg {
+  UINT32 seq_num;                                             // bytes 0 to 3
+  UINT64 uuid;                                                // bytes 4 to 11
+  UINT8 exec_id[40];                                          // bytes 12 to 51
+  UINT8 sender_id[20];                                        // bytes 52 to 71
+  UINT8 cl_ord_id[20];                                        // bytes 72 to 91
+  Volatility volatility;                                      // bytes 92 to 100
+  UINT64 party_details_list_req_id;                           // bytes 101 to 108
+  UINT64 last_px;                                             // bytes 109 to 116, signed, read here as unsigned
+  UINT64 order_id;                                            // bytes 117 to 124
+  UINT64 underlying_px;                                       // bytes 125 to 132, signed, read here as unsigned
+  UINT64 transact_time;                                       // bytes 133 to 140
+  UINT64 sending_time_epoch;                                  // bytes 141 to 148
+  UINT64 sec_exec_id;                                         // bytes 149 to 156
+  UINT8 location[5];                                          // bytes 157 to 161
+  OptionDelta option_delta;                                   // bytes 162 to 166
+  OptionDelta time_to_expiration;                             // bytes 167 to 171
+  OptionDelta risk_free_rate;                                 // bytes 172 to 176
+  UINT32 security_id;                                         // bytes 177 to 180, signed, read here as unsigned
+  UINT32 last_qty;                                            // bytes 181 to 184
+  UINT32 cum_qty;                                             // bytes 185 to 188
+  UINT32 side_trade_id;                                       // bytes 189 to 192
+  UINT16 trade_date;                                          // bytes 193 to 194
+  UINT8 ord_status_trd;                                       // byte 195
+  UINT8 ord_type_optional;                                    // byte 196
+  UINT8 side;                                                 // byte 197
+  UINT8 poss_retrans_flag;                                    // byte 198
+  UINT16 settl_date;                                          // bytes 199 to 200
+  CalculatedCcyLastQty calculated_ccy_last_qty;               // bytes 201 to 209
+  CalculatedCcyLastQty gross_trade_amt;                       // bytes 210 to 218
+  FillsGroups fills_groups;
+  SpreadLegOrderEventsGroups spread_leg_order_events_groups;
+} ExecutionReportTradeSpreadLeg;
 
-// ---- Risk Free Rate: 5 bytes -------------------------------------------------
+// Execution Report - Modify message is sent in response to Order Cancel Replace Request.
+typedef struct _ExecutionReportModify {
+  UINT32 seq_num;                    // bytes 0 to 3
+  UINT64 uuid;                       // bytes 4 to 11
+  UINT8 exec_id[40];                 // bytes 12 to 51
+  UINT8 sender_id[20];               // bytes 52 to 71
+  UINT8 cl_ord_id[20];               // bytes 72 to 91
+  UINT64 party_details_list_req_id;  // bytes 92 to 99
+  UINT64 order_id;                   // bytes 100 to 107
+  UINT64 price;                      // bytes 108 to 115, signed, read here as unsigned
+  UINT64 stop_px;                    // bytes 116 to 123, signed, read here as unsigned
+  UINT64 transact_time;              // bytes 124 to 131
+  UINT64 sending_time_epoch;         // bytes 132 to 139
+  UINT64 order_request_id;           // bytes 140 to 147
+  UINT64 cross_id_optional;          // bytes 148 to 155
+  UINT64 host_cross_id;              // bytes 156 to 163
+  UINT8 location[5];                 // bytes 164 to 168
+  UINT32 security_id;                // bytes 169 to 172, signed, read here as unsigned
+  UINT32 order_qty;                  // bytes 173 to 176
+  UINT32 cum_qty;                    // bytes 177 to 180
+  UINT32 leaves;                     // bytes 181 to 184
+  UINT32 min_qty;                    // bytes 185 to 188
+  UINT32 display_qty;                // bytes 189 to 192
+  UINT16 expire_date;                // bytes 193 to 194
+  UINT16 delay_duration;             // bytes 195 to 196
+  UINT8 ord_type_optional;           // byte 197
+  UINT8 side;                        // byte 198
+  UINT8 time_in_force;               // byte 199
+  UINT8 manual_order_indicator;      // byte 200
+  UINT8 poss_retrans_flag;           // byte 201
+  UINT8 split_msg;                   // byte 202
+  UINT8 cross_type;                  // byte 203
+  UINT8 aon : 1;                     // byte 204
+  UINT8 ob : 1;                      // byte 204
+  UINT8 nh : 1;                      // byte 204
+  UINT8 exec_inst_reserved_1 : 1;    // byte 204
+  UINT8 exec_inst_reserved_2 : 1;    // byte 204
+  UINT8 exec_inst_reserved_3 : 1;    // byte 204
+  UINT8 exec_inst_reserved_4 : 1;    // byte 204
+  UINT8 exec_inst_reserved_5 : 1;    // byte 204
+  UINT8 execution_mode;              // byte 205
+  UINT8 liquidity_flag;              // byte 206
+  UINT8 managed_order;               // byte 207
+  UINT8 short_sale_type;             // byte 208
+  UINT64 delay_to_time;              // bytes 209 to 216
+  UINT64 discretion_price;           // bytes 217 to 224, signed, read here as unsigned
+  UINT8 priority_indicator;          // byte 225
+} ExecutionReportModify;
 
-// ExecutionReportTradeSpreadLeg
-entrypoint typedef struct _RiskFreeRate {
-  UINT32 mantissa_32;  // bytes 0 to 3, signed, read here as unsigned
-  UINT8 exponent;      // byte 4, signed, read here as unsigned
-} RiskFreeRate;
+// Execution Report - Status message is sent in response to Order Status Request or Order Mass Status Request.
+typedef struct _ExecutionReportStatus {
+  UINT32 seq_num;                      // bytes 0 to 3
+  UINT64 uuid;                         // bytes 4 to 11
+  UINT8 text[256];                     // bytes 12 to 267
+  UINT8 exec_id[40];                   // bytes 268 to 307
+  UINT8 sender_id[20];                 // bytes 308 to 327
+  UINT8 cl_ord_id[20];                 // bytes 328 to 347
+  UINT64 party_details_list_req_id;    // bytes 348 to 355
+  UINT64 order_id;                     // bytes 356 to 363
+  UINT64 price_optional;               // bytes 364 to 371, signed, read here as unsigned
+  UINT64 stop_px;                      // bytes 372 to 379, signed, read here as unsigned
+  UINT64 transact_time;                // bytes 380 to 387
+  UINT64 sending_time_epoch;           // bytes 388 to 395
+  UINT64 order_request_id;             // bytes 396 to 403
+  UINT64 ord_status_req_id_optional;   // bytes 404 to 411
+  UINT64 mass_status_req_id_optional;  // bytes 412 to 419
+  UINT64 cross_id_optional;            // bytes 420 to 427
+  UINT64 host_cross_id;                // bytes 428 to 435
+  UINT8 location[5];                   // bytes 436 to 440
+  UINT32 security_id;                  // bytes 441 to 444, signed, read here as unsigned
+  UINT32 order_qty;                    // bytes 445 to 448
+  UINT32 cum_qty;                      // bytes 449 to 452
+  UINT32 leaves;                       // bytes 453 to 456
+  UINT32 min_qty;                      // bytes 457 to 460
+  UINT32 display_qty;                  // bytes 461 to 464
+  UINT16 expire_date;                  // bytes 465 to 466
+  UINT8 ord_status;                    // byte 467
+  UINT8 ord_type_optional;             // byte 468
+  UINT8 side;                          // byte 469
+  UINT8 time_in_force;                 // byte 470
+  UINT8 manual_order_indicator;        // byte 471
+  UINT8 poss_retrans_flag;             // byte 472
+  UINT8 last_rpt_requested;            // byte 473
+  UINT8 cross_type;                    // byte 474
+  UINT8 aon : 1;                       // byte 475
+  UINT8 ob : 1;                        // byte 475
+  UINT8 nh : 1;                        // byte 475
+  UINT8 exec_inst_reserved_1 : 1;      // byte 475
+  UINT8 exec_inst_reserved_2 : 1;      // byte 475
+  UINT8 exec_inst_reserved_3 : 1;      // byte 475
+  UINT8 exec_inst_reserved_4 : 1;      // byte 475
+  UINT8 exec_inst_reserved_5 : 1;      // byte 475
+  UINT8 execution_mode;                // byte 476
+  UINT8 liquidity_flag;                // byte 477
+  UINT8 managed_order;                 // byte 478
+  UINT8 short_sale_type;               // byte 479
+  UINT64 discretion_price;             // bytes 480 to 487, signed, read here as unsigned
+  UINT64 reservation_price;            // bytes 488 to 495, signed, read here as unsigned
+  UINT8 priority_indicator;            // byte 496
+  UINT8 orig_order_user[8];            // bytes 497 to 504
+  UINT8 cancel_text[8];                // bytes 505 to 512
+} ExecutionReportStatus;
 
-// ---- Order Cancel Reject: 409 bytes ------------------------------------------
+// Execution Report - Cancel message is sent in response to Order Cancel Request as well as to report unsolicited cancellation of orders.
+typedef struct _ExecutionReportCancel {
+  UINT32 seq_num;                    // bytes 0 to 3
+  UINT64 uuid;                       // bytes 4 to 11
+  UINT8 exec_id[40];                 // bytes 12 to 51
+  UINT8 sender_id[20];               // bytes 52 to 71
+  UINT8 cl_ord_id[20];               // bytes 72 to 91
+  UINT64 party_details_list_req_id;  // bytes 92 to 99
+  UINT64 order_id;                   // bytes 100 to 107
+  UINT64 price;                      // bytes 108 to 115, signed, read here as unsigned
+  UINT64 stop_px;                    // bytes 116 to 123, signed, read here as unsigned
+  UINT64 transact_time;              // bytes 124 to 131
+  UINT64 sending_time_epoch;         // bytes 132 to 139
+  UINT64 order_request_id;           // bytes 140 to 147
+  UINT64 cross_id_optional;          // bytes 148 to 155
+  UINT64 host_cross_id;              // bytes 156 to 163
+  UINT8 location[5];                 // bytes 164 to 168
+  UINT32 security_id;                // bytes 169 to 172, signed, read here as unsigned
+  UINT32 order_qty;                  // bytes 173 to 176
+  UINT32 cum_qty;                    // bytes 177 to 180
+  UINT32 min_qty;                    // bytes 181 to 184
+  UINT32 display_qty;                // bytes 185 to 188
+  UINT16 expire_date;                // bytes 189 to 190
+  UINT16 delay_duration;             // bytes 191 to 192
+  UINT8 ord_type_optional;           // byte 193
+  UINT8 side;                        // byte 194
+  UINT8 time_in_force;               // byte 195
+  UINT8 manual_order_indicator;      // byte 196
+  UINT8 poss_retrans_flag;           // byte 197
+  UINT8 split_msg;                   // byte 198
+  UINT8 exec_restatement_reason;     // byte 199
+  UINT8 cross_type;                  // byte 200
+  UINT8 aon : 1;                     // byte 201
+  UINT8 ob : 1;                      // byte 201
+  UINT8 nh : 1;                      // byte 201
+  UINT8 exec_inst_reserved_1 : 1;    // byte 201
+  UINT8 exec_inst_reserved_2 : 1;    // byte 201
+  UINT8 exec_inst_reserved_3 : 1;    // byte 201
+  UINT8 exec_inst_reserved_4 : 1;    // byte 201
+  UINT8 exec_inst_reserved_5 : 1;    // byte 201
+  UINT8 execution_mode;              // byte 202
+  UINT8 liquidity_flag;              // byte 203
+  UINT8 managed_order;               // byte 204
+  UINT8 short_sale_type;             // byte 205
+  UINT64 delay_to_time;              // bytes 206 to 213
+  UINT64 discretion_price;           // bytes 214 to 221, signed, read here as unsigned
+  UINT64 reservation_price;          // bytes 222 to 229, signed, read here as unsigned
+  UINT8 priority_indicator;          // byte 230
+  UINT8 orig_order_user[8];          // bytes 231 to 238
+  UINT8 cancel_text[8];              // bytes 239 to 246
+} ExecutionReportCancel;
 
 // The Order Cancel Reject message is issued upon receipt of a cancel request message which cannot be honored.
-entrypoint typedef struct _OrderCancelReject {
+typedef struct _OrderCancelReject {
   UINT32 seq_num;                    // bytes 0 to 3
   UINT64 uuid;                       // bytes 4 to 11
   UINT8 text[256];                   // bytes 12 to 267
@@ -250,10 +1087,8 @@ entrypoint typedef struct _OrderCancelReject {
   UINT64 delay_to_time;              // bytes 401 to 408
 } OrderCancelReject;
 
-// ---- Order Cancel Replace Reject: 409 bytes ----------------------------------
-
 // The Order Cancel Replace Reject message is issued upon receipt of a cancel replace request message that cannot be honored.
-entrypoint typedef struct _OrderCancelReplaceReject {
+typedef struct _OrderCancelReplaceReject {
   UINT32 seq_num;                    // bytes 0 to 3
   UINT64 uuid;                       // bytes 4 to 11
   UINT8 text[256];                   // bytes 12 to 267
@@ -275,10 +1110,78 @@ entrypoint typedef struct _OrderCancelReplaceReject {
   UINT64 delay_to_time;              // bytes 401 to 408
 } OrderCancelReplaceReject;
 
-// ---- Request For Quote Ack: 358 bytes ----------------------------------------
+// Used to replay Party Details Definition information such as clearing instructions, order source, self-match parameters, etc. for a particular Firm ID.
+typedef struct _PartyDetailsListReport {
+  UINT32 seq_num;                                        // bytes 0 to 3
+  UINT64 uuid;                                           // bytes 4 to 11
+  UINT8 avg_px_group_id[20];                             // bytes 12 to 31
+  UINT64 party_details_list_req_id;                      // bytes 32 to 39
+  UINT64 party_details_list_report_id;                   // bytes 40 to 47
+  UINT64 sending_time_epoch;                             // bytes 48 to 55
+  UINT64 self_match_prevention_id;                       // bytes 56 to 63
+  UINT16 tot_num_parties;                                // bytes 64 to 65
+  UINT8 request_result;                                  // byte 66
+  UINT8 last_fragment;                                   // byte 67
+  UINT8 cust_order_capacity;                             // byte 68
+  UINT8 clearing_account_type;                           // byte 69
+  UINT8 self_match_prevention_instruction;               // byte 70
+  UINT8 avg_px_indicator;                                // byte 71
+  UINT8 clearing_trade_price_type;                       // byte 72
+  UINT8 cmta_giveup_cd;                                  // byte 73
+  UINT8 cust_order_handling_inst;                        // byte 74
+  UINT64 executor;                                       // bytes 75 to 82
+  UINT64 idm_short_code;                                 // bytes 83 to 90
+  UINT8 poss_retrans_flag;                               // byte 91
+  UINT8 split_msg;                                       // byte 92
+  PartyDetailsGroups party_details_groups;
+  TrdRegPublicationsGroups trd_reg_publications_groups;
+} PartyDetailsListReport;
+
+// The number of quoute entries for a quote set.
+typedef struct _QuoteAckEntriesGroup {
+  UINT32 quote_entry_id;            // bytes 0 to 3
+  UINT32 security_id;               // bytes 4 to 7, signed, read here as unsigned
+  UINT16 quote_set_id;              // bytes 8 to 9
+  UINT8 quote_entry_reject_reason;  // byte 10
+} QuoteAckEntriesGroup;
+
+// NoQuoteEntries Block
+typedef struct _QuoteAckEntriesGroups {
+  UINT16 block_length;                                                                      // bytes 0 to 1
+  UINT8 num_in_group;                                                                       // byte 2
+  QuoteAckEntriesGroup quote_ack_entries_group[:byte-size (((UINT32) num_in_group) * 11)];
+} QuoteAckEntriesGroups;
+
+// The Mass Quote Acknowledgment message is used as the response to a Mass Quote to notify customers of accepted and rejected quotes.
+typedef struct _MassQuoteAck {
+  UINT32 seq_num;                                  // bytes 0 to 3
+  UINT64 uuid;                                     // bytes 4 to 11
+  UINT8 text[256];                                 // bytes 12 to 267
+  UINT8 sender_id[20];                             // bytes 268 to 287
+  UINT64 party_details_list_req_id;                // bytes 288 to 295
+  UINT64 request_time;                             // bytes 296 to 303
+  UINT64 sending_time_epoch;                       // bytes 304 to 311
+  UINT64 quote_req_id_optional;                    // bytes 312 to 319
+  UINT8 location[5];                               // bytes 320 to 324
+  UINT32 quote_id;                                 // bytes 325 to 328
+  UINT16 quote_reject_reason;                      // bytes 329 to 330
+  UINT16 delay_duration;                           // bytes 331 to 332
+  UINT8 quote_ack_status;                          // byte 333
+  UINT8 manual_order_indicator;                    // byte 334
+  UINT8 no_processed_entries;                      // byte 335
+  UINT8 mm_protection_reset;                       // byte 336
+  UINT8 split_msg;                                 // byte 337
+  UINT8 liquidity_flag;                            // byte 338
+  UINT8 short_sale_type;                           // byte 339
+  UINT8 tot_no_quote_entries_optional;             // byte 340
+  UINT8 poss_retrans_flag;                         // byte 341
+  UINT64 delay_to_time;                            // bytes 342 to 349
+  UINT8 quote_entry_open;                          // byte 350
+  QuoteAckEntriesGroups quote_ack_entries_groups;
+} MassQuoteAck;
 
 // Request for Quote Acknowledgment message is used in response to a Request for Quote message to either accept it or reject it.
-entrypoint typedef struct _RequestForQuoteAck {
+typedef struct _RequestForQuoteAck {
   UINT32 seq_num;                    // bytes 0 to 3
   UINT64 uuid;                       // bytes 4 to 11
   UINT8 text[256];                   // bytes 12 to 267
@@ -298,21 +1201,435 @@ entrypoint typedef struct _RequestForQuoteAck {
   UINT64 delay_to_time;              // bytes 350 to 357
 } RequestForQuoteAck;
 
-// ---- Maturity Month Year: 5 bytes --------------------------------------------
+// Number of fills which comprise fill quantity
+typedef struct _OutrightTradeEventsGroup {
+  UINT64 order_event_px;                               // bytes 0 to 7, signed, read here as unsigned
+  UINT8 order_event_text[5];                           // bytes 8 to 12
+  UINT32 order_event_exec_id;                          // bytes 13 to 16
+  UINT32 order_event_qty;                              // bytes 17 to 20
+  UINT8 trade_addendum;                                // byte 21
+  UINT8 order_event_reason;                            // byte 22
+  UINT32 original_order_event_exec_id;                 // bytes 23 to 26
+  ContraGrossTradeAmt contra_gross_trade_amt;          // bytes 27 to 35
+  ContraGrossTradeAmt contra_calculated_ccy_last_qty;  // bytes 36 to 44
+} OutrightTradeEventsGroup;
+
+// NoOrderEvents Block
+typedef struct _OutrightTradeEventsGroups {
+  UINT16 block_length;                                                                              // bytes 0 to 1
+  UINT8 num_in_group;                                                                               // byte 2
+  OutrightTradeEventsGroup outright_trade_events_group[:byte-size (((UINT32) num_in_group) * 45)];
+} OutrightTradeEventsGroups;
+
+// The Execution Report - Trade Addendum Outright message notifies client systems of trade cancellation or correction for outrights.
+typedef struct _ExecutionReportTradeAddendumOutright {
+  UINT32 seq_num;                                          // bytes 0 to 3
+  UINT64 uuid;                                             // bytes 4 to 11
+  UINT8 exec_id[40];                                       // bytes 12 to 51
+  UINT8 sender_id[20];                                     // bytes 52 to 71
+  UINT8 cl_ord_id[20];                                     // bytes 72 to 91
+  UINT64 party_details_list_req_id;                        // bytes 92 to 99
+  UINT64 last_px;                                          // bytes 100 to 107, signed, read here as unsigned
+  UINT64 order_id;                                         // bytes 108 to 115
+  UINT64 transact_time;                                    // bytes 116 to 123
+  UINT64 sending_time_epoch;                               // bytes 124 to 131
+  UINT64 sec_exec_id;                                      // bytes 132 to 139
+  UINT64 orig_secondary_execution_id;                      // bytes 140 to 147
+  UINT8 location[5];                                       // bytes 148 to 152
+  UINT32 security_id;                                      // bytes 153 to 156, signed, read here as unsigned
+  UINT32 last_qty;                                         // bytes 157 to 160
+  UINT32 side_trade_id;                                    // bytes 161 to 164
+  UINT32 orig_side_trade_id;                               // bytes 165 to 168
+  UINT16 trade_date;                                       // bytes 169 to 170
+  UINT8 ord_status_trd_cxl;                                // byte 171
+  UINT8 exec_type;                                         // byte 172
+  UINT8 side;                                              // byte 173
+  UINT8 manual_order_indicator;                            // byte 174
+  UINT8 poss_retrans_flag;                                 // byte 175
+  UINT8 aon : 1;                                           // byte 176
+  UINT8 ob : 1;                                            // byte 176
+  UINT8 nh : 1;                                            // byte 176
+  UINT8 exec_inst_reserved_1 : 1;                          // byte 176
+  UINT8 exec_inst_reserved_2 : 1;                          // byte 176
+  UINT8 exec_inst_reserved_3 : 1;                          // byte 176
+  UINT8 exec_inst_reserved_4 : 1;                          // byte 176
+  UINT8 exec_inst_reserved_5 : 1;                          // byte 176
+  UINT8 execution_mode;                                    // byte 177
+  UINT8 liquidity_flag;                                    // byte 178
+  UINT8 managed_order;                                     // byte 179
+  UINT8 short_sale_type;                                   // byte 180
+  UINT64 discretion_price;                                 // bytes 181 to 188, signed, read here as unsigned
+  UINT16 trd_type;                                         // bytes 189 to 190
+  UINT8 exec_restatement_reason;                           // byte 191
+  UINT16 settl_date;                                       // bytes 192 to 193
+  UINT16 maturity_date;                                    // bytes 194 to 195
+  CalculatedCcyLastQty calculated_ccy_last_qty;            // bytes 196 to 204
+  CalculatedCcyLastQty gross_trade_amt;                    // bytes 205 to 213
+  UINT64 benchmark_price;                                  // bytes 214 to 221, signed, read here as unsigned
+  FillsGroups fills_groups;
+  OutrightTradeEventsGroups outright_trade_events_groups;
+} ExecutionReportTradeAddendumOutright;
+
+// Number of legs (repeating groups).
+typedef struct _TradeAddendumLegsGroup {
+  UINT64 leg_exec_id;       // bytes 0 to 7
+  UINT64 leg_last_px;       // bytes 8 to 15, signed, read here as unsigned
+  UINT64 leg_exec_ref_id;   // bytes 16 to 23
+  UINT32 leg_trade_id;      // bytes 24 to 27
+  UINT32 leg_trade_ref_id;  // bytes 28 to 31
+  UINT32 leg_security_id;   // bytes 32 to 35, signed, read here as unsigned
+  UINT32 leg_last_qty;      // bytes 36 to 39
+  UINT8 leg_side;           // byte 40
+} TradeAddendumLegsGroup;
+
+// NoLegs Block
+typedef struct _TradeAddendumLegsGroups {
+  UINT16 block_length;                                                                          // bytes 0 to 1
+  UINT8 num_in_group;                                                                           // byte 2
+  TradeAddendumLegsGroup trade_addendum_legs_group[:byte-size (((UINT32) num_in_group) * 41)];
+} TradeAddendumLegsGroups;
+
+// Number of fills which comprise fill quantity
+typedef struct _SpreadTradeEventsGroup {
+  UINT64 order_event_px;                // bytes 0 to 7, signed, read here as unsigned
+  UINT8 order_event_text[5];            // bytes 8 to 12
+  UINT32 order_event_exec_id;           // bytes 13 to 16
+  UINT32 order_event_qty;               // bytes 17 to 20
+  UINT8 trade_addendum;                 // byte 21
+  UINT8 order_event_reason;             // byte 22
+  UINT32 original_order_event_exec_id;  // bytes 23 to 26
+} SpreadTradeEventsGroup;
+
+// NoOrderEvents Block
+typedef struct _SpreadTradeEventsGroups {
+  UINT16 block_length;                                                                          // bytes 0 to 1
+  UINT8 num_in_group;                                                                           // byte 2
+  SpreadTradeEventsGroup spread_trade_events_group[:byte-size (((UINT32) num_in_group) * 27)];
+} SpreadTradeEventsGroups;
+
+// The Execution Report - Trade Addendum Spread message notifies client system of trade cancellation or correction for spreads.
+typedef struct _ExecutionReportTradeAddendumSpread {
+  UINT32 seq_num;                                      // bytes 0 to 3
+  UINT64 uuid;                                         // bytes 4 to 11
+  UINT8 exec_id[40];                                   // bytes 12 to 51
+  UINT8 sender_id[20];                                 // bytes 52 to 71
+  UINT8 cl_ord_id[20];                                 // bytes 72 to 91
+  UINT64 party_details_list_req_id;                    // bytes 92 to 99
+  UINT64 last_px;                                      // bytes 100 to 107, signed, read here as unsigned
+  UINT64 order_id;                                     // bytes 108 to 115
+  UINT64 transact_time;                                // bytes 116 to 123
+  UINT64 sending_time_epoch;                           // bytes 124 to 131
+  UINT64 sec_exec_id;                                  // bytes 132 to 139
+  UINT64 orig_secondary_execution_id;                  // bytes 140 to 147
+  UINT8 location[5];                                   // bytes 148 to 152
+  UINT32 security_id;                                  // bytes 153 to 156, signed, read here as unsigned
+  UINT32 md_trade_entry_id;                            // bytes 157 to 160
+  UINT32 last_qty;                                     // bytes 161 to 164
+  UINT32 side_trade_id;                                // bytes 165 to 168
+  UINT32 orig_side_trade_id;                           // bytes 169 to 172
+  UINT16 trade_date;                                   // bytes 173 to 174
+  UINT8 ord_status_trd_cxl;                            // byte 175
+  UINT8 exec_type;                                     // byte 176
+  UINT8 ord_type_optional;                             // byte 177
+  UINT8 side;                                          // byte 178
+  UINT8 manual_order_indicator;                        // byte 179
+  UINT8 poss_retrans_flag;                             // byte 180
+  UINT8 total_num_securities;                          // byte 181
+  UINT8 aon : 1;                                       // byte 182
+  UINT8 ob : 1;                                        // byte 182
+  UINT8 nh : 1;                                        // byte 182
+  UINT8 exec_inst_reserved_1 : 1;                      // byte 182
+  UINT8 exec_inst_reserved_2 : 1;                      // byte 182
+  UINT8 exec_inst_reserved_3 : 1;                      // byte 182
+  UINT8 exec_inst_reserved_4 : 1;                      // byte 182
+  UINT8 exec_inst_reserved_5 : 1;                      // byte 182
+  UINT8 execution_mode;                                // byte 183
+  UINT8 liquidity_flag;                                // byte 184
+  UINT8 managed_order;                                 // byte 185
+  UINT8 short_sale_type;                               // byte 186
+  FillsGroups fills_groups;
+  TradeAddendumLegsGroups trade_addendum_legs_groups;
+  SpreadTradeEventsGroups spread_trade_events_groups;
+} ExecutionReportTradeAddendumSpread;
+
+// NoOrderEvents Block
+typedef struct _SpreadLegTradeEventsGroups {
+  UINT16 block_length;                                                                              // bytes 0 to 1
+  UINT8 num_in_group;                                                                               // byte 2
+  SpreadTradeEventsGroup spread_leg_trade_events_group[:byte-size (((UINT32) num_in_group) * 27)];
+} SpreadLegTradeEventsGroups;
+
+// The Execution Report - Trade Addendum Spread Leg message notifies client system of trade cancellation or correction for spread legs.
+typedef struct _ExecutionReportTradeAddendumSpreadLeg {
+  UINT32 seq_num;                                             // bytes 0 to 3
+  UINT64 uuid;                                                // bytes 4 to 11
+  UINT8 exec_id[40];                                          // bytes 12 to 51
+  UINT8 sender_id[20];                                        // bytes 52 to 71
+  UINT8 cl_ord_id[20];                                        // bytes 72 to 91
+  UINT64 party_details_list_req_id;                           // bytes 92 to 99
+  UINT64 last_px;                                             // bytes 100 to 107, signed, read here as unsigned
+  UINT64 order_id;                                            // bytes 108 to 115
+  UINT64 transact_time;                                       // bytes 116 to 123
+  UINT64 sending_time_epoch;                                  // bytes 124 to 131
+  UINT64 sec_exec_id;                                         // bytes 132 to 139
+  UINT64 orig_secondary_execution_id;                         // bytes 140 to 147
+  UINT8 location[5];                                          // bytes 148 to 152
+  UINT32 security_id;                                         // bytes 153 to 156, signed, read here as unsigned
+  UINT32 last_qty;                                            // bytes 157 to 160
+  UINT32 side_trade_id;                                       // bytes 161 to 164
+  UINT32 orig_side_trade_id;                                  // bytes 165 to 168
+  UINT16 trade_date;                                          // bytes 169 to 170
+  UINT8 ord_status_trd_cxl;                                   // byte 171
+  UINT8 exec_type;                                            // byte 172
+  UINT8 manual_order_indicator;                               // byte 173
+  UINT8 poss_retrans_flag;                                    // byte 174
+  UINT8 side;                                                 // byte 175
+  UINT16 settl_date;                                          // bytes 176 to 177
+  CalculatedCcyLastQty calculated_ccy_last_qty;               // bytes 178 to 186
+  CalculatedCcyLastQty gross_trade_amt;                       // bytes 187 to 195
+  FillsGroups fills_groups;
+  SpreadLegTradeEventsGroups spread_leg_trade_events_groups;
+} ExecutionReportTradeAddendumSpreadLeg;
 
 // SecurityDefinitionResponse
-entrypoint typedef struct _MaturityMonthYear {
+typedef struct _MaturityMonthYear {
   UINT16 year;  // bytes 0 to 1
   UINT8 month;  // byte 2
   UINT8 day;    // byte 3
   UINT8 week;   // byte 4
 } MaturityMonthYear;
 
-// ---- Leg Option Delta: 5 bytes -----------------------------------------------
-
 // Up to 26 legs (i.e., repeating groups) supported for UDS for options. Up to 40 legs (i.e., repeating groups) supported for UDS for futures. Will be set to 0 for REPO
-entrypoint typedef struct _LegOptionDelta {
+typedef struct _LegOptionDelta {
   UINT32 mantissa_32;  // bytes 0 to 3, signed, read here as unsigned
   UINT8 exponent;      // byte 4, signed, read here as unsigned
 } LegOptionDelta;
+
+// Number of legs (repeating groups).
+typedef struct _ResponseLegsGroup {
+  UINT64 leg_price;                 // bytes 0 to 7, signed, read here as unsigned
+  LegOptionDelta leg_option_delta;  // bytes 8 to 12
+  UINT32 leg_security_id;           // bytes 13 to 16, signed, read here as unsigned
+  UINT8 leg_side;                   // byte 17
+  UINT8 leg_ratio_qty;              // byte 18
+} ResponseLegsGroup;
+
+// NoLegs Block
+typedef struct _ResponseLegsGroups {
+  UINT16 block_length;                                                               // bytes 0 to 1
+  UINT8 num_in_group;                                                                // byte 2
+  ResponseLegsGroup response_legs_group[:byte-size (((UINT32) num_in_group) * 19)];
+} ResponseLegsGroups;
+
+// Used to indicate the number of custom bespoke broken dates for user defined tailor made repo
+typedef struct _BrokenDatesResponseGroup {
+  UINT64 broken_date_guid;         // bytes 0 to 7
+  UINT32 broken_date_security_id;  // bytes 8 to 11, signed, read here as unsigned
+  UINT16 broken_date_start;        // bytes 12 to 13
+  UINT16 broken_date_end;          // bytes 14 to 15
+} BrokenDatesResponseGroup;
+
+// NoBrokenDates Block
+typedef struct _BrokenDatesResponseGroups {
+  UINT16 block_length;                                                                              // bytes 0 to 1
+  UINT8 num_in_group;                                                                               // byte 2
+  BrokenDatesResponseGroup broken_dates_response_group[:byte-size (((UINT32) num_in_group) * 16)];
+} BrokenDatesResponseGroups;
+
+// This message is sent in response to an attempt to create a new security definition.
+typedef struct _SecurityDefinitionResponse {
+  UINT32 seq_num;                                          // bytes 0 to 3
+  UINT64 uuid;                                             // bytes 4 to 11
+  UINT8 text[256];                                         // bytes 12 to 267
+  UINT8 financial_instrument_full_name[35];                // bytes 268 to 302
+  UINT8 sender_id[20];                                     // bytes 303 to 322
+  UINT8 symbol[20];                                        // bytes 323 to 342
+  UINT64 party_details_list_req_id;                        // bytes 343 to 350
+  UINT64 security_req_id;                                  // bytes 351 to 358
+  UINT64 security_response_id;                             // bytes 359 to 366
+  UINT64 sending_time_epoch;                               // bytes 367 to 374
+  UINT8 security_group[6];                                 // bytes 375 to 380
+  UINT8 security_type[6];                                  // bytes 381 to 386
+  UINT8 location[5];                                       // bytes 387 to 391
+  UINT32 security_id_optional;                             // bytes 392 to 395, signed, read here as unsigned
+  UINT8 currency[3];                                       // bytes 396 to 398
+  MaturityMonthYear maturity_month_year;                   // bytes 399 to 403
+  UINT16 delay_duration;                                   // bytes 404 to 405
+  UINT16 start_date;                                       // bytes 406 to 407
+  UINT16 end_date;                                         // bytes 408 to 409
+  UINT8 max_no_of_substitutions;                           // byte 410
+  UINT32 source_repo_id;                                   // bytes 411 to 414, signed, read here as unsigned
+  UINT8 termination_type[8];                               // bytes 415 to 422
+  UINT8 security_response_type;                            // byte 423
+  UINT8 expiration_cycle;                                  // byte 424
+  UINT8 manual_order_indicator;                            // byte 425
+  UINT8 split_msg;                                         // byte 426
+  UINT8 auto_quote_request;                                // byte 427
+  UINT8 poss_retrans_flag;                                 // byte 428
+  UINT8 broken_date_term_type;                             // byte 429
+  ResponseLegsGroups response_legs_groups;
+  BrokenDatesResponseGroups broken_dates_response_groups;
+} SecurityDefinitionResponse;
+
+// Total number of order identifiers affected by the OrderMass Action Request. Only used if orders could actually be cancelled otherwise will be set to zero. Must be followed by OrigCIOrdID
+typedef struct _AffectedOrdersGroup {
+  UINT8 orig_cl_ord_id[20];  // bytes 0 to 19
+  UINT64 affected_order_id;  // bytes 20 to 27
+  UINT32 cxl_quantity;       // bytes 28 to 31
+} AffectedOrdersGroup;
+
+// NoAffectedOrders Block
+typedef struct _AffectedOrdersGroups {
+  UINT16 block_length;                                                                   // bytes 0 to 1
+  UINT8 num_in_group;                                                                    // byte 2
+  AffectedOrdersGroup affected_orders_group[:byte-size (((UINT32) num_in_group) * 32)];
+} AffectedOrdersGroups;
+
+// An Order Mass Action Report is used to acknowledge an Order Mass Action Request.
+typedef struct _OrderMassActionReport {
+  UINT32 seq_num;                               // bytes 0 to 3
+  UINT64 uuid;                                  // bytes 4 to 11
+  UINT8 sender_id[20];                          // bytes 12 to 31
+  UINT64 party_details_list_req_id;             // bytes 32 to 39
+  UINT64 transact_time;                         // bytes 40 to 47
+  UINT64 sending_time_epoch;                    // bytes 48 to 55
+  UINT64 order_request_id;                      // bytes 56 to 63
+  UINT64 mass_action_report_id;                 // bytes 64 to 71
+  UINT8 security_group[6];                      // bytes 72 to 77
+  UINT8 location[5];                            // bytes 78 to 82
+  UINT32 security_id_optional;                  // bytes 83 to 86, signed, read here as unsigned
+  UINT16 delay_duration;                        // bytes 87 to 88
+  UINT8 mass_action_response;                   // byte 89
+  UINT8 manual_order_indicator;                 // byte 90
+  UINT8 mass_action_scope;                      // byte 91
+  UINT32 total_affected_orders;                 // bytes 92 to 95
+  UINT8 last_fragment;                          // byte 96
+  UINT8 mass_action_reject_reason;              // byte 97
+  UINT8 market_segment_id;                      // byte 98
+  UINT8 mass_cancel_request_type;               // byte 99
+  UINT8 side_optional;                          // byte 100
+  UINT8 mass_action_ord_typ;                    // byte 101
+  UINT8 mass_cancel_tif;                        // byte 102
+  UINT8 split_msg;                              // byte 103
+  UINT8 liquidity_flag;                         // byte 104
+  UINT8 poss_retrans_flag;                      // byte 105
+  UINT64 delay_to_time;                         // bytes 106 to 113
+  UINT8 orig_order_user[8];                     // bytes 114 to 121
+  UINT8 cancel_text[8];                         // bytes 122 to 129
+  AffectedOrdersGroups affected_orders_groups;
+} OrderMassActionReport;
+
+// The number of quote entries for a quote set. Will be populated only for enumerated rejects for Cancel By Instrument
+typedef struct _QuoteCancelAckEntriesGroup {
+  UINT32 quote_entry_id;            // bytes 0 to 3
+  UINT32 security_id;               // bytes 4 to 7, signed, read here as unsigned
+  UINT8 quote_entry_reject_reason;  // byte 8
+} QuoteCancelAckEntriesGroup;
+
+// NoQuoteEntries Block
+typedef struct _QuoteCancelAckEntriesGroups {
+  UINT16 block_length;                                                                                  // bytes 0 to 1
+  UINT8 num_in_group;                                                                                   // byte 2
+  QuoteCancelAckEntriesGroup quote_cancel_ack_entries_group[:byte-size (((UINT32) num_in_group) * 9)];
+} QuoteCancelAckEntriesGroups;
+
+// The number of sets of quotes in the message. Will be populated only for enumerated rejects for Cancel By Quote Set
+typedef struct _QuoteCancelAckSetsGroup {
+  UINT16 quote_set_id;      // bytes 0 to 1
+  UINT16 quote_error_code;  // bytes 2 to 3
+} QuoteCancelAckSetsGroup;
+
+// NoQuoteSets Block
+typedef struct _QuoteCancelAckSetsGroups {
+  UINT16 block_length;                                                                            // bytes 0 to 1
+  UINT8 num_in_group;                                                                             // byte 2
+  QuoteCancelAckSetsGroup quote_cancel_ack_sets_group[:byte-size (((UINT32) num_in_group) * 4)];
+} QuoteCancelAckSetsGroups;
+
+// Quote Cancel Acknowledgment message is used in response to a Quote Cancel message to either accept it or reject it. This message can also be unsolicited in a scenario where CME Globex initiates the cancellation.
+typedef struct _QuoteCancelAck {
+  UINT32 seq_num;                                               // bytes 0 to 3
+  UINT64 uuid;                                                  // bytes 4 to 11
+  UINT8 text[256];                                              // bytes 12 to 267
+  UINT8 sender_id[20];                                          // bytes 268 to 287
+  UINT64 party_details_list_req_id;                             // bytes 288 to 295
+  UINT64 request_time;                                          // bytes 296 to 303
+  UINT64 sending_time_epoch;                                    // bytes 304 to 311
+  UINT8 cancelled_symbol[6];                                    // bytes 312 to 317
+  UINT8 location[5];                                            // bytes 318 to 322
+  UINT32 quote_id;                                              // bytes 323 to 326
+  UINT16 quote_reject_reason;                                   // bytes 327 to 328
+  UINT16 delay_duration;                                        // bytes 329 to 330
+  UINT8 manual_order_indicator;                                 // byte 331
+  UINT8 quote_cxl_status;                                       // byte 332
+  UINT32 no_processed_entries_32;                               // bytes 333 to 336
+  UINT8 mm_protection_reset;                                    // byte 337
+  UINT8 unsolicited_cancel_type;                                // byte 338
+  UINT8 split_msg;                                              // byte 339
+  UINT8 tot_no_quote_entries_optional;                          // byte 340
+  UINT8 liquidity_flag;                                         // byte 341
+  UINT8 poss_retrans_flag;                                      // byte 342
+  UINT64 delay_to_time;                                         // bytes 343 to 350
+  UINT8 orig_order_user[8];                                     // bytes 351 to 358
+  UINT8 cancel_text[8];                                         // bytes 359 to 366
+  UINT8 quote_entry_open;                                       // byte 367
+  QuoteCancelAckEntriesGroups quote_cancel_ack_entries_groups;
+  QuoteCancelAckSetsGroups quote_cancel_ack_sets_groups;
+} QuoteCancelAck;
+
+// iLink3 message body sent by Cme to the firm
+casetype _ServerPayload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x01F5: NegotiationResponse negotiation_response;
+    case 0x01F6: NegotiationReject negotiation_reject;
+    case 0x01F8: EstablishmentAck establishment_ack;
+    case 0x01F9: EstablishmentReject establishment_reject;
+    case 0x01FA: Sequence sequence;
+    case 0x01FB: Terminate terminate;
+    case 0x01FD: Retransmission retransmission;
+    case 0x01FE: RetransmitReject retransmit_reject;
+    case 0x0201: NotApplied not_applied;
+    case 0x0207: PartyDetailsDefinitionRequestAck party_details_definition_request_ack;
+    case 0x0209: BusinessReject business_reject;
+    case 0x020A: ExecutionReportNew execution_report_new;
+    case 0x020B: ExecutionReportReject execution_report_reject;
+    case 0x020C: ExecutionReportElimination execution_report_elimination;
+    case 0x020D: ExecutionReportTradeOutright execution_report_trade_outright;
+    case 0x020E: ExecutionReportTradeSpread execution_report_trade_spread;
+    case 0x020F: ExecutionReportTradeSpreadLeg execution_report_trade_spread_leg;
+    case 0x0213: ExecutionReportModify execution_report_modify;
+    case 0x0214: ExecutionReportStatus execution_report_status;
+    case 0x0216: ExecutionReportCancel execution_report_cancel;
+    case 0x0217: OrderCancelReject order_cancel_reject;
+    case 0x0218: OrderCancelReplaceReject order_cancel_replace_reject;
+    case 0x021A: PartyDetailsListReport party_details_list_report;
+    case 0x0221: MassQuoteAck mass_quote_ack;
+    case 0x0222: RequestForQuoteAck request_for_quote_ack;
+    case 0x0224: ExecutionReportTradeAddendumOutright execution_report_trade_addendum_outright;
+    case 0x0225: ExecutionReportTradeAddendumSpread execution_report_trade_addendum_spread;
+    case 0x0226: ExecutionReportTradeAddendumSpreadLeg execution_report_trade_addendum_spread_leg;
+    case 0x0231: SecurityDefinitionResponse security_definition_response;
+    case 0x0232: OrderMassActionReport order_mass_action_report;
+    case 0x0233: QuoteCancelAck quote_cancel_ack;
+    default: UINT8 unknown[available];
+  }
+} ServerPayload;
+
+// Simple Open Frame sent by Cme to the firm
+typedef struct _ServerSimpleOpenFrame {
+  UINT16 message_length { message_length >= 12 };                                                                                                 // bytes 0 to 1
+  UINT16 encoding_type;                                                                                                                           // bytes 2 to 3
+  UINT16 block_length;                                                                                                                            // bytes 4 to 5
+  UINT16 template_id;                                                                                                                             // bytes 6 to 7
+  UINT16 schema_id;                                                                                                                               // bytes 8 to 9
+  UINT16 version;                                                                                                                                 // bytes 10 to 11
+  ServerPayload(template_id, (((UINT32) message_length) - 12)) server_payload[:byte-size-single-element-array (((UINT32) message_length) - 12)];
+} ServerSimpleOpenFrame;
+
+// ---- Packet: ServerPacket ----------------------------------------------------
+
+// Simple Open Frame Packet sent by Cme to the firm
+entrypoint typedef struct _ServerPacket (UINT32 available) {
+  ServerSimpleOpenFrame server_simple_open_frame[:byte-size available];
+} ServerPacket;
 

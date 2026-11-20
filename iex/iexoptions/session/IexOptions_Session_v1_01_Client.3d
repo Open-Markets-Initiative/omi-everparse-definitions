@@ -1,62 +1,132 @@
-// Investors Exchange Session
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Iex IexOptions Session Sbe v1.01
 //
+// Protocol:
+//   Organization: Investors Exchange
+//   Protocol: Session
+//   Encoding: Simple Binary Encoding
+//   Version: 1.01
+//   Date: 7/17/2026
+//   Specification: IEX Options Binary Session Protocol Specification.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ClientPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out IexOptions_Session_v1_01_Client.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - the dispatch that chooses a message by its type
-// - a block whose stated length holds more than its fields
-//
-// License: MIT No Attribution
 
-// ---- Message Header: 8 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Iex Options Sbe message header message identifiers and length of message root
-entrypoint typedef struct _MessageHeader {
-  UINT16 block_length;  // bytes 0 to 1
-  UINT16 template_id;   // bytes 2 to 3
-  UINT16 schema_id;     // bytes 4 to 5
-  UINT16 version;       // bytes 6 to 7
-} MessageHeader;
+// Template Id: 2 byte code
+#define TEMPLATE_ID_LOGIN_REQUEST_MESSAGE 0x0001              // Login Request Message
+#define TEMPLATE_ID_LOGIN_RESPONSE_MESSAGE 0x0002             // Login Response Message
+#define TEMPLATE_ID_GATEWAY_HEARTBEAT_MESSAGE 0x0003          // Gateway Heartbeat Message
+#define TEMPLATE_ID_CLIENT_HEARTBEAT_MESSAGE 0x0004           // Client Heartbeat Message
+#define TEMPLATE_ID_LOGOUT_REQUEST_MESSAGE 0x0005             // Logout Request Message
+#define TEMPLATE_ID_TERMINATE_MESSAGE 0x0006                  // Terminate Message
+#define TEMPLATE_ID_SEQUENCED_MESSAGE_HEADER_MESSAGE 0x0007   // Sequenced Message Header Message
+#define TEMPLATE_ID_SUBSESSION_JOIN_MESSAGE 0x0008            // Subsession Join Message
+#define TEMPLATE_ID_SUBSESSION_JOIN_RESPONSE_MESSAGE 0x0009   // Subsession Join Response Message
+#define TEMPLATE_ID_SUBSESSION_LEAVE_MESSAGE 0x000A           // Subsession Leave Message
+#define TEMPLATE_ID_SUBSESSION_LEAVE_RESPONSE_MESSAGE 0x000B  // Subsession Leave Response Message
 
-// ---- Login Request Message: 48 bytes -----------------------------------------
+// Schema Id: 2 byte code
+#define SCHEMA_ID_SESSION 0x4E20  // Session
+
+// ---- Types -------------------------------------------------------------------
 
 // LoginRequestMessage
-entrypoint typedef struct _LoginRequestMessage {
+typedef struct _LoginRequestMessage {
   UINT8 logon_id[16];  // bytes 0 to 15
   UINT8 token[32];     // bytes 16 to 47
 } LoginRequestMessage;
 
-// ---- Sequenced Message Header Message: 20 bytes ------------------------------
-
 // SequencedMessageHeaderMessage
-entrypoint typedef struct _SequencedMessageHeaderMessage {
+typedef struct _SequencedMessageHeaderMessage {
   UINT64 subsession_id;  // bytes 0 to 7
   UINT32 sequence;       // bytes 8 to 11
   UINT64 timestamp;      // bytes 12 to 19
 } SequencedMessageHeaderMessage;
 
-// ---- Subsession Join Message: 16 bytes ---------------------------------------
-
 // SubsessionJoinMessage
-entrypoint typedef struct _SubsessionJoinMessage {
+typedef struct _SubsessionJoinMessage {
   UINT64 subsession_id;   // bytes 0 to 7
   UINT32 start_sequence;  // bytes 8 to 11
   UINT32 end_sequence;    // bytes 12 to 15
 } SubsessionJoinMessage;
 
-// ---- Subsession Leave Message: 8 bytes ---------------------------------------
-
 // SubsessionLeaveMessage
-entrypoint typedef struct _SubsessionLeaveMessage {
+typedef struct _SubsessionLeaveMessage {
   UINT64 subsession_id;  // bytes 0 to 7
 } SubsessionLeaveMessage;
+
+// Branch
+casetype _ClientSessionPayload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x0001: LoginRequestMessage login_request_message;
+    case 0x0004: unit client_heartbeat_message;
+    case 0x0005: unit logout_request_message;
+    case 0x0007: SequencedMessageHeaderMessage sequenced_message_header_message;
+    case 0x0008: SubsessionJoinMessage subsession_join_message;
+    case 0x000A: SubsessionLeaveMessage subsession_leave_message;
+    default: UINT8 unknown[available];
+  }
+} ClientSessionPayload;
+
+// Message of sbe schema iex.options.boe.session (schema id 20000)
+typedef struct _ClientSessionMessage (UINT16 template_id, UINT32 available) {
+  ClientSessionPayload(template_id, available) client_session_payload[:byte-size-single-element-array available];
+} ClientSessionMessage;
+
+// Branch
+casetype _ClientPayload (UINT16 selector, UINT16 template_id, UINT32 available) {
+  switch (selector) {
+    case 0x4E20: ClientSessionMessage(template_id, available) client_session_message;
+    default: UINT8 unknown[available];
+  }
+} ClientPayload;
+
+// Iex Options length-framed Sbe Message sent by the User to Iex Options
+typedef struct _ClientSbeMessage {
+  UINT16 packet_length { packet_length >= 10 };                                                                                                            // bytes 0 to 1
+  UINT16 block_length;                                                                                                                                     // bytes 2 to 3
+  UINT16 template_id;                                                                                                                                      // bytes 4 to 5
+  UINT16 schema_id;                                                                                                                                        // bytes 6 to 7
+  UINT16 version;                                                                                                                                          // bytes 8 to 9
+  ClientPayload(schema_id, template_id, (((UINT32) packet_length) - 10)) client_payload[:byte-size-single-element-array (((UINT32) packet_length) - 10)];
+} ClientSbeMessage;
+
+// ---- Packet: ClientPacket ----------------------------------------------------
+
+// Iex Options Binary Session Tcp Packet sent by the User to Iex Options
+entrypoint typedef struct _ClientPacket (UINT32 available) {
+  ClientSbeMessage client_sbe_message[:byte-size available];
+} ClientPacket;
 

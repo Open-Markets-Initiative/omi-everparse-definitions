@@ -1,70 +1,282 @@
-// Hong Kong Exchanges and Clearing Orion Market Data Cash Premium Refresh
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Hkex HkexSecurities PremiumRefresh Omd v1.45
 //
+// Protocol:
+//   Organization: Hong Kong Exchanges and Clearing
+//   Protocol: Orion Market Data Cash Premium Refresh
+//   Encoding: Orion Market Data
+//   Version: 1.45
+//   Date: 1/9/2026
+//   Specification: HKEX_OMDC_Binary_Interface_Specifications_v1.45.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out HkexSecurities_PremiumRefresh_v1_45.3d
 //
-// What this definition does not state, and the model does:
-// - a run counted by a field
-// - the dispatch that chooses a message by its type
-//
-// License: MIT No Attribution
+// What this definition reads more loosely than the model states:
+// - a union, several readings of the same bytes, is read as the bytes it occupies
 
-// ---- Packet Header: 16 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Omd packet header (no payload compression; byte 3 is Filler)
-entrypoint typedef struct _PacketHeader {
-  UINT16 pkt_size;   // bytes 0 to 1
-  UINT8 msg_count;   // byte 2
-  UINT8 filler;      // byte 3
-  UINT32 seq_num;    // bytes 4 to 7
-  UINT64 send_time;  // bytes 8 to 15
-} PacketHeader;
+// Msg Type: 2 byte code
+#define MSG_TYPE_AGGREGATE_ORDER_BOOK_UPDATE_MESSAGE 0x0035   // Aggregate Order Book Update Message
+#define MSG_TYPE_CLOSING_PRICE_MESSAGE 0x003E                 // Closing Price Message
+#define MSG_TYPE_INDICATIVE_EQUILIBRIUM_PRICE_MESSAGE 0x0029  // Indicative Equilibrium Price Message
+#define MSG_TYPE_NEWS_MESSAGE 0x0016                          // News Message
+#define MSG_TYPE_NOMINAL_PRICE_MESSAGE 0x0028                 // Nominal Price Message
+#define MSG_TYPE_ORDER_IMBALANCE_MESSAGE 0x0038               // Order Imbalance Message
+#define MSG_TYPE_MARKET_DEFINITION_MESSAGE 0x000A             // Market Definition Message
+#define MSG_TYPE_SECURITY_DEFINITION_MESSAGE 0x000B           // Security Definition Message
+#define MSG_TYPE_LIQUIDITY_PROVIDER_MESSAGE 0x000D            // Liquidity Provider Message
+#define MSG_TYPE_CURRENCY_RATE_MESSAGE 0x000E                 // Currency Rate Message
+#define MSG_TYPE_REFERENCE_PRICE_MESSAGE 0x002B               // Reference Price Message
+#define MSG_TYPE_REFRESH_COMPLETE_MESSAGE 0x00CB              // Refresh Complete Message
+#define MSG_TYPE_STATISTICS_MESSAGE 0x003C                    // Statistics Message
+#define MSG_TYPE_MARKET_TURNOVER_MESSAGE 0x003D               // Market Turnover Message
+#define MSG_TYPE_YIELD_MESSAGE 0x002C                         // Yield Message
+#define MSG_TYPE_TRADING_SESSION_STATUS_MESSAGE 0x0014        // Trading Session Status Message
+#define MSG_TYPE_SECURITY_STATUS_MESSAGE 0x0015               // Security Status Message
+#define MSG_TYPE_VCM_TRIGGER_MESSAGE 0x0017                   // Vcm Trigger Message
 
-// ---- Msg Header: 4 bytes -----------------------------------------------------
+// Side: 2 byte code
+#define SIDE_BID 0x0000    // Bid
+#define SIDE_OFFER 0x0001  // Offer
 
-// Omd message header
-entrypoint typedef struct _MsgHeader {
-  UINT16 msg_size;  // bytes 0 to 1
-  UINT16 msg_type;  // bytes 2 to 3
-} MsgHeader;
+// Update Action: one byte code
+#define UPDATE_ACTION_NEW 0x00              // New
+#define UPDATE_ACTION_CHANGE 0x01           // Change
+#define UPDATE_ACTION_DELETE 0x02           // Delete
+#define UPDATE_ACTION_ORDERBOOK_CLEAR 0x4A  // Orderbook Clear
 
-// ---- Closing Price Message: 12 bytes -----------------------------------------
+// Cancel Flag: one byte code
+#define CANCEL_FLAG_CANCELLED 0x59      // Cancelled
+#define CANCEL_FLAG_NOT_CANCELLED 0x4E  // Not Cancelled
+
+// Last Fragment: one byte code
+#define LAST_FRAGMENT_COMPLETE 0x59      // Complete
+#define LAST_FRAGMENT_NOT_COMPLETE 0x4E  // Not Complete
+
+// Order Imbalance Direction: one byte code
+#define ORDER_IMBALANCE_DIRECTION_BUY_EQUALS_SELL 0x4E                   // Buy Equals Sell
+#define ORDER_IMBALANCE_DIRECTION_BUY_SURPLUS 0x42                       // Buy Surplus
+#define ORDER_IMBALANCE_DIRECTION_SELL_SURPLUS 0x53                      // Sell Surplus
+#define ORDER_IMBALANCE_DIRECTION_NOT_APPLICABLE_IEP_NOT_AVAILABLE 0x20  // Not Applicable Iep Not Available
+
+// Product Type: one byte code
+#define PRODUCT_TYPE_EQUITY_ORDINARY_SHARES 0x01                           // Equity Ordinary Shares
+#define PRODUCT_TYPE_EQUITY_PREFERENCE_SHARES 0x02                         // Equity Preference Shares
+#define PRODUCT_TYPE_EQUITY_RIGHTS 0x06                                    // Equity Rights
+#define PRODUCT_TYPE_EQUITY_DEPOSITORY_RECEIPT_HDR_ORDINARY_SHARES 0x07    // Equity Depository Receipt Hdr Ordinary Shares
+#define PRODUCT_TYPE_EQUITY_DEPOSITORY_RECEIPT_HDR_PREFERENCE_SHARES 0x0C  // Equity Depository Receipt Hdr Preference Shares
+#define PRODUCT_TYPE_EQUITY_SPAC_SHARES 0x18                               // Equity Spac Shares
+#define PRODUCT_TYPE_WARRANT_DERIVATIVE_WARRANT_DW 0x03                    // Warrant Derivative Warrant Dw
+#define PRODUCT_TYPE_WARRANT_CALLABLE_BULL_BEAR_CONTRACT_CBBC 0x0B         // Warrant Callable Bull Bear Contract Cbbc
+#define PRODUCT_TYPE_WARRANT_EQUITY_WARRANT 0x0D                           // Warrant Equity Warrant
+#define PRODUCT_TYPE_WARRANT_INLINE_WARRANT 0x0F                           // Warrant Inline Warrant
+#define PRODUCT_TYPE_WARRANT_SPAC_WARRANTS 0x15                            // Warrant Spac Warrants
+#define PRODUCT_TYPE_BOND_DEBT_SECURITY 0x04                               // Bond Debt Security
+#define PRODUCT_TYPE_TRUST_REAL_ESTATE_INVESTMENT_TRUST_REIT 0x08          // Trust Real Estate Investment Trust Reit
+#define PRODUCT_TYPE_TRUST_OTHER_UNIT_TRUSTS 0x09                          // Trust Other Unit Trusts
+#define PRODUCT_TYPE_TRUST_LEVERAGED_AND_INVERSE_PRODUCT_LIP 0x0A          // Trust Leveraged And Inverse Product Lip
+#define PRODUCT_TYPE_TRUST_EQUITY_ETF 0x10                                 // Trust Equity Etf
+#define PRODUCT_TYPE_TRUST_FIXED_INCOME_AND_MONEY_MARKET_ETF 0x11          // Trust Fixed Income And Money Market Etf
+#define PRODUCT_TYPE_TRUST_COMMODITIES_ETF 0x12                            // Trust Commodities Etf
+#define PRODUCT_TYPE_OTHERS_NONE_OF_THE_ABOVE 0x63                         // Others None Of The Above
+
+// Vcm Flag: one byte code
+#define VCM_FLAG_VCM_APPLICABLE 0x59      // Vcm Applicable
+#define VCM_FLAG_VCM_NOT_APPLICABLE 0x4E  // Vcm Not Applicable
+
+// Short Sell Flag: one byte code
+#define SHORT_SELL_FLAG_SHORT_SELL_ALLOWED 0x59      // Short Sell Allowed
+#define SHORT_SELL_FLAG_SHORT_SELL_NOT_ALLOWED 0x4E  // Short Sell Not Allowed
+
+// Cas Flag: one byte code
+#define CAS_FLAG_CAS_APPLICABLE 0x59      // Cas Applicable
+#define CAS_FLAG_CAS_NOT_APPLICABLE 0x4E  // Cas Not Applicable
+
+// Ccass Flag: one byte code
+#define CCASS_FLAG_CCASS_SECURITY 0x59      // Ccass Security
+#define CCASS_FLAG_NON_CCASS_SECURITY 0x4E  // Non Ccass Security
+
+// Dummy Security Flag: one byte code
+#define DUMMY_SECURITY_FLAG_DUMMY_SECURITY 0x59   // Dummy Security
+#define DUMMY_SECURITY_FLAG_NORMAL_SECURITY 0x4E  // Normal Security
+
+// Stamp Duty Flag: one byte code
+#define STAMP_DUTY_FLAG_STAMP_DUTY_REQUIRED 0x59      // Stamp Duty Required
+#define STAMP_DUTY_FLAG_STAMP_DUTY_NOT_REQUIRED 0x4E  // Stamp Duty Not Required
+
+// Pos Flag: one byte code
+#define POS_FLAG_POS_APPLICABLE 0x59      // Pos Applicable
+#define POS_FLAG_POS_NOT_APPLICABLE 0x4E  // Pos Not Applicable
+
+// Efn Flag: one byte code
+#define EFN_FLAG_EFN 0x59      // Efn
+#define EFN_FLAG_NON_EFN 0x4E  // Non Efn
+
+// Investor Type: one byte code
+#define INVESTOR_TYPE_RETAIL_INVESTOR 0x52        // Retail Investor
+#define INVESTOR_TYPE_PROFESSIONAL_INVESTOR 0x50  // Professional Investor
+
+// Call Put Flag: one byte code
+#define CALL_PUT_FLAG_CALL_OR_BULL 0x43       // Call Or Bull
+#define CALL_PUT_FLAG_PUT_OR_BEAR_RANGE 0x50  // Put Or Bear Range
+#define CALL_PUT_FLAG_OTHERS 0x4F             // Others
+
+// Style: one byte code
+#define STYLE_AMERICAN_STYLE 0x41  // American Style
+#define STYLE_EUROPEAN_STYLE 0x45  // European Style
+#define STYLE_OTHER 0x20           // Other
+
+// Warrant Type: one byte code
+#define WARRANT_TYPE_NORMAL_INSTRUMENT 0x4E  // Normal Instrument
+#define WARRANT_TYPE_EXOTIC_INSTRUMENT 0x58  // Exotic Instrument
+#define WARRANT_TYPE_NOT_AVAILABLE 0x30      // Not Available
+
+// Trading Session Sub Id: one byte code
+#define TRADING_SESSION_SUB_ID_NOT_YET_OPEN_NO 0x64                // Not Yet Open No
+#define TRADING_SESSION_SUB_ID_POS_ORDER_INPUT_OI 0x01             // Pos Order Input Oi
+#define TRADING_SESSION_SUB_ID_POS_NO_CANCELLATION_NW 0x65         // Pos No Cancellation Nw
+#define TRADING_SESSION_SUB_ID_POS_RANDOM_MATCHING_RM 0x6C         // Pos Random Matching Rm
+#define TRADING_SESSION_SUB_ID_POS_ORDER_MATCHING_MA 0x02          // Pos Order Matching Ma
+#define TRADING_SESSION_SUB_ID_BLOCKING_BL 0x07                    // Blocking Bl
+#define TRADING_SESSION_SUB_ID_CONTINUOUS_TRADING_CT 0x03          // Continuous Trading Ct
+#define TRADING_SESSION_SUB_ID_CAS_REFERENCE_PRICE_FIXING_RP 0x69  // Cas Reference Price Fixing Rp
+#define TRADING_SESSION_SUB_ID_CAS_ORDER_INPUT_OI 0x05             // Cas Order Input Oi
+#define TRADING_SESSION_SUB_ID_CAS_NO_CANCELLATION_NW 0x6A         // Cas No Cancellation Nw
+#define TRADING_SESSION_SUB_ID_CAS_RANDOM_CLOSE_RC 0x6B            // Cas Random Close Rc
+#define TRADING_SESSION_SUB_ID_CAS_ORDER_MATCHING_MA 0x04          // Cas Order Matching Ma
+#define TRADING_SESSION_SUB_ID_EXCHANGE_INTERVENTION_EI 0x66       // Exchange Intervention Ei
+#define TRADING_SESSION_SUB_ID_CLOSE_CL 0x67                       // Close Cl
+#define TRADING_SESSION_SUB_ID_ORDER_CANCEL_OC 0x68                // Order Cancel Oc
+#define TRADING_SESSION_SUB_ID_DAY_CLOSE_DC 0x00                   // Day Close Dc
+
+// Trading Ses Status: one byte code
+#define TRADING_SES_STATUS_UNKNOWN_FOR_NO 0x00                    // Unknown For No
+#define TRADING_SES_STATUS_HALTED_FOR_EI 0x0A                     // Halted For Ei
+#define TRADING_SES_STATUS_PRE_OPEN_FOR_POS_OI_NW_RM_MA_BL 0x14   // Pre Open For Pos Oi Nw Rm Ma Bl
+#define TRADING_SES_STATUS_OPEN_FOR_CT_AND_OC 0x1E                // Open For Ct And Oc
+#define TRADING_SES_STATUS_PRE_CLOSE_FOR_CAS_RP_OI_NW_RC_MA 0x28  // Pre Close For Cas Rp Oi Nw Rc Ma
+#define TRADING_SES_STATUS_CLOSED_FOR_CL 0x32                     // Closed For Cl
+#define TRADING_SES_STATUS_DAY_CLOSED_FOR_DC 0x64                 // Day Closed For Dc
+
+// Trading Ses Control Flag: one byte code
+#define TRADING_SES_CONTROL_FLAG_AUTOMATIC_DEFAULT 0x30                                   // Automatic Default
+#define TRADING_SES_CONTROL_FLAG_MANUAL_INVALIDATES_THE_NORMAL_SCHEDULE_FOR_THE_DAY 0x31  // Manual Invalidates The Normal Schedule For The Day
+
+// Suspension Indicator: one byte code
+#define SUSPENSION_INDICATOR_TRADING_HALT_OR_SUSPEND 0x02  // Trading Halt Or Suspend
+#define SUSPENSION_INDICATOR_RESUME 0x03                   // Resume
+
+// ---- Types -------------------------------------------------------------------
+
+// Aggregate order book entry repeating group.
+typedef struct _BookEntry {
+  UINT64 aggregate_quantity;  // bytes 0 to 7
+  UINT32 price;               // bytes 8 to 11, signed, read here as unsigned
+  UINT32 number_of_orders;    // bytes 12 to 15
+  UINT16 side;                // bytes 16 to 17
+  UINT8 price_level;          // byte 18
+  UINT8 update_action;        // byte 19
+  UINT8 filler_4[4];          // bytes 20 to 23
+} BookEntry;
+
+// The Aggregate Order Book Update message is sent whenever there is an orderbook change. Applies to Board Lots only.
+typedef struct _AggregateOrderBookUpdateMessage {
+  UINT32 security_code;                                           // bytes 0 to 3
+  UINT8 filler_3[3];                                              // bytes 4 to 6
+  UINT8 no_entries;                                               // byte 7
+  BookEntry book_entry[:byte-size (((UINT32) no_entries) * 24)];
+} AggregateOrderBookUpdateMessage;
 
 // The Closing Price message is generated near the end of the business day for each security. If the closing price is not available, ClosingPrice is set to 0. NumberOfTrades is not populated for SS (OMD Securities Standard) clients.
-entrypoint typedef struct _ClosingPriceMessage {
+typedef struct _ClosingPriceMessage {
   UINT32 security_code;     // bytes 0 to 3
   UINT32 closing_price;     // bytes 4 to 7, signed, read here as unsigned
   UINT32 number_of_trades;  // bytes 8 to 11
 } ClosingPriceMessage;
 
-// ---- Indicative Equilibrium Price Message: 16 bytes --------------------------
-
 // The Indicative Equilibrium Price (IEP) message is generated whenever there is change of the IEP or Indicative Equilibrium Volume (IEV) during Pre-Opening Session (POS) or Closing Auction Session (CAS). The IEP is 0 when IEP does not exist.
-entrypoint typedef struct _IndicativeEquilibriumPriceMessage {
+typedef struct _IndicativeEquilibriumPriceMessage {
   UINT32 security_code;       // bytes 0 to 3
   UINT32 price;               // bytes 4 to 7, signed, read here as unsigned
   UINT64 aggregate_quantity;  // bytes 8 to 15
 } IndicativeEquilibriumPriceMessage;
 
-// ---- Nominal Price Message: 8 bytes ------------------------------------------
+// Repeating group of market codes referenced by this news item.
+typedef struct _NewsMarket {
+  UINT8 market_code[4];  // bytes 0 to 3
+} NewsMarket;
+
+// Repeating group of security codes referenced by this news item.
+typedef struct _NewsSecurity {
+  UINT32 security_code;  // bytes 0 to 3
+} NewsSecurity;
+
+// Repeating group of news lines.
+typedef struct _NewsLineItem {
+  UINT8 news_line[160];  // bytes 0 to 159
+} NewsLineItem;
+
+// The News message is generated whenever a news update occurs. The message indicates which markets and/or securities the news applies to. If NoMarketCode and NoSecurityCodes are both zero, the news applies to all markets. News may be fragmented across multiple consecutive messages; LastFragment is 'Y' in the message with the last fragment. Headline is only carried in the first message and blanked from the second message onwards.
+typedef struct _NewsMessage {
+  UINT16BE news_type_0;                                                       // bytes 0 to 1, the first 2 of 3 characters a choice is made on
+  UINT8 news_type_1;                                                          // byte 2
+  UINT8 news_id[3];                                                           // bytes 3 to 5
+  UINT8 headline[320];                                                        // bytes 6 to 325
+  UINT8 cancel_flag;                                                          // byte 326
+  UINT8 last_fragment;                                                        // byte 327
+  UINT8 filler_4[4];                                                          // bytes 328 to 331
+  UINT64 release_time;                                                        // bytes 332 to 339
+  UINT8 filler_2[2];                                                          // bytes 340 to 341
+  UINT16 no_market_codes;                                                     // bytes 342 to 343
+  UINT8 news_market[(((UINT32) no_market_codes) * 4)];
+  UINT8 second_filler_2[2];
+  UINT16 no_security_codes;
+  NewsSecurity news_security[:byte-size (((UINT32) no_security_codes) * 4)];
+  UINT8 third_filler_2[2];
+  UINT16 no_news_lines;
+  UINT8 news_line_item[(((UINT32) no_news_lines) * 160)];
+} NewsMessage;
 
 // The Nominal message may be generated when an order is added, deleted or modified in a book or when trade or trade cancel is performed. Before the first Nominal Price message, the nominal price should be the same as the previous closing price provided in Security Definition (11).
-entrypoint typedef struct _NominalPriceMessage {
+typedef struct _NominalPriceMessage {
   UINT32 security_code;  // bytes 0 to 3
   UINT32 nominal_price;  // bytes 4 to 7, signed, read here as unsigned
 } NominalPriceMessage;
 
-// ---- Order Imbalance Message: 16 bytes ---------------------------------------
-
 // The Order Imbalance message provides order imbalance information at the Indicative Equilibrium Price (IEP) during the Pre-Opening Session (POS) and Closing Auction Session (CAS).
-entrypoint typedef struct _OrderImbalanceMessage {
+typedef struct _OrderImbalanceMessage {
   UINT32 security_code;             // bytes 0 to 3
   UINT8 order_imbalance_direction;  // byte 4
   UINT8 filler_1;                   // byte 5
@@ -72,44 +284,110 @@ entrypoint typedef struct _OrderImbalanceMessage {
   UINT8 filler_2[2];                // bytes 14 to 15
 } OrderImbalanceMessage;
 
-// ---- Market Definition Message: 36 bytes -------------------------------------
-
 // The Market Definition message is generated at the start of the business day for each market segment.
-entrypoint typedef struct _MarketDefinitionMessage {
+typedef struct _MarketDefinitionMessage {
   UINT8 market_code[4];         // bytes 0 to 3
   UINT8 market_name[25];        // bytes 4 to 28
   UINT8 currency_code[3];       // bytes 29 to 31
   UINT32 number_of_securities;  // bytes 32 to 35
 } MarketDefinitionMessage;
 
-// ---- Face Value Composite: 9 bytes -------------------------------------------
-
 // Bond face value scaled at runtime by DecimalsInFaceValue. 0 mantissa means Not available.
-entrypoint typedef struct _FaceValueComposite {
+typedef struct _FaceValueComposite {
   UINT64 face_value;             // bytes 0 to 7
   UINT8 decimals_in_face_value;  // byte 8
 } FaceValueComposite;
 
-// ---- Call Price Composite: 5 bytes -------------------------------------------
-
 // CBBC call price scaled at runtime by DecimalsInCallPrice. 0 mantissa means Not available.
-entrypoint typedef struct _CallPriceComposite {
+typedef struct _CallPriceComposite {
   UINT32 call_price;             // bytes 0 to 3, signed, read here as unsigned
   UINT8 decimals_in_call_price;  // byte 4
 } CallPriceComposite;
 
-// ---- Entitlement Composite: 5 bytes ------------------------------------------
-
 // Warrant entitlement scaled at runtime by DecimalsInEntitlement. 0 mantissa means Not available.
-entrypoint typedef struct _EntitlementComposite {
+typedef struct _EntitlementComposite {
   UINT32 entitlement;             // bytes 0 to 3, signed, read here as unsigned
   UINT8 decimals_in_entitlement;  // byte 4
 } EntitlementComposite;
 
-// ---- Currency Rate Message: 12 bytes -----------------------------------------
+// Repeating group of underlying security references.
+typedef struct _UnderlyingSecurity {
+  UINT32 underlying_security_code;  // bytes 0 to 3
+  UINT8 filler_4[4];                // bytes 4 to 7
+} UnderlyingSecurity;
+
+// The Security Definition message contains all the reference data for a security. Security Definition messages may be received intraday (for example the FreeText field may be updated during the day).
+typedef struct _SecurityDefinitionMessage {
+  UINT32 security_code;                                                                          // bytes 0 to 3
+  UINT8 market_code[4];                                                                          // bytes 4 to 7
+  UINT8 isin_code[12];                                                                           // bytes 8 to 19
+  UINT8 instrument_type[4];                                                                      // bytes 20 to 23
+  UINT8 product_type;                                                                            // byte 24
+  UINT8 filler_1;                                                                                // byte 25
+  UINT8 spread_table_code[2];                                                                    // bytes 26 to 27
+  UINT8 security_short_name[40];                                                                 // bytes 28 to 67
+  UINT8 currency_code[3];                                                                        // bytes 68 to 70
+  UINT8 security_name_gccs[60];                                                                  // bytes 71 to 130
+  UINT8 security_name_gb[60];                                                                    // bytes 131 to 190
+  UINT32 lot_size;                                                                               // bytes 191 to 194
+  UINT8 filler_4[4];                                                                             // bytes 195 to 198
+  UINT32 previous_closing_price;                                                                 // bytes 199 to 202, signed, read here as unsigned
+  UINT8 vcm_flag;                                                                                // byte 203
+  UINT8 short_sell_flag;                                                                         // byte 204
+  UINT8 cas_flag;                                                                                // byte 205
+  UINT8 ccass_flag;                                                                              // byte 206
+  UINT8 dummy_security_flag;                                                                     // byte 207
+  UINT8 second_filler_1;                                                                         // byte 208
+  UINT8 stamp_duty_flag;                                                                         // byte 209
+  UINT8 third_filler_1;                                                                          // byte 210
+  UINT32 listing_date;                                                                           // bytes 211 to 214
+  UINT32 delisting_date;                                                                         // bytes 215 to 218
+  UINT8 free_text[38];                                                                           // bytes 219 to 256
+  UINT8 filler_62[62];                                                                           // bytes 257 to 318
+  UINT8 pos_flag;                                                                                // byte 319
+  UINT32 pos_upper_limit;                                                                        // bytes 320 to 323, signed, read here as unsigned
+  UINT32 pos_lower_limit;                                                                        // bytes 324 to 327, signed, read here as unsigned
+  UINT32 domain_stmt_security_code;                                                              // bytes 328 to 331
+  UINT8 filler_37[37];                                                                           // bytes 332 to 368
+  UINT8 efn_flag;                                                                                // byte 369
+  UINT32 accrued_interest;                                                                       // bytes 370 to 373
+  UINT32 coupon_rate;                                                                            // bytes 374 to 377
+  UINT8 fourth_filler_1;                                                                         // byte 378
+  FaceValueComposite face_value_composite;                                                       // bytes 379 to 387
+  UINT8 face_value_currency[3];                                                                  // bytes 388 to 390
+  UINT32 bond_maturity_date;                                                                     // bytes 391 to 394
+  UINT8 investor_type;                                                                           // byte 395
+  UINT8 filler_44[44];                                                                           // bytes 396 to 439
+  UINT32 conversion_ratio;                                                                       // bytes 440 to 443
+  UINT32 strike_price_1;                                                                         // bytes 444 to 447, signed, read here as unsigned
+  UINT32 strike_price_2;                                                                         // bytes 448 to 451, signed, read here as unsigned
+  UINT32 warrant_maturity_date;                                                                  // bytes 452 to 455
+  UINT8 call_put_flag;                                                                           // byte 456
+  UINT8 style;                                                                                   // byte 457
+  UINT8 filler_2[2];                                                                             // bytes 458 to 459
+  UINT8 warrant_type;                                                                            // byte 460
+  CallPriceComposite call_price_composite;                                                       // bytes 461 to 465
+  EntitlementComposite entitlement_composite;                                                    // bytes 466 to 470
+  UINT32 no_warrants_per_entitlement;                                                            // bytes 471 to 474
+  UINT8 filler_63[63];                                                                           // bytes 475 to 537
+  UINT16 no_underlying_securities;                                                               // bytes 538 to 539
+  UnderlyingSecurity underlying_security[:byte-size (((UINT32) no_underlying_securities) * 8)];
+} SecurityDefinitionMessage;
+
+// Repeating group of liquidity providers.
+typedef struct _LiquidityProvider {
+  UINT16 lp_broker_number;  // bytes 0 to 1
+} LiquidityProvider;
+
+// The Liquidity Provider message is generated at the start of the business day for securities that have at least one liquidity provider.
+typedef struct _LiquidityProviderMessage {
+  UINT32 security_code;                                                                      // bytes 0 to 3
+  UINT16 no_liquidity_providers;                                                             // bytes 4 to 5
+  LiquidityProvider liquidity_provider[:byte-size (((UINT32) no_liquidity_providers) * 2)];
+} LiquidityProviderMessage;
 
 // The Currency Rate message provides the foreign exchange conversion rates between various foreign currencies and the Hong Kong dollar.
-entrypoint typedef struct _CurrencyRateMessage {
+typedef struct _CurrencyRateMessage {
   UINT8 currency_code[3];  // bytes 0 to 2
   UINT8 filler_1;          // byte 3
   UINT16 currency_factor;  // bytes 4 to 5
@@ -117,27 +395,21 @@ entrypoint typedef struct _CurrencyRateMessage {
   UINT32 currency_rate;    // bytes 8 to 11
 } CurrencyRateMessage;
 
-// ---- Reference Price Message: 16 bytes ---------------------------------------
-
 // Reference price, lower and upper price limits for order input during an applicable auction session (POS or CAS). Sent again when there is any change.
-entrypoint typedef struct _ReferencePriceMessage {
+typedef struct _ReferencePriceMessage {
   UINT32 security_code;    // bytes 0 to 3
   UINT32 reference_price;  // bytes 4 to 7, signed, read here as unsigned
   UINT32 lower_price;      // bytes 8 to 11, signed, read here as unsigned
   UINT32 upper_price;      // bytes 12 to 15, signed, read here as unsigned
 } ReferencePriceMessage;
 
-// ---- Refresh Complete Message: 4 bytes ---------------------------------------
-
 // This message is published to mark the end of a refresh.
-entrypoint typedef struct _RefreshCompleteMessage {
+typedef struct _RefreshCompleteMessage {
   UINT32 last_seq_num;  // bytes 0 to 3
 } RefreshCompleteMessage;
 
-// ---- Statistics Message: 48 bytes --------------------------------------------
-
 // The Statistics message provides statistics including volume-weighted average price and turnover. Generated (excluding overseas trades) once after CTS/auction match, manual trade, odd lot trade, or trade cancel. VWAP is not populated for SS (OMD Securities Standard) clients.
-entrypoint typedef struct _StatisticsMessage {
+typedef struct _StatisticsMessage {
   UINT32 security_code;             // bytes 0 to 3
   UINT64 shares_traded;             // bytes 4 to 11
   UINT64 turnover;                  // bytes 12 to 19, signed, read here as unsigned
@@ -149,28 +421,22 @@ entrypoint typedef struct _StatisticsMessage {
   UINT64 short_sell_turnover;       // bytes 40 to 47, signed, read here as unsigned
 } StatisticsMessage;
 
-// ---- Market Turnover Message: 16 bytes ---------------------------------------
-
 // The Market Turnover message contains the total turnover (excluding overseas trades) for all securities on a given market segment for a given trading currency. When CurrencyCode is blank, the turnover represents the total for all trading currencies, expressed in HKD. Updates disseminated around every 2 seconds during trading hours.
-entrypoint typedef struct _MarketTurnoverMessage {
+typedef struct _MarketTurnoverMessage {
   UINT8 market_code[4];    // bytes 0 to 3
   UINT8 currency_code[3];  // bytes 4 to 6
   UINT8 filler_1;          // byte 7
   UINT64 turnover;         // bytes 8 to 15, signed, read here as unsigned
 } MarketTurnoverMessage;
 
-// ---- Yield Message: 8 bytes --------------------------------------------------
-
 // The Yield message is generated for bond securities when their yield percentage changes.
-entrypoint typedef struct _YieldMessage {
+typedef struct _YieldMessage {
   UINT32 security_code;  // bytes 0 to 3
   UINT32 yield;          // bytes 4 to 7, signed, read here as unsigned
 } YieldMessage;
 
-// ---- Trading Session Status Message: 28 bytes --------------------------------
-
 // The Trading Session Status provides information on the status of a market segment. It is sent whenever there is change of trading session. This message may be sent on a separate multicast channel from order and trade data and therefore may not be synchronized.
-entrypoint typedef struct _TradingSessionStatusMessage {
+typedef struct _TradingSessionStatusMessage {
   UINT8 market_code[4];            // bytes 0 to 3
   UINT8 filler_1;                  // byte 4
   UINT8 trading_session_sub_id;    // byte 5
@@ -181,19 +447,15 @@ entrypoint typedef struct _TradingSessionStatusMessage {
   UINT64 end_date_time;            // bytes 20 to 27
 } TradingSessionStatusMessage;
 
-// ---- Security Status Message: 8 bytes ----------------------------------------
-
 // The Security Status message is generated at the start of the business day if the security is not available for trading, and whenever a security state changes.
-entrypoint typedef struct _SecurityStatusMessage {
+typedef struct _SecurityStatusMessage {
   UINT32 security_code;        // bytes 0 to 3
   UINT8 suspension_indicator;  // byte 4
   UINT8 filler_3[3];           // bytes 5 to 7
 } SecurityStatusMessage;
 
-// ---- Vcm Trigger Message: 32 bytes -------------------------------------------
-
 // The VCM Trigger message is generated whenever a cooling off period is triggered by Volatility Control Mechanism (VCM).
-entrypoint typedef struct _VcmTriggerMessage {
+typedef struct _VcmTriggerMessage {
   UINT32 security_code;           // bytes 0 to 3
   UINT64 cooling_off_start_time;  // bytes 4 to 11
   UINT64 cooling_off_end_time;    // bytes 12 to 19
@@ -201,4 +463,50 @@ entrypoint typedef struct _VcmTriggerMessage {
   UINT32 vcm_lower_price;         // bytes 24 to 27, signed, read here as unsigned
   UINT32 vcm_upper_price;         // bytes 28 to 31, signed, read here as unsigned
 } VcmTriggerMessage;
+
+// Branch
+casetype _Payload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x0035: AggregateOrderBookUpdateMessage aggregate_order_book_update_message;
+    case 0x003E: ClosingPriceMessage closing_price_message;
+    case 0x0029: IndicativeEquilibriumPriceMessage indicative_equilibrium_price_message;
+    case 0x0016: NewsMessage news_message;
+    case 0x0028: NominalPriceMessage nominal_price_message;
+    case 0x0038: OrderImbalanceMessage order_imbalance_message;
+    case 0x000A: MarketDefinitionMessage market_definition_message;
+    case 0x000B: SecurityDefinitionMessage security_definition_message;
+    case 0x000D: LiquidityProviderMessage liquidity_provider_message;
+    case 0x000E: CurrencyRateMessage currency_rate_message;
+    case 0x002B: ReferencePriceMessage reference_price_message;
+    case 0x00CB: RefreshCompleteMessage refresh_complete_message;
+    case 0x003C: StatisticsMessage statistics_message;
+    case 0x003D: MarketTurnoverMessage market_turnover_message;
+    case 0x002C: YieldMessage yield_message;
+    case 0x0014: TradingSessionStatusMessage trading_session_status_message;
+    case 0x0015: SecurityStatusMessage security_status_message;
+    case 0x0017: VcmTriggerMessage vcm_trigger_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16 msg_size { msg_size >= 4 };                                                                                                                               // bytes 0 to 1
+  UINT16 msg_type;                                                                                                                                                 // bytes 2 to 3
+  Payload(msg_type, (((UINT32) msg_size) - 4)) payload[:byte-size-single-element-array (((UINT32) msg_size) - 4)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Omd Udp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 16) {
+  UINT16 pkt_size;                                                                                                      // bytes 0 to 1
+  UINT8 msg_count;                                                                                                      // byte 2
+  UINT8 filler;                                                                                                         // byte 3
+  UINT32 seq_num;                                                                                                       // bytes 4 to 7
+  UINT64 send_time;                                                                                                     // bytes 8 to 15
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size (available - 16)];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) msg_count); };
+} Packet;
 

@@ -1,56 +1,156 @@
-// Bolsa Institucional de Valores Order Entry
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Biva BivaEquities OrderEntry Ouch v1.05
 //
+// Protocol:
+//   Organization: Bolsa Institucional de Valores
+//   Protocol: Order Entry
+//   Encoding: Ouch
+//   Version: 1.05
+//   Date: 1/1/2016
+//   Specification: BIVA_External_OUCH_Specification_v1.05.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ServerPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out BivaEquities_OrderEntry_v1_05_Server.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a length prefix framing what follows
-//
-// License: MIT No Attribution
 
-// ---- Server Packet Header: 3 bytes -------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Packet header of a packet sent by the server
-entrypoint typedef struct _ServerPacketHeader {
-  UINT16BE packet_length;    // bytes 0 to 1
-  UINT8 server_packet_type;  // byte 2
-} ServerPacketHeader;
+// Server Packet Type: one byte code
+#define SERVER_PACKET_TYPE_DEBUG_PACKET 0x2B             // Debug Packet
+#define SERVER_PACKET_TYPE_LOGIN_ACCEPTED_PACKET 0x41    // Login Accepted Packet
+#define SERVER_PACKET_TYPE_LOGIN_REJECTED_PACKET 0x4A    // Login Rejected Packet
+#define SERVER_PACKET_TYPE_SEQUENCED_DATA_PACKET 0x53    // Sequenced Data Packet
+#define SERVER_PACKET_TYPE_SERVER_HEARTBEAT_PACKET 0x48  // Server Heartbeat Packet
+#define SERVER_PACKET_TYPE_END_OF_SESSION_PACKET 0x5A    // End Of Session Packet
 
-// ---- Login Accepted Packet: 30 bytes -----------------------------------------
+// Reject Reason Code: one byte code
+#define REJECT_REASON_CODE_NOT_AUTHORIZED 0x41         // Not Authorized
+#define REJECT_REASON_CODE_SESSION_NOT_AVAILABLE 0x53  // Session Not Available
+
+// Sequenced Message Type: one byte code
+#define SEQUENCED_MESSAGE_TYPE_SYSTEM_EVENT_MESSAGE 0x53    // System Event Message
+#define SEQUENCED_MESSAGE_TYPE_ACCEPTED_MESSAGE 0x41        // Accepted Message
+#define SEQUENCED_MESSAGE_TYPE_REPLACED_MESSAGE 0x55        // Replaced Message
+#define SEQUENCED_MESSAGE_TYPE_CANCELED_MESSAGE 0x43        // Canceled Message
+#define SEQUENCED_MESSAGE_TYPE_EXECUTED_ORDER_MESSAGE 0x45  // Executed Order Message
+#define SEQUENCED_MESSAGE_TYPE_BROKEN_TRADE_MESSAGE 0x42    // Broken Trade Message
+#define SEQUENCED_MESSAGE_TYPE_REJECTED_ORDER_MESSAGE 0x4A  // Rejected Order Message
+
+// Event Code: one byte code
+#define EVENT_CODE_START_OF_DAY 0x53  // Start Of Day
+#define EVENT_CODE_END_OF_DAY 0x45    // End Of Day
+
+// Account Type: one byte code
+#define ACCOUNT_TYPE_CLIENT 0x43         // Client
+#define ACCOUNT_TYPE_HOUSE 0x48          // House
+#define ACCOUNT_TYPE_OTHER 0x4F          // Other
+#define ACCOUNT_TYPE_STRATEGY 0x59       // Strategy
+#define ACCOUNT_TYPE_MARKET_MAKER 0x4D   // Market Maker
+#define ACCOUNT_TYPE_STABILISATION 0x53  // Stabilisation
+
+// Order Verb: one byte code
+#define ORDER_VERB_BUY 0x42         // Buy
+#define ORDER_VERB_SELL 0x53        // Sell
+#define ORDER_VERB_SHORT_SELL 0x54  // Short Sell
+
+// Time In Force: 4 byte code
+#define TIME_IN_FORCE_IMMEDIATE 0x00000000  // Immediate
+#define TIME_IN_FORCE_SESSION 0x0001869D    // Session
+#define TIME_IN_FORCE_DAY 0x0001869E        // Day
+
+// Order State: one byte code
+#define ORDER_STATE_LIVE 0x4C  // Live
+#define ORDER_STATE_DEAD 0x44  // Dead
+
+// Canceled Reason: one byte code
+#define CANCELED_REASON_USER_REQUESTED_CANCEL 0x55                               // User Requested Cancel
+#define CANCELED_REASON_IMMEDIATE_ORDER_EXPIRED 0x49                             // Immediate Order Expired
+#define CANCELED_REASON_TIMEOUT_SESSION_OR_DAY_ORDER_EXPIRED 0x54                // Timeout Session Or Day Order Expired
+#define CANCELED_REASON_SUPERVISORY 0x53                                         // Supervisory
+#define CANCELED_REASON_USER_LOGGED_OFF 0x4C                                     // User Logged Off
+#define CANCELED_REASON_INVALID_QUANTITY_OR_QUANTITY_EXCEEDS_MAXIMUM_LIMIT 0x5A  // Invalid Quantity Or Quantity Exceeds Maximum Limit
+#define CANCELED_REASON_ORDER_NOT_ALLOWED_AT_THIS_TIME 0x52                      // Order Not Allowed At This Time
+#define CANCELED_REASON_INVALID_PRICE 0x58                                       // Invalid Price
+#define CANCELED_REASON_INVALID_MINIMUM_QUANTITY 0x4E                            // Invalid Minimum Quantity
+#define CANCELED_REASON_INVALID_ORDER_TYPE 0x59                                  // Invalid Order Type
+#define CANCELED_REASON_FLOW_CONTROL_IN_PLACE_FOR_USER 0x46                      // Flow Control In Place For User
+#define CANCELED_REASON_UNKNOWN 0x57                                             // Unknown
+
+// Liquidity Flag: one byte code
+#define LIQUIDITY_FLAG_ADDED_FOR_THE_PASSIVE_FIRM 0x41      // Added For The Passive Firm
+#define LIQUIDITY_FLAG_REMOVED_FOR_THE_AGGRESSOR 0x52       // Removed For The Aggressor
+#define LIQUIDITY_FLAG_UNCROSS_FOR_AUCTION_EXECUTIONS 0x55  // Uncross For Auction Executions
+
+// Broken Trade Reason: one byte code
+#define BROKEN_TRADE_REASON_CONSENT_BOTH_PARTIES_AGREED_TO_BREAK_THE_TRADE 0x43  // Consent Both Parties Agreed To Break The Trade
+#define BROKEN_TRADE_REASON_SUPERVISORY_BROKEN_BY_BIVA_MARKET_CONTROL 0x53       // Supervisory Broken By Biva Market Control
+
+// Rejected Reason: one byte code
+#define REJECTED_REASON_SECBOARD_INSTRUMENT_BOARD_OR_MARKET_NOT_TRADEABLE 0x48   // Secboard Instrument Board Or Market Not Tradeable
+#define REJECTED_REASON_INVALID_QUANTITY_OR_QUANTITY_EXCEEDS_MAXIMUM_LIMIT 0x5A  // Invalid Quantity Or Quantity Exceeds Maximum Limit
+#define REJECTED_REASON_INVALID_ORDERBOOK_IDENTIFIER 0x53                        // Invalid Orderbook Identifier
+#define REJECTED_REASON_ORDER_NOT_ALLOWED_AT_THIS_TIME 0x52                      // Order Not Allowed At This Time
+#define REJECTED_REASON_INVALID_PRICE 0x58                                       // Invalid Price
+#define REJECTED_REASON_INVALID_MINIMUM_QUANTITY 0x4E                            // Invalid Minimum Quantity
+#define REJECTED_REASON_INVALID_ORDER_TYPE 0x59                                  // Invalid Order Type
+#define REJECTED_REASON_FLOW_CONTROL_IN_PLACE_FOR_USER 0x46                      // Flow Control In Place For User
+#define REJECTED_REASON_UNKNOWN 0x57                                             // Unknown
+
+// ---- Types -------------------------------------------------------------------
+
+// Debug packets are intended to provide human readable text that may aid in debugging problems
+typedef struct _DebugPacket (UINT16 packet_length) where (packet_length >= 1) {
+  UINT8 debug_text[(((UINT32) packet_length) - 1)];
+} DebugPacket;
 
 // The SoupBinTCP server sends a Login Accepted Packet in response to receiving a valid Login Request from the client
-entrypoint typedef struct _LoginAcceptedPacket {
+typedef struct _LoginAcceptedPacket {
   UINT8 accepted_session[10];          // bytes 0 to 9
   UINT8 accepted_sequence_number[20];  // bytes 10 to 29
 } LoginAcceptedPacket;
 
-// ---- Login Rejected Packet: 1 byte -------------------------------------------
-
 // The SoupBinTCP server sends this packet in response to an invalid Login Request Packet from the client
-entrypoint typedef struct _LoginRejectedPacket {
+typedef struct _LoginRejectedPacket {
   UINT8 reject_reason_code;  // byte 0
 } LoginRejectedPacket;
 
-// ---- System Event Message: 9 bytes -------------------------------------------
-
 // System event message
-entrypoint typedef struct _SystemEventMessage {
+typedef struct _SystemEventMessage {
   UINT64BE timestamp;  // bytes 0 to 7
   UINT8 event_code;    // byte 8
 } SystemEventMessage;
 
-// ---- Accepted Message: 59 bytes ----------------------------------------------
-
 // Accepted message echoing the data fields of the Enter Order Message
-entrypoint typedef struct _AcceptedMessage {
+typedef struct _AcceptedMessage {
   UINT64BE timestamp;               // bytes 0 to 7
   UINT32BE order_token;             // bytes 8 to 11
   UINT8 account_type;               // byte 12
@@ -66,10 +166,8 @@ entrypoint typedef struct _AcceptedMessage {
   UINT8 order_state;                // byte 58
 } AcceptedMessage;
 
-// ---- Replaced Message: 42 bytes ----------------------------------------------
-
 // Replaced message
-entrypoint typedef struct _ReplacedMessage {
+typedef struct _ReplacedMessage {
   UINT64BE timestamp;                // bytes 0 to 7
   UINT32BE replacement_order_token;  // bytes 8 to 11
   UINT8 order_verb;                  // byte 12
@@ -81,20 +179,16 @@ entrypoint typedef struct _ReplacedMessage {
   UINT32BE previous_order_token;     // bytes 38 to 41
 } ReplacedMessage;
 
-// ---- Canceled Message: 21 bytes ----------------------------------------------
-
 // Canceled order message
-entrypoint typedef struct _CanceledMessage {
+typedef struct _CanceledMessage {
   UINT64BE timestamp;     // bytes 0 to 7
   UINT32BE order_token;   // bytes 8 to 11
   UINT64BE quantity;      // bytes 12 to 19
   UINT8 canceled_reason;  // byte 20
 } CanceledMessage;
 
-// ---- Executed Order Message: 37 bytes ----------------------------------------
-
 // Order executed message
-entrypoint typedef struct _ExecutedOrderMessage {
+typedef struct _ExecutedOrderMessage {
   UINT64BE timestamp;          // bytes 0 to 7
   UINT32BE order_token;        // bytes 8 to 11
   UINT64BE executed_quantity;  // bytes 12 to 19
@@ -104,22 +198,65 @@ entrypoint typedef struct _ExecutedOrderMessage {
   UINT32BE counter_party_id;   // bytes 33 to 36
 } ExecutedOrderMessage;
 
-// ---- Broken Trade Message: 21 bytes ------------------------------------------
-
 // Broken trade message
-entrypoint typedef struct _BrokenTradeMessage {
+typedef struct _BrokenTradeMessage {
   UINT64BE timestamp;         // bytes 0 to 7
   UINT32BE order_token;       // bytes 8 to 11
   UINT64BE match_number;      // bytes 12 to 19
   UINT8 broken_trade_reason;  // byte 20
 } BrokenTradeMessage;
 
-// ---- Rejected Order Message: 13 bytes ----------------------------------------
-
 // Rejected order message
-entrypoint typedef struct _RejectedOrderMessage {
+typedef struct _RejectedOrderMessage {
   UINT64BE timestamp;     // bytes 0 to 7
   UINT32BE order_token;   // bytes 8 to 11
   UINT8 rejected_reason;  // byte 12
 } RejectedOrderMessage;
+
+// The sequenced (server to client) message carried by the packet, opaque bytes unless an application source dispatches it
+casetype _SequencedMessage (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x53: SystemEventMessage system_event_message;
+    case 0x41: AcceptedMessage accepted_message;
+    case 0x55: ReplacedMessage replaced_message;
+    case 0x43: CanceledMessage canceled_message;
+    case 0x45: ExecutedOrderMessage executed_order_message;
+    case 0x42: BrokenTradeMessage broken_trade_message;
+    case 0x4A: RejectedOrderMessage rejected_order_message;
+    default: UINT8 unknown[available];
+  }
+} SequencedMessage;
+
+// The Sequenced Data Packets act as an envelope to carry the actual sequenced data messages that are transferred from the server to the client. Each Sequenced Data Packet carries one message from the higher-lever protocol
+typedef struct _SequencedDataPacket (UINT16 packet_length) where (packet_length >= 2) {
+  UINT8 sequenced_message_type;                                                                                                                                // byte 0
+  SequencedMessage(sequenced_message_type, (((UINT32) packet_length) - 2)) sequenced_message[:byte-size-single-element-array (((UINT32) packet_length) - 2)];
+} SequencedDataPacket;
+
+// Branch
+casetype _ServerPayload (UINT8 selector, UINT32 length, UINT16 packet_length, UINT32 available) {
+  switch (selector) {
+    case 0x2B: DebugPacket(packet_length) debug_packet;
+    case 0x41: LoginAcceptedPacket login_accepted_packet;
+    case 0x4A: LoginRejectedPacket login_rejected_packet;
+    case 0x53: SequencedDataPacket(packet_length) sequenced_data_packet[:byte-size-single-element-array length];
+    case 0x48: unit server_heartbeat;
+    case 0x5A: unit end_of_session;
+    default: UINT8 unknown[available];
+  }
+} ServerPayload;
+
+// Soup Bin Tcp Packet sent by the server
+typedef struct _ServerSoupBinTcpPacket {
+  UINT16BE packet_length { packet_length >= 1 };                                                                                                                                                                // bytes 0 to 1
+  UINT8 server_packet_type;                                                                                                                                                                                     // byte 2
+  ServerPayload(server_packet_type, (((UINT32) packet_length) - 1), packet_length, ((((UINT32) packet_length) + 2) - 3)) server_payload[:byte-size-single-element-array ((((UINT32) packet_length) + 2) - 3)];
+} ServerSoupBinTcpPacket;
+
+// ---- Packet: ServerPacket ----------------------------------------------------
+
+// SoupBinTCP Packet sent by the server
+entrypoint typedef struct _ServerPacket (UINT32 available) {
+  ServerSoupBinTcpPacket server_soup_bin_tcp_packet[:byte-size available];
+} ServerPacket;
 

@@ -1,77 +1,1239 @@
-// New York Stock Exchange Binary Gateway
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nyse ArcaEquities BinaryGateway PillarStream v6.0
 //
+// Protocol:
+//   Organization: New York Stock Exchange
+//   Protocol: Binary Gateway
+//   Encoding: Pillar Stream Protocol
+//   Version: 6.0
+//   Date: 08/14/2026
+//   Specification: NYSE_Pillar_Gateway_Binary_Protocol_Specification.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ServerPillarMessage, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out ArcaEquities_BinaryGateway_v6_0_ServerPillarMessage.3d
-//
-// What this definition does not state, and the model does:
-// - a Reassemble rule
-// - a length prefix framing what follows
-// - a run filling what frames it
-// - a field read in bits
-// - a field present only on a condition
-//
-// License: MIT No Attribution
 
-// ---- Msg Header: 4 bytes -----------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Pillar Stream Message Header
-entrypoint typedef struct _MsgHeader {
-  UINT16 msg_type;    // bytes 0 to 1
-  UINT16 msg_length;  // bytes 2 to 3
-} MsgHeader;
+// Msg Type: 2 byte code
+#define MSG_TYPE_LOGIN 0x0201           // Login
+#define MSG_TYPE_LOGIN_RESPONSE 0x0202  // Login Response
+#define MSG_TYPE_STREAM_AVAIL 0x0203    // Stream Avail
+#define MSG_TYPE_HEARTBEAT 0x0204       // Heartbeat
+#define MSG_TYPE_OPEN 0x0205            // Open
+#define MSG_TYPE_OPEN_RESPONSE 0x0206   // Open Response
+#define MSG_TYPE_CLOSE 0x0207           // Close
+#define MSG_TYPE_CLOSE_RESPONSE 0x0208  // Close Response
+#define MSG_TYPE_SEQ_MSG 0x0905         // Seq Msg
 
-// ---- Stream Id: 8 bytes ------------------------------------------------------
+// Status: one byte code
+#define STATUS_REQUEST_PROCESSED_SUCCESSFULLY 0x00  // Request Processed Successfully
+#define STATUS_NOT_LOGGED_IN 0x12                   // Not Logged In
+#define STATUS_INVALID_LOGIN_DETAILS 0x18           // Invalid Login Details
+#define STATUS_ALREADY_LOGGED_IN 0x1B               // Already Logged In
+#define STATUS_HEARTBEAT_TIMEOUT 0x1C               // Heartbeat Timeout
+#define STATUS_LOGIN_TIMED_OUT 0x1D                 // Login Timed Out
+#define STATUS_INVALID_MESSAGE 0x21                 // Invalid Message
+#define STATUS_NO_STREAM_PERMISSION 0x36            // No Stream Permission
+#define STATUS_INVALID_PROTOCOL_VERSION 0x51        // Invalid Protocol Version
+#define STATUS_MESSAGE_OUT_OF_SEQUENCE 0x52         // Message Out Of Sequence
+#define STATUS_INVALID_STREAM 0x54                  // Invalid Stream
+#define STATUS_STREAM_NOT_OPEN 0x55                 // Stream Not Open
+#define STATUS_INVALID_TIMESTAMP 0x56               // Invalid Timestamp
+#define STATUS_DENIAL_OF_SERVICE 0x59               // Denial Of Service
+#define STATUS_WRITE_PERMISSION_REVOKED 0x5A        // Write Permission Revoked
+#define STATUS_INVALID_MULTIMESSAGE 0x5D            // Invalid Multimessage
+
+// Seq Msg Type: 2 byte code
+#define SEQ_MSG_TYPE_SESSION_CONFIGURATION_REQUEST_MESSAGE 0x0220                         // Session Configuration Request Message
+#define SEQ_MSG_TYPE_SEQUENCED_FILLER_MESSAGE 0x0282                                      // Sequenced Filler Message
+#define SEQ_MSG_TYPE_NEW_ORDER_SINGLE_AND_CANCEL_REPLACE_REQUEST_MESSAGE 0x0240           // New Order Single And Cancel Replace Request Message
+#define SEQ_MSG_TYPE_ORDER_CANCEL_REQUEST_MESSAGE 0x0280                                  // Order Cancel Request Message
+#define SEQ_MSG_TYPE_ORDER_MODIFY_REQUEST_MESSAGE 0x0270                                  // Order Modify Request Message
+#define SEQ_MSG_TYPE_BULK_CANCEL_REQUEST_MESSAGE 0x0281                                   // Bulk Cancel Request Message
+#define SEQ_MSG_TYPE_SYMBOL_SUBSCRIPTION_REQUEST_MESSAGE 0x0346                           // Symbol Subscription Request Message
+#define SEQ_MSG_TYPE_TG_BEGIN_MESSAGE 0x0343                                              // Tg Begin Message
+#define SEQ_MSG_TYPE_TG_END_MESSAGE 0x0344                                                // Tg End Message
+#define SEQ_MSG_TYPE_MANUAL_ACTION_RESPONSE_MESSAGE 0x0354                                // Manual Action Response Message
+#define SEQ_MSG_TYPE_RISK_LIMIT_UPDATE_REQUEST_MESSAGE 0x0330                             // Risk Limit Update Request Message
+#define SEQ_MSG_TYPE_RISK_ACTION_REQUEST_MESSAGE 0x0331                                   // Risk Action Request Message
+#define SEQ_MSG_TYPE_EQUITIES_SYMBOL_REFERENCE_DATA_MESSAGE 0x0232                        // Equities Symbol Reference Data Message
+#define SEQ_MSG_TYPE_DMM_SYMBOL_REFERENCE_DATA_MESSAGE 0x0832                             // Dmm Symbol Reference Data Message
+#define SEQ_MSG_TYPE_MINIMUM_PRICE_VARIANT_CLASS_REFERENCE_DATA_MESSAGE 0x0230            // Minimum Price Variant Class Reference Data Message
+#define SEQ_MSG_TYPE_MINIMUM_PRICE_VARIANT_LEVEL_REFERENCE_DATA_MESSAGE 0x0231            // Minimum Price Variant Level Reference Data Message
+#define SEQ_MSG_TYPE_MPID_CONFIGURATION_MESSAGE 0x0272                                    // Mpid Configuration Message
+#define SEQ_MSG_TYPE_MMID_CONFIGURATION_MESSAGE 0x0273                                    // Mmid Configuration Message
+#define SEQ_MSG_TYPE_SESSION_CONFIGURATION_ACKNOWLEDGEMENT_MESSAGE 0x0221                 // Session Configuration Acknowledgement Message
+#define SEQ_MSG_TYPE_ORDER_AND_CANCEL_REPLACE_ACKNOWLEDGEMENT_MESSAGE 0x0260              // Order And Cancel Replace Acknowledgement Message
+#define SEQ_MSG_TYPE_ORDER_MODIFY_CANCEL_REQUEST_ACKNOWLEDGMENT_AND_UROUT_MESSAGE 0x0271  // Order Modify Cancel Request Acknowledgment And Urout Message
+#define SEQ_MSG_TYPE_ORDER_PRIORITY_UPDATE_ACKNOWLEDGMENT_MESSAGE 0x0262                  // Order Priority Update Acknowledgment Message
+#define SEQ_MSG_TYPE_EXECUTION_REPORT_MESSAGE 0x0290                                      // Execution Report Message
+#define SEQ_MSG_TYPE_TRADE_BUST_CORRECT_MESSAGE 0x0292                                    // Trade Bust Correct Message
+#define SEQ_MSG_TYPE_APPLICATION_LAYER_REJECT_MESSAGE 0x0263                              // Application Layer Reject Message
+#define SEQ_MSG_TYPE_SYMBOL_SUBSCRIPTION_ACKNOWLEDGEMENT_MESSAGE 0x0347                   // Symbol Subscription Acknowledgement Message
+#define SEQ_MSG_TYPE_GT_BEGIN_MESSAGE 0x0349                                              // Gt Begin Message
+#define SEQ_MSG_TYPE_GT_END_MESSAGE 0x0350                                                // Gt End Message
+#define SEQ_MSG_TYPE_AUCTION_PRICE_DATA_MESSAGE 0x0352                                    // Auction Price Data Message
+#define SEQ_MSG_TYPE_AUCTION_REQUEST_MESSAGE 0x0348                                       // Auction Request Message
+#define SEQ_MSG_TYPE_MANUAL_ACTION_REQUEST_MESSAGE 0x0353                                 // Manual Action Request Message
+#define SEQ_MSG_TYPE_RISK_CONTROL_ACKNOWLEDGEMENT_MESSAGE 0x0332                          // Risk Control Acknowledgement Message
+#define SEQ_MSG_TYPE_RISK_CONTROL_ALERT_MESSAGE 0x0333                                    // Risk Control Alert Message
+
+// Test Symbol Indicator: one byte code
+#define TEST_SYMBOL_INDICATOR_PRODUCTION_SYMBOL 0x00  // Production Symbol
+#define TEST_SYMBOL_INDICATOR_TEST_SYMBOL 0x01        // Test Symbol
+
+// Mpid Status: one byte code
+#define MPID_STATUS_ACTIVE 0x01    // Active
+#define MPID_STATUS_INACTIVE 0x02  // Inactive
+#define MPID_STATUS_PROSPECT 0x03  // Prospect
+
+// User Session Type: one byte code
+#define USER_SESSION_TYPE_CUSTOMER 0x01                 // Customer
+#define USER_SESSION_TYPE_SERVICE_BUREAU 0x02           // Service Bureau
+#define USER_SESSION_TYPE_DESIGNATED_MARKET_MAKER 0x03  // Designated Market Maker
+#define USER_SESSION_TYPE_OPTIONS_MARKET_MAKER 0x04     // Options Market Maker
+#define USER_SESSION_TYPE_RISK_ADMIN 0x0C               // Risk Admin
+
+// User Session Status: one byte code
+#define USER_SESSION_STATUS_ACTIVE 0x01    // Active
+#define USER_SESSION_STATUS_INACTIVE 0x02  // Inactive
+#define USER_SESSION_STATUS_PROSPECT 0x03  // Prospect
+
+// Cancel On Disconnect: one byte code
+#define CANCEL_ON_DISCONNECT_DISABLED 0x00    // Disabled
+#define CANCEL_ON_DISCONNECT_ENABLE_DAY 0x01  // Enable Day
+#define CANCEL_ON_DISCONNECT_ENABLE_ALL 0x02  // Enable All
+
+// Throttle Preference: one byte code
+#define THROTTLE_PREFERENCE_QUEUE_ORDERS 0x00   // Queue Orders
+#define THROTTLE_PREFERENCE_REJECT_ORDERS 0x01  // Reject Orders
+
+// Symbol Eligibility: one byte code
+#define SYMBOL_ELIGIBILITY_ALL_SYMBOLS 0x01        // All Symbols
+#define SYMBOL_ELIGIBILITY_TEST_SYMBOLS_ONLY 0x02  // Test Symbols Only
+
+// Self Trade Prevention: one byte code
+#define SELF_TRADE_PREVENTION_NO_SELF_TRADE_PREVENTION 0x01  // No Self Trade Prevention
+#define SELF_TRADE_PREVENTION_CANCEL_NEWEST 0x02             // Cancel Newest
+#define SELF_TRADE_PREVENTION_CANCEL_OLDEST 0x03             // Cancel Oldest
+#define SELF_TRADE_PREVENTION_CANCEL_BOTH 0x04               // Cancel Both
+#define SELF_TRADE_PREVENTION_CANCEL_DECREMENT 0x05          // Cancel Decrement
+
+// Order Priority Update Ack Subscription: one byte code
+#define ORDER_PRIORITY_UPDATE_ACK_SUBSCRIPTION_NOT_SUBSCRIBED 0x00           // Not Subscribed
+#define ORDER_PRIORITY_UPDATE_ACK_SUBSCRIPTION_RECEIVE_UNSOLICITED_ACK 0x01  // Receive Unsolicited Ack
+
+// Ack Status: one byte code
+#define ACK_STATUS_UNSOLICITED 0x00           // Unsolicited
+#define ACK_STATUS_USER_REQUEST_VALID 0x01    // User Request Valid
+#define ACK_STATUS_USER_REQUEST_INVALID 0x02  // User Request Invalid
+
+// Working Away From Display: one byte code
+#define WORKING_AWAY_FROM_DISPLAY_SAME_AS_DISPLAY 0x00         // Same As Display
+#define WORKING_AWAY_FROM_DISPLAY_DIFFERENT_FROM_DISPLAY 0x01  // Different From Display
+
+// Reason Code: 2 byte code
+#define REASON_CODE_OK 0x0000                                               // Ok
+#define REASON_CODE_INVALID_SENDER_COMP_ID 0x0001                           // Invalid Sender Comp Id
+#define REASON_CODE_INVALID_SENDER_SUB_ID 0x0002                            // Invalid Sender Sub Id
+#define REASON_CODE_INVALID_SENDING_TIME 0x0003                             // Invalid Sending Time
+#define REASON_CODE_INVALID_TARGET_COMP_ID 0x0004                           // Invalid Target Comp Id
+#define REASON_CODE_INVALID_TARGET_SUB_ID 0x0005                            // Invalid Target Sub Id
+#define REASON_CODE_INVALID_ON_BEHALF_OF_COMP_ID 0x0006                     // Invalid On Behalf Of Comp Id
+#define REASON_CODE_INVALID_ON_BEHALF_OF_SUB_ID 0x0007                      // Invalid On Behalf Of Sub Id
+#define REASON_CODE_INVALID_DELIVER_TO_COMP_ID 0x0008                       // Invalid Deliver To Comp Id
+#define REASON_CODE_INVALID_DELIVER_TO_SUB_ID 0x0009                        // Invalid Deliver To Sub Id
+#define REASON_CODE_INVALID_ACCOUNT 0x000A                                  // Invalid Account
+#define REASON_CODE_INVALID_CL_ORD_ID 0x000B                                // Invalid Cl Ord Id
+#define REASON_CODE_INVALID_EXEC_INST 0x000C                                // Invalid Exec Inst
+#define REASON_CODE_INVALID_ID_SOURCE 0x000D                                // Invalid Id Source
+#define REASON_CODE_INVALID_ORDER_QTY 0x000E                                // Invalid Order Qty
+#define REASON_CODE_INVALID_ORD_TYPE 0x000F                                 // Invalid Ord Type
+#define REASON_CODE_INVALID_PRICE 0x0010                                    // Invalid Price
+#define REASON_CODE_INVALID_ORDER_CAPACITY 0x0011                           // Invalid Order Capacity
+#define REASON_CODE_INVALID_SECURITY_ID 0x0012                              // Invalid Security Id
+#define REASON_CODE_INVALID_SIDE 0x0013                                     // Invalid Side
+#define REASON_CODE_INVALID_SYMBOL_SERIES 0x0014                            // Invalid Symbol Series
+#define REASON_CODE_INVALID_TEXT 0x0015                                     // Invalid Text
+#define REASON_CODE_INVALID_TIME_IN_FORCE 0x0016                            // Invalid Time In Force
+#define REASON_CODE_INVALID_SETTLEMENT_TYPE 0x0017                          // Invalid Settlement Type
+#define REASON_CODE_INVALID_FUT_SETT_DATE 0x0018                            // Invalid Fut Sett Date
+#define REASON_CODE_INVALID_SYMBOL_SFX 0x0019                               // Invalid Symbol Sfx
+#define REASON_CODE_INVALID_OPEN_CLOSE 0x001A                               // Invalid Open Close
+#define REASON_CODE_INVALID_STOP_PX 0x001B                                  // Invalid Stop Px
+#define REASON_CODE_INVALID_CLIENT_ID 0x001C                                // Invalid Client Id
+#define REASON_CODE_INVALID_MIN_QTY 0x001D                                  // Invalid Min Qty
+#define REASON_CODE_INVALID_MAX_FLOOR 0x001E                                // Invalid Max Floor
+#define REASON_CODE_INVALID_LOCATE_REQD 0x001F                              // Invalid Locate Reqd
+#define REASON_CODE_INVALID_EXPIRE_TIME 0x0020                              // Invalid Expire Time
+#define REASON_CODE_INVALID_SECURITY_TYPE 0x0021                            // Invalid Security Type
+#define REASON_CODE_INVALID_MATURITY_MONTH_YEAR 0x0022                      // Invalid Maturity Month Year
+#define REASON_CODE_INVALID_PUT_OR_CALL 0x0023                              // Invalid Put Or Call
+#define REASON_CODE_INVALID_STRIKE_PRICE 0x0024                             // Invalid Strike Price
+#define REASON_CODE_INVALID_COVERED_OR_UNCOVERED 0x0025                     // Invalid Covered Or Uncovered
+#define REASON_CODE_INVALID_CUSTOMER_OR_FIRM 0x0026                         // Invalid Customer Or Firm
+#define REASON_CODE_INVALID_MATURITY_DAY 0x0027                             // Invalid Maturity Day
+#define REASON_CODE_INVALID_PEG_DIFFERENCE 0x0028                           // Invalid Peg Difference
+#define REASON_CODE_INVALID_SELLERS_DAYS 0x0029                             // Invalid Sellers Days
+#define REASON_CODE_INVALID_TRADING_SESSION_ID 0x002A                       // Invalid Trading Session Id
+#define REASON_CODE_INVALID_NO_TRADING_SESSIONS 0x002B                      // Invalid No Trading Sessions
+#define REASON_CODE_INVALID_DISCRETION_INST 0x002C                          // Invalid Discretion Inst
+#define REASON_CODE_INVALID_DISCRETION_OFFSET 0x002D                        // Invalid Discretion Offset
+#define REASON_CODE_INVALID_PRICE_TYPE 0x002E                               // Invalid Price Type
+#define REASON_CODE_INVALID_CLEARING_FIRM 0x002F                            // Invalid Clearing Firm
+#define REASON_CODE_INVALID_CLEARING_ACCOUNT 0x0030                         // Invalid Clearing Account
+#define REASON_CODE_INVALID_PARTY_ID 0x0031                                 // Invalid Party Id
+#define REASON_CODE_INVALID_OPTIONAL_DATA 0x0032                            // Invalid Optional Data
+#define REASON_CODE_INVALID_CROSS_ID 0x0033                                 // Invalid Cross Id
+#define REASON_CODE_INVALID_STRATEGY_INDICATOR 0x0034                       // Invalid Strategy Indicator
+#define REASON_CODE_INVALID_TRADE_ID 0x0035                                 // Invalid Trade Id
+#define REASON_CODE_INVALID_NO_SELF_TRADE 0x0036                            // Invalid No Self Trade
+#define REASON_CODE_INVALID_CAP_STRATEGY 0x0037                             // Invalid Cap Strategy
+#define REASON_CODE_INVALID_SPECIAL_ORD_TYPE 0x0038                         // Invalid Special Ord Type
+#define REASON_CODE_INVALID_ROUTING_INST 0x0039                             // Invalid Routing Inst
+#define REASON_CODE_INVALID_OFFSET_PRICE 0x003A                             // Invalid Offset Price
+#define REASON_CODE_INVALID_EXTENDED_EXEC_INST 0x003B                       // Invalid Extended Exec Inst
+#define REASON_CODE_INVALID_INTRODUCING_BADGE_ID 0x003C                     // Invalid Introducing Badge Id
+#define REASON_CODE_INVALID_BILL_TO 0x003D                                  // Invalid Bill To
+#define REASON_CODE_INVALID_PARENT_FIRM_CL_ORD_ID 0x003E                    // Invalid Parent Firm Cl Ord Id
+#define REASON_CODE_INVALID_PARENT_FIRM_EXCHANGE_ORD_ID 0x003F              // Invalid Parent Firm Exchange Ord Id
+#define REASON_CODE_INVALID_PARENT_FIRM 0x0040                              // Invalid Parent Firm
+#define REASON_CODE_INVALID_INTEREST_TYPE 0x0041                            // Invalid Interest Type
+#define REASON_CODE_INVALID_DISPLAY_IND 0x0042                              // Invalid Display Ind
+#define REASON_CODE_INVALID_PEG_IND 0x0043                                  // Invalid Peg Ind
+#define REASON_CODE_INVALID_CEILING_FLOOR_PRICE 0x0044                      // Invalid Ceiling Floor Price
+#define REASON_CODE_INVALID_MIN_PEG_QTY 0x0045                              // Invalid Min Peg Qty
+#define REASON_CODE_INVALID_D_ORDER_AUCTION_PRICE 0x0046                    // Invalid D Order Auction Price
+#define REASON_CODE_INVALID_DISC_MAX_VOL 0x0047                             // Invalid Disc Max Vol
+#define REASON_CODE_INVALID_DICS_ROUTE_IND 0x0048                           // Invalid Dics Route Ind
+#define REASON_CODE_INVALID_MINIMUM_TRIGGER_VOL_MTV 0x0049                  // Invalid Minimum Trigger Vol Mtv
+#define REASON_CODE_INVALID_ATTRIBUTED_QUOTE 0x004A                         // Invalid Attributed Quote
+#define REASON_CODE_INVALID_PROACTIVE_IF_LOCKED 0x004B                      // Invalid Proactive If Locked
+#define REASON_CODE_SYSTEM_NOT_AVAILABLE 0x004C                             // System Not Available
+#define REASON_CODE_SYSTEM_FULL_MENG_RATE_EXCEEDED 0x004D                   // System Full Meng Rate Exceeded
+#define REASON_CODE_THROTTLE_REJECT 0x004E                                  // Throttle Reject
+#define REASON_CODE_SYMBOL_SERIES_HALTED 0x004F                             // Symbol Series Halted
+#define REASON_CODE_NO_SYMBOLSERIES_PERMISSION 0x0050                       // No Symbolseries Permission
+#define REASON_CODE_PRICE_TOO_FAR_OUTSIDE 0x0051                            // Price Too Far Outside
+#define REASON_CODE_MWCB_HALT 0x0052                                        // Mwcb Halt
+#define REASON_CODE_MARKET_CLOSED 0x0053                                    // Market Closed
+#define REASON_CODE_SYMBOLSERIES_CLOSED 0x0054                              // Symbolseries Closed
+#define REASON_CODE_LULD_CANCEL_INSTRUCTION 0x0055                          // Luld Cancel Instruction
+#define REASON_CODE_NO_PRICE_SLIDE_INST_DURING_SSR 0x0056                   // No Price Slide Inst During Ssr
+#define REASON_CODE_INVALID_STOCK_LEG_GIVE_UP 0x0057                        // Invalid Stock Leg Give Up
+#define REASON_CODE_INVALID_NO_LEGS 0x0058                                  // Invalid No Legs
+#define REASON_CODE_INVALID_LEG_POSITION_EFFECT 0x0059                      // Invalid Leg Position Effect
+#define REASON_CODE_INVALID_LEG_SYMBOL_FIELD 0x005A                         // Invalid Leg Symbol Field
+#define REASON_CODE_INVALID_LEG_CFI_CODE 0x005B                             // Invalid Leg Cfi Code
+#define REASON_CODE_INVALID_LEG_MATURITY_DATE 0x005C                        // Invalid Leg Maturity Date
+#define REASON_CODE_INVALID_LEG_STRIKE_PRICE 0x005D                         // Invalid Leg Strike Price
+#define REASON_CODE_INVALID_LEG_CONTRACT_MULTIPLIER 0x005E                  // Invalid Leg Contract Multiplier
+#define REASON_CODE_INVALID_LEG_RATIO_QTY 0x005F                            // Invalid Leg Ratio Qty
+#define REASON_CODE_INVALID_LEG_SIDE 0x0060                                 // Invalid Leg Side
+#define REASON_CODE_INVALID_LEG_REF_ID 0x0061                               // Invalid Leg Ref Id
+#define REASON_CODE_UNSUPPORTED_ORDER_TYPE 0x0062                           // Unsupported Order Type
+#define REASON_CODE_UROUT 0x0063                                            // Urout
+#define REASON_CODE_PRIMARY_MARKET_NOT_AVAILABLE 0x0064                     // Primary Market Not Available
+#define REASON_CODE_NO_NBBOPBBO_FOR_PEG 0x0065                              // No Nbbopbbo For Peg
+#define REASON_CODE_NO_MARKET_FOR_MARKET_ORDER 0x0066                       // No Market For Market Order
+#define REASON_CODE_MARKETABLE_PRICE 0x0067                                 // Marketable Price
+#define REASON_CODE_DONE_FOR_DAY 0x0068                                     // Done For Day
+#define REASON_CODE_CREDIT_LIMIT_VIOLATION 0x0069                           // Credit Limit Violation
+#define REASON_CODE_CANCEL_REMAINING_IOC 0x006A                             // Cancel Remaining Ioc
+#define REASON_CODE_TOO_LATE_TO_CANCEL 0x006B                               // Too Late To Cancel
+#define REASON_CODE_INVALID_POSS_RESEND 0x006C                              // Invalid Poss Resend
+#define REASON_CODE_CANCEL_PENDING 0x006D                                   // Cancel Pending
+#define REASON_CODE_SYMBOL_SERIES_ALREADY_OPENED 0x006E                     // Symbol Series Already Opened
+#define REASON_CODE_FIRM_BULK_CANCEL 0x006F                                 // Firm Bulk Cancel
+#define REASON_CODE_ON_BEHALF_OF_COMP_ID_BLOCKED 0x0070                     // On Behalf Of Comp Id Blocked
+#define REASON_CODE_CLEARING_FIRM_BLOCKED 0x0071                            // Clearing Firm Blocked
+#define REASON_CODE_CANCEL_REPLACE_PENDING 0x0072                           // Cancel Replace Pending
+#define REASON_CODE_MODIFY_PENDING 0x0073                                   // Modify Pending
+#define REASON_CODE_CANNOT_FLIP_IMBALANCE 0x0074                            // Cannot Flip Imbalance
+#define REASON_CODE_CANNOT_INCREASE_IMBALANCE 0x0075                        // Cannot Increase Imbalance
+#define REASON_CODE_PENDING_CANCEL_IMBALANCE_FREEZE 0x0076                  // Pending Cancel Imbalance Freeze
+#define REASON_CODE_PENDING_REPLACE_IMBALANCE_FREEZE 0x0077                 // Pending Replace Imbalance Freeze
+#define REASON_CODE_PENDING_MODIFY_IMBALANCE_FREEZE 0x0078                  // Pending Modify Imbalance Freeze
+#define REASON_CODE_PENDING_CANCEL_ROUTED_INTEREST 0x0079                   // Pending Cancel Routed Interest
+#define REASON_CODE_PENDING_REPLACE_ROUTED_INTEREST 0x007A                  // Pending Replace Routed Interest
+#define REASON_CODE_PENDING_MODIFY_ROUTED_INTEREST 0x007B                   // Pending Modify Routed Interest
+#define REASON_CODE_PENDING_AUCTION_RUNNING 0x007C                          // Pending Auction Running
+#define REASON_CODE_DUPLICATIVE_ORDER_CHECK 0x007D                          // Duplicative Order Check
+#define REASON_CODE_CANCELLED_BY_EXCHANGE 0x007E                            // Cancelled By Exchange
+#define REASON_CODE_NEW_ORDER 0x007F                                        // New Order
+#define REASON_CODE_FILL 0x0080                                             // Fill
+#define REASON_CODE_PARTIAL_FILL 0x0081                                     // Partial Fill
+#define REASON_CODE_REDUCED 0x0082                                          // Reduced
+#define REASON_CODE_REPLACED 0x0083                                         // Replaced
+#define REASON_CODE_NO_MARKET_FOR_CROSS 0x0084                              // No Market For Cross
+#define REASON_CODE_STP_CANCEL 0x0085                                       // Stp Cancel
+#define REASON_CODE_INVALID_POSS_DUPE 0x0086                                // Invalid Poss Dupe
+#define REASON_CODE_TPID_BLOCKED 0x0087                                     // Tpid Blocked
+#define REASON_CODE_INVALID_BULK_CANCEL 0x0088                              // Invalid Bulk Cancel
+#define REASON_CODE_PENDING_BULK_CANCEL 0x0089                              // Pending Bulk Cancel
+#define REASON_CODE_SYMBOL_SERIES_NOT_OPEN 0x008A                           // Symbol Series Not Open
+#define REASON_CODE_SYMBOL_SERIES_SUSPENDED 0x008B                          // Symbol Series Suspended
+#define REASON_CODE_SYMBOL_IPO_HALT 0x008C                                  // Symbol Ipo Halt
+#define REASON_CODE_INVLD_INST_DURING_IMBALANCE_FREEZE 0x008D               // Invld Inst During Imbalance Freeze
+#define REASON_CODE_INVLD_INST_AFTER_CUTOFF_TIME 0x008E                     // Invld Inst After Cutoff Time
+#define REASON_CODE_CANCELLED_BY_PRIMARY_MARKET 0x008F                      // Cancelled By Primary Market
+#define REASON_CODE_PENDING_IMBALANCE_FREEZE 0x0090                         // Pending Imbalance Freeze
+#define REASON_CODE_NO_RLP_PERMISSION 0x0091                                // No Rlp Permission
+#define REASON_CODE_INVALID_INSTRUCTION_FOR_IO_CS 0x0092                    // Invalid Instruction For Io Cs
+#define REASON_CODE_SYSTEM_FULL_CG_RATE_EXCEEDED 0x0093                     // System Full Cg Rate Exceeded
+#define REASON_CODE_PENDING_CANCEL_AUCTION_RUNNING 0x0094                   // Pending Cancel Auction Running
+#define REASON_CODE_PENDING_MODIFY_AUCTION_RUNNING 0x0095                   // Pending Modify Auction Running
+#define REASON_CODE_PENDING_REPLACE_AUCTION_RUNNING 0x0096                  // Pending Replace Auction Running
+#define REASON_CODE_INVLD_INST_FOR_PENDING_ORDER 0x0097                     // Invld Inst For Pending Order
+#define REASON_CODE_SSH_PRICE_BELOW_NBB_ON_ISO 0x0098                       // Ssh Price Below Nbb On Iso
+#define REASON_CODE_IOC_RECEIVED_WHILE_AUCTION_RUNNING 0x0099               // Ioc Received While Auction Running
+#define REASON_CODE_PENDING_SESSION_TRANSITION 0x009A                       // Pending Session Transition
+#define REASON_CODE_PENDING_CANCEL_SESSION_TRANSITION 0x009B                // Pending Cancel Session Transition
+#define REASON_CODE_PENDING_MODIFY_SESSION_TRANSITION 0x009C                // Pending Modify Session Transition
+#define REASON_CODE_PENDING_REPLACE_SESSION_TRANSITION 0x009D               // Pending Replace Session Transition
+#define REASON_CODE_INVALID_FOR_TICK_PILOT 0x009E                           // Invalid For Tick Pilot
+#define REASON_CODE_INVALID_MMID 0x009F                                     // Invalid Mmid
+#define REASON_CODE_INVALID_MPID 0x00A0                                     // Invalid Mpid
+#define REASON_CODE_INVALID_CANCEL_INSTEAD_OF_REPRICE 0x00A1                // Invalid Cancel Instead Of Reprice
+#define REASON_CODE_INVALID_RETAIL_INDICATOR 0x00A2                         // Invalid Retail Indicator
+#define REASON_CODE_SENDER_COMP_ID_NOT_ACTIVE 0x00A3                        // Sender Comp Id Not Active
+#define REASON_CODE_MPID_BLOCKED 0x00A4                                     // Mpid Blocked
+#define REASON_CODE_INVALID_TIMESTAMP 0x00A5                                // Invalid Timestamp
+#define REASON_CODE_INVALID_PERMISSION_FOR_SENDER_COMP_ID 0x00A6            // Invalid Permission For Sender Comp Id
+#define REASON_CODE_INVALID_USER_DATA 0x00A7                                // Invalid User Data
+#define REASON_CODE_PILLAR_RISK_MITIGATION 0x00A8                           // Pillar Risk Mitigation
+#define REASON_CODE_NO_LAST_SALE_FOR_PEG 0x00A9                             // No Last Sale For Peg
+#define REASON_CODE_SYMBOL_PENDING_CLOSING_AUCTION 0x00AA                   // Symbol Pending Closing Auction
+#define REASON_CODE_EXTREME_CLOSING_ORDER_IMBALANCE 0x00AB                  // Extreme Closing Order Imbalance
+#define REASON_CODE_INVALID_MULTI_MESSAGE 0x00AC                            // Invalid Multi Message
+#define REASON_CODE_INVALID_REQUEST_TARGETING_MANUAL_SENDER_COMP_ID 0x00AD  // Invalid Request Targeting Manual Sender Comp Id
+#define REASON_CODE_INVALID_DMM_REJECT_REASON 0x00AE                        // Invalid Dmm Reject Reason
+#define REASON_CODE_PENDING_PENDING_AUCTION_STATE 0x00AF                    // Pending Pending Auction State
+#define REASON_CODE_PENDING_CANCEL_PENDING_AUCTION_STATE 0x00B0             // Pending Cancel Pending Auction State
+#define REASON_CODE_PENDING_MODIFY_PENDING_AUCTION_STATE 0x00B1             // Pending Modify Pending Auction State
+#define REASON_CODE_PENDING_REPLACE_PENDING_AUCTION_STATE 0x00B2            // Pending Replace Pending Auction State
+#define REASON_CODE_CANCELLED_DMM_MANUAL_ORDER_REPRICE 0x00B3               // Cancelled Dmm Manual Order Reprice
+#define REASON_CODE_TOO_EARLY_TO_OPEN 0x00B4                                // Too Early To Open
+#define REASON_CODE_TOO_EARLY_TO_CLOSE 0x00B5                               // Too Early To Close
+#define REASON_CODE_SYMBOL_NOT_FROZEN_BY_AUCTION_REQUEST 0x00B6             // Symbol Not Frozen By Auction Request
+#define REASON_CODE_SYMBOL_IS_FROZEN_BY_DBK_GUI 0x00B7                      // Symbol Is Frozen By Dbk Gui
+#define REASON_CODE_TOO_LATE_AUCTION_RUNNING 0x00B8                         // Too Late Auction Running
+#define REASON_CODE_TOO_LATE_SYMBOL_TRANSITION 0x00B9                       // Too Late Symbol Transition
+#define REASON_CODE_NO_ELIGIBLE_CROSSING_INTEREST 0x00BA                    // No Eligible Crossing Interest
+#define REASON_CODE_BOOK_IS_LOCKEDCROSSED 0x00BB                            // Book Is Lockedcrossed
+#define REASON_CODE_NO_INTEREST_EXISTS 0x00BC                               // No Interest Exists
+#define REASON_CODE_IMBALANCE_TOO_LARGE 0x00BD                              // Imbalance Too Large
+#define REASON_CODE_SSH_PRICE_BELOW_SSR_FILING_PRICE 0x00BE                 // Ssh Price Below Ssr Filing Price
+#define REASON_CODE_SYMBOL_ALREADY_CLOSED 0x00BF                            // Symbol Already Closed
+#define REASON_CODE_OPENING_TEMPLATE_OPENED 0x00C0                          // Opening Template Opened
+#define REASON_CODE_CLOSING_TEMPLATE_OPENED 0x00C1                          // Closing Template Opened
+#define REASON_CODE_PRIN_ENTERED_ON_AUCTION_TEMPLATE 0x00C2                 // Prin Entered On Auction Template
+#define REASON_CODE_MANDATORY_INDICATION_SUBMITTED 0x00C3                   // Mandatory Indication Submitted
+#define REASON_CODE_PENDING_CROWD_EXISTS 0x00C4                             // Pending Crowd Exists
+#define REASON_CODE_NO_CONSOLIDATED_LAST_SALE 0x00C5                        // No Consolidated Last Sale
+#define REASON_CODE_PAIRED_QTY_EXCEEDS_MAX_TRADE_PARAMETER 0x00C6           // Paired Qty Exceeds Max Trade Parameter
+#define REASON_CODE_LULD_OR_MWCB_TIMER_RUNNING 0x00C7                       // Luld Or Mwcb Timer Running
+#define REASON_CODE_LOCKING_CROSSING_AWAY_QUOTE 0x00C8                      // Locking Crossing Away Quote
+#define REASON_CODE_CROSS_NOT_ELIGIBLE 0x00C9                               // Cross Not Eligible
+#define REASON_CODE_RESERVED_FOR_FUTURE_USE_202 0x00CA                      // Reserved For Future Use 202
+#define REASON_CODE_PENDING_ACCEPTANCE_FOR_ACK_ON_ORDER_ARRIVAL 0x00CB      // Pending Acceptance For Ack On Order Arrival
+#define REASON_CODE_REJECTED_CANCEL_BY_DMM 0x00CC                           // Rejected Cancel By Dmm
+#define REASON_CODE_CANCELLED_BY_DMM 0x00CD                                 // Cancelled By Dmm
+#define REASON_CODE_PRICE_IS_OUTSIDE_ALLOWABLE_RANGE 0x00CE                 // Price Is Outside Allowable Range
+#define REASON_CODE_AUCTION_VALIDATION_IN_PROGRESS 0x00CF                   // Auction Validation In Progress
+#define REASON_CODE_INVALID_MANUAL_ACTION_ID 0x00D0                         // Invalid Manual Action Id
+#define REASON_CODE_INVALID_AUCTION_SELL_INDICATOR 0x00D1                   // Invalid Auction Sell Indicator
+#define REASON_CODE_INVALID_INTRADAY_SELL_SHORT_QTY 0x00D2                  // Invalid Intraday Sell Short Qty
+#define REASON_CODE_INDICATION_TEMPLATE_IS_OPEN 0x00D3                      // Indication Template Is Open
+#define REASON_CODE_NO_PREV_CLOSING_PRICE 0x00D4                            // No Prev Closing Price
+#define REASON_CODE_CANCELLED_DUE_TO_TRADING_COLLARS 0x00D5                 // Cancelled Due To Trading Collars
+#define REASON_CODE_UNDERLYING_IS_IN_LULD_STATE 0x00D6                      // Underlying Is In Luld State
+#define REASON_CODE_INVALID_MANUAL_RESPONSE_TYPE 0x00D7                     // Invalid Manual Response Type
+#define REASON_CODE_NO_NYSE_LAST_SALE 0x00D8                                // No Nyse Last Sale
+#define REASON_CODE_SYMBOL_DIRECT_LISTING_STATE 0x00D9                      // Symbol Direct Listing State
+#define REASON_CODE_DMM_GUI_REDUCTION_IN_MANUAL_ORDER_QTY 0x00DA            // Dmm Gui Reduction In Manual Order Qty
+#define REASON_CODE_CROSS_ELIGIBLE 0x00DB                                   // Cross Eligible
+#define REASON_CODE_DRY_RUN 0x00DC                                          // Dry Run
+#define REASON_CODE_UNSUPPORTED_BY_BROKER_PLEX 0x00DD                       // Unsupported By Broker Plex
+#define REASON_CODE_CROSS_BLOCKED_BY_BBOPBBO 0x00DE                         // Cross Blocked By Bbopbbo
+#define REASON_CODE_RISK_SINGLE_ORD_MAX_QTY 0x00DF                          // Risk Single Ord Max Qty
+#define REASON_CODE_RISK_SINGLE_ORD_MAX_NOTIONAL 0x00E0                     // Risk Single Ord Max Notional
+#define REASON_CODE_RISK_GROSS_CREDIT_BREACH 0x00E1                         // Risk Gross Credit Breach
+#define REASON_CODE_RISK_KILL_SWITCH 0x00E2                                 // Risk Kill Switch
+#define REASON_CODE_INVALID_ROUTE_TO_BROKER 0x00E3                          // Invalid Route To Broker
+#define REASON_CODE_SPREAD_TOO_WIDE 0x00E4                                  // Spread Too Wide
+#define REASON_CODE_EXPIRE_FOK 0x00E5                                       // Expire Fok
+#define REASON_CODE_LOCKS_DISPLAYED_INTEREST 0x00E6                         // Locks Displayed Interest
+#define REASON_CODE_MM_QUOTE_PRICE_LOCKCROSS_CONTRA_SIDE_NBBO 0x00E7        // Mm Quote Price Lockcross Contra Side Nbbo
+#define REASON_CODE_INVALID_LEG_SYMBOL 0x00E8                               // Invalid Leg Symbol
+#define REASON_CODE_DUPLICATE_LEG_SYMBOL 0x00E9                             // Duplicate Leg Symbol
+#define REASON_CODE_SYMBOL_NOT_IN_UNDERLYING 0x00EA                         // Symbol Not In Underlying
+#define REASON_CODE_LEG_RATIOS_NOT_IN_THE_MOST_REDUCED_FORM 0x00EB          // Leg Ratios Not In The Most Reduced Form
+#define REASON_CODE_OPTION_LEG_RATIO_TOO_HIGH 0x00EC                        // Option Leg Ratio Too High
+#define REASON_CODE_STOCK_LEG_RATIO_TOO_LOW 0x00ED                          // Stock Leg Ratio Too Low
+#define REASON_CODE_COMPLEX_SERIES_ALREADY_EXISTS 0x00EE                    // Complex Series Already Exists
+#define REASON_CODE_NUMBER_OF_LEGS_INCORRECT 0x00EF                         // Number Of Legs Incorrect
+#define REASON_CODE_CANCEL_DOES_NOT_SET_NBBO_INST 0x00F0                    // Cancel Does Not Set Nbbo Inst
+#define REASON_CODE_CANCEL_AVOID_REPRICE_INST 0x00F1                        // Cancel Avoid Reprice Inst
+#define REASON_CODE_ALLOW_REPRICE_ONCE_THEN_CANCEL_INST 0x00F2              // Allow Reprice Once Then Cancel Inst
+#define REASON_CODE_INVALID_ALLOCATION_PCT 0x00F3                           // Invalid Allocation Pct
+#define REASON_CODE_INVALID_MM_QUOTE_TYPE 0x00F4                            // Invalid Mm Quote Type
+#define REASON_CODE_INVALID_MM_SENT_TIME 0x00F5                             // Invalid Mm Sent Time
+#define REASON_CODE_SERIES_EXPIRED 0x00F6                                   // Series Expired
+#define REASON_CODE_INVALID_GIVE_UP_MMID 0x00F7                             // Invalid Give Up Mmid
+#define REASON_CODE_INVALID_NO_SIDES 0x00F8                                 // Invalid No Sides
+#define REASON_CODE_PENDING_TO_ACCEPTANCE 0x00F9                            // Pending To Acceptance
+#define REASON_CODE_RESERVED_FOR_FUTURE_USE_250 0x00FA                      // Reserved For Future Use 250
+#define REASON_CODE_INVALID_BULK_ACTION 0x00FB                              // Invalid Bulk Action
+#define REASON_CODE_INVALID_CANCEL_SCOPE 0x00FC                             // Invalid Cancel Scope
+#define REASON_CODE_NO_LEGAL_WIDTH_SPREAD 0x00FD                            // No Legal Width Spread
+#define REASON_CODE_INVALID_TARGET_CANCEL_MPID 0x00FE                       // Invalid Target Cancel Mpid
+#define REASON_CODE_INVALID_TARGET_CANCEL_SENDER_COMP_ID 0x00FF             // Invalid Target Cancel Sender Comp Id
+#define REASON_CODE_CLEAR_THE_BOOK_PREV_ENTERED 0x0100                      // Clear The Book Prev Entered
+#define REASON_CODE_TIMER_EXPIRED_API_ALLOCATION 0x0101                     // Timer Expired Api Allocation
+#define REASON_CODE_INVALID_NUMBER_OF_QUOTES 0x0102                         // Invalid Number Of Quotes
+#define REASON_CODE_INVALID_ORDER_ID 0x0103                                 // Invalid Order Id
+#define REASON_CODE_RISK_CONTROL_EVENT 0x0104                               // Risk Control Event
+#define REASON_CODE_TO_REJECTED 0x0105                                      // To Rejected
+#define REASON_CODE_CANCELLED_CORPORATE_ACTION 0x0106                       // Cancelled Corporate Action
+#define REASON_CODE_TOO_LATE_TO_REPLACE 0x0107                              // Too Late To Replace
+#define REASON_CODE_INVALID_REF_DELTA 0x0108                                // Invalid Ref Delta
+#define REASON_CODE_INVALID_STOCK_PRICE 0x0109                              // Invalid Stock Price
+#define REASON_CODE_RESERVED_FOR_FUTURE_USE_266 0x010A                      // Reserved For Future Use 266
+#define REASON_CODE_INVALID_TIED_TO_STOCK 0x010B                            // Invalid Tied To Stock
+#define REASON_CODE_TOO_LATE_TO_ALLOCATE 0x010C                             // Too Late To Allocate
+#define REASON_CODE_CUSTOMER_INTEREST_ON_BBO 0x010D                         // Customer Interest On Bbo
+#define REASON_CODE_IDO_CANNOT_BE_MODIFIED 0x010E                           // Ido Cannot Be Modified
+#define REASON_CODE_CROSS_OUTSIDE_BBO 0x010F                                // Cross Outside Bbo
+#define REASON_CODE_PENDING_TO_APPROVAL 0x0110                              // Pending To Approval
+#define REASON_CODE_INVALID_LEG_OPEN_CLOSE 0x0111                           // Invalid Leg Open Close
+#define REASON_CODE_INVALID_RISK_CONTROL_TYPE 0x0112                        // Invalid Risk Control Type
+#define REASON_CODE_INVALID_RISK_CONTROL_ACTIVATION 0x0113                  // Invalid Risk Control Activation
+#define REASON_CODE_INVALID_BREACH_ACTION_REQUEST 0x0114                    // Invalid Breach Action Request
+#define REASON_CODE_INVALID_IOC_ATTRIBUTION 0x0115                          // Invalid Ioc Attribution
+#define REASON_CODE_INVALID_RISK_ACTION_TYPE 0x0116                         // Invalid Risk Action Type
+#define REASON_CODE_INVALID_USD_LIMIT 0x0117                                // Invalid Usd Limit
+#define REASON_CODE_IDO_ALREADY_EXISTS 0x0118                               // Ido Already Exists
+#define REASON_CODE_INVALID_TIME_LIMIT 0x0119                               // Invalid Time Limit
+#define REASON_CODE_INVALID_PERCENTAGE_LIMIT 0x011A                         // Invalid Percentage Limit
+#define REASON_CODE_INVALID_COUNT_LIMIT 0x011B                              // Invalid Count Limit
+#define REASON_CODE_RISK_ROLL_TRANSACT_BREACH 0x011C                        // Risk Roll Transact Breach
+#define REASON_CODE_RISK_ROLL_VOL_BREACH 0x011D                             // Risk Roll Vol Breach
+#define REASON_CODE_RISK_ROLL_PCT_BREACH 0x011E                             // Risk Roll Pct Breach
+#define REASON_CODE_RISK_ROLL_GRMP_BREACH 0x011F                            // Risk Roll Grmp Breach
+#define REASON_CODE_RISK_MM_ARBITRAGE_BREACH 0x0120                         // Risk Mm Arbitrage Breach
+#define REASON_CODE_RISK_MM_INTRINSIC_BREACH 0x0121                         // Risk Mm Intrinsic Breach
+#define REASON_CODE_IDO_MUST_EXIST 0x0122                                   // Ido Must Exist
+#define REASON_CODE_INVALID_ALLOCATION_TAG 0x0123                           // Invalid Allocation Tag
+#define REASON_CODE_INVALID_TRADE_TAG 0x0124                                // Invalid Trade Tag
+#define REASON_CODE_ARBITRAGE_CHECK 0x0125                                  // Arbitrage Check
+#define REASON_CODE_INTRINSIC_VALUE_CHECK 0x0126                            // Intrinsic Value Check
+#define REASON_CODE_CREDIT_DEBIT_CHECK 0x0127                               // Credit Debit Check
+#define REASON_CODE_INVALID_RISK_USER 0x0128                                // Invalid Risk User
+#define REASON_CODE_INVALID_RISK_ENTITY 0x0129                              // Invalid Risk Entity
+#define REASON_CODE_INVALID_FLEX_SERIES_ALREADY_EXISTS 0x012A               // Invalid Flex Series Already Exists
+#define REASON_CODE_INVALID_FLEX_SERIES_KEY 0x012B                          // Invalid Flex Series Key
+#define REASON_CODE_INVALID_CLEAR_THE_BOOK 0x012C                           // Invalid Clear The Book
+#define REASON_CODE_INVALID_STOCK_QTY 0x012D                                // Invalid Stock Qty
+#define REASON_CODE_INVALID_PACKAGE_LINK_ID 0x012E                          // Invalid Package Link Id
+#define REASON_CODE_COMPLEX_MAX_SERIES_BREACH 0x012F                        // Complex Max Series Breach
+#define REASON_CODE_INVALID_FLEX_EOD_TAG 0x0130                             // Invalid Flex Eod Tag
+#define REASON_CODE_INVALID_PERCENTAGE_PRICE 0x0131                         // Invalid Percentage Price
+#define REASON_CODE_UNKNOWN_ISSUE_ENCOUNTERED 0x03E7                        // Unknown Issue Encountered
+#define REASON_CODE_INVALID_PERCENTAGE_STRIKE 0x0132                        // Invalid Percentage Strike
+#define REASON_CODE_CANCEL_REMAINING_GTX 0x0133                             // Cancel Remaining Gtx
+#define REASON_CODE_AUCTION_NOT_RUNNING 0x0134                              // Auction Not Running
+#define REASON_CODE_INVALID_ORD_STATUS 0x0135                               // Invalid Ord Status
+#define REASON_CODE_MMID_BLOCKED 0x0136                                     // Mmid Blocked
+#define REASON_CODE_INVALID_CATIMID 0x0137                                  // Invalid Catimid
+#define REASON_CODE_RISK_REJ_ISO 0x0138                                     // Risk Rej Iso
+#define REASON_CODE_RISK_REJ_MKT_ORDERS 0x0139                              // Risk Rej Mkt Orders
+#define REASON_CODE_RISK_REJ_MOO_MOC 0x013A                                 // Risk Rej Moo Moc
+#define REASON_CODE_RISK_REJ_EARLY_TRADING 0x013B                           // Risk Rej Early Trading
+#define REASON_CODE_RISK_REJ_LATE_TRADING 0x013C                            // Risk Rej Late Trading
+#define REASON_CODE_RISK_REJ_RESTRICTED_SYMBOL 0x013D                       // Risk Rej Restricted Symbol
+#define REASON_CODE_RISK_REJ_SELL_SHORT_FOR_SYMBOL 0x013E                   // Risk Rej Sell Short For Symbol
+#define REASON_CODE_RISK_REJ_SELL_SHORT_EXEMPT_FOR_SYMBOL 0x013F            // Risk Rej Sell Short Exempt For Symbol
+#define REASON_CODE_RISK_REJ_ORD_MAX_QTY_SYMBOL_ADV 0x0140                  // Risk Rej Ord Max Qty Symbol Adv
+#define REASON_CODE_RISK_MAX_DUPLICATIVE_ORD 0x0141                         // Risk Max Duplicative Ord
+#define REASON_CODE_RISK_REQUIRE_LOCATE_BROKER 0x0142                       // Risk Require Locate Broker
+#define REASON_CODE_INVALID_RISK_RANGE_ID 0x0143                            // Invalid Risk Range Id
+#define REASON_CODE_INVALID_RISK_MINIMUM_VALUE 0x0144                       // Invalid Risk Minimum Value
+#define REASON_CODE_INVALID_PRICE_SCALE 0x0145                              // Invalid Price Scale
+#define REASON_CODE_INVALID_MAX_RISK_SYMBOLS_EXCEEDED 0x0146                // Invalid Max Risk Symbols Exceeded
+#define REASON_CODE_INVALID_RISK_SETTINGS_INCOMPLETE 0x0147                 // Invalid Risk Settings Incomplete
+#define REASON_CODE_INVALID_AUCTION_ID 0x0148                               // Invalid Auction Id
+#define REASON_CODE_GROUP_ID_BLOCKED 0x0149                                 // Group Id Blocked
+#define REASON_CODE_PENDING_FLEX_PRICE_MSG 0x014A                           // Pending Flex Price Msg
+#define REASON_CODE_RISK_ORD_RATE_THRESHOLD 0x014B                          // Risk Ord Rate Threshold
+#define REASON_CODE_INCONSISTENT_PERCENTAGE_FLEX_LEGS 0x014C                // Inconsistent Percentage Flex Legs
+#define REASON_CODE_CANCELLED_BY_ROUTING_VENUE 0x014D                       // Cancelled By Routing Venue
+#define REASON_CODE_INVALID_TARGET_STRATEGY 0x014E                          // Invalid Target Strategy
+#define REASON_CODE_CANCEL_IOC_CROSSING_AWAY_QUOTE 0x014F                   // Cancel Ioc Crossing Away Quote
+#define REASON_CODE_ROUTING_VENUE_NOT_AVAILABLE 0x0150                      // Routing Venue Not Available
+#define REASON_CODE_INVALID_LEG_PRICE 0x0151                                // Invalid Leg Price
+#define REASON_CODE_INVALID_ROUTING_STRATEGY 0x0152                         // Invalid Routing Strategy
+#define REASON_CODE_ROUTING_IS_NOT_AVAILABLE 0x0155                         // Routing Is Not Available
+#define REASON_CODE_REPRICED 0x0190                                         // Repriced
+#define REASON_CODE_CANCELLED_BY_ATS 0x01F4                                 // Cancelled By Ats
+#define REASON_CODE_INVALID_CURRENCY 0x01F5                                 // Invalid Currency
+#define REASON_CODE_INVALID_TRF_TAG 0x02BC                                  // Invalid Trf Tag
+#define REASON_CODE_INVALID_REPORTING_FIRM 0x02BD                           // Invalid Reporting Firm
+#define REASON_CODE_INVALID_CONTRA_FIRM 0x02BE                              // Invalid Contra Firm
+#define REASON_CODE_INVALID_REPORTING_CLEARING 0x02BF                       // Invalid Reporting Clearing
+#define REASON_CODE_INVALID_CONTRA_CLEARING 0x02C0                          // Invalid Contra Clearing
+#define REASON_CODE_INVALID_FIRM_RELATIONSHIP 0x02C1                        // Invalid Firm Relationship
+#define REASON_CODE_UNSUPPORTED_REPORT_TYPE 0x02C2                          // Unsupported Report Type
+#define REASON_CODE_ORIGINAL_TRADE_NOT_FOUND 0x02C3                         // Original Trade Not Found
+#define REASON_CODE_INVALID_PRICE_LULD 0x02C4                               // Invalid Price Luld
+#define REASON_CODE_REJECT_TRADE_ACTION_PENDING 0x02C5                      // Reject Trade Action Pending
+#define REASON_CODE_FINRA_OBR_DOWN 0x02C6                                   // Finra Obr Down
+#define REASON_CODE_MISC_PRISM_REJECT 0x031F                                // Misc Prism Reject
+#define REASON_CODE_BROKER_REJECT 0x0320                                    // Broker Reject
+#define REASON_CODE_SYSTEM_FULL_CGA_RATE_EXCEEDED 0x038A                    // System Full Cga Rate Exceeded
+
+// Ack Type: one byte code
+#define ACK_TYPE_NEW_INTEREST 0x01                       // New Interest
+#define ACK_TYPE_ORDER_PRIORITY_UPDATE_NEW_ID 0x02       // Order Priority Update New Id
+#define ACK_TYPE_ORDER_PRIORITY_UPDATE_SAME_ID 0x03      // Order Priority Update Same Id
+#define ACK_TYPE_BULK_CANCEL_ACK 0x04                    // Bulk Cancel Ack
+#define ACK_TYPE_PENDING_CANCEL 0x05                     // Pending Cancel
+#define ACK_TYPE_PENDING_REPLACE 0x06                    // Pending Replace
+#define ACK_TYPE_PENDING_MODIFY 0x07                     // Pending Modify
+#define ACK_TYPE_REPLACED 0x08                           // Replaced
+#define ACK_TYPE_MODIFIED 0x09                           // Modified
+#define ACK_TYPE_ELIGIBLE_FOR_CROSS 0x0A                 // Eligible For Cross
+#define ACK_TYPE_CANCELED 0x0B                           // Canceled
+#define ACK_TYPE_DONE_FOR_DAY 0x0C                       // Done For Day
+#define ACK_TYPE_BILLABLE_CANCEL_ADD_LIQUIDITY 0x0D      // Billable Cancel Add Liquidity
+#define ACK_TYPE_BILLABLE_CANCEL_REMOVE_LIQUIDITY 0x0E   // Billable Cancel Remove Liquidity
+#define ACK_TYPE_BILLABLE_CANCEL_SUB_DOLLAR_ADD 0x0F     // Billable Cancel Sub Dollar Add
+#define ACK_TYPE_BILLABLE_CANCEL_SUB_DOLLAR_REMOVE 0x10  // Billable Cancel Sub Dollar Remove
+
+// Routing Strategy: one byte code
+#define ROUTING_STRATEGY_MIDPOINT_PING 0x01                     // Midpoint Ping
+#define ROUTING_STRATEGY_RETAIL_PRICE_IMPROVEMENT_SEEKING 0x02  // Retail Price Improvement Seeking
+#define ROUTING_STRATEGY_RETAIL_MIDPOINT_PING 0x03              // Retail Midpoint Ping
+
+// Settlement Type: one byte code
+#define SETTLEMENT_TYPE_REGULAR_WAY 0x30  // Regular Way
+#define SETTLEMENT_TYPE_CASH 0x31         // Cash
+
+// Side: one byte code
+#define SIDE_NO_CHANGE_IN_SIDE 0x00   // No Change In Side
+#define SIDE_BUY 0x01                 // Buy
+#define SIDE_SELL 0x02                // Sell
+#define SIDE_SELL_SHORT 0x03          // Sell Short
+#define SIDE_SELL_SHORT_EXEMPT 0x04   // Sell Short Exempt
+#define SIDE_CROSS 0x05               // Cross
+#define SIDE_CROSS_SHORT 0x06         // Cross Short
+#define SIDE_CROSS_SHORT_EXEMPT 0x07  // Cross Short Exempt
+
+// Locate Reqd U 81: one byte code
+#define LOCATE_REQD_U_81_NO_LOCATE_REQD 0x00              // No Locate Reqd
+#define LOCATE_REQD_U_81_LOCATE_REQD_FOR_SSH_ORDERS 0x01  // Locate Reqd For Ssh Orders
+
+// Participant Type: one byte code
+#define PARTICIPANT_TYPE_CUSTOMER 0x01      // Customer
+#define PARTICIPANT_TYPE_MARKET_MAKER 0x02  // Market Maker
+#define PARTICIPANT_TYPE_DMM 0x03           // Dmm
+#define PARTICIPANT_TYPE_SLP 0x04           // Slp
+#define PARTICIPANT_TYPE_FLOOR_BROKER 0x05  // Floor Broker
+
+// Reject Type: one byte code
+#define REJECT_TYPE_ORDER_CANCEL_REPLACE 0x01                    // Order Cancel Replace
+#define REJECT_TYPE_MODIFY_REQUEST 0x02                          // Modify Request
+#define REJECT_TYPE_CANCEL_REQUEST 0x03                          // Cancel Request
+#define REJECT_TYPE_BULK_CANCEL_REQUEST 0x04                     // Bulk Cancel Request
+#define REJECT_TYPE_RESERVED_FOR_FUTURE_USE_5 0x05               // Reserved For Future Use 5
+#define REJECT_TYPE_MANUAL_ACTION_RESPONSE 0x06                  // Manual Action Response
+#define REJECT_TYPE_RISK_LIMIT_UPDATE_REQUEST 0x07               // Risk Limit Update Request
+#define REJECT_TYPE_NOT_APPLICABLE_FOR_EQUITIES_MARKETS_8 0x08   // Not Applicable For Equities Markets 8
+#define REJECT_TYPE_RESERVED_FOR_FUTURE_USE_9 0x09               // Reserved For Future Use 9
+#define REJECT_TYPE_NOT_APPLICABLE_FOR_EQUITIES_MARKETS_10 0x0A  // Not Applicable For Equities Markets 10
+#define REJECT_TYPE_RISK_ACTION_REQUEST 0x0B                     // Risk Action Request
+
+// Subscription Status: one byte code
+#define SUBSCRIPTION_STATUS_SUBSCRIBED 0x01      // Subscribed
+#define SUBSCRIPTION_STATUS_NOT_SUBSCRIBED 0x02  // Not Subscribed
+
+// Imbalance Side: one byte code
+#define IMBALANCE_SIDE_NO_IMBALANCE 0x00    // No Imbalance
+#define IMBALANCE_SIDE_BUY_IMBALANCE 0x01   // Buy Imbalance
+#define IMBALANCE_SIDE_SELL_IMBALANCE 0x02  // Sell Imbalance
+
+// Side Of Unpaired Qty: one byte code
+#define SIDE_OF_UNPAIRED_QTY_PAIRED 0x00           // Paired
+#define SIDE_OF_UNPAIRED_QTY_BUY_NOT_PAIRED 0x01   // Buy Not Paired
+#define SIDE_OF_UNPAIRED_QTY_SELL_NOT_PAIRED 0x02  // Sell Not Paired
+
+// Auction Type: one byte code
+#define AUCTION_TYPE_OPENING_AUCTION 0x00    // Opening Auction
+#define AUCTION_TYPE_REOPENING_AUCTION 0x01  // Reopening Auction
+#define AUCTION_TYPE_CLOSING_AUCTION 0x02    // Closing Auction
+
+// Manual Override: one byte code
+#define MANUAL_OVERRIDE_NOT_APPLICABLE 0x00    // Not Applicable
+#define MANUAL_OVERRIDE_ALERT 0x01             // Alert
+#define MANUAL_OVERRIDE_POSITION_MARKING 0x02  // Position Marking
+
+// Manual Action Type: one byte code
+#define MANUAL_ACTION_TYPE_NEW_MANUAL_DMM_ORDER 0x01      // New Manual Dmm Order
+#define MANUAL_ACTION_TYPE_REDUCE_MANUAL_DMM_QTY 0x02     // Reduce Manual Dmm Qty
+#define MANUAL_ACTION_TYPE_OPENING_AUCTION 0x03           // Opening Auction
+#define MANUAL_ACTION_TYPE_REOPENING_AUCTION 0x04         // Reopening Auction
+#define MANUAL_ACTION_TYPE_CLOSING_AUCTION 0x05           // Closing Auction
+#define MANUAL_ACTION_TYPE_MANUAL_CROSS 0x06              // Manual Cross
+#define MANUAL_ACTION_TYPE_CANCEL_ALL_MANUAL_ORDERS 0x07  // Cancel All Manual Orders
+
+// Risk Ack Type: one byte code
+#define RISK_ACK_TYPE_SOLICITED 0x00    // Solicited
+#define RISK_ACK_TYPE_UNSOLICITED 0x01  // Unsolicited
+
+// Risk User Type: one byte code
+#define RISK_USER_TYPE_ENTERING_FIRM 0x45              // Entering Firm
+#define RISK_USER_TYPE_CLEARING_FIRM 0x43              // Clearing Firm
+#define RISK_USER_TYPE_OPTIONS_MARKET_MAKER_FIRM 0x4F  // Options Market Maker Firm
+
+// Risk Control Type: one byte code
+#define RISK_CONTROL_TYPE_NOT_APPLICABLE 0x00                         // Not Applicable
+#define RISK_CONTROL_TYPE_SINGLE_ORDER_MAX_QTY 0x01                   // Single Order Max Qty
+#define RISK_CONTROL_TYPE_SINGLE_ORDER_MAX_NOTIONAL_VALUE 0x02        // Single Order Max Notional Value
+#define RISK_CONTROL_TYPE_GROSS_CREDIT_EXECUTED 0x03                  // Gross Credit Executed
+#define RISK_CONTROL_TYPE_GROSS_CREDIT_OPEN 0x04                      // Gross Credit Open
+#define RISK_CONTROL_TYPE_GROSS_CREDIT_OPEN_PLUS_EXECUTED 0x05        // Gross Credit Open Plus Executed
+#define RISK_CONTROL_TYPE_MAXIMUM_DUPLICATIVE_ORDERS 0x06             // Maximum Duplicative Orders
+#define RISK_CONTROL_TYPE_RESERVED_FOR_FUTURE_USE_7 0x07              // Reserved For Future Use 7
+#define RISK_CONTROL_TYPE_ACTIVITY_ROLLING_TRANSACTION 0x08           // Activity Rolling Transaction
+#define RISK_CONTROL_TYPE_ACTIVITY_ROLLING_VOLUME 0x09                // Activity Rolling Volume
+#define RISK_CONTROL_TYPE_ACTIVITY_ROLLING_PERCENTAGE 0x0A            // Activity Rolling Percentage
+#define RISK_CONTROL_TYPE_ACTIVITY_GLOBAL_RISK_MITIGATION 0x0B        // Activity Global Risk Mitigation
+#define RISK_CONTROL_TYPE_RESERVED_FOR_FUTURE_USE_12 0x0C             // Reserved For Future Use 12
+#define RISK_CONTROL_TYPE_REJECT_MARKET_ORDERS 0x0D                   // Reject Market Orders
+#define RISK_CONTROL_TYPE_REJECT_MOO_AND_MOC 0x0E                     // Reject Moo And Moc
+#define RISK_CONTROL_TYPE_NOT_AVAILABLE_15 0x0F                       // Not Available 15
+#define RISK_CONTROL_TYPE_NOT_AVAILABLE_16 0x10                       // Not Available 16
+#define RISK_CONTROL_TYPE_REJECT_EARLY_TRADING_SESSION 0x11           // Reject Early Trading Session
+#define RISK_CONTROL_TYPE_REJECT_LATE_TRADING_SESSION 0x12            // Reject Late Trading Session
+#define RISK_CONTROL_TYPE_REJECT_RESTRICTED_SYMBOL 0x13               // Reject Restricted Symbol
+#define RISK_CONTROL_TYPE_REJECT_SELL_SHORT_FOR_SYMBOL 0x14           // Reject Sell Short For Symbol
+#define RISK_CONTROL_TYPE_REJECT_SELL_SHORT_EXEMPT_FOR_SYMBOL 0x15    // Reject Sell Short Exempt For Symbol
+#define RISK_CONTROL_TYPE_SINGLE_ORDER_MAX_QTY_PCT_ADV 0x16           // Single Order Max Qty Pct Adv
+#define RISK_CONTROL_TYPE_LOPP_EQUITIES_CUSTOM_LIMITS 0x17            // Lopp Equities Custom Limits
+#define RISK_CONTROL_TYPE_LOPP_EQUITIES_EARLY_LATE_MULTIPLIER 0x18    // Lopp Equities Early Late Multiplier
+#define RISK_CONTROL_TYPE_LOPP_EQUITIES_CLOSING_ONLY_MULTIPLIER 0x19  // Lopp Equities Closing Only Multiplier
+#define RISK_CONTROL_TYPE_LOPP_OPTIONS_SINGLE_LEG_CUSTOM_LIMITS 0x1A  // Lopp Options Single Leg Custom Limits
+#define RISK_CONTROL_TYPE_LOPP_OPTIONS_COMPLEX_CUSTOM_LIMITS 0x1B     // Lopp Options Complex Custom Limits
+#define RISK_CONTROL_TYPE_REQUIRE_LOCATE_BROKER 0x1C                  // Require Locate Broker
+#define RISK_CONTROL_TYPE_ORDER_RATE_THRESHOLD 0x1D                   // Order Rate Threshold
+#define RISK_CONTROL_TYPE_REJECT_ISO_IOC 0x1E                         // Reject Iso Ioc
+#define RISK_CONTROL_TYPE_REJECT_ISO_DAY 0x1F                         // Reject Iso Day
+
+// Risk Control Activation: one byte code
+#define RISK_CONTROL_ACTIVATION_RISK_CONTROL_TURNED_OFF 0x00  // Risk Control Turned Off
+#define RISK_CONTROL_ACTIVATION_RISK_CONTROL_TURNED_ON 0x01   // Risk Control Turned On
+
+// Risk Action Type: one byte code
+#define RISK_ACTION_TYPE_NOT_APPLICABLE 0x00                         // Not Applicable
+#define RISK_ACTION_TYPE_QUERY_RISK_ENTITY 0x01                      // Query Risk Entity
+#define RISK_ACTION_TYPE_KILL_SWITCH_BLOCK 0x02                      // Kill Switch Block
+#define RISK_ACTION_TYPE_KILL_SWITCH_UNBLOCK 0x03                    // Kill Switch Unblock
+#define RISK_ACTION_TYPE_KILL_SWITCH_CANCEL_AUCTION_ORDERS 0x04      // Kill Switch Cancel Auction Orders
+#define RISK_ACTION_TYPE_KILL_SWITCH_CANCEL_NON_AUCTION_ORDERS 0x05  // Kill Switch Cancel Non Auction Orders
+#define RISK_ACTION_TYPE_KILL_SWITCH_CANCEL_GTC_ORDERS 0x06          // Kill Switch Cancel Gtc Orders
+#define RISK_ACTION_TYPE_APPROVE_REINSTATEMENT 0x07                  // Approve Reinstatement
+#define RISK_ACTION_TYPE_RISK_ENTITY_REINSTATED 0x08                 // Risk Entity Reinstated
+#define RISK_ACTION_TYPE_ADD_SYMBOL_LEVEL_RISK_ENTITY 0x09           // Add Symbol Level Risk Entity
+#define RISK_ACTION_TYPE_REMOVE_SYMBOL_LEVEL_RISK_ENTITY 0x0A        // Remove Symbol Level Risk Entity
+
+// Breach Action Response: one byte code
+#define BREACH_ACTION_RESPONSE_NOT_APPLICABLE 0x00    // Not Applicable
+#define BREACH_ACTION_RESPONSE_NOTIFY_ONLY 0x01       // Notify Only
+#define BREACH_ACTION_RESPONSE_CANCEL_AND_BLOCK 0x02  // Cancel And Block
+#define BREACH_ACTION_RESPONSE_BLOCK 0x03             // Block
+
+// Ioc Attribution: one byte code
+#define IOC_ATTRIBUTION_NOT_APPLICABLE 0x00      // Not Applicable
+#define IOC_ATTRIBUTION_INCLUDE_IOC_ORDERS 0x01  // Include Ioc Orders
+#define IOC_ATTRIBUTION_EXCLUDE_IOC_ORDERS 0x02  // Exclude Ioc Orders
+
+// Blocked By Breach Indicator: one byte code
+#define BLOCKED_BY_BREACH_INDICATOR_NOT_BLOCKED 0x00           // Not Blocked
+#define BLOCKED_BY_BREACH_INDICATOR_BLOCKED_BY_BREACH 0x01     // Blocked By Breach
+#define BLOCKED_BY_BREACH_INDICATOR_BLOCKED_BY_ARB_CHECK 0x02  // Blocked By Arb Check
+#define BLOCKED_BY_BREACH_INDICATOR_BLOCKED_BY_INTRINSIC 0x03  // Blocked By Intrinsic
+
+// Blocked By Kill Switch Indicator: one byte code
+#define BLOCKED_BY_KILL_SWITCH_INDICATOR_NOT_BLOCKED 0x00  // Not Blocked
+#define BLOCKED_BY_KILL_SWITCH_INDICATOR_BLOCKED 0x01      // Blocked
+
+// Reinstatement Required By Self: one byte code
+#define REINSTATEMENT_REQUIRED_BY_SELF_NOT_REQUIRED 0x00  // Not Required
+#define REINSTATEMENT_REQUIRED_BY_SELF_REQUIRED 0x01      // Required
+
+// Reinstatement Required By Other: one byte code
+#define REINSTATEMENT_REQUIRED_BY_OTHER_NOT_REQUIRED 0x00  // Not Required
+#define REINSTATEMENT_REQUIRED_BY_OTHER_REQUIRED 0x01      // Required
+
+// Price Scale: one byte code
+#define PRICE_SCALE_NO_DECIMALS 0x00   // No Decimals
+#define PRICE_SCALE_TWO_DECIMALS 0x02  // Two Decimals
+
+// Threshold Breach Level: one byte code
+#define THRESHOLD_BREACH_LEVEL_NOT_APPLICABLE 0x00            // Not Applicable
+#define THRESHOLD_BREACH_LEVEL_GREATER_THAN_50_PERCENT 0x01   // Greater Than 50 Percent
+#define THRESHOLD_BREACH_LEVEL_GREATER_THAN_75_PERCENT 0x02   // Greater Than 75 Percent
+#define THRESHOLD_BREACH_LEVEL_GREATER_THAN_90_PERCENT 0x03   // Greater Than 90 Percent
+#define THRESHOLD_BREACH_LEVEL_GREATER_THAN_100_PERCENT 0x04  // Greater Than 100 Percent
+
+// ---- Types -------------------------------------------------------------------
+
+// Pillar Stream Login Response Message Branch
+typedef struct _LoginResponse {
+  UINT8 username[16];  // bytes 0 to 15
+  UINT8 status;        // byte 16
+} LoginResponse;
 
 // Pillar Stream Protocol Stream Identifier
-entrypoint typedef struct _StreamId {
+typedef struct _StreamId {
   UINT32 sess;   // bytes 0 to 3
   UINT32 value;  // bytes 4 to 7
 } StreamId;
 
-// ---- Seq Msg Id: 16 bytes ----------------------------------------------------
+// The message contains stream ID and sequence of next message on stream
+typedef struct _StreamAvail {
+  StreamId stream_id;  // bytes 0 to 7
+  UINT64 next_seq;     // bytes 8 to 15
+  UINT8 access;        // byte 16
+} StreamAvail;
+
+// Heartbeat must be sent once a second
+typedef struct _Heartbeat {
+  unit empty;
+} Heartbeat;
+
+// Response to Open
+typedef struct _OpenResponse {
+  StreamId stream_id;  // bytes 0 to 7
+  UINT8 status;        // byte 8
+  UINT8 access;        // byte 9
+} OpenResponse;
+
+// Response to Close Message
+typedef struct _CloseResponse {
+  StreamId stream_id;  // bytes 0 to 7
+  UINT8 status;        // byte 8
+} CloseResponse;
 
 // Pillar Stream Sequenced Message Identifier
-entrypoint typedef struct _SeqMsgId {
+typedef struct _SeqMsgId {
   StreamId stream_id;  // bytes 0 to 7
   UINT64 seq;          // bytes 8 to 15
 } SeqMsgId;
 
-// ---- Seq Msg Header: 4 bytes -------------------------------------------------
+// This message is published for each security traded on the market for which a gateway session is configured to trade and provides the information needed to enter orders for those securities.
+typedef struct _EquitiesSymbolReferenceDataMessage {
+  UINT64 transact_time;         // bytes 0 to 7
+  UINT32 symbol_id;             // bytes 8 to 11
+  UINT8 nyse_symbol[24];        // bytes 12 to 35
+  UINT8 listed_mic[4];          // bytes 36 to 39
+  UINT8 round_lot_size;         // byte 40
+  UINT8 adv_risk_range_id;      // byte 41
+  UINT8 reserved_7[7];          // bytes 42 to 48
+  UINT16 mpv_class_id;          // bytes 49 to 50
+  UINT8 test_symbol_indicator;  // byte 51
+} EquitiesSymbolReferenceDataMessage;
 
-// Pillar Stream Sequenced Message Header
-entrypoint typedef struct _SeqMsgHeader {
-  UINT16 seq_msg_type;    // bytes 0 to 1
-  UINT16 seq_msg_length;  // bytes 2 to 3
-} SeqMsgHeader;
+// DMM Symbol Reference Data
+typedef struct _DmmSymbolReferenceDataMessage {
+  UINT64 transact_time;           // bytes 0 to 7
+  UINT32 symbol_id;               // bytes 8 to 11
+  UINT8 nyse_symbol[24];          // bytes 12 to 35
+  UINT8 book[8];                  // bytes 36 to 43
+  UINT8 mpid[4];                  // bytes 44 to 47
+  UINT8 dmm_unit_num[3];          // bytes 48 to 50
+  UINT8 post[2];                  // bytes 51 to 52
+  UINT64 median_volume;           // bytes 53 to 60
+  UINT64 rd_seq;                  // bytes 61 to 68
+  UINT64 ridge_price;             // bytes 69 to 76, signed, read here as unsigned
+  UINT64 ppp_1;                   // bytes 77 to 84, signed, read here as unsigned
+  UINT64 ppp_2;                   // bytes 85 to 92, signed, read here as unsigned
+  UINT64 ppp_3;                   // bytes 93 to 100, signed, read here as unsigned
+  UINT64 open_on_trade_max_qty;   // bytes 101 to 108
+  UINT64 close_on_trade_max_qty;  // bytes 109 to 116
+  UINT64 lmocp;                   // bytes 117 to 124, signed, read here as unsigned
+} DmmSymbolReferenceDataMessage;
 
-// ---- Sub Msg Header: 4 bytes -------------------------------------------------
+// Defines a single Minimum Price Variant (MPV) Class by name and identification number and provides attributes belonging to that class.
+typedef struct _MinimumPriceVariantClassReferenceDataMessage {
+  UINT64 transact_time;      // bytes 0 to 7
+  UINT8 mpv_class_name[20];  // bytes 8 to 27
+  UINT16 mpv_class_id;       // bytes 28 to 29
+  UINT64 rpimpv;             // bytes 30 to 37, signed, read here as unsigned
+  UINT64 luldmpv;            // bytes 38 to 45, signed, read here as unsigned
+} MinimumPriceVariantClassReferenceDataMessage;
+
+// MPVLevelDefinition
+typedef struct _MpvLevelDefinition {
+  UINT8 mpv_level_name[24];  // bytes 0 to 23
+  UINT64 price;              // bytes 24 to 31, signed, read here as unsigned
+  UINT64 quoting_mpv;        // bytes 32 to 39, signed, read here as unsigned
+  UINT64 trading_mpv;        // bytes 40 to 47, signed, read here as unsigned
+  UINT16 mpv_class_id;       // bytes 48 to 49
+} MpvLevelDefinition;
+
+// Defines one or more Minimum Price Variant (MPV) Levels within a single MPV Class. Each embedded MPVLevelDefinition structure defines a single MPV Level.
+typedef struct _MinimumPriceVariantLevelReferenceDataMessage (UINT32 available) where (available >= 8) {
+  UINT64 transact_time;                                                 // bytes 0 to 7
+  MpvLevelDefinition mpv_level_definition[:byte-size (available - 8)];
+} MinimumPriceVariantLevelReferenceDataMessage;
+
+// This message is published for each MPID configured on a gateway session and indicates the current status of the MPID.
+typedef struct _MpidConfigurationMessage {
+  UINT64 transact_time;   // bytes 0 to 7
+  UINT8 mpid_status;      // byte 8
+  UINT8 mpid[4];          // bytes 9 to 12
+  UINT8 username[16];     // bytes 13 to 28
+  UINT8 reserved_50[50];  // bytes 29 to 78
+} MpidConfigurationMessage;
+
+// This message is published for each MMID configured on a gateway session and provides the character representation of a Market Maker and the integer MMID value assigned to it.
+typedef struct _MmidConfigurationMessage {
+  UINT64 transact_time;     // bytes 0 to 7
+  UINT8 market_maker[10];   // bytes 8 to 17
+  UINT32 mmid;              // bytes 18 to 21
+  UINT8 username[16];       // bytes 22 to 37
+  UINT8 reserved_100[100];  // bytes 38 to 137
+} MmidConfigurationMessage;
+
+// Indicates the current configured settings for the gateway session.
+typedef struct _SessionConfigurationAcknowledgementMessage {
+  UINT64 transact_time;                          // bytes 0 to 7
+  UINT8 user_session_type;                       // byte 8
+  UINT8 user_session_status;                     // byte 9
+  UINT8 username[16];                            // bytes 10 to 25
+  UINT8 mic[4];                                  // bytes 26 to 29
+  UINT8 cancel_on_disconnect;                    // byte 30
+  UINT8 throttle_preference;                     // byte 31
+  UINT16 throttle_window;                        // bytes 32 to 33
+  UINT16 throttle_threshold;                     // bytes 34 to 35
+  UINT8 symbol_eligibility;                      // byte 36
+  UINT32 max_order_quantity;                     // bytes 37 to 40
+  UINT8 self_trade_prevention;                   // byte 41
+  UINT8 order_priority_update_ack_subscription;  // byte 42
+  UINT8 ack_status;                              // byte 43
+  UINT8 bold_designation;                        // byte 44
+  UINT8 reserved_49[49];                         // bytes 45 to 93
+} SessionConfigurationAcknowledgementMessage;
 
 // Pillar Stream Sub Message Item Header
-entrypoint typedef struct _SubMsgHeader {
+typedef struct _SubMsgHeader {
   UINT16 sub_msg_type;    // bytes 0 to 1
   UINT16 sub_msg_length;  // bytes 2 to 3
 } SubMsgHeader;
 
-// ---- Ref Seq Msg Id: 16 bytes ------------------------------------------------
+// OptionalOrderAddOn
+typedef struct _OptionalOrderAddOn {
+  SubMsgHeader sub_msg_header;  // bytes 0 to 3
+  UINT8 deliver_to_comp_id[5];  // bytes 4 to 8
+  UINT32 max_floor;             // bytes 9 to 12
+  UINT8 locate_broker[4];       // bytes 13 to 16
+  UINT8 reserved_8[8];          // bytes 17 to 24
+  UINT64 offset_price;          // bytes 25 to 32, signed, read here as unsigned
+  UINT64 effective_time;        // bytes 33 to 40
+} OptionalOrderAddOn;
+
+// OptionalOrderAddOn
+casetype _OptionalOptionalOrderAddOn (Bool present) {
+  switch (present) {
+    case true: OptionalOrderAddOn optional_order_add_on;
+    case false: unit absent;
+  }
+} OptionalOptionalOrderAddOn;
+
+// OptionalRoutingStrategyAddOn
+typedef struct _OptionalRoutingStrategyAddOn {
+  SubMsgHeader sub_msg_header;  // bytes 0 to 3
+  UINT8 routing_strategy;       // byte 4
+  UINT8 reserved_27[27];        // bytes 5 to 31
+} OptionalRoutingStrategyAddOn;
+
+// OptionalRoutingStrategyAddOn
+casetype _OptionalOptionalRoutingStrategyAddOn (Bool present) {
+  switch (present) {
+    case true: OptionalRoutingStrategyAddOn optional_routing_strategy_add_on;
+    case false: unit absent;
+  }
+} OptionalOptionalRoutingStrategyAddOn;
+
+// OptionalSettlementTypeAddOn
+typedef struct _OptionalSettlementTypeAddOn {
+  SubMsgHeader sub_msg_header;  // bytes 0 to 3
+  UINT8 settlement_type;        // byte 4
+} OptionalSettlementTypeAddOn;
+
+// OptionalSettlementTypeAddOn
+casetype _OptionalOptionalSettlementTypeAddOn (Bool present) {
+  switch (present) {
+    case true: OptionalSettlementTypeAddOn optional_settlement_type_add_on;
+    case false: unit absent;
+  }
+} OptionalOptionalSettlementTypeAddOn;
+
+// Exchange acknowledgement in response to an Order or Cancel/Replace request.
+typedef struct _OrderAndCancelReplaceAcknowledgementMessage (UINT16 seq_msg_length) {
+  UINT64 transact_time;                                                                               // bytes 0 to 7
+  UINT32 symbol_id;                                                                                   // bytes 8 to 11
+  UINT8 mpid[4];                                                                                      // bytes 12 to 15
+  UINT32 mmid;                                                                                        // bytes 16 to 19
+  UINT8 m_p_sub_i_d_1;                                                                                // byte 20
+  UINT64 cl_ord_id;                                                                                   // bytes 21 to 28
+  UINT64 orig_cl_ord_id;                                                                              // bytes 29 to 36
+  UINT64 unused_12 : 12;                                                                              // bytes 37 to 44
+  UINT64 sub_id_indicator : 1;                                                                        // bytes 37 to 44
+  UINT64 special_ord_type : 4;                                                                        // bytes 37 to 44
+  UINT64 locate_reqd_1 : 1;                                                                           // bytes 37 to 44
+  UINT64 retail_indicator : 1;                                                                        // bytes 37 to 44
+  UINT64 attributed_quote : 3;                                                                        // bytes 37 to 44
+  UINT64 order_capacity : 3;                                                                          // bytes 37 to 44
+  UINT64 interest_type : 3;                                                                           // bytes 37 to 44
+  UINT64 trading_session_id : 3;                                                                      // bytes 37 to 44
+  UINT64 time_in_force : 3;                                                                           // bytes 37 to 44
+  UINT64 proactive_if_locked : 3;                                                                     // bytes 37 to 44
+  UINT64 self_trade_type_3 : 3;                                                                       // bytes 37 to 44
+  UINT64 cancel_instead_of_reprice : 4;                                                               // bytes 37 to 44
+  UINT64 routing_inst : 4;                                                                            // bytes 37 to 44
+  UINT64 extended_exec_inst : 4;                                                                      // bytes 37 to 44
+  UINT64 exec_inst : 4;                                                                               // bytes 37 to 44
+  UINT64 ord_type : 4;                                                                                // bytes 37 to 44
+  UINT64 side_bits : 4;                                                                               // bytes 37 to 44
+  UINT64 price;                                                                                       // bytes 45 to 52, signed, read here as unsigned
+  UINT32 order_qty;                                                                                   // bytes 53 to 56
+  UINT32 min_qty;                                                                                     // bytes 57 to 60
+  UINT64 order_id;                                                                                    // bytes 61 to 68
+  UINT32 leaves_qty;                                                                                  // bytes 69 to 72
+  UINT64 working_price;                                                                               // bytes 73 to 80, signed, read here as unsigned
+  UINT8 working_away_from_display;                                                                    // byte 81
+  UINT8 pre_liquidity_indicator[4];                                                                   // bytes 82 to 85
+  UINT16 reason_code;                                                                                 // bytes 86 to 87
+  UINT8 ack_type;                                                                                     // byte 88
+  UINT8 throttled : 1;                                                                                // byte 89
+  UINT8 unused_7 : 7;                                                                                 // byte 89
+  UINT8 user_data[8];                                                                                 // bytes 90 to 97
+  OptionalOptionalOrderAddOn((seq_msg_length == 0x008F)) optional_order_add_on;
+  OptionalOptionalRoutingStrategyAddOn((seq_msg_length == 0x0086)) optional_routing_strategy_add_on;
+  OptionalOptionalSettlementTypeAddOn((seq_msg_length == 0x006B)) optional_settlement_type_add_on;
+} OrderAndCancelReplaceAcknowledgementMessage;
+
+// Used as a Modify Request Acknowledgement, Cancel Request Acknowledgement, UROUT, and Billable Cancel, distinguished by AckType.
+typedef struct _OrderModifyCancelRequestAcknowledgmentAndUroutMessage {
+  UINT64 transact_time;    // bytes 0 to 7
+  UINT32 symbol_id;        // bytes 8 to 11
+  UINT8 mpid[4];           // bytes 12 to 15
+  UINT64 order_id;         // bytes 16 to 23
+  UINT64 ref_cl_ord_id;    // bytes 24 to 31
+  UINT64 orig_cl_ord_id;   // bytes 32 to 39
+  UINT64 price;            // bytes 40 to 47, signed, read here as unsigned
+  UINT32 order_qty;        // bytes 48 to 51
+  UINT32 leaves_qty;       // bytes 52 to 55
+  UINT8 side;              // byte 56
+  UINT8 locate_reqd_u_81;  // byte 57
+  UINT16 reason_code;      // bytes 58 to 59
+  UINT8 ack_type;          // byte 60
+  UINT8 throttled : 1;     // byte 61
+  UINT8 unused_7 : 7;      // byte 61
+  UINT8 user_data[8];      // bytes 62 to 69
+} OrderModifyCancelRequestAcknowledgmentAndUroutMessage;
+
+// Unsolicited message sent by the Exchange to notify the firm of a Reserve Order replenishment event. The displayed portion of a Reserve Order has been replenished according to MaxFloor and assigned a new OrderID.
+typedef struct _OrderPriorityUpdateAcknowledgmentMessage {
+  UINT64 transact_time;              // bytes 0 to 7
+  UINT32 symbol_id;                  // bytes 8 to 11
+  UINT8 mpid[4];                     // bytes 12 to 15
+  UINT64 order_id;                   // bytes 16 to 23
+  UINT64 cl_ord_id;                  // bytes 24 to 31
+  UINT64 working_price;              // bytes 32 to 39, signed, read here as unsigned
+  UINT32 order_qty;                  // bytes 40 to 43
+  UINT8 working_away_from_display;   // byte 44
+  UINT8 pre_liquidity_indicator[4];  // bytes 45 to 48
+  UINT8 ack_type;                    // byte 49
+  UINT8 user_data[8];                // bytes 50 to 57
+} OrderPriorityUpdateAcknowledgmentMessage;
+
+// Returned on executions for Orders and indicates whether an order has been partially or entirely filled.
+typedef struct _ExecutionReportMessage (UINT16 seq_msg_length) {
+  UINT64 transact_time;                                                                             // bytes 0 to 7
+  UINT32 symbol_id;                                                                                 // bytes 8 to 11
+  UINT8 mpid[4];                                                                                    // bytes 12 to 15
+  UINT64 order_id;                                                                                  // bytes 16 to 23
+  UINT64 cl_ord_id;                                                                                 // bytes 24 to 31
+  UINT64 deal_id;                                                                                   // bytes 32 to 39
+  UINT64 last_px;                                                                                   // bytes 40 to 47, signed, read here as unsigned
+  UINT32 leaves_qty;                                                                                // bytes 48 to 51
+  UINT32 cum_qty;                                                                                   // bytes 52 to 55
+  UINT32 last_qty;                                                                                  // bytes 56 to 59
+  UINT8 liquidity_indicator[4];                                                                     // bytes 60 to 63
+  UINT8 executed_trading_session : 3;                                                               // byte 64
+  UINT8 unused_5 : 5;                                                                               // byte 64
+  UINT8 reserved_3[3];                                                                              // bytes 65 to 67
+  UINT8 locate_reqd_u_81;                                                                           // byte 68
+  UINT8 participant_type;                                                                           // byte 69
+  UINT16 reason_code;                                                                               // bytes 70 to 71
+  UINT8 user_data[8];                                                                               // bytes 72 to 79
+  OptionalOptionalSettlementTypeAddOn((seq_msg_length == 0x0059)) optional_settlement_type_add_on;
+} ExecutionReportMessage;
 
 // Pillar reference sequenced message identifier
-entrypoint typedef struct _RefSeqMsgId {
+typedef struct _RefSeqMsgId {
   StreamId stream_id;  // bytes 0 to 7
   UINT64 seq;          // bytes 8 to 15
 } RefSeqMsgId;
 
-// ---- Manual Action Id: 16 bytes ----------------------------------------------
+// This message is sent as a result of a report bust or correction (NYSE Texas only).
+typedef struct _TradeBustCorrectMessage {
+  UINT64 transact_time;        // bytes 0 to 7
+  UINT32 symbol_id;            // bytes 8 to 11
+  UINT8 mpid[4];               // bytes 12 to 15
+  UINT64 order_id;             // bytes 16 to 23
+  UINT64 cl_ord_id;            // bytes 24 to 31
+  RefSeqMsgId ref_seq_msg_id;  // bytes 32 to 47
+  UINT64 deal_id;              // bytes 48 to 55
+  UINT64 last_px;              // bytes 56 to 63, signed, read here as unsigned
+  UINT32 last_qty;             // bytes 64 to 67
+  UINT16 reason_code;          // bytes 68 to 69
+  UINT8 user_data[8];          // bytes 70 to 77
+} TradeBustCorrectMessage;
+
+// This message informs the firm that a New Order, Cancel, Cancel/Replace, or Modify request has been rejected. For NYSE DMM sessions it is also used to reject TG Action and Manual Action Response.
+typedef struct _ApplicationLayerRejectMessage {
+  UINT64 transact_time;  // bytes 0 to 7
+  UINT32 symbol_id;      // bytes 8 to 11
+  UINT8 mpid[4];         // bytes 12 to 15
+  UINT64 cl_ord_id;      // bytes 16 to 23
+  UINT16 reason_code;    // bytes 24 to 25
+  UINT8 reject_type;     // byte 26
+  UINT8 user_data[8];    // bytes 27 to 34
+  UINT8 reserved_4[4];   // bytes 35 to 38
+} ApplicationLayerRejectMessage;
+
+// Response to a Symbol Subscription Request indicating whether the DMM session is subscribed to the symbol.
+typedef struct _SymbolSubscriptionAcknowledgementMessage {
+  UINT64 transact_time;       // bytes 0 to 7
+  UINT32 symbol_id;           // bytes 8 to 11
+  UINT8 username[16];         // bytes 12 to 27
+  UINT8 subscription_status;  // byte 28
+} SymbolSubscriptionAcknowledgementMessage;
+
+// Defines the beginning boundary of a multi-message sequence originating from Pillar that must be processed atomically by the firm.
+typedef struct _GtBeginMessage {
+  UINT64 transact_time;  // bytes 0 to 7
+} GtBeginMessage;
+
+// Defines the ending boundary of a multi-message sequence originating from Pillar that must be processed atomically by the firm.
+typedef struct _GtEndMessage {
+  UINT64 transact_time;  // bytes 0 to 7
+} GtEndMessage;
+
+// Provides opening, re-opening, and closing auction imbalance and DMM interest information at each eligible auction price point. Sent as part of a multi-message between GT Begin and GT End.
+typedef struct _AuctionPriceDataMessage {
+  UINT64 transact_time;           // bytes 0 to 7
+  UINT32 symbol_id;               // bytes 8 to 11
+  UINT8 imbalance_side;           // byte 12
+  UINT8 side_of_unpaired_qty;     // byte 13
+  UINT32 imbalance_volume;        // bytes 14 to 17
+  UINT64 price;                   // bytes 18 to 25, signed, read here as unsigned
+  UINT32 paired_qty;              // bytes 26 to 29
+  UINT32 unpaired_qty;            // bytes 30 to 33
+  UINT32 buy_dmm_available_qty;   // bytes 34 to 37
+  UINT32 sell_dmm_available_qty;  // bytes 38 to 41
+} AuctionPriceDataMessage;
+
+// Request from Pillar to open, re-open, or close a symbol with an auction trade.
+typedef struct _AuctionRequestMessage {
+  UINT64 transact_time;     // bytes 0 to 7
+  UINT32 symbol_id;         // bytes 8 to 11
+  UINT8 auction_type;       // byte 12
+  UINT64 ssr_filing_price;  // bytes 13 to 20, signed, read here as unsigned
+} AuctionRequestMessage;
 
 // ManualActionID
-entrypoint typedef struct _ManualActionId {
+typedef struct _ManualActionId {
   StreamId stream_id;  // bytes 0 to 7
   UINT64 seq;          // bytes 8 to 15
 } ManualActionId;
+
+// Manual action details initiated by a DMM on the NYSE Trading Floor via DBK GUI.
+typedef struct _ManualActionRequestMessage {
+  UINT64 transact_time;              // bytes 0 to 7
+  UINT32 symbol_id;                  // bytes 8 to 11
+  UINT8 introducing_badge_id[4];     // bytes 12 to 15
+  UINT8 mpid[4];                     // bytes 16 to 19
+  UINT32 mmid;                       // bytes 20 to 23
+  ManualActionId manual_action_id;   // bytes 24 to 39
+  UINT8 side;                        // byte 40
+  UINT64 price;                      // bytes 41 to 48, signed, read here as unsigned
+  UINT32 dmm_requested_qty;          // bytes 49 to 52
+  UINT32 dmm_available_qty;          // bytes 53 to 56
+  UINT32 dmm_allocated_qty;          // bytes 57 to 60
+  UINT64 ssr_filing_price;           // bytes 61 to 68, signed, read here as unsigned
+  UINT8 manual_override;             // byte 69
+  UINT8 manual_override_reason[20];  // bytes 70 to 89
+  UINT8 manual_action_type;          // byte 90
+} ManualActionRequestMessage;
+
+// Provides current configurations and calculations of a Risk Entity for Pillar Risk Controls.
+typedef struct _RiskControlAcknowledgementMessage {
+  UINT32 symbol_id;                        // bytes 0 to 3
+  UINT8 mpid[4];                           // bytes 4 to 7
+  UINT8 market_maker_n_u_l[10];            // bytes 8 to 17
+  UINT8 m_p_sub_i_d_4[4];                  // bytes 18 to 21
+  UINT8 reserved_4[4];                     // bytes 22 to 25
+  UINT8 clearing_number[5];                // bytes 26 to 30
+  UINT64 cl_ord_id;                        // bytes 31 to 38
+  UINT8 risk_ack_type;                     // byte 39
+  UINT32 risk_user_crd;                    // bytes 40 to 43
+  UINT8 risk_user_type;                    // byte 44
+  UINT8 risk_control_type;                 // byte 45
+  UINT8 risk_control_activation;           // byte 46
+  UINT8 risk_action_type;                  // byte 47
+  UINT64 usd_limit;                        // bytes 48 to 55, signed, read here as unsigned
+  UINT32 time_limit;                       // bytes 56 to 59, signed, read here as unsigned
+  UINT32 percentage_limit;                 // bytes 60 to 63, signed, read here as unsigned
+  UINT32 count_limit;                      // bytes 64 to 67, signed, read here as unsigned
+  UINT8 breach_action_response;            // byte 68
+  UINT8 ioc_attribution;                   // byte 69
+  UINT64 usd_calculation_1;                // bytes 70 to 77, signed, read here as unsigned
+  UINT64 usd_calculation_2;                // bytes 78 to 85, signed, read here as unsigned
+  UINT64 usd_calculation_3;                // bytes 86 to 93, signed, read here as unsigned
+  UINT64 usd_calculation_4;                // bytes 94 to 101, signed, read here as unsigned
+  UINT32 count_calculation;                // bytes 102 to 105
+  UINT8 blocked_by_breach_indicator;       // byte 106
+  UINT8 blocked_by_kill_switch_indicator;  // byte 107
+  UINT8 reinstatement_required_by_self;    // byte 108
+  UINT8 reinstatement_required_by_other;   // byte 109
+  UINT8 risk_range_id;                     // byte 110
+  UINT64 risk_minimum_value;               // bytes 111 to 118, signed, read here as unsigned
+  UINT8 price_scale;                       // byte 119
+  UINT8 reserved_190[190];                 // bytes 120 to 309
+} RiskControlAcknowledgementMessage;
+
+// Provides notification of threshold or breach events, reinstatement events, and kill switch actions for firms using Pillar Risk Controls.
+typedef struct _RiskControlAlertMessage {
+  UINT32 symbol_id;                        // bytes 0 to 3
+  UINT8 mpid[4];                           // bytes 4 to 7
+  UINT8 market_maker_n_u_l[10];            // bytes 8 to 17
+  UINT8 m_p_sub_i_d_4[4];                  // bytes 18 to 21
+  UINT8 reserved_4[4];                     // bytes 22 to 25
+  UINT8 clearing_number[5];                // bytes 26 to 30
+  UINT32 risk_user_crd;                    // bytes 31 to 34
+  UINT8 risk_user_type;                    // byte 35
+  UINT8 risk_control_type;                 // byte 36
+  UINT64 usd_limit;                        // bytes 37 to 44, signed, read here as unsigned
+  UINT32 time_limit;                       // bytes 45 to 48, signed, read here as unsigned
+  UINT32 percentage_limit;                 // bytes 49 to 52, signed, read here as unsigned
+  UINT32 count_limit;                      // bytes 53 to 56, signed, read here as unsigned
+  UINT8 breach_action_response;            // byte 57
+  UINT8 ioc_attribution;                   // byte 58
+  UINT64 usd_calculation_1;                // bytes 59 to 66, signed, read here as unsigned
+  UINT64 usd_calculation_2;                // bytes 67 to 74, signed, read here as unsigned
+  UINT64 usd_calculation_3;                // bytes 75 to 82, signed, read here as unsigned
+  UINT64 usd_calculation_4;                // bytes 83 to 90, signed, read here as unsigned
+  UINT32 count_calculation;                // bytes 91 to 94
+  UINT8 risk_action_type;                  // byte 95
+  UINT8 threshold_breach_level;            // byte 96
+  UINT8 blocked_by_breach_indicator;       // byte 97
+  UINT8 blocked_by_kill_switch_indicator;  // byte 98
+  UINT8 reinstatement_required_by_self;    // byte 99
+  UINT8 reinstatement_required_by_other;   // byte 100
+  UINT8 reserved_200[200];                 // bytes 101 to 300
+} RiskControlAlertMessage;
+
+// Branch
+casetype _ServerSequencedMessage (UINT16 selector, UINT32 length, UINT32 length_2, UINT32 length_3, UINT32 length_4, UINT32 length_5, UINT32 length_6, UINT32 length_7, UINT32 length_8, UINT32 length_9, UINT32 length_10, UINT32 length_11, UINT32 length_12, UINT32 length_13, UINT32 length_14, UINT32 length_15, UINT32 length_16, UINT32 length_17, UINT32 length_18, UINT32 length_19, UINT32 length_20, UINT32 length_21, UINT16 seq_msg_length) {
+  switch (selector) {
+    case 0x0232: EquitiesSymbolReferenceDataMessage equities_symbol_reference_data_message[:byte-size-single-element-array length];
+    case 0x0832: DmmSymbolReferenceDataMessage dmm_symbol_reference_data_message[:byte-size-single-element-array length_2];
+    case 0x0230: MinimumPriceVariantClassReferenceDataMessage minimum_price_variant_class_reference_data_message[:byte-size-single-element-array length_3];
+    case 0x0231: MinimumPriceVariantLevelReferenceDataMessage(length_4) minimum_price_variant_level_reference_data_message[:byte-size-single-element-array length_4];
+    case 0x0272: MpidConfigurationMessage mpid_configuration_message[:byte-size-single-element-array length_5];
+    case 0x0273: MmidConfigurationMessage mmid_configuration_message[:byte-size-single-element-array length_6];
+    case 0x0221: SessionConfigurationAcknowledgementMessage session_configuration_acknowledgement_message[:byte-size-single-element-array length_7];
+    case 0x0260: OrderAndCancelReplaceAcknowledgementMessage(seq_msg_length) order_and_cancel_replace_acknowledgement_message[:byte-size-single-element-array length_8];
+    case 0x0271: OrderModifyCancelRequestAcknowledgmentAndUroutMessage order_modify_cancel_request_acknowledgment_and_urout_message[:byte-size-single-element-array length_9];
+    case 0x0262: OrderPriorityUpdateAcknowledgmentMessage order_priority_update_acknowledgment_message[:byte-size-single-element-array length_10];
+    case 0x0290: ExecutionReportMessage(seq_msg_length) execution_report_message[:byte-size-single-element-array length_11];
+    case 0x0292: TradeBustCorrectMessage trade_bust_correct_message[:byte-size-single-element-array length_12];
+    case 0x0263: ApplicationLayerRejectMessage application_layer_reject_message[:byte-size-single-element-array length_13];
+    case 0x0347: SymbolSubscriptionAcknowledgementMessage symbol_subscription_acknowledgement_message[:byte-size-single-element-array length_14];
+    case 0x0349: GtBeginMessage gt_begin_message[:byte-size-single-element-array length_15];
+    case 0x0350: GtEndMessage gt_end_message[:byte-size-single-element-array length_16];
+    case 0x0352: AuctionPriceDataMessage auction_price_data_message[:byte-size-single-element-array length_17];
+    case 0x0348: AuctionRequestMessage auction_request_message[:byte-size-single-element-array length_18];
+    case 0x0353: ManualActionRequestMessage manual_action_request_message[:byte-size-single-element-array length_19];
+    case 0x0332: RiskControlAcknowledgementMessage risk_control_acknowledgement_message[:byte-size-single-element-array length_20];
+    case 0x0333: RiskControlAlertMessage risk_control_alert_message[:byte-size-single-element-array length_21];
+  }
+} ServerSequencedMessage;
+
+// Used to transmit a stream message
+typedef struct _ServerSeqMsg {
+  SeqMsgId seq_msg_id;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 // bytes 0 to 15
+  UINT8 reserved_4[4];                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 // bytes 16 to 19
+  UINT64 timestamp;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    // bytes 20 to 27
+  UINT16 seq_msg_type;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 // bytes 28 to 29
+  UINT16 seq_msg_length { seq_msg_length >= 4 };                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       // bytes 30 to 31
+  ServerSequencedMessage(seq_msg_type, (((UINT32) seq_msg_length) - 4), (((UINT32) seq_msg_length) - 4), (((UINT32) seq_msg_length) - 4), (((UINT32) seq_msg_length) - 4), (((UINT32) seq_msg_length) - 4), (((UINT32) seq_msg_length) - 4), (((UINT32) seq_msg_length) - 4), (((UINT32) seq_msg_length) - 4), (((UINT32) seq_msg_length) - 4), (((UINT32) seq_msg_length) - 4), (((UINT32) seq_msg_length) - 4), (((UINT32) seq_msg_length) - 4), (((UINT32) seq_msg_length) - 4), (((UINT32) seq_msg_length) - 4), (((UINT32) seq_msg_length) - 4), (((UINT32) seq_msg_length) - 4), (((UINT32) seq_msg_length) - 4), (((UINT32) seq_msg_length) - 4), (((UINT32) seq_msg_length) - 4), (((UINT32) seq_msg_length) - 4), (((UINT32) seq_msg_length) - 4), seq_msg_length) server_sequenced_message;
+} ServerSeqMsg;
+
+// Branch
+casetype _ServerMessage (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x0202: LoginResponse login_response;
+    case 0x0203: StreamAvail stream_avail;
+    case 0x0204: Heartbeat heartbeat;
+    case 0x0206: OpenResponse open_response;
+    case 0x0208: CloseResponse close_response;
+    case 0x0905: ServerSeqMsg server_seq_msg;
+    default: UINT8 unknown[available];
+  }
+} ServerMessage;
+
+// ---- Packet: ServerPillarMessage ---------------------------------------------
+
+// Pillar Stream message sent by Pillar
+entrypoint typedef struct _ServerPillarMessage (UINT32 available) where (available >= 4) {
+  UINT16 msg_type;                                                                                           // bytes 0 to 1
+  UINT16 msg_length;                                                                                         // bytes 2 to 3
+  ServerMessage(msg_type, (available - 4)) server_message[:byte-size-single-element-array (available - 4)];
+} ServerPillarMessage;
 

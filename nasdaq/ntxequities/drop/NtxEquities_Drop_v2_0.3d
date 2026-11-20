@@ -1,33 +1,97 @@
-// National Association of Securities Dealers Automated Quotations (Nasdaq) Drop
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nasdaq NtxEquities Drop AsciiDrop v2.0
 //
+// Protocol:
+//   Organization: National Association of Securities Dealers Automated Quotations (Nasdaq)
+//   Protocol: Drop
+//   Encoding: Ascii Drop
+//   Version: 2.0
+//   Date: 04/19/2012
+//   Specification: NQBX_DROP20.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Frame, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out NtxEquities_Drop_v2_0.3d
 //
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-//
-// License: MIT No Attribution
+// What this definition reads more loosely than the model states:
+// - the stream is a run of frames each ending at a byte 10: the caller splits it there and validates each frame, that byte included
 
-// ---- Message Header: 11 bytes ------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Time Stamp and Type opening every Drop message line
-entrypoint typedef struct _MessageHeader {
-  UINT8 time_stamp[9];  // bytes 0 to 8
-  UINT8 comma;          // byte 9
-  UINT8 message_type;   // byte 10
-} MessageHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_NEW_ORDER_ACCEPTED_MESSAGE 0x41         // New Order Accepted Message
+#define MESSAGE_TYPE_EXISTING_ORDER_EXECUTED_MESSAGE 0x45    // Existing Order Executed Message
+#define MESSAGE_TYPE_EXISTING_ORDER_CANCELED_MESSAGE 0x58    // Existing Order Canceled Message
+#define MESSAGE_TYPE_PREVIOUS_EXECUTION_BROKEN_MESSAGE 0x42  // Previous Execution Broken Message
 
-// ---- New Order Accepted Message: 80 bytes ------------------------------------
+// Buy Sell: one byte code
+#define BUY_SELL_BOUGHT 0x42             // Bought
+#define BUY_SELL_SOLD 0x53               // Sold
+#define BUY_SELL_SOLD_SHORT 0x54         // Sold Short
+#define BUY_SELL_SOLD_SHORT_EXEMPT 0x45  // Sold Short Exempt
+
+// Liquidity Code: one byte code
+#define LIQUIDITY_CODE_ADDED 0x41                                 // Added
+#define LIQUIDITY_CODE_REMOVED 0x52                               // Removed
+#define LIQUIDITY_CODE_ROUTED 0x58                                // Routed
+#define LIQUIDITY_CODE_DOT 0x44                                   // Dot
+#define LIQUIDITY_CODE_ADDED_OR_OPENING_TRADE_ON_NYSE 0x46        // Added Or Opening Trade On Nyse
+#define LIQUIDITY_CODE_ODD_LOT_OR_ON_CLOSE_ORDER_ON_NYSE 0x47     // Odd Lot Or On Close Order On Nyse
+#define LIQUIDITY_CODE_OPENING_CROSS_BILLABLE 0x4F                // Opening Cross Billable
+#define LIQUIDITY_CODE_OPENING_CROSS_NON_BILLABLE 0x4D            // Opening Cross Non Billable
+#define LIQUIDITY_CODE_CLOSING_CROSS_BILLABLE 0x43                // Closing Cross Billable
+#define LIQUIDITY_CODE_CLOSING_CROSS_NON_BILLABLE 0x4C            // Closing Cross Non Billable
+#define LIQUIDITY_CODE_HALT_IPO_CROSS_BILLABLE 0x48               // Halt Ipo Cross Billable
+#define LIQUIDITY_CODE_HALT_IPO_CROSS_NON_BILLABLE 0x4B           // Halt Ipo Cross Non Billable
+#define LIQUIDITY_CODE_INTRADAY_AND_POST_MARKET_CROSSES 0x49      // Intraday And Post Market Crosses
+#define LIQUIDITY_CODE_NON_DISPLAYED_ADDING_LIQUIDITY 0x4A        // Non Displayed Adding Liquidity
+#define LIQUIDITY_CODE_RE_ROUTED_BY_NYSE 0x59                     // Re Routed By Nyse
+#define LIQUIDITY_CODE_ODD_LOT_EXECUTION_ON_NYSE 0x53             // Odd Lot Execution On Nyse
+#define LIQUIDITY_CODE_ADDED_LIQUIDITY_ON_NYSE 0x55               // Added Liquidity On Nyse
+#define LIQUIDITY_CODE_ROUTED_TO_BX 0x42                          // Routed To Bx
+#define LIQUIDITY_CODE_NYSE_OTHER 0x45                            // Nyse Other
+#define LIQUIDITY_CODE_ROUTED_TO_PSX 0x50                         // Routed To Psx
+#define LIQUIDITY_CODE_OPENING_TRADE_ON_ARCA 0x54                 // Opening Trade On Arca
+#define LIQUIDITY_CODE_ON_CLOSE_ORDER_ON_ARCA 0x5A                // On Close Order On Arca
+#define LIQUIDITY_CODE_REMOVED_LIQUIDITY_AT_A_MIDPOINT 0x6D       // Removed Liquidity At A Midpoint
+#define LIQUIDITY_CODE_ADDED_LIQUIDITY_VIA_A_MIDPOINT_ORDER 0x6B  // Added Liquidity Via A Midpoint Order
+
+// Clearing Code: one byte code
+#define CLEARING_CODE_QSR 0x51  // Qsr
+
+// ---- Types -------------------------------------------------------------------
 
 // New order accepted.
-entrypoint typedef struct _NewOrderAcceptedMessage {
+typedef struct _NewOrderAcceptedMessage {
   UINT8 separator_1;       // byte 0
   UINT8 source[6];         // bytes 1 to 6
   UINT8 separator_2;       // byte 7
@@ -54,10 +118,8 @@ entrypoint typedef struct _NewOrderAcceptedMessage {
   UINT8 clearing_code;     // byte 79
 } NewOrderAcceptedMessage;
 
-// ---- Existing Order Executed Message: 80 bytes -------------------------------
-
 // Existing order executed.
-entrypoint typedef struct _ExistingOrderExecutedMessage {
+typedef struct _ExistingOrderExecutedMessage {
   UINT8 separator_1;      // byte 0
   UINT8 source[6];        // bytes 1 to 6
   UINT8 separator_2;      // byte 7
@@ -84,10 +146,8 @@ entrypoint typedef struct _ExistingOrderExecutedMessage {
   UINT8 clearing_code;    // byte 79
 } ExistingOrderExecutedMessage;
 
-// ---- Existing Order Canceled Message: 80 bytes -------------------------------
-
 // Existing order canceled.
-entrypoint typedef struct _ExistingOrderCanceledMessage {
+typedef struct _ExistingOrderCanceledMessage {
   UINT8 separator_1;       // byte 0
   UINT8 source[6];         // bytes 1 to 6
   UINT8 separator_2;       // byte 7
@@ -114,10 +174,8 @@ entrypoint typedef struct _ExistingOrderCanceledMessage {
   UINT8 clearing_code;     // byte 79
 } ExistingOrderCanceledMessage;
 
-// ---- Previous Execution Broken Message: 80 bytes -----------------------------
-
 // Previous execution broken.
-entrypoint typedef struct _PreviousExecutionBrokenMessage {
+typedef struct _PreviousExecutionBrokenMessage {
   UINT8 separator_1;      // byte 0
   UINT8 source[6];        // bytes 1 to 6
   UINT8 separator_2;      // byte 7
@@ -143,4 +201,27 @@ entrypoint typedef struct _PreviousExecutionBrokenMessage {
   UINT8 separator_12;     // byte 78
   UINT8 clearing_code;    // byte 79
 } PreviousExecutionBrokenMessage;
+
+// Branch
+casetype _Message (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x41: NewOrderAcceptedMessage new_order_accepted_message;
+    case 0x45: ExistingOrderExecutedMessage existing_order_executed_message;
+    case 0x58: ExistingOrderCanceledMessage existing_order_canceled_message;
+    case 0x42: PreviousExecutionBrokenMessage previous_execution_broken_message;
+    default: UINT8 unknown[available];
+  }
+} Message;
+
+// ---- Packet: Frame -----------------------------------------------------------
+
+// A fixed length, comma delimited, CR/LF terminated Drop message line
+entrypoint typedef struct _Frame (UINT32 available) where (available >= 13) {
+  UINT8 time_stamp[9];                                                                                // bytes 0 to 8
+  UINT8 comma;                                                                                        // byte 9
+  UINT8 message_type;                                                                                 // byte 10
+  Message(message_type, (available - 13)) message[:byte-size-single-element-array (available - 13)];
+  UINT8 cr;
+  UINT8 lf { lf == 10 };
+} Frame;
 

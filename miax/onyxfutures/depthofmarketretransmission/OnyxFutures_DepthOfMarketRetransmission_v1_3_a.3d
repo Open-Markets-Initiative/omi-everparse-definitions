@@ -1,5 +1,34 @@
-// Miami International Holdings Depth Of Market Retransmission
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Miax OnyxFutures DepthOfMarketRetransmission SesM v1.3.a
 //
+// Protocol:
+//   Organization: Miami International Holdings
+//   Protocol: Depth Of Market Retransmission
+//   Encoding: Session Management
+//   Version: 1.3.a
+//   Date: 7/31/2026
+//   Specification: ONYX_DoM_Feed_v1.3a.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
 // writes a C validator for each record below and proves, of that C, that it reads no byte
 // outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
@@ -7,6 +36,8 @@
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out OnyxFutures_DepthOfMarketRetransmission_v1_3_a.3d
 //
@@ -14,15 +45,127 @@
 // - a run filling what frames it
 // - a length prefix framing what follows
 // - a run counted by a field
-//
-// License: MIT No Attribution
+// - the packet as a whole, which is a run of entries each framed by a length read outside them, at packet.sesmtcppacket.sesmpayload.unsequenceddatapacket
+
+// ---- Values ------------------------------------------------------------------
+
+// Sesm Packet Type: one byte code
+#define SESM_PACKET_TYPE_SEQUENCED_DATA_PACKET 0x53     // Sequenced Data Packet
+#define SESM_PACKET_TYPE_UNSEQUENCED_DATA_PACKET 0x55   // Unsequenced Data Packet
+#define SESM_PACKET_TYPE_LOGIN_REQUEST 0x4C             // Login Request
+#define SESM_PACKET_TYPE_LOGIN_RESPONSE 0x52            // Login Response
+#define SESM_PACKET_TYPE_SYNCHRONIZATION_COMPLETE 0x43  // Synchronization Complete
+#define SESM_PACKET_TYPE_RETRANSMISSION_REQUEST 0x41    // Retransmission Request
+#define SESM_PACKET_TYPE_LOGOUT_REQUEST 0x58            // Logout Request
+#define SESM_PACKET_TYPE_GOODBYE_PACKET 0x47            // Goodbye Packet
+#define SESM_PACKET_TYPE_END_OF_SESSION 0x45            // End Of Session
+#define SESM_PACKET_TYPE_SERVER_HEARTBEAT 0x30          // Server Heartbeat
+#define SESM_PACKET_TYPE_CLIENT_HEARTBEAT 0x31          // Client Heartbeat
+
+// Underlying Asset Type: one byte code
+#define UNDERLYING_ASSET_TYPE_EQUITY_INDEX 0x45           // Equity Index
+#define UNDERLYING_ASSET_TYPE_COMMODITY_AGRICULTURE 0x41  // Commodity Agriculture
+#define UNDERLYING_ASSET_TYPE_FUTURES_CONTRACT 0x46       // Futures Contract
+#define UNDERLYING_ASSET_TYPE_NOT_APPLICABLE 0x4E         // Not Applicable
+
+// Instrument Id Source: one byte code
+#define INSTRUMENT_ID_SOURCE_EXCHANGE 0x45  // Exchange
+
+// Instrument Type: one byte code
+#define INSTRUMENT_TYPE_FUTURES 0x46                          // Futures
+#define INSTRUMENT_TYPE_OPTIONS_ON_FUTURES 0x4F               // Options On Futures
+#define INSTRUMENT_TYPE_TRADE_AT_SETTLEMENT_TAS 0x54          // Trade At Settlement Tas
+#define INSTRUMENT_TYPE_BASIS_TRADE_AT_INDEX_CLOSE_BTIC 0x42  // Basis Trade At Index Close Btic
+
+// Instrument Listing Status: one byte code
+#define INSTRUMENT_LISTING_STATUS_ACTIVE 0x41    // Active
+#define INSTRUMENT_LISTING_STATUS_INACTIVE 0x49  // Inactive
+
+// Currency: one byte code
+#define CURRENCY_USD 0x55  // Usd
+
+// Settlement Currency: one byte code
+#define SETTLEMENT_CURRENCY_USD 0x55  // Usd
+
+// Match Algorithm: one byte code
+#define MATCH_ALGORITHM_PRICE_TIME 0x50  // Price Time
+
+// Settlement Price Type Calc Method: one byte code
+#define SETTLEMENT_PRICE_TYPE_CALC_METHOD_ACTUAL 0x41       // Actual
+#define SETTLEMENT_PRICE_TYPE_CALC_METHOD_THEORETICAL 0x54  // Theoretical
+
+// Trading Collar Variation Type: one byte code
+#define TRADING_COLLAR_VARIATION_TYPE_PRODUCT_DOLLAR_COLLAR_VALUE 0x44      // Product Dollar Collar Value
+#define TRADING_COLLAR_VARIATION_TYPE_PRODUCT_COLLAR_PERCENTAGE_VALUE 0x50  // Product Collar Percentage Value
+#define TRADING_COLLAR_VARIATION_TYPE_NOT_APPLICABLE 0x4E                   // Not Applicable
+
+// Option Strike Currency: one byte code
+#define OPTION_STRIKE_CURRENCY_US_DOLLAR 0x55                               // Us Dollar
+#define OPTION_STRIKE_CURRENCY_NA_WHEN_INSTRUMENT_TYPE_NOT_EQUAL_TO_O 0x4E  // Na When Instrument Type Not Equal To O
+
+// Option Type: one byte code
+#define OPTION_TYPE_CALL_OPTIONS 0x43                            // Call Options
+#define OPTION_TYPE_PUT_OPTIONS 0x50                             // Put Options
+#define OPTION_TYPE_NA_WHEN_INSTRUMENT_TYPE_NOT_EQUAL_TO_O 0x4E  // Na When Instrument Type Not Equal To O
+
+// Option Expiration Type: one byte code
+#define OPTION_EXPIRATION_TYPE_AMERICAN_STYLE_OPTIONS 0x41                  // American Style Options
+#define OPTION_EXPIRATION_TYPE_EUROPEAN_STYLE_OPTIONS 0x45                  // European Style Options
+#define OPTION_EXPIRATION_TYPE_NA_WHEN_INSTRUMENT_TYPE_NOT_EQUAL_TO_O 0x4E  // Na When Instrument Type Not Equal To O
+
+// System Status: one byte code
+#define SYSTEM_STATUS_START_OF_SYSTEM_HOURS 0x53                    // Start Of System Hours
+#define SYSTEM_STATUS_END_OF_SYSTEM_HOURS 0x43                      // End Of System Hours
+#define SYSTEM_STATUS_START_OF_TEST_SESSION_SENT_BEFORE_TESTS 0x31  // Start Of Test Session Sent Before Tests
+#define SYSTEM_STATUS_END_OF_TEST_SESSION 0x32                      // End Of Test Session
+
+// Settlement Price Type: one byte code
+#define SETTLEMENT_PRICE_TYPE_DAILY 0x44  // Daily
+#define SETTLEMENT_PRICE_TYPE_FINAL 0x46  // Final
+
+// Order Type: one byte code
+#define ORDER_TYPE_SIMPLE_ORDER 0x53   // Simple Order
+#define ORDER_TYPE_COMPLEX_ORDER 0x43  // Complex Order
+#define ORDER_TYPE_DERIVED_ORDER 0x44  // Derived Order
+
+// Order Side: one byte code
+#define ORDER_SIDE_BUY 0x42   // Buy
+#define ORDER_SIDE_SELL 0x53  // Sell
+
+// Aggressor Side: one byte code
+#define AGGRESSOR_SIDE_BUY_SIDE 0x42        // Buy Side
+#define AGGRESSOR_SIDE_SELL_SIDE 0x53       // Sell Side
+#define AGGRESSOR_SIDE_NOT_APPLICABLE 0x4E  // Not Applicable
+
+// Trade Type: one byte code
+#define TRADE_TYPE_OUTRIGHT_TRADE_BETWEEN_TWO_SIMPLE_ORDERS 0x4F     // Outright Trade Between Two Simple Orders
+#define TRADE_TYPE_STRATEGY_MATCH_NET_LEVEL_TRADE 0x53               // Strategy Match Net Level Trade
+#define TRADE_TYPE_STRATEGY_MATCH_COMPONENT_LEG_TRADE 0x4D           // Strategy Match Component Leg Trade
+#define TRADE_TYPE_COMPLEX_LEGGING_DERIVED_NET_LEVEL_TRADE 0x43      // Complex Legging Derived Net Level Trade
+#define TRADE_TYPE_COMPLEX_LEGGING_DERIVED_COMPONENT_LEG_TRADE 0x4C  // Complex Legging Derived Component Leg Trade
+#define TRADE_TYPE_ADJUSTED_LATE_MANUAL_TRADE 0x41                   // Adjusted Late Manual Trade
+
+// Refresh Message Type: one byte code
+#define REFRESH_MESSAGE_TYPE_SIMPLE_COMPLEX_INSTRUMENT_DEFINITION_REFRESH 0x49  // Simple Complex Instrument Definition Refresh
+#define REFRESH_MESSAGE_TYPE_INSTRUMENT_TRADING_STATUS_REFRESH 0x54             // Instrument Trading Status Refresh
+#define REFRESH_MESSAGE_TYPE_SYSTEM_STATE_REFRESH 0x53                          // System State Refresh
+#define REFRESH_MESSAGE_TYPE_ORDER_BOOK_REFRESH 0x4F                            // Order Book Refresh
+
+// Login Status: one byte code
+#define LOGIN_STATUS_SUCCESSFUL 0x20                                         // Successful
+#define LOGIN_STATUS_REJECTED 0x58                                           // Rejected
+#define LOGIN_STATUS_REQUESTED_SESSION_IS_NOT_AVAILABLE 0x53                 // Requested Session Is Not Available
+#define LOGIN_STATUS_INVALID_START_SEQUENCE_NUMBER_REQUESTED 0x4E            // Invalid Start Sequence Number Requested
+#define LOGIN_STATUS_INCOMPATIBLE_SESSION_PROTOCOL_VERSION 0x49              // Incompatible Session Protocol Version
+#define LOGIN_STATUS_INCOMPATIBLE_APPLICATION_PROTOCOL_VERSION 0x41          // Incompatible Application Protocol Version
+#define LOGIN_STATUS_REQUEST_REJECTED_BECAUSE_CLIENT_ALREADY_LOGGED_IN 0x4C  // Request Rejected Because Client Already Logged In
 
 // ---- Sesm Packet Header: 3 bytes ---------------------------------------------
 
 // SesM packet header
 entrypoint typedef struct _SesmPacketHeader {
   UINT16 sesm_packet_length;  // bytes 0 to 1
-  UINT8 sesm_packet_type;     // byte 2
+  UINT8 sesm_packet_type;     // byte 2, values SESM_PACKET_TYPE_
 } SesmPacketHeader;
 
 // ---- Simple Instrument Definition Message: 138 bytes -------------------------
@@ -31,29 +174,29 @@ entrypoint typedef struct _SesmPacketHeader {
 entrypoint typedef struct _SimpleInstrumentDefinitionMessage {
   UINT64 timestamp;                            // bytes 0 to 7
   UINT32 instrument_id;                        // bytes 8 to 11
-  UINT8 underlying_asset_type;                 // byte 12
+  UINT8 underlying_asset_type;                 // byte 12, values UNDERLYING_ASSET_TYPE_
   UINT8 underlying_asset_alphanumeric_4[4];    // bytes 13 to 16
   UINT8 product_group_code_alphanumeric_6[6];  // bytes 17 to 22
   UINT8 exchange[4];                           // bytes 23 to 26
-  UINT8 instrument_id_source;                  // byte 27
-  UINT8 instrument_type;                       // byte 28
-  UINT8 instrument_listing_status;             // byte 29
+  UINT8 instrument_id_source;                  // byte 27, values INSTRUMENT_ID_SOURCE_
+  UINT8 instrument_type;                       // byte 28, values INSTRUMENT_TYPE_
+  UINT8 instrument_listing_status;             // byte 29, values INSTRUMENT_LISTING_STATUS_
   UINT8 reserved_3[3];                         // bytes 30 to 32
-  UINT8 currency;                              // byte 33
-  UINT8 settlement_currency;                   // byte 34
-  UINT8 match_algorithm;                       // byte 35
+  UINT8 currency;                              // byte 33, values CURRENCY_
+  UINT8 settlement_currency;                   // byte 34, values SETTLEMENT_CURRENCY_
+  UINT8 match_algorithm;                       // byte 35, values MATCH_ALGORITHM_
   UINT32 minimum_size;                         // bytes 36 to 39
   UINT32 maximum_size;                         // bytes 40 to 43
   UINT64 tick;                                 // bytes 44 to 51, signed, read here as unsigned
   UINT8 unit_of_measure[5];                    // bytes 52 to 56
   UINT32 unit_of_measure_quantity;             // bytes 57 to 60
   UINT64 settlement_price;                     // bytes 61 to 68, signed, read here as unsigned
-  UINT8 settlement_price_type_calc_method;     // byte 69
+  UINT8 settlement_price_type_calc_method;     // byte 69, values SETTLEMENT_PRICE_TYPE_CALC_METHOD_
   UINT32 total_volume;                         // bytes 70 to 73
   UINT32 open_interest_quantity;               // bytes 74 to 77
   UINT64 high_limit_price;                     // bytes 78 to 85, signed, read here as unsigned
   UINT64 low_limit_price;                      // bytes 86 to 93, signed, read here as unsigned
-  UINT8 trading_collar_variation_type;         // byte 94
+  UINT8 trading_collar_variation_type;         // byte 94, values TRADING_COLLAR_VARIATION_TYPE_
   UINT64 trading_collar_variation;             // bytes 95 to 102, signed, read here as unsigned
   UINT32 contract_date;                        // bytes 103 to 106
   UINT16 maturity_date;                        // bytes 107 to 108
@@ -65,9 +208,9 @@ entrypoint typedef struct _SimpleInstrumentDefinitionMessage {
   UINT16 first_delivery_date;                  // bytes 119 to 120
   UINT16 last_delivery_date;                   // bytes 121 to 122
   UINT64 option_strike_price;                  // bytes 123 to 130, signed, read here as unsigned
-  UINT8 option_strike_currency;                // byte 131
-  UINT8 option_type;                           // byte 132
-  UINT8 option_expiration_type;                // byte 133
+  UINT8 option_strike_currency;                // byte 131, values OPTION_STRIKE_CURRENCY_
+  UINT8 option_type;                           // byte 132, values OPTION_TYPE_
+  UINT8 option_expiration_type;                // byte 133, values OPTION_EXPIRATION_TYPE_
   UINT32 underlying_future_instrument_id;      // bytes 134 to 137
 } SimpleInstrumentDefinitionMessage;
 
@@ -78,7 +221,7 @@ entrypoint typedef struct _SystemStateMessage {
   UINT64 timestamp;       // bytes 0 to 7
   UINT8 do_m_version[8];  // bytes 8 to 15
   UINT8 session_id;       // byte 16
-  UINT8 system_status;    // byte 17
+  UINT8 system_status;    // byte 17, values SYSTEM_STATUS_
 } SystemStateMessage;
 
 // ---- Instrument Trading Status Notification Message: 14 bytes ----------------
@@ -99,7 +242,7 @@ entrypoint typedef struct _AnticipatedOpeningPriceMessage {
   UINT32 instrument_id;              // bytes 8 to 11
   UINT64 anticipated_opening_price;  // bytes 12 to 19, signed, read here as unsigned
   UINT32 opening_match_quantity;     // bytes 20 to 23
-  UINT8 instrument_type;             // byte 24
+  UINT8 instrument_type;             // byte 24, values INSTRUMENT_TYPE_
 } AnticipatedOpeningPriceMessage;
 
 // ---- Settlement Price Update Message: 24 bytes -------------------------------
@@ -110,8 +253,8 @@ entrypoint typedef struct _SettlementPriceUpdateMessage {
   UINT16 trade_date;                        // bytes 8 to 9
   UINT32 instrument_id;                     // bytes 10 to 13
   UINT64 settlement_price;                  // bytes 14 to 21, signed, read here as unsigned
-  UINT8 settlement_price_type;              // byte 22
-  UINT8 settlement_price_type_calc_method;  // byte 23
+  UINT8 settlement_price_type;              // byte 22, values SETTLEMENT_PRICE_TYPE_
+  UINT8 settlement_price_type_calc_method;  // byte 23, values SETTLEMENT_PRICE_TYPE_CALC_METHOD_
 } SettlementPriceUpdateMessage;
 
 // ---- Open Interest Update Message: 18 bytes ----------------------------------
@@ -148,12 +291,12 @@ entrypoint typedef struct _InstrumentClearMessage {
 entrypoint typedef struct _AddOrderMessage {
   UINT64 timestamp;       // bytes 0 to 7
   UINT32 instrument_id;   // bytes 8 to 11
-  UINT8 order_type;       // byte 12
+  UINT8 order_type;       // byte 12, values ORDER_TYPE_
   UINT64 order_id;        // bytes 13 to 20
-  UINT8 order_side;       // byte 21
+  UINT8 order_side;       // byte 21, values ORDER_SIDE_
   UINT64 price;           // bytes 22 to 29, signed, read here as unsigned
   UINT32 size;            // bytes 30 to 33
-  UINT8 instrument_type;  // byte 34
+  UINT8 instrument_type;  // byte 34, values INSTRUMENT_TYPE_
 } AddOrderMessage;
 
 // ---- Modify Order Message: 34 bytes ------------------------------------------
@@ -165,8 +308,8 @@ entrypoint typedef struct _ModifyOrderMessage {
   UINT64 order_id;        // bytes 12 to 19
   UINT64 price;           // bytes 20 to 27, signed, read here as unsigned
   UINT32 size_flags;      // bytes 28 to 31
-  UINT8 order_side;       // byte 32
-  UINT8 instrument_type;  // byte 33
+  UINT8 order_side;       // byte 32, values ORDER_SIDE_
+  UINT8 instrument_type;  // byte 33, values INSTRUMENT_TYPE_
 } ModifyOrderMessage;
 
 // ---- Delete Order Message: 22 bytes ------------------------------------------
@@ -176,8 +319,8 @@ entrypoint typedef struct _DeleteOrderMessage {
   UINT64 timestamp;       // bytes 0 to 7
   UINT32 instrument_id;   // bytes 8 to 11
   UINT64 order_id;        // bytes 12 to 19
-  UINT8 order_side;       // byte 20
-  UINT8 instrument_type;  // byte 21
+  UINT8 order_side;       // byte 20, values ORDER_SIDE_
+  UINT8 instrument_type;  // byte 21, values INSTRUMENT_TYPE_
 } DeleteOrderMessage;
 
 // ---- Order Execution Message: 62 bytes ---------------------------------------
@@ -189,14 +332,14 @@ entrypoint typedef struct _OrderExecutionMessage {
   UINT32 instrument_id;     // bytes 10 to 13
   UINT64 buy_order_id;      // bytes 14 to 21
   UINT64 sell_order_id;     // bytes 22 to 29
-  UINT8 aggressor_side;     // byte 30
+  UINT8 aggressor_side;     // byte 30, values AGGRESSOR_SIDE_
   UINT64 trade_id;          // bytes 31 to 38
   UINT8 correction_number;  // byte 39
   UINT64 price;             // bytes 40 to 47, signed, read here as unsigned
   UINT32 size;              // bytes 48 to 51
-  UINT8 trade_type;         // byte 52
+  UINT8 trade_type;         // byte 52, values TRADE_TYPE_
   UINT64 complex_trade_id;  // bytes 53 to 60
-  UINT8 instrument_type;    // byte 61
+  UINT8 instrument_type;    // byte 61, values INSTRUMENT_TYPE_
 } OrderExecutionMessage;
 
 // ---- Trade Cancel Message: 36 bytes ------------------------------------------
@@ -210,21 +353,21 @@ entrypoint typedef struct _TradeCancelMessage {
   UINT8 correction_number;  // byte 22
   UINT64 price;             // bytes 23 to 30, signed, read here as unsigned
   UINT32 size;              // bytes 31 to 34
-  UINT8 instrument_type;    // byte 35
+  UINT8 instrument_type;    // byte 35, values INSTRUMENT_TYPE_
 } TradeCancelMessage;
 
 // ---- Refresh Request: 1 byte -------------------------------------------------
 
 // Firms request a last value refresh of market data and status information
 entrypoint typedef struct _RefreshRequest {
-  UINT8 refresh_message_type;  // byte 0
+  UINT8 refresh_message_type;  // byte 0, values REFRESH_MESSAGE_TYPE_
 } RefreshRequest;
 
 // ---- End Of Refresh: 1 byte --------------------------------------------------
 
 // Sent when the refresh of the requested message type is complete
 entrypoint typedef struct _EndOfRefresh {
-  UINT8 refresh_message_type;  // byte 0
+  UINT8 refresh_message_type;  // byte 0, values REFRESH_MESSAGE_TYPE_
 } EndOfRefresh;
 
 // ---- Login Request: 35 bytes -------------------------------------------------
@@ -243,7 +386,7 @@ entrypoint typedef struct _LoginRequest {
 
 // The SesM server sends a Login response packet in response a Login request packet from the client
 entrypoint typedef struct _LoginResponse {
-  UINT8 login_status;              // byte 0
+  UINT8 login_status;              // byte 0, values LOGIN_STATUS_
   UINT8 session_id;                // byte 1
   UINT64 highest_sequence_number;  // bytes 2 to 9
 } LoginResponse;

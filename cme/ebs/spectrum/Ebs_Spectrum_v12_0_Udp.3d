@@ -1,62 +1,254 @@
-// CME Group Spectrum Market Data
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Cme Ebs Spectrum Sbe v12.0
 //
+// Protocol:
+//   Organization: CME Group
+//   Protocol: Spectrum Market Data
+//   Encoding: Simple Binary Encoding
+//   Version: 12.0
+//   Date: 4/8/2022
+//   Specification: derivedmktdata.xml
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, UdpPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out Ebs_Spectrum_v12_0_Udp.3d
-//
-// What this definition does not state, and the model does:
-// - a length prefix framing what follows
-// - a field read in bits
-// - a block whose stated length holds more than its fields
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Binary Packet Header: 12 bytes ------------------------------------------
+// ---- Values ------------------------------------------------------------------
+
+// Template Id: 2 byte code
+#define TEMPLATE_ID_ADMIN_HEARTBEAT 0x012E                  // Admin Heartbeat
+#define TEMPLATE_ID_MD_INCREMENTAL_REFRESH_SPECTRUM 0x012F  // Md Incremental Refresh Spectrum
+#define TEMPLATE_ID_MD_INCREMENTAL_REFRESH_TICKER 0x0130    // Md Incremental Refresh Ticker
+#define TEMPLATE_ID_MD_SNAPSHOT_REFRESH_SPECTRUM 0x0131     // Md Snapshot Refresh Spectrum
+#define TEMPLATE_ID_MD_SNAPSHOT_REFRESH_TICKER 0x0132       // Md Snapshot Refresh Ticker
+#define TEMPLATE_ID_GLOBAL_DAY_ROLL 0x0133                  // Global Day Roll
+
+// Spectrum Md Entry Type: one byte code
+#define SPECTRUM_MD_ENTRY_TYPE_VWAP 0x39  // Vwap
+#define SPECTRUM_MD_ENTRY_TYPE_TWAP 0x74  // Twap
+
+// Ticker Md Entry Type: one byte code
+#define TICKER_MD_ENTRY_TYPE_TOUCH_HIGH 0x6B         // Touch High
+#define TICKER_MD_ENTRY_TYPE_TOUCH_LOW 0x6C          // Touch Low
+#define TICKER_MD_ENTRY_TYPE_OPEN_BEST_BID 0x6D      // Open Best Bid
+#define TICKER_MD_ENTRY_TYPE_OPEN_BEST_OFFER 0x6E    // Open Best Offer
+#define TICKER_MD_ENTRY_TYPE_CLOSE_BEST_BID 0x6F     // Close Best Bid
+#define TICKER_MD_ENTRY_TYPE_CLOSE_BEST_OFFER 0x70   // Close Best Offer
+#define TICKER_MD_ENTRY_TYPE_MARKET_HIGH 0x71        // Market High
+#define TICKER_MD_ENTRY_TYPE_MARKET_LOW 0x72         // Market Low
+#define TICKER_MD_ENTRY_TYPE_MARKET_BEST_OFFER 0x77  // Market Best Offer
+#define TICKER_MD_ENTRY_TYPE_MARKET_BEST_BID 0x78    // Market Best Bid
+#define TICKER_MD_ENTRY_TYPE_PAID 0x79               // Paid
+#define TICKER_MD_ENTRY_TYPE_GIVEN 0x7A              // Given
+
+// Open Close Settl Flag: one byte code
+#define OPEN_CLOSE_SETTL_FLAG_CURRENT_DAY 0x00   // Current Day
+#define OPEN_CLOSE_SETTL_FLAG_PREVIOUS_DAY 0x04  // Previous Day
+
+// Trading Session Id: one byte code
+#define TRADING_SESSION_ID_GL 0x00  // Gl
+#define TRADING_SESSION_ID_SY 0x01  // Sy
+#define TRADING_SESSION_ID_TK 0x02  // Tk
+#define TRADING_SESSION_ID_HK 0x03  // Hk
+#define TRADING_SESSION_ID_LN 0x04  // Ln
+#define TRADING_SESSION_ID_NY 0x05  // Ny
+
+// Aggressor Side: one byte code
+#define AGGRESSOR_SIDE_BUY 0x01   // Buy
+#define AGGRESSOR_SIDE_SELL 0x02  // Sell
+
+// Security Trading Event: one byte code
+#define SECURITY_TRADING_EVENT_GLOBAL_DAY_ROLL 0x04  // Global Day Roll
+
+// ---- Types -------------------------------------------------------------------
 
 // Cme Mdp Packet Header
-entrypoint typedef struct _BinaryPacketHeader {
+typedef struct _BinaryPacketHeader {
   UINT32 packet_sequence_number;  // bytes 0 to 3
   UINT64 sending_time;            // bytes 4 to 11
 } BinaryPacketHeader;
 
-// ---- Simple Binary Header: 8 bytes -------------------------------------------
+// Number of entries in Market Data message
+typedef struct _IncrementalRefreshSpectrumGroup {
+  UINT8 spectrum_md_entry_type;              // byte 0
+  UINT8 financial_instrument_full_name[35];  // bytes 1 to 35
+  UINT8 symbol[20];                          // bytes 36 to 55
+  UINT64 instrument_guid;                    // bytes 56 to 63
+  UINT32 security_id;                        // bytes 64 to 67, signed, read here as unsigned
+  UINT64 md_entry_px;                        // bytes 68 to 75, signed, read here as unsigned
+  UINT64 md_entry_size;                      // bytes 76 to 83
+  UINT64 md_entry_time;                      // bytes 84 to 91
+} IncrementalRefreshSpectrumGroup;
 
-// Template ID and length of message root
-entrypoint typedef struct _SimpleBinaryHeader {
-  UINT16 block_length;  // bytes 0 to 1
-  UINT16 template_id;   // bytes 2 to 3
-  UINT16 schema_id;     // bytes 4 to 5
-  UINT16 version;       // bytes 6 to 7
-} SimpleBinaryHeader;
+// NoMDEntries Block
+typedef struct _IncrementalRefreshSpectrumGroups {
+  UINT16 block_length;                                                                                            // bytes 0 to 1
+  UINT8 num_in_group;                                                                                             // byte 2
+  IncrementalRefreshSpectrumGroup incremental_refresh_spectrum_group[:byte-size (((UINT32) num_in_group) * 92)];
+} IncrementalRefreshSpectrumGroups;
 
-// ---- Message Header: 10 bytes ------------------------------------------------
+// MDIncrementalRefreshSpectrum
+typedef struct _MdIncrementalRefreshSpectrum {
+  UINT64 transact_time;                                                  // bytes 0 to 7
+  UINT8 unused_bits_0_to_5 : 6;                                          // byte 8
+  UINT8 recovery_message : 1;                                            // byte 8
+  UINT8 end_of_event : 1;                                                // byte 8
+  IncrementalRefreshSpectrumGroups incremental_refresh_spectrum_groups;
+} MdIncrementalRefreshSpectrum;
 
-// Message Size followed by the Simple Binary Header
-entrypoint typedef struct _MessageHeader {
-  UINT16 message_size;                      // bytes 0 to 1
-  SimpleBinaryHeader simple_binary_header;  // bytes 2 to 9
-} MessageHeader;
+// Number of entries in Market Data message
+typedef struct _IncrementalRefreshTickerGroup {
+  UINT8 ticker_md_entry_type;                // byte 0
+  UINT32 security_id;                        // bytes 1 to 4, signed, read here as unsigned
+  UINT8 symbol[20];                          // bytes 5 to 24
+  UINT64 instrument_guid;                    // bytes 25 to 32
+  UINT8 financial_instrument_full_name[35];  // bytes 33 to 67
+  UINT64 md_entry_px;                        // bytes 68 to 75, signed, read here as unsigned
+  UINT64 md_entry_size;                      // bytes 76 to 83
+  UINT64 md_entry_time;                      // bytes 84 to 91
+  UINT8 open_close_settl_flag;               // byte 92
+  UINT8 trading_session_id;                  // byte 93
+  UINT8 aggressor_side;                      // byte 94
+} IncrementalRefreshTickerGroup;
 
-// ---- Group Size: 3 bytes -----------------------------------------------------
+// NoMDEntries Block
+typedef struct _IncrementalRefreshTickerGroups {
+  UINT16 block_length;                                                                                        // bytes 0 to 1
+  UINT8 num_in_group;                                                                                         // byte 2
+  IncrementalRefreshTickerGroup incremental_refresh_ticker_group[:byte-size (((UINT32) num_in_group) * 95)];
+} IncrementalRefreshTickerGroups;
 
-// Repeating group dimensions
-entrypoint typedef struct _GroupSize {
-  UINT16 block_length;  // bytes 0 to 1
-  UINT8 num_in_group;   // byte 2
-} GroupSize;
+// MDIncrementalRefreshTicker
+typedef struct _MdIncrementalRefreshTicker {
+  UINT64 transact_time;                                              // bytes 0 to 7
+  UINT8 unused_bits_0_to_5 : 6;                                      // byte 8
+  UINT8 recovery_message : 1;                                        // byte 8
+  UINT8 end_of_event : 1;                                            // byte 8
+  IncrementalRefreshTickerGroups incremental_refresh_ticker_groups;
+} MdIncrementalRefreshTicker;
 
-// ---- Global Day Roll: 9 bytes ------------------------------------------------
+// Number of entries in Market Data message
+typedef struct _SnapshotRefreshSpectrumGroup {
+  UINT8 spectrum_md_entry_type;  // byte 0
+  UINT64 md_entry_px;            // bytes 1 to 8, signed, read here as unsigned
+  UINT64 md_entry_size;          // bytes 9 to 16
+  UINT64 md_entry_time;          // bytes 17 to 24
+} SnapshotRefreshSpectrumGroup;
+
+// NoMDEntries Block
+typedef struct _SnapshotRefreshSpectrumGroups {
+  UINT16 block_length;                                                                                      // bytes 0 to 1
+  UINT8 num_in_group;                                                                                       // byte 2
+  SnapshotRefreshSpectrumGroup snapshot_refresh_spectrum_group[:byte-size (((UINT32) num_in_group) * 25)];
+} SnapshotRefreshSpectrumGroups;
+
+// MDSnapshotRefreshSpectrum
+typedef struct _MdSnapshotRefreshSpectrum {
+  UINT64 transact_time;                                            // bytes 0 to 7
+  UINT8 unused_bits_0_to_5 : 6;                                    // byte 8
+  UINT8 recovery_message : 1;                                      // byte 8
+  UINT8 end_of_event : 1;                                          // byte 8
+  UINT8 financial_instrument_full_name[35];                        // bytes 9 to 43
+  UINT8 symbol[20];                                                // bytes 44 to 63
+  UINT64 instrument_guid;                                          // bytes 64 to 71
+  UINT32 security_id;                                              // bytes 72 to 75, signed, read here as unsigned
+  SnapshotRefreshSpectrumGroups snapshot_refresh_spectrum_groups;
+} MdSnapshotRefreshSpectrum;
+
+// Number of entries in Market Data message
+typedef struct _SnapshotRefreshTickerGroup {
+  UINT8 ticker_md_entry_type;   // byte 0
+  UINT64 md_entry_px;           // bytes 1 to 8, signed, read here as unsigned
+  UINT64 md_entry_size;         // bytes 9 to 16
+  UINT64 md_entry_time;         // bytes 17 to 24
+  UINT8 open_close_settl_flag;  // byte 25
+  UINT8 trading_session_id;     // byte 26
+  UINT8 aggressor_side;         // byte 27
+} SnapshotRefreshTickerGroup;
+
+// NoMDEntries Block
+typedef struct _SnapshotRefreshTickerGroups {
+  UINT16 block_length;                                                                                  // bytes 0 to 1
+  UINT8 num_in_group;                                                                                   // byte 2
+  SnapshotRefreshTickerGroup snapshot_refresh_ticker_group[:byte-size (((UINT32) num_in_group) * 28)];
+} SnapshotRefreshTickerGroups;
+
+// MDSnapshotRefreshTicker
+typedef struct _MdSnapshotRefreshTicker {
+  UINT64 transact_time;                                        // bytes 0 to 7
+  UINT8 unused_bits_0_to_5 : 6;                                // byte 8
+  UINT8 recovery_message : 1;                                  // byte 8
+  UINT8 end_of_event : 1;                                      // byte 8
+  UINT8 financial_instrument_full_name[35];                    // bytes 9 to 43
+  UINT8 symbol[20];                                            // bytes 44 to 63
+  UINT64 instrument_guid;                                      // bytes 64 to 71
+  UINT32 security_id;                                          // bytes 72 to 75, signed, read here as unsigned
+  SnapshotRefreshTickerGroups snapshot_refresh_ticker_groups;
+} MdSnapshotRefreshTicker;
 
 // GlobalDayRoll
-entrypoint typedef struct _GlobalDayRoll {
+typedef struct _GlobalDayRoll {
   UINT64 transact_time;          // bytes 0 to 7
   UINT8 security_trading_event;  // byte 8
 } GlobalDayRoll;
+
+// Branch
+casetype _Payload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x012E: unit admin_heartbeat;
+    case 0x012F: MdIncrementalRefreshSpectrum md_incremental_refresh_spectrum;
+    case 0x0130: MdIncrementalRefreshTicker md_incremental_refresh_ticker;
+    case 0x0131: MdSnapshotRefreshSpectrum md_snapshot_refresh_spectrum;
+    case 0x0132: MdSnapshotRefreshTicker md_snapshot_refresh_ticker;
+    case 0x0133: GlobalDayRoll global_day_roll;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// Cme Market Data Message
+typedef struct _Mdp3Message {
+  UINT16 message_size { message_size >= 10 };                                                                                    // bytes 0 to 1
+  UINT16 block_length;                                                                                                           // bytes 2 to 3
+  UINT16 template_id;                                                                                                            // bytes 4 to 5
+  UINT16 schema_id;                                                                                                              // bytes 6 to 7
+  UINT16 version;                                                                                                                // bytes 8 to 9
+  Payload(template_id, (((UINT32) message_size) - 10)) payload[:byte-size-single-element-array (((UINT32) message_size) - 10)];
+} Mdp3Message;
+
+// ---- Packet: UdpPacket -------------------------------------------------------
+
+// Cme Mdp Packet
+entrypoint typedef struct _UdpPacket (UINT32 available) where (available >= 12) {
+  BinaryPacketHeader binary_packet_header;                // bytes 0 to 11
+  Mdp3Message mdp3_message[:byte-size (available - 12)];
+} UdpPacket;
 

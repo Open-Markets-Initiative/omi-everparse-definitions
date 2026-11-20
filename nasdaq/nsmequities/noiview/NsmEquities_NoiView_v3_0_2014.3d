@@ -1,51 +1,174 @@
-// National Association of Securities Dealers Automated Quotations (Nasdaq) Net Order Imbalance View
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nasdaq NsmEquities NoiView Itch v3.0.2014
 //
+// Protocol:
+//   Organization: National Association of Securities Dealers Automated Quotations (Nasdaq)
+//   Protocol: Net Order Imbalance View
+//   Encoding: Itch
+//   Version: 3.0.2014
+//   Date: 01/08/2014
+//   Specification: NOIViewSpecification.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out NsmEquities_NoiView_v3_0_2014.3d
-//
-// What this definition does not state, and the model does:
-// - the dispatch that chooses a message by its type
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 20 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Itch Mold Udp 64 Packet Header
-entrypoint typedef struct _PacketHeader {
-  UINT8 session[10];         // bytes 0 to 9
-  UINT64BE sequence_number;  // bytes 10 to 17
-  UINT16BE message_count;    // bytes 18 to 19
-} PacketHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_SYSTEM_EVENT_MESSAGE 0x53               // System Event Message
+#define MESSAGE_TYPE_STOCK_DIRECTORY_MESSAGE 0x52            // Stock Directory Message
+#define MESSAGE_TYPE_STOCK_TRADING_ACTION_MESSAGE 0x48       // Stock Trading Action Message
+#define MESSAGE_TYPE_REG_SHO_RESTRICTION_MESSAGE 0x59        // Reg Sho Restriction Message
+#define MESSAGE_TYPE_NOII_MESSAGE 0x49                       // Noii Message
+#define MESSAGE_TYPE_CROSS_TRADE_MESSAGE 0x51                // Cross Trade Message
+#define MESSAGE_TYPE_IPO_QUOTING_PERIOD_UPDATE_MESSAGE 0x4B  // Ipo Quoting Period Update Message
 
-// ---- Message Header: 3 bytes -------------------------------------------------
+// Event Code: one byte code
+#define EVENT_CODE_START_OF_MESSAGES 0x4F              // Start Of Messages
+#define EVENT_CODE_START_OF_SYSTEM_HOURS 0x53          // Start Of System Hours
+#define EVENT_CODE_START_OF_MARKET_HOURS 0x51          // Start Of Market Hours
+#define EVENT_CODE_CLEAR_NOII_OPENING_CROSS_DATA 0x58  // Clear Noii Opening Cross Data
+#define EVENT_CODE_END_OF_MARKET_HOURS 0x4D            // End Of Market Hours
+#define EVENT_CODE_END_OF_SYSTEM_HOURS 0x45            // End Of System Hours
+#define EVENT_CODE_END_OF_MESSAGES 0x43                // End Of Messages
 
-// Mold Udp 64 Message Header
-entrypoint typedef struct _MessageHeader {
-  UINT16BE message_length;  // bytes 0 to 1
-  UINT8 message_type;       // byte 2
-} MessageHeader;
+// Market Category: one byte code
+#define MARKET_CATEGORY_NASDAQ_GLOBAL_SELECT_MARKET 0x51  // Nasdaq Global Select Market
+#define MARKET_CATEGORY_NASDAQ_GLOBAL_MARKET 0x47         // Nasdaq Global Market
+#define MARKET_CATEGORY_NASDAQ_CAPITAL_MARKET 0x53        // Nasdaq Capital Market
+#define MARKET_CATEGORY_NYSE 0x4E                         // Nyse
+#define MARKET_CATEGORY_NYSE_MKT 0x41                     // Nyse Mkt
+#define MARKET_CATEGORY_NYSE_ARCA 0x50                    // Nyse Arca
+#define MARKET_CATEGORY_BATS_Z 0x5A                       // Bats Z
+#define MARKET_CATEGORY_NA 0x20                           // Na
 
-// ---- System Event Message: 9 bytes -------------------------------------------
+// Financial Status Indicator: one byte code
+#define FINANCIAL_STATUS_INDICATOR_DEFICIENT 0x44                            // Deficient
+#define FINANCIAL_STATUS_INDICATOR_DELINQUENT 0x45                           // Delinquent
+#define FINANCIAL_STATUS_INDICATOR_BANKRUPT 0x51                             // Bankrupt
+#define FINANCIAL_STATUS_INDICATOR_SUSPENDED 0x53                            // Suspended
+#define FINANCIAL_STATUS_INDICATOR_DEFICIENT_AND_BANKRUPT 0x47               // Deficient And Bankrupt
+#define FINANCIAL_STATUS_INDICATOR_DEFICIENT_AND_DELINQUENT 0x48             // Deficient And Delinquent
+#define FINANCIAL_STATUS_INDICATOR_DELINQUENT_AND_BANKRUPT 0x4A              // Delinquent And Bankrupt
+#define FINANCIAL_STATUS_INDICATOR_DEFICIENT_DELINQUENT_AND_BANKRUPT 0x4B    // Deficient Delinquent And Bankrupt
+#define FINANCIAL_STATUS_INDICATOR_CREATIONS_AND_REDEMPTIONS_SUSPENDED 0x43  // Creations And Redemptions Suspended
+#define FINANCIAL_STATUS_INDICATOR_NORMAL 0x4E                               // Normal
+#define FINANCIAL_STATUS_INDICATOR_NA 0x20                                   // Na
+
+// Round Lots Only: one byte code
+#define ROUND_LOTS_ONLY_ROUND_LOTS_ONLY 0x59  // Round Lots Only
+#define ROUND_LOTS_ONLY_NO_RESTRICTIONS 0x4E  // No Restrictions
+
+// Authenticity: one byte code
+#define AUTHENTICITY_LIVE_PRODUCTION 0x50  // Live Production
+#define AUTHENTICITY_TEST 0x54             // Test
+
+// Short Sale Threshold Indicator: one byte code
+#define SHORT_SALE_THRESHOLD_INDICATOR_RESTRICTED 0x59      // Restricted
+#define SHORT_SALE_THRESHOLD_INDICATOR_NOT_RESTRICTED 0x4E  // Not Restricted
+#define SHORT_SALE_THRESHOLD_INDICATOR_NA 0x20              // Na
+
+// Ipo Flag: one byte code
+#define IPO_FLAG_SET_UP_FOR_IPO_RELEASE 0x59      // Set Up For Ipo Release
+#define IPO_FLAG_NOT_SET_UP_FOR_IPO_RELEASE 0x4E  // Not Set Up For Ipo Release
+#define IPO_FLAG_NOT_AVAILABLE 0x20               // Not Available
+
+// Luld Reference Price Tier: one byte code
+#define LULD_REFERENCE_PRICE_TIER_TIER_1 0x31          // Tier 1
+#define LULD_REFERENCE_PRICE_TIER_TIER_2 0x32          // Tier 2
+#define LULD_REFERENCE_PRICE_TIER_NOT_APPLICABLE 0x20  // Not Applicable
+
+// Etp Flag: one byte code
+#define ETP_FLAG_ETP 0x59            // Etp
+#define ETP_FLAG_NOT_ETP 0x4E        // Not Etp
+#define ETP_FLAG_NOT_AVAILABLE 0x20  // Not Available
+
+// Inverse Indicator: one byte code
+#define INVERSE_INDICATOR_INVERSE_ETP 0x59      // Inverse Etp
+#define INVERSE_INDICATOR_NOT_INVERSE_ETP 0x4E  // Not Inverse Etp
+
+// Current Trading State: one byte code
+#define CURRENT_TRADING_STATE_HALTED 0x48   // Halted
+#define CURRENT_TRADING_STATE_PAUSED 0x50   // Paused
+#define CURRENT_TRADING_STATE_TRADING 0x54  // Trading
+
+// Reg Sho Action: one byte code
+#define REG_SHO_ACTION_NO_PRICE_TEST 0x30                              // No Price Test
+#define REG_SHO_ACTION_REG_SHO_SHORT_SALE_PRICE_TEST_RESTRICTION 0x31  // Reg Sho Short Sale Price Test Restriction
+#define REG_SHO_ACTION_TEST_RESTRICTION_REMAINS 0x32                   // Test Restriction Remains
+
+// Imbalance Direction: one byte code
+#define IMBALANCE_DIRECTION_BUY_IMBALANCE 0x42        // Buy Imbalance
+#define IMBALANCE_DIRECTION_SELL_IMBALANCE 0x53       // Sell Imbalance
+#define IMBALANCE_DIRECTION_NO_IMBALANCE 0x4E         // No Imbalance
+#define IMBALANCE_DIRECTION_INSUFFICIENT_ORDERS 0x4F  // Insufficient Orders
+
+// Cross Type: one byte code
+#define CROSS_TYPE_OPENING_CROSS 0x4F           // Opening Cross
+#define CROSS_TYPE_CLOSING_CROSS 0x43           // Closing Cross
+#define CROSS_TYPE_CROSS_HALTED_OR_PAUSED 0x48  // Cross Halted Or Paused
+
+// Price Variation Indicator: one byte code
+#define PRICE_VARIATION_INDICATOR_LESS_THAN_1 0x4C                                    // Less Than 1%
+#define PRICE_VARIATION_INDICATOR_ONE_TO_ONE_POINT_NINE_NINE_PERCENT 0x31             // One To One Point Nine Nine Percent
+#define PRICE_VARIATION_INDICATOR_TWO_TO_TWO_POINT_NINE_NINE_PERCENT 0x32             // Two To Two Point Nine Nine Percent
+#define PRICE_VARIATION_INDICATOR_THREE_TO_THREE_POINT_NINE_NINE_PERCENT 0x33         // Three To Three Point Nine Nine Percent
+#define PRICE_VARIATION_INDICATOR_FOUR_TO_FOUR_POINT_NINE_NINE_PERCENT 0x34           // Four To Four Point Nine Nine Percent
+#define PRICE_VARIATION_INDICATOR_FIVE_TO_FIVE_POINT_NINE_NINE_PERCENT 0x35           // Five To Five Point Nine Nine Percent
+#define PRICE_VARIATION_INDICATOR_SIX_TO_SIX_POINT_NINE_NINE_PERCENT 0x36             // Six To Six Point Nine Nine Percent
+#define PRICE_VARIATION_INDICATOR_SEVEN_TO_SEVEN_POINT_NINE_NINE_PERCENT 0x37         // Seven To Seven Point Nine Nine Percent
+#define PRICE_VARIATION_INDICATOR_EIGHT_TO_EIGHT_POINT_NINE_NINE_PERCENT 0x38         // Eight To Eight Point Nine Nine Percent
+#define PRICE_VARIATION_INDICATOR_NINE_TO_NINE_POINT_NINE_NINE_PERCENT 0x39           // Nine To Nine Point Nine Nine Percent
+#define PRICE_VARIATION_INDICATOR_TEN_TO_NINETEEN_POINT_NINE_NINE_PERCENT 0x41        // Ten To Nineteen Point Nine Nine Percent
+#define PRICE_VARIATION_INDICATOR_TWENTY_TO_TWENTY_NINE_POINT_NINE_NINE_PERCENT 0x42  // Twenty To Twenty Nine Point Nine Nine Percent
+#define PRICE_VARIATION_INDICATOR_THIRTY_PERCENT_OR_GREATER 0x43                      // Thirty Percent Or Greater
+#define PRICE_VARIATION_INDICATOR_CANNOT_BE_CALCULATED 0x20                           // Cannot Be Calculated
+
+// Ipo Quotation Release Qualifier: one byte code
+#define IPO_QUOTATION_RELEASE_QUALIFIER_ANTICIPATED_QUOTATION_RELEASE_TIME 0x41  // Anticipated Quotation Release Time
+#define IPO_QUOTATION_RELEASE_QUALIFIER_IPO_RELEASE_CANCELED_OR_POSTPONED 0x43   // Ipo Release Canceled Or Postponed
+
+// ---- Types -------------------------------------------------------------------
 
 // Reflects the number of seconds past midnight that the Timestamp message was generated.
-entrypoint typedef struct _SystemEventMessage {
+typedef struct _SystemEventMessage {
   UINT16BE tracking_number;  // bytes 0 to 1
   UINT8 timestamp[6];        // bytes 2 to 7
   UINT8 event_code;          // byte 8
 } SystemEventMessage;
 
-// ---- Stock Directory Message: 36 bytes ---------------------------------------
-
 // At the start of each trading day, Nasdaq disseminates stock directory messages for all active symbols in the Nasdaq execution system.
-entrypoint typedef struct _StockDirectoryMessage {
+typedef struct _StockDirectoryMessage {
   UINT16BE tracking_number;              // bytes 0 to 1
   UINT8 timestamp[6];                    // bytes 2 to 7
   UINT8 stock[8];                        // bytes 8 to 15
@@ -64,10 +187,8 @@ entrypoint typedef struct _StockDirectoryMessage {
   UINT8 inverse_indicator;               // byte 35
 } StockDirectoryMessage;
 
-// ---- Stock Trading Action Message: 21 bytes ----------------------------------
-
 // NASDAQ uses this administrative message to indicate the current trading status of a security to the trading community.
-entrypoint typedef struct _StockTradingActionMessage {
+typedef struct _StockTradingActionMessage {
   UINT16BE tracking_number;     // bytes 0 to 1
   UINT8 timestamp[6];           // bytes 2 to 7
   UINT8 stock[8];               // bytes 8 to 15
@@ -75,20 +196,16 @@ entrypoint typedef struct _StockTradingActionMessage {
   UINT8 reason[4];              // bytes 17 to 20
 } StockTradingActionMessage;
 
-// ---- Reg Sho Restriction Message: 17 bytes -----------------------------------
-
 // NASDAQ processes orders based on the most Reg SHO Restriction status value.
-entrypoint typedef struct _RegShoRestrictionMessage {
+typedef struct _RegShoRestrictionMessage {
   UINT16BE tracking_number;  // bytes 0 to 1
   UINT8 timestamp[6];        // bytes 2 to 7
   UINT8 stock[8];            // bytes 8 to 15
   UINT8 reg_sho_action;      // byte 16
 } RegShoRestrictionMessage;
 
-// ---- Noii Message: 47 bytes --------------------------------------------------
-
 // Nasdaq disseminates NOII data at 5-second intervals in the minutes leading up to the Nasdaq Opening and Closing Crosses as well as the IPO/Halt Crosses
-entrypoint typedef struct _NoiiMessage {
+typedef struct _NoiiMessage {
   UINT16BE tracking_number;          // bytes 0 to 1
   UINT8 timestamp[6];                // bytes 2 to 7
   UINT64BE paired_shares;            // bytes 8 to 15
@@ -102,10 +219,8 @@ entrypoint typedef struct _NoiiMessage {
   UINT8 price_variation_indicator;   // byte 46
 } NoiiMessage;
 
-// ---- Cross Trade Message: 37 bytes -------------------------------------------
-
 // Cross Trade message indicates that Nasdaq has completed its cross process for a specific security. Nasdaq sends out a Cross Trade message for all active issues in the system following the Opening, Closing and EMC cross events. Firms may use the Cross Trade message to determine when the cross for each security has been completed.
-entrypoint typedef struct _CrossTradeMessage {
+typedef struct _CrossTradeMessage {
   UINT16BE tracking_number;  // bytes 0 to 1
   UINT8 timestamp[6];        // bytes 2 to 7
   UINT64BE shares;           // bytes 8 to 15
@@ -115,10 +230,8 @@ entrypoint typedef struct _CrossTradeMessage {
   UINT8 cross_type;          // byte 36
 } CrossTradeMessage;
 
-// ---- Ipo Quoting Period Update Message: 25 bytes -----------------------------
-
 // Indicates the anticipated IPO quotation release time of a security.
-entrypoint typedef struct _IpoQuotingPeriodUpdateMessage {
+typedef struct _IpoQuotingPeriodUpdateMessage {
   UINT16BE tracking_number;               // bytes 0 to 1
   UINT8 timestamp[6];                     // bytes 2 to 7
   UINT8 stock[8];                         // bytes 8 to 15
@@ -126,4 +239,52 @@ entrypoint typedef struct _IpoQuotingPeriodUpdateMessage {
   UINT8 ipo_quotation_release_qualifier;  // byte 20
   UINT32BE ipo_price;                     // bytes 21 to 24
 } IpoQuotingPeriodUpdateMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x53: SystemEventMessage system_event_message;
+    case 0x52: StockDirectoryMessage stock_directory_message;
+    case 0x48: StockTradingActionMessage stock_trading_action_message;
+    case 0x59: RegShoRestrictionMessage reg_sho_restriction_message;
+    case 0x49: NoiiMessage noii_message;
+    case 0x51: CrossTradeMessage cross_trade_message;
+    case 0x4B: IpoQuotingPeriodUpdateMessage ipo_quoting_period_update_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// Mold Udp64 Message
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16BE message_length { message_length >= 1 };                                                                                                                 // bytes 0 to 1
+  UINT8 message_type;                                                                                                                                              // byte 2
+  Payload(message_type, (((UINT32) message_length) - 1)) payload[:byte-size-single-element-array (((UINT32) message_length) - 1)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// Mold Udp64 Message
+typedef struct _MessageRun (UINT16 message_count, UINT32 available, mutable UINT32 * tally) {
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size available];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} MessageRun;
+
+// Branch
+casetype _Messages (UINT16 selector, UINT16 message_count, UINT32 available, mutable UINT32 * tally) {
+  switch (selector) {
+    case 0x0000: unit heartbeat;
+    case 0xFFFF: unit end_of_session;
+    default: MessageRun(message_count, available, tally) message;
+  }
+} Messages;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Itch Mold Udp 64 Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 20) {
+  UINT8 session[10];                                                                                                           // bytes 0 to 9
+  UINT64BE sequence_number;                                                                                                    // bytes 10 to 17
+  UINT16BE message_count;                                                                                                      // bytes 18 to 19
+  Messages(message_count, message_count, (available - 20), tally) messages[:byte-size-single-element-array (available - 20)];
+} Packet;
 

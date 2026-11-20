@@ -1,44 +1,92 @@
-// TMX Group Sola Tcp Retransmission
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Tmx Mx SolaTcpRetransmission Hsvf v1.11
 //
+// Protocol:
+//   Organization: TMX Group
+//   Protocol: Sola Tcp Retransmission
+//   Encoding: High Speed Vendor Feed
+//   Version: 1.11
+//   Date: 01/23/2019
+//   Specification: MX SOLA HSVF Multicast Specifications Guide.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ClientSolaFrame, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out Mx_SolaTcpRetransmission_v1_11_Client.3d
 //
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-//
-// License: MIT No Attribution
+// What this definition reads more loosely than the model states:
+// - the stream is a run of frames each ending at a byte 3: the caller splits it there and validates each frame, that byte included
 
-// ---- Client Message Header: 11 bytes -----------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Standard Hsvf message header
-entrypoint typedef struct _ClientMessageHeader {
-  UINT8 sequence_number[9];      // bytes 0 to 8
-  UINT8 client_message_type[2];  // bytes 9 to 10
-} ClientMessageHeader;
+// Client Message Type: 2 byte code
+#define CLIENT_MESSAGE_TYPE_LOGIN_MESSAGE 0x4C49                   // Login Message
+#define CLIENT_MESSAGE_TYPE_LOGOUT_MESSAGE 0x4C4F                  // Logout Message
+#define CLIENT_MESSAGE_TYPE_RETRANSMISSION_REQUEST_MESSAGE 0x5254  // Retransmission Request Message
 
-// ---- Login Message: 40 bytes -------------------------------------------------
+// ---- Types -------------------------------------------------------------------
 
 // Login
-entrypoint typedef struct _LoginMessage {
+typedef struct _LoginMessage {
   UINT8 user[16];            // bytes 0 to 15
   UINT8 pwd[16];             // bytes 16 to 31
   UINT8 login_timestamp[6];  // bytes 32 to 37
   UINT8 protocol[2];         // bytes 38 to 39
 } LoginMessage;
 
-// ---- Retransmission Request Message: 20 bytes --------------------------------
-
 // Retransmission Request
-entrypoint typedef struct _RetransmissionRequestMessage {
+typedef struct _RetransmissionRequestMessage {
   UINT8 line[2];   // bytes 0 to 1
   UINT8 start[9];  // bytes 2 to 10
   UINT8 end_[9];   // bytes 11 to 19
 } RetransmissionRequestMessage;
+
+// Branch
+casetype _ClientMessageBody (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x4C49: LoginMessage login_message;
+    case 0x4C4F: unit logout_message;
+    case 0x5254: RetransmissionRequestMessage retransmission_request_message;
+    default: UINT8 unknown[available];
+  }
+} ClientMessageBody;
+
+// ---- Packet: ClientSolaFrame -------------------------------------------------
+
+// One Hsvf record, from STX through ETX
+entrypoint typedef struct _ClientSolaFrame (UINT32 available) where (available >= 13) {
+  UINT8 sola_message_start;                                                                                                        // byte 0
+  UINT8 sequence_number[9];                                                                                                        // bytes 1 to 9
+  UINT16BE client_message_type;                                                                                                    // bytes 10 to 11
+  ClientMessageBody(client_message_type, (available - 13)) client_message_body[:byte-size-single-element-array (available - 13)];
+  UINT8 sola_message_end { sola_message_end == 3 };
+} ClientSolaFrame;
 

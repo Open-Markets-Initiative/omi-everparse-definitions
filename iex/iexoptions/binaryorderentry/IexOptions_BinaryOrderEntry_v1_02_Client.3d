@@ -1,70 +1,231 @@
-// Investors Exchange Binary Order Entry
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Iex IexOptions BinaryOrderEntry Sbe v1.02
 //
+// Protocol:
+//   Organization: Investors Exchange
+//   Protocol: Binary Order Entry
+//   Encoding: Simple Binary Encoding
+//   Version: 1.02
+//   Date: 6/1/2026
+//   Specification: IEX Binary Options Protocol Specification.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ClientPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out IexOptions_BinaryOrderEntry_v1_02_Client.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - the dispatch that chooses a message by its type
-// - a block whose stated length holds more than its fields
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Message Header: 8 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Iex Options Sbe message header message identifiers and length of message root
-entrypoint typedef struct _MessageHeader {
-  UINT16 block_length;  // bytes 0 to 1
-  UINT16 template_id;   // bytes 2 to 3
-  UINT16 schema_id;     // bytes 4 to 5
-  UINT16 version;       // bytes 6 to 7
-} MessageHeader;
+// Template Id: 2 byte code
+#define TEMPLATE_ID_LOGIN_REQUEST_MESSAGE 0x0001                          // Login Request Message
+#define TEMPLATE_ID_LOGIN_RESPONSE_MESSAGE 0x0002                         // Login Response Message
+#define TEMPLATE_ID_GATEWAY_HEARTBEAT_MESSAGE 0x0003                      // Gateway Heartbeat Message
+#define TEMPLATE_ID_CLIENT_HEARTBEAT_MESSAGE 0x0004                       // Client Heartbeat Message
+#define TEMPLATE_ID_LOGOUT_REQUEST_MESSAGE 0x0005                         // Logout Request Message
+#define TEMPLATE_ID_TERMINATE_MESSAGE 0x0006                              // Terminate Message
+#define TEMPLATE_ID_SEQUENCED_MESSAGE_HEADER_MESSAGE 0x0007               // Sequenced Message Header Message
+#define TEMPLATE_ID_SUBSESSION_JOIN_MESSAGE 0x0008                        // Subsession Join Message
+#define TEMPLATE_ID_SUBSESSION_JOIN_RESPONSE_MESSAGE 0x0009               // Subsession Join Response Message
+#define TEMPLATE_ID_SUBSESSION_LEAVE_MESSAGE 0x000A                       // Subsession Leave Message
+#define TEMPLATE_ID_SUBSESSION_LEAVE_RESPONSE_MESSAGE 0x000B              // Subsession Leave Response Message
+#define TEMPLATE_ID_ORDER_ACK_MESSAGE 0x0065                              // Order Ack Message
+#define TEMPLATE_ID_UNSOLICITED_MODIFY_ACK_MESSAGE 0x0066                 // Unsolicited Modify Ack Message
+#define TEMPLATE_ID_ORDER_CANCEL_ACK_MESSAGE 0x0067                       // Order Cancel Ack Message
+#define TEMPLATE_ID_MASS_CANCEL_ACK_MESSAGE 0x0068                        // Mass Cancel Ack Message
+#define TEMPLATE_ID_BULK_QUOTE_ACK_MESSAGE 0x0069                         // Bulk Quote Ack Message
+#define TEMPLATE_ID_NEW_IOC_QUOTE_ACK_MESSAGE 0x006A                      // New Ioc Quote Ack Message
+#define TEMPLATE_ID_QUOTE_RESTATED_MESSAGE 0x006B                         // Quote Restated Message
+#define TEMPLATE_ID_QUOTE_CANCELED_MESSAGE 0x006C                         // Quote Canceled Message
+#define TEMPLATE_ID_PURGE_ACK_MESSAGE 0x006D                              // Purge Ack Message
+#define TEMPLATE_ID_EXECUTION_REPORT_MESSAGE 0x006E                       // Execution Report Message
+#define TEMPLATE_ID_TRADE_BUST_CORRECT_MESSAGE 0x006F                     // Trade Bust Correct Message
+#define TEMPLATE_ID_APPLICATION_LAYER_REJECT_MESSAGE 0x0070               // Application Layer Reject Message
+#define TEMPLATE_ID_RISK_LIMIT_UPDATE_REQUEST_MESSAGE 0x0033              // Risk Limit Update Request Message
+#define TEMPLATE_ID_RISK_ACTION_REQUEST_MESSAGE 0x0034                    // Risk Action Request Message
+#define TEMPLATE_ID_UNDERLYING_REF_DATA_MESSAGE 0x0097                    // Underlying Ref Data Message
+#define TEMPLATE_ID_INSTRUMENT_REF_DATA_MESSAGE 0x0098                    // Instrument Ref Data Message
+#define TEMPLATE_ID_MPID_CONFIGURATION_ACKNOWLEDGEMENT_MESSAGE 0x0099     // Mpid Configuration Acknowledgement Message
+#define TEMPLATE_ID_MARKET_MAKER_SYMBOL_APPOINTMENT_MESSAGE 0x009A        // Market Maker Symbol Appointment Message
+#define TEMPLATE_ID_SESSION_CONFIGURATION_ACKNOWLEDGEMENT_MESSAGE 0x009B  // Session Configuration Acknowledgement Message
+#define TEMPLATE_ID_RISK_CONTROL_ACKNOWLEDGMENT_MESSAGE 0x009C            // Risk Control Acknowledgment Message
+#define TEMPLATE_ID_RISK_CONTROL_ALERT_MESSAGE 0x009D                     // Risk Control Alert Message
 
-// ---- Login Request Message: 48 bytes -----------------------------------------
+// Schema Id: 2 byte code
+#define SCHEMA_ID_SESSION 0x4E20   // Session
+#define SCHEMA_ID_BUSINESS 0x4E21  // Business
+
+// Customer Or Firm: one byte code
+#define CUSTOMER_OR_FIRM_CUSTOMER 0x00           // Customer
+#define CUSTOMER_OR_FIRM_FIRM 0x01               // Firm
+#define CUSTOMER_OR_FIRM_BROKER_DEALER 0x02      // Broker Dealer
+#define CUSTOMER_OR_FIRM_MARKET_MAKER 0x03       // Market Maker
+#define CUSTOMER_OR_FIRM_AWAY_MARKET_MAKER 0x04  // Away Market Maker
+#define CUSTOMER_OR_FIRM_PROF_CUSTOMER 0x05      // Prof Customer
+
+// Open Close: one byte code
+#define OPEN_CLOSE_OPEN 0x00            // Open
+#define OPEN_CLOSE_CLOSE 0x01           // Close
+#define OPEN_CLOSE_NOT_APPLICABLE 0x02  // Not Applicable
+
+// Attributed Quote: one byte code
+#define ATTRIBUTED_QUOTE_SUM 0x01                       // Sum
+#define ATTRIBUTED_QUOTE_ORDER_INFO_CAPACITY 0x02       // Order Info Capacity
+#define ATTRIBUTED_QUOTE_ORDER_INFO_MPID 0x03           // Order Info Mpid
+#define ATTRIBUTED_QUOTE_ORDER_INFO_CAPACITY_MPID 0x04  // Order Info Capacity Mpid
+#define ATTRIBUTED_QUOTE_DO_NOT_USE_SUM 0x05            // Do Not Use Sum
+
+// Time In Force: one byte code
+#define TIME_IN_FORCE_DAY 0x00  // Day
+#define TIME_IN_FORCE_IOC 0x01  // Ioc
+
+// Cancel Instead Of Slide: one byte code
+#define CANCEL_INSTEAD_OF_SLIDE_SLIDE 0x00   // Slide
+#define CANCEL_INSTEAD_OF_SLIDE_CANCEL 0x01  // Cancel
+
+// Display Inst: one byte code
+#define DISPLAY_INST_POST_ONLY 0x01  // Post Only
+
+// Exec Inst: one byte code
+#define EXEC_INST_ISO 0x01           // Iso
+#define EXEC_INST_DO_NOT_ROUTE 0x02  // Do Not Route
+
+// Ord Type: one byte code
+#define ORD_TYPE_MARKET 0x01  // Market
+#define ORD_TYPE_LIMIT 0x02   // Limit
+
+// Side: one byte code
+#define SIDE_BUY 0x01   // Buy
+#define SIDE_SELL 0x02  // Sell
+
+// Cancel Instead Of Slide Optional: one byte code
+#define CANCEL_INSTEAD_OF_SLIDE_OPTIONAL_SLIDE 0x00   // Slide
+#define CANCEL_INSTEAD_OF_SLIDE_OPTIONAL_CANCEL 0x01  // Cancel
+
+// Quote Type: one byte code
+#define QUOTE_TYPE_STANDARD 0x00  // Standard
+#define QUOTE_TYPE_REPRICE 0x01   // Reprice
+#define QUOTE_TYPE_CANCEL 0x02    // Cancel
+
+// Ack Style Mass Cancel Ack Style: one byte code
+#define ACK_STYLE_MASS_CANCEL_ACK_STYLE_SINGLE_ACK 0x00                    // Single Ack
+#define ACK_STYLE_MASS_CANCEL_ACK_STYLE_PER_ORDER_ACK_AND_SINGLE_ACK 0x01  // Per Order Ack And Single Ack
+
+// Mpid Filter: one byte code
+#define MPID_FILTER_EXPLICIT_MPID 0x00  // Explicit Mpid
+#define MPID_FILTER_ACROSS_MPI_DS 0x01  // Across Mpi Ds
+
+// Bulk Action: one byte code
+#define BULK_ACTION_CANCEL 0x00            // Cancel
+#define BULK_ACTION_CANCEL_AND_BLOCK 0x01  // Cancel And Block
+#define BULK_ACTION_UNBLOCK 0x02           // Unblock
+
+// Ack Style Purge Request Ack Style: one byte code
+#define ACK_STYLE_PURGE_REQUEST_ACK_STYLE_SINGLE_ACK 0x00            // Single Ack
+#define ACK_STYLE_PURGE_REQUEST_ACK_STYLE_SINGLE_ACK_WITH_MMQS 0x01  // Single Ack With Mmqs
+
+// Risk Control Optional: one byte code
+#define RISK_CONTROL_OPTIONAL_TRANSACTION_BASED 0x01              // Transaction Based
+#define RISK_CONTROL_OPTIONAL_VOLUME_BASED 0x02                   // Volume Based
+#define RISK_CONTROL_OPTIONAL_PERCENTAGE_BASED 0x03               // Percentage Based
+#define RISK_CONTROL_OPTIONAL_GRMP 0x04                           // Grmp
+#define RISK_CONTROL_OPTIONAL_PURGE_LOCKOUT_RESET 0x05            // Purge Lockout Reset
+#define RISK_CONTROL_OPTIONAL_INTRINSIC_VALUE_AND_ARBITRAGE 0x06  // Intrinsic Value And Arbitrage
+
+// Risk Control Status Optional: one byte code
+#define RISK_CONTROL_STATUS_OPTIONAL_DISABLED 0x00  // Disabled
+#define RISK_CONTROL_STATUS_OPTIONAL_ENABLED 0x01   // Enabled
+
+// Ioc Attribution: one byte code
+#define IOC_ATTRIBUTION_INCLUDE_IOC 0x01  // Include Ioc
+#define IOC_ATTRIBUTION_EXCLUDE_IOC 0x02  // Exclude Ioc
+
+// Risk Control: one byte code
+#define RISK_CONTROL_TRANSACTION_BASED 0x01              // Transaction Based
+#define RISK_CONTROL_VOLUME_BASED 0x02                   // Volume Based
+#define RISK_CONTROL_PERCENTAGE_BASED 0x03               // Percentage Based
+#define RISK_CONTROL_GRMP 0x04                           // Grmp
+#define RISK_CONTROL_PURGE_LOCKOUT_RESET 0x05            // Purge Lockout Reset
+#define RISK_CONTROL_INTRINSIC_VALUE_AND_ARBITRAGE 0x06  // Intrinsic Value And Arbitrage
+
+// Risk Action: one byte code
+#define RISK_ACTION_QUERY_RISK_CONTROL 0x01  // Query Risk Control
+#define RISK_ACTION_UNBLOCK 0x02             // Unblock
+
+// ---- Types -------------------------------------------------------------------
 
 // LoginRequestMessage
-entrypoint typedef struct _LoginRequestMessage {
+typedef struct _LoginRequestMessage {
   UINT8 logon_id[16];  // bytes 0 to 15
   UINT8 token[32];     // bytes 16 to 47
 } LoginRequestMessage;
 
-// ---- Sequenced Message Header Message: 20 bytes ------------------------------
-
 // SequencedMessageHeaderMessage
-entrypoint typedef struct _SequencedMessageHeaderMessage {
+typedef struct _SequencedMessageHeaderMessage {
   UINT64 subsession_id;  // bytes 0 to 7
   UINT32 sequence;       // bytes 8 to 11
   UINT64 timestamp;      // bytes 12 to 19
 } SequencedMessageHeaderMessage;
 
-// ---- Subsession Join Message: 16 bytes ---------------------------------------
-
 // SubsessionJoinMessage
-entrypoint typedef struct _SubsessionJoinMessage {
+typedef struct _SubsessionJoinMessage {
   UINT64 subsession_id;   // bytes 0 to 7
   UINT32 start_sequence;  // bytes 8 to 11
   UINT32 end_sequence;    // bytes 12 to 15
 } SubsessionJoinMessage;
 
-// ---- Subsession Leave Message: 8 bytes ---------------------------------------
-
 // SubsessionLeaveMessage
-entrypoint typedef struct _SubsessionLeaveMessage {
+typedef struct _SubsessionLeaveMessage {
   UINT64 subsession_id;  // bytes 0 to 7
 } SubsessionLeaveMessage;
 
-// ---- New Order Single Message: 92 bytes --------------------------------------
+// Branch
+casetype _ClientSessionPayload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x0001: LoginRequestMessage login_request_message;
+    case 0x0004: unit client_heartbeat_message;
+    case 0x0005: unit logout_request_message;
+    case 0x0007: SequencedMessageHeaderMessage sequenced_message_header_message;
+    case 0x0008: SubsessionJoinMessage subsession_join_message;
+    case 0x000A: SubsessionLeaveMessage subsession_leave_message;
+    default: UINT8 unknown[available];
+  }
+} ClientSessionPayload;
+
+// Message of sbe schema iex.options.boe.session (schema id 20000)
+typedef struct _ClientSessionMessage (UINT16 template_id, UINT32 available) {
+  ClientSessionPayload(template_id, available) client_session_payload[:byte-size-single-element-array available];
+} ClientSessionMessage;
 
 // NewOrderSingleMessage
-entrypoint typedef struct _NewOrderSingleMessage {
+typedef struct _NewOrderSingleMessage {
   UINT8 account_account[16];       // bytes 0 to 15
   UINT32 instrument_id;            // bytes 16 to 19
   UINT8 market_participant_id[4];  // bytes 20 to 23
@@ -89,10 +250,8 @@ entrypoint typedef struct _NewOrderSingleMessage {
   UINT32 order_qty;                // bytes 88 to 91
 } NewOrderSingleMessage;
 
-// ---- Order Cancel Replace Request Message: 100 bytes -------------------------
-
 // OrderCancelReplaceRequestMessage
-entrypoint typedef struct _OrderCancelReplaceRequestMessage {
+typedef struct _OrderCancelReplaceRequestMessage {
   UINT8 account_account[16];               // bytes 0 to 15
   UINT32 instrument_id;                    // bytes 16 to 19
   UINT8 market_participant_id[4];          // bytes 20 to 23
@@ -118,28 +277,46 @@ entrypoint typedef struct _OrderCancelReplaceRequestMessage {
   UINT32 order_qty;                        // bytes 96 to 99
 } OrderCancelReplaceRequestMessage;
 
-// ---- Order Cancel Request Message: 24 bytes ----------------------------------
-
 // OrderCancelRequestMessage
-entrypoint typedef struct _OrderCancelRequestMessage {
+typedef struct _OrderCancelRequestMessage {
   UINT32 instrument_id;            // bytes 0 to 3
   UINT8 market_participant_id[4];  // bytes 4 to 7
   UINT64 cl_ord_id;                // bytes 8 to 15
   UINT64 orig_cl_ord_id;           // bytes 16 to 23
 } OrderCancelRequestMessage;
 
-// ---- Quote Updates Group Encoding: 2 bytes -----------------------------------
+// quoteUpdates
+typedef struct _NewBulkQuoteMessageQuoteUpdatesGroup {
+  UINT32 instrument_id;           // bytes 0 to 3
+  UINT8 side;                     // byte 4, signed, read here as unsigned
+  UINT32 price_price_4_optional;  // bytes 5 to 8, signed, read here as unsigned
+  UINT32 order_qty_optional;      // bytes 9 to 12
+  UINT8 quote_type;               // byte 13, signed, read here as unsigned
+  UINT8 reserved;                 // byte 14, signed, read here as unsigned
+} NewBulkQuoteMessageQuoteUpdatesGroup;
 
-// quoteUpdatesGroupEncoding
-entrypoint typedef struct _QuoteUpdatesGroupEncoding {
-  UINT8 block_length_short;  // byte 0
-  UINT8 num_in_group;        // byte 1
-} QuoteUpdatesGroupEncoding;
+// quoteUpdates Block
+typedef struct _NewBulkQuoteMessageQuoteUpdatesGroups {
+  UINT8 block_length_short;                                                                                                    // byte 0
+  UINT8 num_in_group;                                                                                                          // byte 1
+  NewBulkQuoteMessageQuoteUpdatesGroup new_bulk_quote_message_quote_updates_group[:byte-size (((UINT32) num_in_group) * 15)];
+} NewBulkQuoteMessageQuoteUpdatesGroups;
 
-// ---- Mass Cancel Request Message: 27 bytes -----------------------------------
+// NewBulkQuoteMessage
+typedef struct _NewBulkQuoteMessage {
+  UINT8 market_participant_id[4];                                                     // bytes 0 to 3
+  UINT16 custom_group_id;                                                             // bytes 4 to 5
+  UINT64 cl_ord_id;                                                                   // bytes 6 to 13
+  UINT8 clearing_account[4];                                                          // bytes 14 to 17
+  UINT8 cancel_instead_of_slide_optional;                                             // byte 18, signed, read here as unsigned
+  UINT64 send_time;                                                                   // bytes 19 to 26
+  UINT8 aiq[3];                                                                       // bytes 27 to 29
+  UINT8 time_in_force;                                                                // byte 30, signed, read here as unsigned
+  NewBulkQuoteMessageQuoteUpdatesGroups new_bulk_quote_message_quote_updates_groups;
+} NewBulkQuoteMessage;
 
 // MassCancelRequestMessage
-entrypoint typedef struct _MassCancelRequestMessage {
+typedef struct _MassCancelRequestMessage {
   UINT32 underlying_id_optional;          // bytes 0 to 3
   UINT8 market_participant_id[4];         // bytes 4 to 7
   UINT64 cl_ord_id;                       // bytes 8 to 15
@@ -149,18 +326,31 @@ entrypoint typedef struct _MassCancelRequestMessage {
   UINT8 bulk_action;                      // byte 26
 } MassCancelRequestMessage;
 
-// ---- Custom Group Ids Group Encoding: 2 bytes --------------------------------
+// customGroupIds
+typedef struct _PurgeRequestMessageCustomGroupIdsGroup {
+  UINT16 custom_group_id;  // bytes 0 to 1
+} PurgeRequestMessageCustomGroupIdsGroup;
 
-// customGroupIdsGroupEncoding
-entrypoint typedef struct _CustomGroupIdsGroupEncoding {
-  UINT8 block_length_short;  // byte 0
-  UINT8 num_in_group;        // byte 1
-} CustomGroupIdsGroupEncoding;
+// customGroupIds Block
+typedef struct _PurgeRequestMessageCustomGroupIdsGroups {
+  UINT8 block_length_short;                                                                                                       // byte 0
+  UINT8 num_in_group;                                                                                                             // byte 1
+  PurgeRequestMessageCustomGroupIdsGroup purge_request_message_custom_group_ids_group[:byte-size (((UINT32) num_in_group) * 2)];
+} PurgeRequestMessageCustomGroupIdsGroups;
 
-// ---- Risk Limit Update Request Message: 36 bytes -----------------------------
+// PurgeRequestMessage
+typedef struct _PurgeRequestMessage {
+  UINT32 underlying_id;                                                                   // bytes 0 to 3
+  UINT8 market_participant_id[4];                                                         // bytes 4 to 7
+  UINT64 cl_ord_id;                                                                       // bytes 8 to 15
+  UINT64 send_time;                                                                       // bytes 16 to 23
+  UINT8 ack_style_purge_request_ack_style;                                                // byte 24
+  UINT8 bulk_action;                                                                      // byte 25
+  PurgeRequestMessageCustomGroupIdsGroups purge_request_message_custom_group_ids_groups;
+} PurgeRequestMessage;
 
 // RiskLimitUpdateRequestMessage
-entrypoint typedef struct _RiskLimitUpdateRequestMessage {
+typedef struct _RiskLimitUpdateRequestMessage {
   UINT32 underlying_id_optional;        // bytes 0 to 3
   UINT8 market_participant_id[4];       // bytes 4 to 7
   UINT64 cl_ord_id;                     // bytes 8 to 15
@@ -173,10 +363,8 @@ entrypoint typedef struct _RiskLimitUpdateRequestMessage {
   UINT8 cust_capacity_weight_optional;  // byte 35
 } RiskLimitUpdateRequestMessage;
 
-// ---- Risk Action Request Message: 20 bytes -----------------------------------
-
 // RiskActionRequestMessage
-entrypoint typedef struct _RiskActionRequestMessage {
+typedef struct _RiskActionRequestMessage {
   UINT32 underlying_id_optional;    // bytes 0 to 3
   UINT8 market_participant_id[4];   // bytes 4 to 7
   UINT64 cl_ord_id;                 // bytes 8 to 15
@@ -184,4 +372,50 @@ entrypoint typedef struct _RiskActionRequestMessage {
   UINT8 risk_action;                // byte 17, signed, read here as unsigned
   UINT16 custom_group_id_optional;  // bytes 18 to 19
 } RiskActionRequestMessage;
+
+// Branch
+casetype _ClientBusinessPayload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x0001: NewOrderSingleMessage new_order_single_message;
+    case 0x0002: OrderCancelReplaceRequestMessage order_cancel_replace_request_message;
+    case 0x0003: OrderCancelRequestMessage order_cancel_request_message;
+    case 0x0004: NewBulkQuoteMessage new_bulk_quote_message;
+    case 0x0005: MassCancelRequestMessage mass_cancel_request_message;
+    case 0x0006: PurgeRequestMessage purge_request_message;
+    case 0x0033: RiskLimitUpdateRequestMessage risk_limit_update_request_message;
+    case 0x0034: RiskActionRequestMessage risk_action_request_message;
+    default: UINT8 unknown[available];
+  }
+} ClientBusinessPayload;
+
+// Message of sbe schema iex.options.boe.business (schema id 20001)
+typedef struct _ClientBusinessMessage (UINT16 template_id, UINT32 available) {
+  ClientBusinessPayload(template_id, available) client_business_payload[:byte-size-single-element-array available];
+} ClientBusinessMessage;
+
+// Branch
+casetype _ClientPayload (UINT16 selector, UINT16 template_id, UINT32 available) {
+  switch (selector) {
+    case 0x4E20: ClientSessionMessage(template_id, available) client_session_message;
+    case 0x4E21: ClientBusinessMessage(template_id, available) client_business_message;
+    default: UINT8 unknown[available];
+  }
+} ClientPayload;
+
+// Iex Options length-framed Sbe Message sent by the User to Iex Options
+typedef struct _ClientSbeMessage {
+  UINT16 packet_length { packet_length >= 10 };                                                                                                            // bytes 0 to 1
+  UINT16 block_length;                                                                                                                                     // bytes 2 to 3
+  UINT16 template_id;                                                                                                                                      // bytes 4 to 5
+  UINT16 schema_id;                                                                                                                                        // bytes 6 to 7
+  UINT16 version;                                                                                                                                          // bytes 8 to 9
+  ClientPayload(schema_id, template_id, (((UINT32) packet_length) - 10)) client_payload[:byte-size-single-element-array (((UINT32) packet_length) - 10)];
+} ClientSbeMessage;
+
+// ---- Packet: ClientPacket ----------------------------------------------------
+
+// Iex Options Binary Session Tcp Packet sent by the User to Iex Options
+entrypoint typedef struct _ClientPacket (UINT32 available) {
+  ClientSbeMessage client_sbe_message[:byte-size available];
+} ClientPacket;
 

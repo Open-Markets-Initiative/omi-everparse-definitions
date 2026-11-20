@@ -1,59 +1,117 @@
-// National Association of Securities Dealers Automated Quotations (Nasdaq) Top Of Market
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nasdaq NtxOptions TopOfMarket Itch v1.2
 //
+// Protocol:
+//   Organization: National Association of Securities Dealers Automated Quotations (Nasdaq)
+//   Protocol: Top Of Market
+//   Encoding: Itch
+//   Version: 1.2
+//   Date: 11/2/2017
+//   Specification: BXOptions_TopofMarket.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out NtxOptions_TopOfMarket_v1_2.3d
-//
-// What this definition does not state, and the model does:
-// - the dispatch that chooses a message by its type
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 20 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Itch Mold Udp 64 Packet Header
-entrypoint typedef struct _PacketHeader {
-  UINT8 session[10];         // bytes 0 to 9
-  UINT64BE sequence_number;  // bytes 10 to 17
-  UINT16BE message_count;    // bytes 18 to 19
-} PacketHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_TIMESTAMP_MESSAGE 0x54                           // Timestamp Message
+#define MESSAGE_TYPE_SYSTEM_EVENT_MESSAGE 0x53                        // System Event Message
+#define MESSAGE_TYPE_OPTIONS_DIRECTORY_MESSAGE 0x44                   // Options Directory Message
+#define MESSAGE_TYPE_TRADING_ACTION_MESSAGE 0x48                      // Trading Action Message
+#define MESSAGE_TYPE_SECURITY_OPEN_MESSAGE 0x4F                       // Security Open Message
+#define MESSAGE_TYPE_BEST_BID_AND_ASK_UPDATE_SHORT_FORM_MESSAGE 0x71  // Best Bid And Ask Update Short Form Message
+#define MESSAGE_TYPE_BEST_BID_AND_ASK_UPDATE_LONG_FORM_MESSAGE 0x51   // Best Bid And Ask Update Long Form Message
+#define MESSAGE_TYPE_BEST_BID_UPDATE_SHORT_FORM_MESSAGE 0x62          // Best Bid Update Short Form Message
+#define MESSAGE_TYPE_BEST_ASK_UPDATE_SHORT_FORM_MESSAGE 0x61          // Best Ask Update Short Form Message
+#define MESSAGE_TYPE_BEST_BID_UPDATE_LONG_FORM_MESSAGE 0x42           // Best Bid Update Long Form Message
+#define MESSAGE_TYPE_BEST_ASK_UPDATE_LONG_FORM_MESSAGE 0x41           // Best Ask Update Long Form Message
+#define MESSAGE_TYPE_TRADE_REPORT_MESSAGE 0x52                        // Trade Report Message
+#define MESSAGE_TYPE_BROKEN_TRADE_REPORT_MESSAGE 0x58                 // Broken Trade Report Message
 
-// ---- Message Header: 3 bytes -------------------------------------------------
+// Event Code: one byte code
+#define EVENT_CODE_START_OF_MESSAGES 0x4F      // Start Of Messages
+#define EVENT_CODE_START_OF_SYSTEM_HOURS 0x53  // Start Of System Hours
+#define EVENT_CODE_START_OF_MARKET_HOURS 0x51  // Start Of Market Hours
+#define EVENT_CODE_END_OF_MARKET_HOURS 0x4D    // End Of Market Hours
+#define EVENT_CODE_END_OF_SYSTEM_HOURS 0x45    // End Of System Hours
+#define EVENT_CODE_END_OF_MESSAGES 0x43        // End Of Messages
 
-// Mold Udp 64 Message Header
-entrypoint typedef struct _MessageHeader {
-  UINT16BE message_length;  // bytes 0 to 1
-  UINT8 message_type;       // byte 2
-} MessageHeader;
+// Option Type: one byte code
+#define OPTION_TYPE_CALL 0x43  // Call
+#define OPTION_TYPE_PUT 0x50   // Put
 
-// ---- Timestamp Message: 4 bytes ----------------------------------------------
+// Tradable: one byte code
+#define TRADABLE_YES 0x59  // Yes
+#define TRADABLE_NO 0x4E   // No
+
+// Minimum Price Variation: one byte code
+#define MINIMUM_PRICE_VARIATION_PENNY_EVERYWHERE 0x45  // Penny Everywhere
+#define MINIMUM_PRICE_VARIATION_SCALED 0x53            // Scaled
+#define MINIMUM_PRICE_VARIATION_PENNY_PILOT 0x50       // Penny Pilot
+
+// Current Trading State: one byte code
+#define CURRENT_TRADING_STATE_HALT 0x48     // Halt
+#define CURRENT_TRADING_STATE_TRADING 0x54  // Trading
+
+// Open State: one byte code
+#define OPEN_STATE_OPEN 0x59    // Open
+#define OPEN_STATE_CLOSED 0x4E  // Closed
+
+// Quote Condition: one byte code
+#define QUOTE_CONDITION_NON_FIRM_QUOTE 0x46    // Non Firm Quote
+#define QUOTE_CONDITION_ROTATIONAL_QUOTE 0x52  // Rotational Quote
+#define QUOTE_CONDITION_BID_SIDE_FIRM 0x58     // Bid Side Firm
+#define QUOTE_CONDITION_ASK_SIDE_FIRM 0x59     // Ask Side Firm
+#define QUOTE_CONDITION_REGULAR_QUOTE 0x20     // Regular Quote
+
+// ---- Types -------------------------------------------------------------------
 
 // For bandwidth efficiency reasons, the timestamp for a message is divided into two pieces: the seconds portion and sub-seconds portion. The seconds portion of the timestamp appears in the Timestamp Message, any message on the stream following this message has this seconds portion of time until the next timestamp message. The format is as follows:
-entrypoint typedef struct _TimestampMessage {
+typedef struct _TimestampMessage {
   UINT32BE second;  // bytes 0 to 3
 } TimestampMessage;
 
-// ---- System Event Message: 7 bytes -------------------------------------------
-
 // The system event message type is used to signal a market or data feed handler event. The format is as follows:
-entrypoint typedef struct _SystemEventMessage {
+typedef struct _SystemEventMessage {
   UINT32BE nanoseconds;  // bytes 0 to 3
   UINT8 event_code;      // byte 4
   UINT8 version;         // byte 5
   UINT8 sub_version;     // byte 6
 } SystemEventMessage;
 
-// ---- Options Directory Message: 39 bytes -------------------------------------
-
 // At the start of each trading day, the options system disseminates directory messages for all symbols eligible for the auction process in the options system.
-entrypoint typedef struct _OptionsDirectoryMessage {
+typedef struct _OptionsDirectoryMessage {
   UINT32BE nanoseconds;           // bytes 0 to 3
   UINT32BE option_id;             // bytes 4 to 7
   UINT8 security_symbol[6];       // bytes 8 to 13
@@ -69,28 +127,22 @@ entrypoint typedef struct _OptionsDirectoryMessage {
   UINT8 minimum_price_variation;  // byte 38
 } OptionsDirectoryMessage;
 
-// ---- Trading Action Message: 9 bytes -----------------------------------------
-
 // The options system uses this administrative message to indicate the current trading status of an index or equity option within the options market.
-entrypoint typedef struct _TradingActionMessage {
+typedef struct _TradingActionMessage {
   UINT32BE nanoseconds;         // bytes 0 to 3
   UINT32BE option_id;           // bytes 4 to 7
   UINT8 current_trading_state;  // byte 8
 } TradingActionMessage;
 
-// ---- Security Open Message: 9 bytes ------------------------------------------
-
 // The options system uses this administrative message to indicate when an option has completed the opening process and is now available for auto execution or when the option has closed and is no longer available for auto execution.
-entrypoint typedef struct _SecurityOpenMessage {
+typedef struct _SecurityOpenMessage {
   UINT32BE nanoseconds;  // bytes 0 to 3
   UINT32BE option_id;    // bytes 4 to 7
   UINT8 open_state;      // byte 8
 } SecurityOpenMessage;
 
-// ---- Best Bid And Ask Update Short Form Message: 17 bytes --------------------
-
 // The options system will continuously calculate its best bid and offer position for active options contracts on the options market during the trading day. Whenever the best bid and ask position changes on both sides, the options system will send its best bid and ask update via the data feed for the affected security. A change in bid or ask implies a change in price and/or size. The quote will reflect the highest price displayable in the options system for buy orders/quotes and the lowest price displayable in the options system for sell orders/quotes.
-entrypoint typedef struct _BestBidAndAskUpdateShortFormMessage {
+typedef struct _BestBidAndAskUpdateShortFormMessage {
   UINT32BE nanoseconds;   // bytes 0 to 3
   UINT32BE option_id;     // bytes 4 to 7
   UINT8 quote_condition;  // byte 8
@@ -100,10 +152,8 @@ entrypoint typedef struct _BestBidAndAskUpdateShortFormMessage {
   UINT16BE ask_size;      // bytes 15 to 16
 } BestBidAndAskUpdateShortFormMessage;
 
-// ---- Best Bid And Ask Update Long Form Message: 25 bytes ---------------------
-
 // This message is the same as the Best Bid AND Ask Update Message Short Form described above except that Prices and Sizes are 4 byte Integers, the price having 4 implied decimal places.
-entrypoint typedef struct _BestBidAndAskUpdateLongFormMessage {
+typedef struct _BestBidAndAskUpdateLongFormMessage {
   UINT32BE nanoseconds;     // bytes 0 to 3
   UINT32BE option_id;       // bytes 4 to 7
   UINT8 quote_condition;    // byte 8
@@ -113,10 +163,8 @@ entrypoint typedef struct _BestBidAndAskUpdateLongFormMessage {
   UINT32BE ask_size_long;   // bytes 21 to 24
 } BestBidAndAskUpdateLongFormMessage;
 
-// ---- Best Bid Update Short Form Message: 13 bytes ----------------------------
-
 // The options system will continuously calculate its best bid and offer position for active options contracts on the options market during the trading day. Whenever the best bid or ask position changes on one side but not the other side, the options system will send its best bid or ask update via this feed for the affected security. A change in bid or ask implies a change in price and/or size. The quote will reflect the highest price displayable in the options system for buy orders/quotes and the lowest price displayable in the options system for sell orders/quotes.
-entrypoint typedef struct _BestBidUpdateShortFormMessage {
+typedef struct _BestBidUpdateShortFormMessage {
   UINT32BE nanoseconds;   // bytes 0 to 3
   UINT32BE option_id;     // bytes 4 to 7
   UINT8 quote_condition;  // byte 8
@@ -124,21 +172,8 @@ entrypoint typedef struct _BestBidUpdateShortFormMessage {
   UINT16BE size;          // bytes 11 to 12
 } BestBidUpdateShortFormMessage;
 
-// ---- Best Ask Update Short Form Message: 13 bytes ----------------------------
-
-// The options system will continuously calculate its best bid and offer position for active options contracts on the options market during the trading day. Whenever the best bid or ask position changes on one side but not the other side, the options system will send its best bid or ask update via this feed for the affected security. A change in bid or ask implies a change in price and/or size. The quote will reflect the highest price displayable in the options system for buy orders/quotes and the lowest price displayable in the options system for sell orders/quotes.
-entrypoint typedef struct _BestAskUpdateShortFormMessage {
-  UINT32BE nanoseconds;   // bytes 0 to 3
-  UINT32BE option_id;     // bytes 4 to 7
-  UINT8 quote_condition;  // byte 8
-  UINT16BE price;         // bytes 9 to 10
-  UINT16BE size;          // bytes 11 to 12
-} BestAskUpdateShortFormMessage;
-
-// ---- Best Bid Update Long Form Message: 17 bytes -----------------------------
-
 // This message is the same as the Best Bid OR Ask Update Message Short Form described above except that Prices and Sizes are 4 byte Integers, the price having 4 implied decimal places.
-entrypoint typedef struct _BestBidUpdateLongFormMessage {
+typedef struct _BestBidUpdateLongFormMessage {
   UINT32BE nanoseconds;   // bytes 0 to 3
   UINT32BE option_id;     // bytes 4 to 7
   UINT8 quote_condition;  // byte 8
@@ -146,21 +181,8 @@ entrypoint typedef struct _BestBidUpdateLongFormMessage {
   UINT32BE size_long;     // bytes 13 to 16
 } BestBidUpdateLongFormMessage;
 
-// ---- Best Ask Update Long Form Message: 17 bytes -----------------------------
-
-// This message is the same as the Best Bid OR Ask Update Message Short Form described above except that Prices and Sizes are 4 byte Integers, the price having 4 implied decimal places.
-entrypoint typedef struct _BestAskUpdateLongFormMessage {
-  UINT32BE nanoseconds;   // bytes 0 to 3
-  UINT32BE option_id;     // bytes 4 to 7
-  UINT8 quote_condition;  // byte 8
-  UINT32BE price_long;    // bytes 9 to 12
-  UINT32BE size_long;     // bytes 13 to 16
-} BestAskUpdateLongFormMessage;
-
-// ---- Trade Report Message: 21 bytes ------------------------------------------
-
 // The Trade Report message will be used to relay execution system transactions that are reported during the current business day. The options system only reports one-side of a trade execution on the feed and other data feed products.
-entrypoint typedef struct _TradeReportMessage {
+typedef struct _TradeReportMessage {
   UINT32BE nanoseconds;   // bytes 0 to 3
   UINT32BE option_id;     // bytes 4 to 7
   UINT32BE cross_id;      // bytes 8 to 11
@@ -169,14 +191,66 @@ entrypoint typedef struct _TradeReportMessage {
   UINT32BE volume;        // bytes 17 to 20
 } TradeReportMessage;
 
-// ---- Broken Trade Report Message: 20 bytes -----------------------------------
-
 // The following message is used in the event that an options trade transaction is broken on the same business day that it is reported.
-entrypoint typedef struct _BrokenTradeReportMessage {
+typedef struct _BrokenTradeReportMessage {
   UINT32BE nanoseconds;        // bytes 0 to 3
   UINT32BE option_id;          // bytes 4 to 7
   UINT32BE original_cross_id;  // bytes 8 to 11
   UINT32BE original_price;     // bytes 12 to 15
   UINT32BE original_volume;    // bytes 16 to 19
 } BrokenTradeReportMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x54: TimestampMessage timestamp_message;
+    case 0x53: SystemEventMessage system_event_message;
+    case 0x44: OptionsDirectoryMessage options_directory_message;
+    case 0x48: TradingActionMessage trading_action_message;
+    case 0x4F: SecurityOpenMessage security_open_message;
+    case 0x71: BestBidAndAskUpdateShortFormMessage best_bid_and_ask_update_short_form_message;
+    case 0x51: BestBidAndAskUpdateLongFormMessage best_bid_and_ask_update_long_form_message;
+    case 0x62: BestBidUpdateShortFormMessage best_bid_update_short_form_message;
+    case 0x61: BestBidUpdateShortFormMessage best_ask_update_short_form_message;
+    case 0x42: BestBidUpdateLongFormMessage best_bid_update_long_form_message;
+    case 0x41: BestBidUpdateLongFormMessage best_ask_update_long_form_message;
+    case 0x52: TradeReportMessage trade_report_message;
+    case 0x58: BrokenTradeReportMessage broken_trade_report_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// Mold Udp64 Message
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16BE message_length { message_length >= 1 };                                                                                                                 // bytes 0 to 1
+  UINT8 message_type;                                                                                                                                              // byte 2
+  Payload(message_type, (((UINT32) message_length) - 1)) payload[:byte-size-single-element-array (((UINT32) message_length) - 1)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// Mold Udp64 Message
+typedef struct _MessageRun (UINT16 message_count, UINT32 available, mutable UINT32 * tally) {
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size available];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} MessageRun;
+
+// Branch
+casetype _Messages (UINT16 selector, UINT16 message_count, UINT32 available, mutable UINT32 * tally) {
+  switch (selector) {
+    case 0x0000: unit heartbeat;
+    case 0xFFFF: unit end_of_session;
+    default: MessageRun(message_count, available, tally) message;
+  }
+} Messages;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Itch Mold Udp 64 Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 20) {
+  UINT8 session[10];                                                                                                           // bytes 0 to 9
+  UINT64BE sequence_number;                                                                                                    // bytes 10 to 17
+  UINT16BE message_count;                                                                                                      // bytes 18 to 19
+  Messages(message_count, message_count, (available - 20), tally) messages[:byte-size-single-element-array (available - 20)];
+} Packet;
 

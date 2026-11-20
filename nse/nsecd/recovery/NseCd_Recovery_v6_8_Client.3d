@@ -1,26 +1,79 @@
-// National Stock Exchange of India Ltd Mtbt Tick Data Recovery
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nse NseCd Recovery Tbt v6.8
 //
+// Protocol:
+//   Organization: National Stock Exchange of India Ltd
+//   Protocol: Mtbt Tick Data Recovery
+//   Encoding: Tbt
+//   Version: 6.8
+//   Date: 12/1/2025
+//   Specification: MTBT_FO_NNF_PROTOCOL_6_8_20260401172252.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ClientPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out NseCd_Recovery_v6_8_Client.3d
-//
-// What this definition does not state, and the model does:
-// - the dispatch that chooses a message by its type
-//
-// License: MIT No Attribution
 
-// ---- Tick Data Recovery Request Message: 10 bytes ----------------------------
+// ---- Values ------------------------------------------------------------------
+
+// Client Message Type: one byte code
+#define CLIENT_MESSAGE_TYPE_TICK_DATA_RECOVERY_REQUEST_MESSAGE 0x52  // Tick Data Recovery Request Message
+
+// ---- Types -------------------------------------------------------------------
 
 // Sent to the Recovery Server whenever tick data is missed.
-entrypoint typedef struct _TickDataRecoveryRequestMessage {
+typedef struct _TickDataRecoveryRequestMessage {
   UINT16 stream_id;              // bytes 0 to 1, signed, read here as unsigned
   UINT32 start_sequence_number;  // bytes 2 to 5
   UINT32 end_sequence_number;    // bytes 6 to 9
 } TickDataRecoveryRequestMessage;
+
+// Branch
+casetype _ClientPayload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x52: TickDataRecoveryRequestMessage tick_data_recovery_request_message;
+    default: UINT8 unknown[available];
+  }
+} ClientPayload;
+
+// Client request. First field is always Message Type and must be read/interpreted first.
+typedef struct _ClientMessage (UINT32 available) where (available >= 1) {
+  UINT8 client_message_type;                                                                                            // byte 0
+  ClientPayload(client_message_type, (available - 1)) client_payload[:byte-size-single-element-array (available - 1)];
+} ClientMessage;
+
+// ---- Packet: ClientPacket ----------------------------------------------------
+
+// Recovery request sent by the client. No header is required for this message.
+entrypoint typedef struct _ClientPacket (UINT32 available) {
+  ClientMessage(available) client_message;
+} ClientPacket;
 

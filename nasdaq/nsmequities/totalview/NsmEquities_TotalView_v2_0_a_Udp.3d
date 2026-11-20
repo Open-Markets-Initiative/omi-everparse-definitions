@@ -1,47 +1,83 @@
-// National Association of Securities Dealers Automated Quotations (Nasdaq) TotalView Itch
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nasdaq NsmEquities TotalView AsciiItch v2.0.a
 //
+// Protocol:
+//   Organization: National Association of Securities Dealers Automated Quotations (Nasdaq)
+//   Protocol: TotalView Itch
+//   Encoding: Ascii Itch
+//   Version: 2.0.a
+//   Date: 02/15/2007
+//   Specification: Nasdaq TotalView ITCH.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out NsmEquities_TotalView_v2_0_a_Udp.3d
-//
-// What this definition does not state, and the model does:
-// - the dispatch that chooses a message by its type
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 16 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-entrypoint typedef struct _PacketHeader {
-  UINT8 session[10];       // bytes 0 to 9
-  UINT32 sequence_number;  // bytes 10 to 13
-  UINT16 message_count;    // bytes 14 to 15
-} PacketHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_SYSTEM_EVENT_MESSAGE 0x53       // System Event Message
+#define MESSAGE_TYPE_ADD_ORDER_MESSAGE 0x41          // Add Order Message
+#define MESSAGE_TYPE_ORDER_EXECUTED_MESSAGE 0x45     // Order Executed Message
+#define MESSAGE_TYPE_ORDER_CANCEL_MESSAGE 0x58       // Order Cancel Message
+#define MESSAGE_TYPE_TRADE_MESSAGE 0x50              // Trade Message
+#define MESSAGE_TYPE_BROKEN_TRADE_MESSAGE 0x42       // Broken Trade Message
+#define MESSAGE_TYPE_STOCK_HALT_STATUS_MESSAGE 0x48  // Stock Halt Status Message
 
-// ---- Message Header: 9 bytes -------------------------------------------------
+// Event Code: one byte code
+#define EVENT_CODE_START_OF_DAY 0x53  // Start Of Day
+#define EVENT_CODE_END_OF_DAY 0x45    // End Of Day
 
-entrypoint typedef struct _MessageHeader {
-  UINT8 timestamp[8];  // bytes 0 to 7
-  UINT8 message_type;  // byte 8
-} MessageHeader;
+// Side: one byte code
+#define SIDE_BUY 0x42   // Buy
+#define SIDE_SELL 0x53  // Sell
 
-// ---- System Event Message: 1 byte --------------------------------------------
+// Display: one byte code
+#define DISPLAY_DISPLAYED 0x59     // Displayed
+#define DISPLAY_ATTRIBUTABLE 0x41  // Attributable
+
+// Stock Halted: one byte code
+#define STOCK_HALTED_HALTED 0x54   // Halted
+#define STOCK_HALTED_TRADING 0x46  // Trading
+
+// ---- Types -------------------------------------------------------------------
 
 // System Event Messages signal events that affect the entire NASDAQ system.
-entrypoint typedef struct _SystemEventMessage {
+typedef struct _SystemEventMessage {
   UINT8 event_code;  // byte 0
 } SystemEventMessage;
 
-// ---- Add Order Message: 37 bytes ---------------------------------------------
-
 // An Add Order Message indicates that a new order has been accepted by the NASDAQ system and added onto the displayable book. It includes a day-unique Order Reference Number assigned by NASDAQ to the order. The Add Order message is a variable length message, 42 or 46 bytes: the MMID field is present only if the Display field equals A (attributed).
-entrypoint typedef struct _AddOrderMessage {
+typedef struct _AddOrderMessage {
   UINT8 order_reference_number[9];  // bytes 0 to 8
   UINT8 side;                       // byte 9
   UINT8 shares[6];                  // bytes 10 to 15
@@ -51,27 +87,21 @@ entrypoint typedef struct _AddOrderMessage {
   UINT8 mmid[4];                    // bytes 33 to 36
 } AddOrderMessage;
 
-// ---- Order Executed Message: 24 bytes ----------------------------------------
-
 // This message is sent whenever an order on the book is executed in whole or in part. The execution price is always equal to the limit price of the order as indicated in the Add Order Message.
-entrypoint typedef struct _OrderExecutedMessage {
+typedef struct _OrderExecutedMessage {
   UINT8 order_reference_number[9];  // bytes 0 to 8
   UINT8 executed_shares[6];         // bytes 9 to 14
   UINT8 match_number[9];            // bytes 15 to 23
 } OrderExecutedMessage;
 
-// ---- Order Cancel Message: 15 bytes ------------------------------------------
-
 // This message is sent whenever an order on the book is modified as a result of being canceled in whole or in part.
-entrypoint typedef struct _OrderCancelMessage {
+typedef struct _OrderCancelMessage {
   UINT8 order_reference_number[9];  // bytes 0 to 8
   UINT8 canceled_shares[6];         // bytes 9 to 14
 } OrderCancelMessage;
 
-// ---- Trade Message: 41 bytes -------------------------------------------------
-
 // The Trade Message provides information about execution events that involve orders not visible on the NASDAQ book. A Trade Message is transmitted each time a hidden order is executed in whole or in part.
-entrypoint typedef struct _TradeMessage {
+typedef struct _TradeMessage {
   UINT8 order_reference_number[9];  // bytes 0 to 8
   UINT8 side;                       // byte 9
   UINT8 shares[6];                  // bytes 10 to 15
@@ -80,18 +110,73 @@ entrypoint typedef struct _TradeMessage {
   UINT8 match_number[9];            // bytes 32 to 40
 } TradeMessage;
 
-// ---- Broken Trade Message: 9 bytes -------------------------------------------
-
 // The Broken Trade message is sent whenever an execution on NASDAQ is broken.
-entrypoint typedef struct _BrokenTradeMessage {
+typedef struct _BrokenTradeMessage {
   UINT8 match_number[9];  // bytes 0 to 8
 } BrokenTradeMessage;
 
-// ---- Stock Halt Status Message: 7 bytes --------------------------------------
-
 // Prior to the start of system hours, NASDAQ will send out a Stock Halt Status spin. After the start of system hours, NASDAQ will use this message to relay trading status changes for an individual security.
-entrypoint typedef struct _StockHaltStatusMessage {
+typedef struct _StockHaltStatusMessage {
   UINT8 stock[6];      // bytes 0 to 5
   UINT8 stock_halted;  // byte 6
 } StockHaltStatusMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x53: SystemEventMessage system_event_message;
+    case 0x41: AddOrderMessage add_order_message;
+    case 0x45: OrderExecutedMessage order_executed_message;
+    case 0x58: OrderCancelMessage order_cancel_message;
+    case 0x50: TradeMessage trade_message;
+    case 0x42: BrokenTradeMessage broken_trade_message;
+    case 0x48: StockHaltStatusMessage stock_halt_status_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// Mold Udp message data
+typedef struct _MessageData (UINT16 message_length) where (message_length >= 9) {
+  UINT8 timestamp[8];                                                                                                               // bytes 0 to 7
+  UINT8 message_type;                                                                                                               // byte 8
+  Payload(message_type, (((UINT32) message_length) - 9)) payload[:byte-size-single-element-array (((UINT32) message_length) - 9)];
+} MessageData;
+
+// Branch
+casetype _MessageBody (UINT16 selector, UINT16 message_length) {
+  switch (selector) {
+    case 0x0000: unit end_of_session;
+    default: MessageData(message_length) message_data;
+  }
+} MessageBody;
+
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16 message_length;                                                                                                                                           // bytes 0 to 1
+  MessageBody(message_length, message_length) message_body[:byte-size-single-element-array ((((UINT32) message_length) + 2) - 2)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+typedef struct _MessageRun (UINT16 message_count, UINT32 available, mutable UINT32 * tally) {
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size available];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} MessageRun;
+
+// Branch
+casetype _Messages (UINT16 selector, UINT16 message_count, UINT32 available, mutable UINT32 * tally) {
+  switch (selector) {
+    case 0x0000: unit heartbeat;
+    default: MessageRun(message_count, available, tally) message;
+  }
+} Messages;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Itch Udp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 16) {
+  UINT8 session[10];                                                                                                           // bytes 0 to 9
+  UINT32 sequence_number;                                                                                                      // bytes 10 to 13
+  UINT16 message_count;                                                                                                        // bytes 14 to 15
+  Messages(message_count, message_count, (available - 16), tally) messages[:byte-size-single-element-array (available - 16)];
+} Packet;
 

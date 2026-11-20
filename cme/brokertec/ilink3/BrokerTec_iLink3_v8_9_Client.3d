@@ -1,56 +1,367 @@
-// CME Group iLink 3
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Cme BrokerTec iLink3 Sbe v8.9
 //
+// Protocol:
+//   Organization: CME Group
+//   Protocol: iLink 3
+//   Encoding: Simple Binary Encoding
+//   Version: 8.9
+//   Date: 5/31/2025
+//   Specification: ilinkbinary.xml
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ClientPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out BrokerTec_iLink3_v8_9_Client.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a field present only on a condition
-// - a field read in bits
-// - a block whose stated length holds more than its fields
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Simple Open Framing Header: 4 bytes -------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Simple Open Framing Header
-entrypoint typedef struct _SimpleOpenFramingHeader {
-  UINT16 message_length;  // bytes 0 to 1
-  UINT16 encoding_type;   // bytes 2 to 3
-} SimpleOpenFramingHeader;
+// Template Id: 2 byte code
+#define TEMPLATE_ID_NEGOTIATE 0x01F4                                   // Negotiate
+#define TEMPLATE_ID_NEGOTIATION_RESPONSE 0x01F5                        // Negotiation Response
+#define TEMPLATE_ID_NEGOTIATION_REJECT 0x01F6                          // Negotiation Reject
+#define TEMPLATE_ID_ESTABLISH 0x01F7                                   // Establish
+#define TEMPLATE_ID_ESTABLISHMENT_ACK 0x01F8                           // Establishment Ack
+#define TEMPLATE_ID_ESTABLISHMENT_REJECT 0x01F9                        // Establishment Reject
+#define TEMPLATE_ID_SEQUENCE 0x01FA                                    // Sequence
+#define TEMPLATE_ID_TERMINATE 0x01FB                                   // Terminate
+#define TEMPLATE_ID_RETRANSMIT_REQUEST 0x01FC                          // Retransmit Request
+#define TEMPLATE_ID_RETRANSMISSION 0x01FD                              // Retransmission
+#define TEMPLATE_ID_RETRANSMIT_REJECT 0x01FE                           // Retransmit Reject
+#define TEMPLATE_ID_NOT_APPLIED 0x0201                                 // Not Applied
+#define TEMPLATE_ID_NEW_ORDER_SINGLE 0x0202                            // New Order Single
+#define TEMPLATE_ID_ORDER_CANCEL_REPLACE_REQUEST 0x0203                // Order Cancel Replace Request
+#define TEMPLATE_ID_ORDER_CANCEL_REQUEST 0x0204                        // Order Cancel Request
+#define TEMPLATE_ID_MASS_QUOTE 0x0205                                  // Mass Quote
+#define TEMPLATE_ID_PARTY_DETAILS_DEFINITION_REQUEST 0x0206            // Party Details Definition Request
+#define TEMPLATE_ID_PARTY_DETAILS_DEFINITION_REQUEST_ACK 0x0207        // Party Details Definition Request Ack
+#define TEMPLATE_ID_BUSINESS_REJECT 0x0209                             // Business Reject
+#define TEMPLATE_ID_EXECUTION_REPORT_NEW 0x020A                        // Execution Report New
+#define TEMPLATE_ID_EXECUTION_REPORT_REJECT 0x020B                     // Execution Report Reject
+#define TEMPLATE_ID_EXECUTION_REPORT_ELIMINATION 0x020C                // Execution Report Elimination
+#define TEMPLATE_ID_EXECUTION_REPORT_TRADE_OUTRIGHT 0x020D             // Execution Report Trade Outright
+#define TEMPLATE_ID_EXECUTION_REPORT_TRADE_SPREAD 0x020E               // Execution Report Trade Spread
+#define TEMPLATE_ID_EXECUTION_REPORT_TRADE_SPREAD_LEG 0x020F           // Execution Report Trade Spread Leg
+#define TEMPLATE_ID_QUOTE_CANCEL 0x0210                                // Quote Cancel
+#define TEMPLATE_ID_ORDER_MASS_ACTION_REQUEST 0x0211                   // Order Mass Action Request
+#define TEMPLATE_ID_ORDER_MASS_STATUS_REQUEST 0x0212                   // Order Mass Status Request
+#define TEMPLATE_ID_EXECUTION_REPORT_MODIFY 0x0213                     // Execution Report Modify
+#define TEMPLATE_ID_EXECUTION_REPORT_STATUS 0x0214                     // Execution Report Status
+#define TEMPLATE_ID_ORDER_STATUS_REQUEST 0x0215                        // Order Status Request
+#define TEMPLATE_ID_EXECUTION_REPORT_CANCEL 0x0216                     // Execution Report Cancel
+#define TEMPLATE_ID_ORDER_CANCEL_REJECT 0x0217                         // Order Cancel Reject
+#define TEMPLATE_ID_ORDER_CANCEL_REPLACE_REJECT 0x0218                 // Order Cancel Replace Reject
+#define TEMPLATE_ID_PARTY_DETAILS_LIST_REQUEST 0x0219                  // Party Details List Request
+#define TEMPLATE_ID_PARTY_DETAILS_LIST_REPORT 0x021A                   // Party Details List Report
+#define TEMPLATE_ID_EXECUTION_ACK 0x021B                               // Execution Ack
+#define TEMPLATE_ID_REQUEST_FOR_QUOTE 0x021F                           // Request For Quote
+#define TEMPLATE_ID_NEW_ORDER_CROSS 0x0220                             // New Order Cross
+#define TEMPLATE_ID_MASS_QUOTE_ACK 0x0221                              // Mass Quote Ack
+#define TEMPLATE_ID_REQUEST_FOR_QUOTE_ACK 0x0222                       // Request For Quote Ack
+#define TEMPLATE_ID_EXECUTION_REPORT_TRADE_ADDENDUM_OUTRIGHT 0x0224    // Execution Report Trade Addendum Outright
+#define TEMPLATE_ID_EXECUTION_REPORT_TRADE_ADDENDUM_SPREAD 0x0225      // Execution Report Trade Addendum Spread
+#define TEMPLATE_ID_EXECUTION_REPORT_TRADE_ADDENDUM_SPREAD_LEG 0x0226  // Execution Report Trade Addendum Spread Leg
+#define TEMPLATE_ID_SECURITY_DEFINITION_REQUEST 0x0230                 // Security Definition Request
+#define TEMPLATE_ID_SECURITY_DEFINITION_RESPONSE 0x0231                // Security Definition Response
+#define TEMPLATE_ID_ORDER_MASS_ACTION_REPORT 0x0232                    // Order Mass Action Report
+#define TEMPLATE_ID_QUOTE_CANCEL_ACK 0x0233                            // Quote Cancel Ack
+#define TEMPLATE_ID_EXECUTION_REPORT_PENDING_CANCEL 0x0234             // Execution Report Pending Cancel
+#define TEMPLATE_ID_EXECUTION_REPORT_PENDING_REPLACE 0x0235            // Execution Report Pending Replace
+#define TEMPLATE_ID_REQUEST_FOR_CROSS 0x0236                           // Request For Cross
+#define TEMPLATE_ID_MASS_QUOTE_REQUEST 0x0237                          // Mass Quote Request
+#define TEMPLATE_ID_QUOTE_CANCEL_BY_SET 0x0238                         // Quote Cancel By Set
+#define TEMPLATE_ID_QUOTE_CANCEL_BY_GROUP 0x0239                       // Quote Cancel By Group
+#define TEMPLATE_ID_QUOTE_CANCEL_BY_INSTRUMENT 0x023A                  // Quote Cancel By Instrument
+#define TEMPLATE_ID_MASS_QUOTE_RESPONSE 0x023B                         // Mass Quote Response
 
-// ---- Message Header: 8 bytes -------------------------------------------------
+// Fault Tolerance Indicator: one byte code
+#define FAULT_TOLERANCE_INDICATOR_BACKUP 0x00   // Backup
+#define FAULT_TOLERANCE_INDICATOR_PRIMARY 0x01  // Primary
 
-// Template ID and length of message root
-entrypoint typedef struct _MessageHeader {
-  UINT16 block_length;  // bytes 0 to 1
-  UINT16 template_id;   // bytes 2 to 3
-  UINT16 schema_id;     // bytes 4 to 5
-  UINT16 version;       // bytes 6 to 7
-} MessageHeader;
+// Keep Alive Interval Lapsed: one byte code
+#define KEEP_ALIVE_INTERVAL_LAPSED_NOT_LAPSED 0x00  // Not Lapsed
+#define KEEP_ALIVE_INTERVAL_LAPSED_LAPSED 0x01      // Lapsed
 
-// ---- Sequence: 14 bytes ------------------------------------------------------
+// Split Msg: one byte code
+#define SPLIT_MSG_SPLIT_MESSAGE_DELAYED 0x00        // Split Message Delayed
+#define SPLIT_MSG_OUTOF_ORDER_MESSAGE_DELAYED 0x01  // Outof Order Message Delayed
+#define SPLIT_MSG_COMPLETE_MESSAGE_DELAYED 0x02     // Complete Message Delayed
+
+// Side: one byte code
+#define SIDE_BUY 0x01          // Buy
+#define SIDE_SELL 0x02         // Sell
+#define SIDE_UNDISCLOSED 0x07  // Undisclosed
+
+// Ord Type: one byte code
+#define ORD_TYPE_MARKETWITH_PROTECTION 0x31          // Marketwith Protection
+#define ORD_TYPE_LIMIT 0x32                          // Limit
+#define ORD_TYPE_STOPWITH_PROTECTION 0x33            // Stopwith Protection
+#define ORD_TYPE_STOP_LIMIT 0x34                     // Stop Limit
+#define ORD_TYPE_MARKET_WITH_LEFTOVER_AS_LIMIT 0x4B  // Market With Leftover As Limit
+
+// Time In Force: one byte code
+#define TIME_IN_FORCE_DAY 0x00               // Day
+#define TIME_IN_FORCE_GOOD_TILL_CANCEL 0x01  // Good Till Cancel
+#define TIME_IN_FORCE_FILL_AND_KILL 0x03     // Fill And Kill
+#define TIME_IN_FORCE_FILL_OR_KILL 0x04      // Fill Or Kill
+#define TIME_IN_FORCE_GOOD_TILL_DATE 0x06    // Good Till Date
+#define TIME_IN_FORCE_GOOD_FOR_SESSION 0x63  // Good For Session
+
+// Manual Order Indicator: one byte code
+#define MANUAL_ORDER_INDICATOR_AUTOMATED 0x00  // Automated
+#define MANUAL_ORDER_INDICATOR_MANUAL 0x01     // Manual
+
+// Execution Mode: one byte code
+#define EXECUTION_MODE_AGGRESSIVE 0x41  // Aggressive
+#define EXECUTION_MODE_PASSIVE 0x50     // Passive
+
+// Liquidity Flag: one byte code
+#define LIQUIDITY_FLAG_FALSE 0x00  // False
+#define LIQUIDITY_FLAG_TRUE 0x01   // True
+
+// Managed Order: one byte code
+#define MANAGED_ORDER_FALSE 0x00  // False
+#define MANAGED_ORDER_TRUE 0x01   // True
+
+// Short Sale Type: one byte code
+#define SHORT_SALE_TYPE_LONG_SELL 0x00                                        // Long Sell
+#define SHORT_SALE_TYPE_SHORT_SALE_WITH_NO_EXEMPTION_SESH 0x01                // Short Sale With No Exemption Sesh
+#define SHORT_SALE_TYPE_SHORT_SALE_WITH_EXEMPTION_SSEX 0x02                   // Short Sale With Exemption Ssex
+#define SHORT_SALE_TYPE_UNDISCLOSED_SELL_INFORMATION_NOT_AVAILABLE_UNDI 0x03  // Undisclosed Sell Information Not Available Undi
+
+// Ofm Override: one byte code
+#define OFM_OVERRIDE_DISABLED 0x00  // Disabled
+#define OFM_OVERRIDE_ENABLED 0x01   // Enabled
+
+// Mm Protection Reset: one byte code
+#define MM_PROTECTION_RESET_FALSE 0x00  // False
+#define MM_PROTECTION_RESET_TRUE 0x01   // True
+
+// Quote Entry Open: one byte code
+#define QUOTE_ENTRY_OPEN_FALSE 0x00  // False
+#define QUOTE_ENTRY_OPEN_TRUE 0x01   // True
+
+// List Update Action: one byte code
+#define LIST_UPDATE_ACTION_ADD 0x41     // Add
+#define LIST_UPDATE_ACTION_DELETE 0x44  // Delete
+
+// Cmta Giveup Cd: one byte code
+#define CMTA_GIVEUP_CD_GIVE_UP 0x47     // Give Up
+#define CMTA_GIVEUP_CD_SG_XOFFSET 0x53  // Sg Xoffset
+
+// Cust Order Capacity: one byte code
+#define CUST_ORDER_CAPACITY_MEMBERTRADINGFORTHEIROWNACCOUNT 0x01            // Membertradingfortheirownaccount
+#define CUST_ORDER_CAPACITY_MEMBERFIRMTRADINGFORITSPROPRIETARYACCOUNT 0x02  // Memberfirmtradingforitsproprietaryaccount
+#define CUST_ORDER_CAPACITY_MEMBERTRADINGFORANOTHERMEMBERORNONMEMBER 0x03   // Membertradingforanothermemberornonmember
+#define CUST_ORDER_CAPACITY_ALLOTHER 0x04                                   // Allother
+
+// Clearing Account Type: one byte code
+#define CLEARING_ACCOUNT_TYPE_CUSTOMER 0x00  // Customer
+#define CLEARING_ACCOUNT_TYPE_FIRM 0x01      // Firm
+
+// Self Match Prevention Instruction: one byte code
+#define SELF_MATCH_PREVENTION_INSTRUCTION_CANCEL_NEWEST 0x4E  // Cancel Newest
+#define SELF_MATCH_PREVENTION_INSTRUCTION_CANCEL_OLDEST 0x4F  // Cancel Oldest
+
+// Avg Px Indicator: one byte code
+#define AVG_PX_INDICATOR_NO_AVERAGE_PRICING 0x00                                                 // No Average Pricing
+#define AVG_PX_INDICATOR_TRADEISPARTOFAN_AVERAGE_PRICE_GROUP_IDENTIFIEDBYTHE_AVG_PX_GRP_ID 0x01  // Tradeispartofan Average Price Group Identifiedbythe Avg Px Grp Id
+#define AVG_PX_INDICATOR_TRADEISPARTOFA_NOTIONAL_VALUE_AVERAGE_PRICE_GROUP 0x03                  // Tradeispartofa Notional Value Average Price Group
+
+// Clearing Trade Price Type: one byte code
+#define CLEARING_TRADE_PRICE_TYPE_TRADE_CLEARINGAT_EXECUTION_PRICE 0x00           // Trade Clearingat Execution Price
+#define CLEARING_TRADE_PRICE_TYPE_TRADE_CLEARINGAT_ALTERNATE_CLEARING_PRICE 0x01  // Trade Clearingat Alternate Clearing Price
+
+// Cust Order Handling Inst: one byte code
+#define CUST_ORDER_HANDLING_INST_FC_MPROVIDEDSCREEN 0x43   // Fc Mprovidedscreen
+#define CUST_ORDER_HANDLING_INST_OTHERPROVIDEDSCREEN 0x44  // Otherprovidedscreen
+#define CUST_ORDER_HANDLING_INST_FCMAP_IOR_FIX 0x47        // Fcmap Ior Fix
+#define CUST_ORDER_HANDLING_INST_ALGO_ENGINE 0x48          // Algo Engine
+#define CUST_ORDER_HANDLING_INST_DESK_ELECTRONIC 0x57      // Desk Electronic
+#define CUST_ORDER_HANDLING_INST_CLIENT_ELECTRONIC 0x59    // Client Electronic
+
+// Party Detail Role: 2 byte code
+#define PARTY_DETAIL_ROLE_EXECUTING_FIRM 0x0001    // Executing Firm
+#define PARTY_DETAIL_ROLE_CUSTOMER_ACCOUNT 0x0018  // Customer Account
+#define PARTY_DETAIL_ROLE_TAKE_UP_FIRM 0x0060      // Take Up Firm
+#define PARTY_DETAIL_ROLE_OPERATOR 0x0076          // Operator
+#define PARTY_DETAIL_ROLE_TAKE_UP_ACCOUNT 0x03E8   // Take Up Account
+
+// Quote Cancel Type: one byte code
+#define QUOTE_CANCEL_TYPE_CANCELPER_INSTRUMENT 0x01       // Cancelper Instrument
+#define QUOTE_CANCEL_TYPE_CANCELPER_INSTRUMENTGROUP 0x03  // Cancelper Instrumentgroup
+#define QUOTE_CANCEL_TYPE_CANCELALLQUOTES 0x04            // Cancelallquotes
+#define QUOTE_CANCEL_TYPE_CANCELPER_QUOTE_SET 0x64        // Cancelper Quote Set
+
+// Mass Action Scope: one byte code
+#define MASS_ACTION_SCOPE_INSTRUMENT 0x01         // Instrument
+#define MASS_ACTION_SCOPE_ALL 0x07                // All
+#define MASS_ACTION_SCOPE_MARKET_SEGMENT_ID 0x09  // Market Segment Id
+#define MASS_ACTION_SCOPE_INSTRUMENT_GROUP 0x0A   // Instrument Group
+#define MASS_ACTION_SCOPE_QUOTE_SET_ID 0x64       // Quote Set Id
+
+// Mass Cancel Request Type: one byte code
+#define MASS_CANCEL_REQUEST_TYPE_SENDER_SUB_ID 0x64  // Sender Sub Id
+#define MASS_CANCEL_REQUEST_TYPE_ACCOUNT 0x65        // Account
+
+// Side Optional: one byte code
+#define SIDE_OPTIONAL_BUY 0x01   // Buy
+#define SIDE_OPTIONAL_SELL 0x02  // Sell
+
+// Mass Action Ord Typ: one byte code
+#define MASS_ACTION_ORD_TYP_LIMIT 0x32       // Limit
+#define MASS_ACTION_ORD_TYP_STOP_LIMIT 0x34  // Stop Limit
+
+// Mass Cancel Tif: one byte code
+#define MASS_CANCEL_TIF_DAY 0x00               // Day
+#define MASS_CANCEL_TIF_GOOD_TILL_CANCEL 0x01  // Good Till Cancel
+#define MASS_CANCEL_TIF_GOOD_TILL_DATE 0x06    // Good Till Date
+
+// Mass Status Req Type: one byte code
+#define MASS_STATUS_REQ_TYPE_INSTRUMENT 0x01        // Instrument
+#define MASS_STATUS_REQ_TYPE_INSTRUMENT_GROUP 0x03  // Instrument Group
+#define MASS_STATUS_REQ_TYPE_ALL_ORDERS 0x07        // All Orders
+#define MASS_STATUS_REQ_TYPE_MARKET_SEGMENT 0x64    // Market Segment
+
+// Ord Status Req Type: one byte code
+#define ORD_STATUS_REQ_TYPE_SENDER_SUB_ID 0x64  // Sender Sub Id
+#define ORD_STATUS_REQ_TYPE_ACCOUNT 0x65        // Account
+
+// Mass Status Tif: one byte code
+#define MASS_STATUS_TIF_DAY 0x00  // Day
+#define MASS_STATUS_TIF_GTC 0x01  // Gtc
+#define MASS_STATUS_TIF_GTD 0x06  // Gtd
+#define MASS_STATUS_TIF_GFS 0x63  // Gfs
+
+// Exec Ack Status: one byte code
+#define EXEC_ACK_STATUS_ACCEPTED 0x01  // Accepted
+#define EXEC_ACK_STATUS_REJECTED 0x02  // Rejected
+
+// Dk Reason: one byte code
+#define DK_REASON_UNKNOWN_SECURITY 0x41              // Unknown Security
+#define DK_REASON_WRONG_SIDE 0x42                    // Wrong Side
+#define DK_REASON_QUANTITY_EXCEEDS_ORDER 0x43        // Quantity Exceeds Order
+#define DK_REASON_NO_MATCHING_ORDER 0x44             // No Matching Order
+#define DK_REASON_PRICE_EXCEEDS_LIMIT 0x45           // Price Exceeds Limit
+#define DK_REASON_CALCULATION_DIFFERENCE 0x46        // Calculation Difference
+#define DK_REASON_NO_MATCHING_EXECUTION_REPORT 0x47  // No Matching Execution Report
+#define DK_REASON_OTHER 0x5A                         // Other
+
+// Quote Type: one byte code
+#define QUOTE_TYPE_TRADEABLE 0x01  // Tradeable
+
+// Rfq Side: one byte code
+#define RFQ_SIDE_BUY 0x01    // Buy
+#define RFQ_SIDE_SELL 0x02   // Sell
+#define RFQ_SIDE_CROSS 0x08  // Cross
+
+// Side Time In Force: one byte code
+#define SIDE_TIME_IN_FORCE_DAY 0x00  // Day
+#define SIDE_TIME_IN_FORCE_FAK 0x03  // Fak
+
+// Leg Side: one byte code
+#define LEG_SIDE_BUY 0x01          // Buy
+#define LEG_SIDE_SELL 0x02         // Sell
+#define LEG_SIDE_UNDISCLOSED 0x07  // Undisclosed
+
+// Cross Type: one byte code
+#define CROSS_TYPE_CROSS 0x03    // Cross
+#define CROSS_TYPE_R_CROSS 0x14  // R Cross
+#define CROSS_TYPE_C_CROSS 0x15  // C Cross
+
+// Quote Entry Control: one byte code
+#define QUOTE_ENTRY_CONTROL_FALSE 0x00  // False
+#define QUOTE_ENTRY_CONTROL_TRUE 0x01   // True
+
+// Quote Side: one byte code
+#define QUOTE_SIDE_BUY 0x01   // Buy
+#define QUOTE_SIDE_SELL 0x02  // Sell
+
+// Cxl Linked Sessions: one byte code
+#define CXL_LINKED_SESSIONS_FALSE 0x00  // False
+#define CXL_LINKED_SESSIONS_TRUE 0x01   // True
+
+// ---- Types -------------------------------------------------------------------
+
+// Variable Length Data
+casetype _OptionalCredentialsData (Bool present, UINT32 length) {
+  switch (present) {
+    case true: UINT8 credentials_data[length];
+    case false: unit absent;
+  }
+} OptionalCredentialsData;
+
+// Not used and will be set to 0
+typedef struct _Credentials {
+  UINT16 credentials_length;                                                                               // bytes 0 to 1
+  OptionalCredentialsData((credentials_length > 0x0000), ((UINT32) credentials_length)) credentials_data;
+} Credentials;
+
+// The customer sends the Negotiate message to CME to initiate a connection.
+typedef struct _Negotiate {
+  UINT8 hmac_signature[32];  // bytes 0 to 31
+  UINT8 access_key_id[20];   // bytes 32 to 51
+  UINT64 uuid;               // bytes 52 to 59
+  UINT64 request_timestamp;  // bytes 60 to 67
+  UINT8 session[3];          // bytes 68 to 70
+  UINT8 firm[5];             // bytes 71 to 75
+  Credentials credentials;
+} Negotiate;
+
+// After negotiation is complete, the customer must send an Establish message to start assigning sequence numbers. Once established, customers can submit orders and quotes.
+typedef struct _Establish {
+  UINT8 hmac_signature[32];          // bytes 0 to 31
+  UINT8 access_key_id[20];           // bytes 32 to 51
+  UINT8 trading_system_name[30];     // bytes 52 to 81
+  UINT8 trading_system_version[10];  // bytes 82 to 91
+  UINT8 trading_system_vendor[10];   // bytes 92 to 101
+  UINT64 uuid;                       // bytes 102 to 109
+  UINT64 request_timestamp;          // bytes 110 to 117
+  UINT32 next_seq_no;                // bytes 118 to 121
+  UINT8 session[3];                  // bytes 122 to 124
+  UINT8 firm[5];                     // bytes 125 to 129
+  UINT16 keep_alive_interval;        // bytes 130 to 131
+  Credentials credentials;
+} Establish;
 
 // The Sequence message is used in both Recoverable (CME to customer) and Idempotent (customer to CME) flows.
-entrypoint typedef struct _Sequence {
+typedef struct _Sequence {
   UINT64 uuid;                       // bytes 0 to 7
   UINT32 next_seq_no;                // bytes 8 to 11
   UINT8 fault_tolerance_indicator;   // byte 12
   UINT8 keep_alive_interval_lapsed;  // byte 13
 } Sequence;
 
-// ---- Terminate: 67 bytes -----------------------------------------------------
-
 // The Terminate message is sent to indicate that the sender is going to disconnect the TCP socket connection.
-entrypoint typedef struct _Terminate {
+typedef struct _Terminate {
   UINT8 reason[48];          // bytes 0 to 47
   UINT64 uuid;               // bytes 48 to 55
   UINT64 request_timestamp;  // bytes 56 to 63
@@ -58,10 +369,8 @@ entrypoint typedef struct _Terminate {
   UINT8 split_msg;           // byte 66
 } Terminate;
 
-// ---- Retransmit Request: 30 bytes --------------------------------------------
-
 // Customers can send the Retransmit Request message to recover missed messages.
-entrypoint typedef struct _RetransmitRequest {
+typedef struct _RetransmitRequest {
   UINT64 uuid;               // bytes 0 to 7
   UINT64 last_uuid;          // bytes 8 to 15
   UINT64 request_timestamp;  // bytes 16 to 23
@@ -69,10 +378,81 @@ entrypoint typedef struct _RetransmitRequest {
   UINT16 msg_count_16;       // bytes 28 to 29
 } RetransmitRequest;
 
-// ---- Order Cancel Request: 96 bytes ------------------------------------------
+// Used to enter an order in the system; the behavior of an order can be affected by many parameters such as order type and order type qualifier.
+typedef struct _NewOrderSingle {
+  UINT64 price_optional;             // bytes 0 to 7, signed, read here as unsigned
+  UINT32 order_qty;                  // bytes 8 to 11
+  UINT32 security_id;                // bytes 12 to 15, signed, read here as unsigned
+  UINT8 side;                        // byte 16
+  UINT32 seq_num;                    // bytes 17 to 20
+  UINT8 sender_id[20];               // bytes 21 to 40
+  UINT8 cl_ord_id[20];               // bytes 41 to 60
+  UINT64 party_details_list_req_id;  // bytes 61 to 68
+  UINT64 order_request_id;           // bytes 69 to 76
+  UINT64 sending_time_epoch;         // bytes 77 to 84
+  UINT64 stop_px;                    // bytes 85 to 92, signed, read here as unsigned
+  UINT8 location[5];                 // bytes 93 to 97
+  UINT32 min_qty;                    // bytes 98 to 101
+  UINT32 display_qty;                // bytes 102 to 105
+  UINT16 expire_date;                // bytes 106 to 107
+  UINT8 ord_type;                    // byte 108
+  UINT8 time_in_force;               // byte 109
+  UINT8 manual_order_indicator;      // byte 110
+  UINT8 aon : 1;                     // byte 111
+  UINT8 ob : 1;                      // byte 111
+  UINT8 nh : 1;                      // byte 111
+  UINT8 exec_inst_reserved_1 : 1;    // byte 111
+  UINT8 exec_inst_reserved_2 : 1;    // byte 111
+  UINT8 exec_inst_reserved_3 : 1;    // byte 111
+  UINT8 exec_inst_reserved_4 : 1;    // byte 111
+  UINT8 exec_inst_reserved_5 : 1;    // byte 111
+  UINT8 execution_mode;              // byte 112
+  UINT8 liquidity_flag;              // byte 113
+  UINT8 managed_order;               // byte 114
+  UINT8 short_sale_type;             // byte 115
+  UINT64 discretion_price;           // bytes 116 to 123, signed, read here as unsigned
+  UINT64 reservation_price;          // bytes 124 to 131, signed, read here as unsigned
+} NewOrderSingle;
+
+// Sent by client system to replace an existing order.
+typedef struct _OrderCancelReplaceRequest {
+  UINT64 price_optional;             // bytes 0 to 7, signed, read here as unsigned
+  UINT32 order_qty;                  // bytes 8 to 11
+  UINT32 security_id;                // bytes 12 to 15, signed, read here as unsigned
+  UINT8 side;                        // byte 16
+  UINT32 seq_num;                    // bytes 17 to 20
+  UINT8 sender_id[20];               // bytes 21 to 40
+  UINT8 cl_ord_id[20];               // bytes 41 to 60
+  UINT64 party_details_list_req_id;  // bytes 61 to 68
+  UINT64 order_id_optional;          // bytes 69 to 76
+  UINT64 stop_px;                    // bytes 77 to 84, signed, read here as unsigned
+  UINT64 order_request_id;           // bytes 85 to 92
+  UINT64 sending_time_epoch;         // bytes 93 to 100
+  UINT8 location[5];                 // bytes 101 to 105
+  UINT32 min_qty;                    // bytes 106 to 109
+  UINT32 display_qty;                // bytes 110 to 113
+  UINT16 expire_date;                // bytes 114 to 115
+  UINT8 ord_type;                    // byte 116
+  UINT8 time_in_force;               // byte 117
+  UINT8 manual_order_indicator;      // byte 118
+  UINT8 ofm_override;                // byte 119
+  UINT8 aon : 1;                     // byte 120
+  UINT8 ob : 1;                      // byte 120
+  UINT8 nh : 1;                      // byte 120
+  UINT8 exec_inst_reserved_1 : 1;    // byte 120
+  UINT8 exec_inst_reserved_2 : 1;    // byte 120
+  UINT8 exec_inst_reserved_3 : 1;    // byte 120
+  UINT8 exec_inst_reserved_4 : 1;    // byte 120
+  UINT8 exec_inst_reserved_5 : 1;    // byte 120
+  UINT8 execution_mode;              // byte 121
+  UINT8 liquidity_flag;              // byte 122
+  UINT8 managed_order;               // byte 123
+  UINT8 short_sale_type;             // byte 124
+  UINT64 discretion_price;           // bytes 125 to 132, signed, read here as unsigned
+} OrderCancelReplaceRequest;
 
 // Sent by client system to cancel an existing order; an order may be cancelled by referencing the Order ID.
-entrypoint typedef struct _OrderCancelRequest {
+typedef struct _OrderCancelRequest {
   UINT64 order_id_optional;          // bytes 0 to 7
   UINT64 party_details_list_req_id;  // bytes 8 to 15
   UINT8 manual_order_indicator;      // byte 16
@@ -88,18 +468,139 @@ entrypoint typedef struct _OrderCancelRequest {
   UINT8 orig_order_user[8];          // bytes 88 to 95
 } OrderCancelRequest;
 
-// ---- Group Size: 3 bytes -----------------------------------------------------
+// The number of quoute entries for a quote set
+typedef struct _QuoteEntriesGroup {
+  UINT64 bid_px;                  // bytes 0 to 7, signed, read here as unsigned
+  UINT64 offer_px;                // bytes 8 to 15, signed, read here as unsigned
+  UINT32 quote_entry_id;          // bytes 16 to 19
+  UINT32 security_id;             // bytes 20 to 23, signed, read here as unsigned
+  UINT32 bid_size;                // bytes 24 to 27
+  UINT32 offer_size;              // bytes 28 to 31
+  UINT32 underlying_security_id;  // bytes 32 to 35, signed, read here as unsigned
+  UINT16 quote_set_id;            // bytes 36 to 37
+} QuoteEntriesGroup;
 
-// Repeating group dimensions
-entrypoint typedef struct _GroupSize {
-  UINT16 block_length;  // bytes 0 to 1
-  UINT8 num_in_group;   // byte 2
-} GroupSize;
+// NoQuoteEntries Block
+typedef struct _QuoteEntriesGroups {
+  UINT16 block_length;                                                               // bytes 0 to 1
+  UINT8 num_in_group;                                                                // byte 2
+  QuoteEntriesGroup quote_entries_group[:byte-size (((UINT32) num_in_group) * 38)];
+} QuoteEntriesGroups;
 
-// ---- Order Mass Action Request: 79 bytes -------------------------------------
+// Authorized market makers use the Mass Quote message to submit bid/ask pairs and generate two-sided markets for multiple instruments for options.
+typedef struct _MassQuote {
+  UINT64 party_details_list_req_id;         // bytes 0 to 7
+  UINT64 sending_time_epoch;                // bytes 8 to 15
+  UINT8 manual_order_indicator;             // byte 16
+  UINT32 seq_num;                           // bytes 17 to 20
+  UINT8 sender_id[20];                      // bytes 21 to 40
+  UINT64 quote_req_id_optional;             // bytes 41 to 48
+  UINT8 location[5];                        // bytes 49 to 53
+  UINT32 quote_id;                          // bytes 54 to 57
+  UINT8 tot_no_quote_entries;               // byte 58
+  UINT8 mm_protection_reset;                // byte 59
+  UINT8 liquidity_flag;                     // byte 60
+  UINT8 short_sale_type;                    // byte 61
+  UINT8 unused_30[30];                      // bytes 62 to 91
+  UINT8 future_30[30];                      // bytes 92 to 121
+  UINT8 quote_entry_open;                   // byte 122
+  QuoteEntriesGroups quote_entries_groups;
+} MassQuote;
+
+// Number of party details. More than one occurrence of the same party role is not allowed and will be rejected
+typedef struct _PartyDetailsGroup {
+  UINT8 party_detail_id[20];  // bytes 0 to 19
+  UINT16 party_detail_role;   // bytes 20 to 21
+} PartyDetailsGroup;
+
+// NoPartyDetails Block
+typedef struct _PartyDetailsGroups {
+  UINT16 block_length;                                                               // bytes 0 to 1
+  UINT8 num_in_group;                                                                // byte 2
+  PartyDetailsGroup party_details_group[:byte-size (((UINT32) num_in_group) * 22)];
+} PartyDetailsGroups;
+
+// Number of regulatory publication rules in repeating group. Should always be set to 1 if being used otherwise set to 0
+typedef struct _TrdRegPublicationsGroup {
+  UINT8 trd_reg_publication_type;    // byte 0
+  UINT8 trd_reg_publication_reason;  // byte 1
+} TrdRegPublicationsGroup;
+
+// NoTrdRegPublications Block
+typedef struct _TrdRegPublicationsGroups {
+  UINT16 block_length;                                                                           // bytes 0 to 1
+  UINT8 num_in_group;                                                                            // byte 2
+  TrdRegPublicationsGroup trd_reg_publications_group[:byte-size (((UINT32) num_in_group) * 2)];
+} TrdRegPublicationsGroups;
+
+// The Party Details Definition Request message is used to provide all customer information, clearing instructions, order source, self-match parameters, etc. Only one party update is allowed per message.
+typedef struct _PartyDetailsDefinitionRequest {
+  UINT64 party_details_list_req_id;                      // bytes 0 to 7
+  UINT64 sending_time_epoch;                             // bytes 8 to 15
+  UINT8 list_update_action;                              // byte 16
+  UINT32 seq_num;                                        // bytes 17 to 20
+  UINT8 memo[75];                                        // bytes 21 to 95
+  UINT8 avg_px_group_id[20];                             // bytes 96 to 115
+  UINT64 self_match_prevention_id;                       // bytes 116 to 123
+  UINT8 cmta_giveup_cd;                                  // byte 124
+  UINT8 cust_order_capacity;                             // byte 125
+  UINT8 clearing_account_type;                           // byte 126
+  UINT8 self_match_prevention_instruction;               // byte 127
+  UINT8 avg_px_indicator;                                // byte 128
+  UINT8 clearing_trade_price_type;                       // byte 129
+  UINT8 cust_order_handling_inst;                        // byte 130
+  UINT64 executor;                                       // bytes 131 to 138
+  UINT64 idm_short_code;                                 // bytes 139 to 146
+  PartyDetailsGroups party_details_groups;
+  TrdRegPublicationsGroups trd_reg_publications_groups;
+} PartyDetailsDefinitionRequest;
+
+// The number of quote entries for quote sets, instruments, product group, cancel all; 298=1 (1 to 100); 298=3 (1); 298=4 (1); 298=100 (1 to 15)
+typedef struct _QuoteCancelEntriesGroup {
+  UINT8 security_group[6];      // bytes 0 to 5
+  UINT32 security_id_optional;  // bytes 6 to 9, signed, read here as unsigned
+} QuoteCancelEntriesGroup;
+
+// NoQuoteEntries Block
+typedef struct _QuoteCancelEntriesGroups {
+  UINT16 block_length;                                                                            // bytes 0 to 1
+  UINT8 num_in_group;                                                                             // byte 2
+  QuoteCancelEntriesGroup quote_cancel_entries_group[:byte-size (((UINT32) num_in_group) * 10)];
+} QuoteCancelEntriesGroups;
+
+// The number of sets of quotes in the message. Conditionally required if 298=100
+typedef struct _QuoteCancelSetsGroup {
+  UINT32 bid_size;      // bytes 0 to 3
+  UINT32 offer_size;    // bytes 4 to 7
+  UINT16 quote_set_id;  // bytes 8 to 9
+} QuoteCancelSetsGroup;
+
+// NoQuoteSets Block
+typedef struct _QuoteCancelSetsGroups {
+  UINT16 block_length;                                                                      // bytes 0 to 1
+  UINT8 num_in_group;                                                                       // byte 2
+  QuoteCancelSetsGroup quote_cancel_sets_group[:byte-size (((UINT32) num_in_group) * 10)];
+} QuoteCancelSetsGroups;
+
+// The Quote Cancel message is used by a market maker to cancel all quotes or a partial set of quotes submitted during a specific session which are still tradeable and have not been rejected or expired. Quote Cancel messages are processed upon receipt by CME regardless of whether the corresponding resting quotes are completely or partially filled.
+typedef struct _QuoteCancel {
+  UINT64 party_details_list_req_id;                      // bytes 0 to 7
+  UINT64 sending_time_epoch;                             // bytes 8 to 15
+  UINT8 manual_order_indicator;                          // byte 16
+  UINT32 seq_num;                                        // bytes 17 to 20
+  UINT8 sender_id[20];                                   // bytes 21 to 40
+  UINT8 location[5];                                     // bytes 41 to 45
+  UINT32 quote_id;                                       // bytes 46 to 49
+  UINT8 quote_cancel_type;                               // byte 50
+  UINT8 liquidity_flag;                                  // byte 51
+  UINT8 orig_order_user[8];                              // bytes 52 to 59
+  UINT8 quote_entry_open;                                // byte 60
+  QuoteCancelEntriesGroups quote_cancel_entries_groups;
+  QuoteCancelSetsGroups quote_cancel_sets_groups;
+} QuoteCancel;
 
 // An Order Mass Action Request is sent by the client system to cancel working orders for a particular SenderCompID for futures, options on futures, and BrokerTec markets on CME Globex.
-entrypoint typedef struct _OrderMassActionRequest {
+typedef struct _OrderMassActionRequest {
   UINT64 party_details_list_req_id;  // bytes 0 to 7
   UINT64 order_request_id;           // bytes 8 to 15
   UINT8 manual_order_indicator;      // byte 16
@@ -119,10 +620,8 @@ entrypoint typedef struct _OrderMassActionRequest {
   UINT8 orig_order_user[8];          // bytes 71 to 78
 } OrderMassActionRequest;
 
-// ---- Order Mass Status Request: 68 bytes -------------------------------------
-
 // The Order Mass Status Request message requests the status for orders matching criteria specified within the request.
-entrypoint typedef struct _OrderMassStatusRequest {
+typedef struct _OrderMassStatusRequest {
   UINT64 party_details_list_req_id;  // bytes 0 to 7
   UINT64 mass_status_req_id;         // bytes 8 to 15
   UINT8 manual_order_indicator;      // byte 16
@@ -138,10 +637,8 @@ entrypoint typedef struct _OrderMassStatusRequest {
   UINT8 market_segment_id;           // byte 67
 } OrderMassStatusRequest;
 
-// ---- Order Status Request: 62 bytes ------------------------------------------
-
 // Submitted by the client system to obtain the current status of a specific order; CME Globex returns the order status in the form of an Execution Report (MsgType=8) with the status listed in tag 39-OrdStatus.
-entrypoint typedef struct _OrderStatusRequest {
+typedef struct _OrderStatusRequest {
   UINT64 party_details_list_req_id;  // bytes 0 to 7
   UINT64 ord_status_req_id;          // bytes 8 to 15
   UINT8 manual_order_indicator;      // byte 16
@@ -152,10 +649,45 @@ entrypoint typedef struct _OrderStatusRequest {
   UINT8 location[5];                 // bytes 57 to 61
 } OrderStatusRequest;
 
-// ---- Execution Ack: 101 bytes ------------------------------------------------
+// Number of requesting party identifiers. Will be zero if specific PartyDetailsDefinitionID's are being requested. Will be populated only if all PartyDetailsDefinitions are being requested for a specific Firm
+typedef struct _RequestingPartyIdsGroup {
+  UINT8 requesting_party_id[5];      // bytes 0 to 4
+  UINT8 requesting_party_id_source;  // byte 5
+  UINT8 requesting_party_role;       // byte 6
+} RequestingPartyIdsGroup;
+
+// NoRequestingPartyIDs Block
+typedef struct _RequestingPartyIdsGroups {
+  UINT16 block_length;                                                                           // bytes 0 to 1
+  UINT8 num_in_group;                                                                            // byte 2
+  RequestingPartyIdsGroup requesting_party_ids_group[:byte-size (((UINT32) num_in_group) * 7)];
+} RequestingPartyIdsGroups;
+
+// Number of PartyID (448), PartyIDSource (447), and PartyRole (452) entries. Applicable only if specific PartyDetailsDefinitions are being requested otherwise set to 0
+typedef struct _PartyIdsGroup {
+  UINT64 party_id;        // bytes 0 to 7
+  UINT8 party_id_source;  // byte 8
+  UINT16 party_role;      // bytes 9 to 10
+} PartyIdsGroup;
+
+// NoPartyIDs Block
+typedef struct _PartyIdsGroups {
+  UINT16 block_length;                                                       // bytes 0 to 1
+  UINT8 num_in_group;                                                        // byte 2
+  PartyIdsGroup party_ids_group[:byte-size (((UINT32) num_in_group) * 11)];
+} PartyIdsGroups;
+
+// The Party Details List Request message is used to request all of the Party Details Definition information such as clearing instructions, order source, self-match parameters, etc. for a particular Firm ID. Only one Party Details List Request is allowed at a time.
+typedef struct _PartyDetailsListRequest {
+  UINT64 party_details_list_req_id;                      // bytes 0 to 7
+  UINT64 sending_time_epoch;                             // bytes 8 to 15
+  UINT32 seq_num;                                        // bytes 16 to 19
+  RequestingPartyIdsGroups requesting_party_ids_groups;
+  PartyIdsGroups party_ids_groups;
+} PartyDetailsListRequest;
 
 // The Execution Acknowledgment message notifies CME that a given fill has either been accepted or rejected by a counterparty for EU bilateral trades.
-entrypoint typedef struct _ExecutionAck {
+typedef struct _ExecutionAck {
   UINT64 party_details_list_req_id;  // bytes 0 to 7
   UINT64 order_id;                   // bytes 8 to 15
   UINT8 exec_ack_status;             // byte 16
@@ -173,11 +705,293 @@ entrypoint typedef struct _ExecutionAck {
   UINT8 manual_order_indicator;      // byte 100
 } ExecutionAck;
 
-// ---- Leg Option Delta: 5 bytes -----------------------------------------------
+// Specifies the number of repeating symbols specified.
+typedef struct _RelatedSymGroup {
+  UINT32 security_id;         // bytes 0 to 3, signed, read here as unsigned
+  UINT32 order_qty_optional;  // bytes 4 to 7
+  UINT8 rfq_side;             // byte 8
+} RelatedSymGroup;
+
+// NoRelatedSym Block
+typedef struct _RelatedSymGroups {
+  UINT16 block_length;                                                          // bytes 0 to 1
+  UINT8 num_in_group;                                                           // byte 2
+  RelatedSymGroup related_sym_group[:byte-size (((UINT32) num_in_group) * 9)];
+} RelatedSymGroups;
+
+// The Request for Quote message generates a Request for Quote to solicit a quote on an instrument.
+typedef struct _RequestForQuote {
+  UINT64 party_details_list_req_id;     // bytes 0 to 7
+  UINT64 quote_req_id;                  // bytes 8 to 15
+  UINT8 manual_order_indicator;         // byte 16
+  UINT32 seq_num;                       // bytes 17 to 20
+  UINT8 sender_id[20];                  // bytes 21 to 40
+  UINT64 sending_time_epoch;            // bytes 41 to 48
+  UINT8 location[5];                    // bytes 49 to 53
+  UINT8 quote_type;                     // byte 54
+  RelatedSymGroups related_sym_groups;
+} RequestForQuote;
+
+// Number of Side repeating group instances
+typedef struct _SidesGroup {
+  UINT8 cl_ord_id[20];               // bytes 0 to 19
+  UINT64 party_details_list_req_id;  // bytes 20 to 27
+  UINT32 order_qty;                  // bytes 28 to 31
+  UINT8 side;                        // byte 32
+  UINT8 side_time_in_force;          // byte 33
+} SidesGroup;
+
+// NoSides Block
+typedef struct _SidesGroups {
+  UINT16 block_length;                                                // bytes 0 to 1
+  UINT8 num_in_group;                                                 // byte 2
+  SidesGroup sides_group[:byte-size (((UINT32) num_in_group) * 34)];
+} SidesGroups;
+
+// The New Order Cross message submits a Cross on CME Globex, a two-sided order submitted by a single party/broker at the same price and quantity.
+typedef struct _NewOrderCross {
+  UINT64 cross_id;               // bytes 0 to 7
+  UINT64 order_request_id;       // bytes 8 to 15
+  UINT8 manual_order_indicator;  // byte 16
+  UINT32 seq_num;                // bytes 17 to 20
+  UINT8 sender_id[20];           // bytes 21 to 40
+  UINT64 price;                  // bytes 41 to 48, signed, read here as unsigned
+  UINT64 trans_bkd_time;         // bytes 49 to 56
+  UINT64 sending_time_epoch;     // bytes 57 to 64
+  UINT8 location[5];             // bytes 65 to 69
+  UINT32 security_id;            // bytes 70 to 73, signed, read here as unsigned
+  SidesGroups sides_groups;
+} NewOrderCross;
 
 // Up to 26 legs (i.e., repeating groups) supported for UDS for options. Up to 40 legs (i.e., repeating groups) supported for UDS for futures. Will be set to 0 for REPO
-entrypoint typedef struct _LegOptionDelta {
+typedef struct _LegOptionDelta {
   UINT32 mantissa_32;  // bytes 0 to 3, signed, read here as unsigned
   UINT8 exponent;      // byte 4, signed, read here as unsigned
 } LegOptionDelta;
+
+// Up to 26 legs (i.e., repeating groups) supported for UDS for options. Up to 40 legs (i.e., repeating groups) supported for UDS for futures. Will be set to 0 for REPO
+typedef struct _RequestLegsGroup {
+  UINT64 leg_price;                 // bytes 0 to 7, signed, read here as unsigned
+  UINT32 leg_security_id;           // bytes 8 to 11, signed, read here as unsigned
+  LegOptionDelta leg_option_delta;  // bytes 12 to 16
+  UINT8 leg_side;                   // byte 17
+  UINT8 leg_ratio_qty;              // byte 18
+} RequestLegsGroup;
+
+// NoLegs Block
+typedef struct _RequestLegsGroups {
+  UINT16 block_length;                                                             // bytes 0 to 1
+  UINT8 num_in_group;                                                              // byte 2
+  RequestLegsGroup request_legs_group[:byte-size (((UINT32) num_in_group) * 19)];
+} RequestLegsGroups;
+
+// Used to indicate the number of custom bespoke broken dates for user defined tailor made repo
+typedef struct _BrokenDatesRequestGroup {
+  UINT16 broken_date_start;  // bytes 0 to 1
+  UINT16 broken_date_end;    // bytes 2 to 3
+} BrokenDatesRequestGroup;
+
+// NoBrokenDates Block
+typedef struct _BrokenDatesRequestGroups {
+  UINT16 block_length;                                                                           // bytes 0 to 1
+  UINT8 num_in_group;                                                                            // byte 2
+  BrokenDatesRequestGroup broken_dates_request_group[:byte-size (((UINT32) num_in_group) * 4)];
+} BrokenDatesRequestGroups;
+
+// The Security Definition Request message creates a User Defined Spread (UDS) instrument.
+typedef struct _SecurityDefinitionRequest {
+  UINT64 party_details_list_req_id;                      // bytes 0 to 7
+  UINT64 security_req_id;                                // bytes 8 to 15
+  UINT8 manual_order_indicator;                          // byte 16
+  UINT32 seq_num;                                        // bytes 17 to 20
+  UINT8 sender_id_optional[20];                          // bytes 21 to 40
+  UINT64 sending_time_epoch;                             // bytes 41 to 48
+  UINT8 security_sub_type[8];                            // bytes 49 to 56
+  UINT8 location[5];                                     // bytes 57 to 61
+  UINT16 start_date;                                     // bytes 62 to 63
+  UINT16 end_date;                                       // bytes 64 to 65
+  UINT8 max_no_of_substitutions;                         // byte 66
+  UINT32 source_repo_id;                                 // bytes 67 to 70, signed, read here as unsigned
+  UINT8 broken_date_term_type;                           // byte 71
+  RequestLegsGroups request_legs_groups;
+  BrokenDatesRequestGroups broken_dates_request_groups;
+} SecurityDefinitionRequest;
+
+// RequestForCross
+typedef struct _RequestForCross {
+  UINT64 cross_id;               // bytes 0 to 7
+  UINT64 order_request_id;       // bytes 8 to 15
+  UINT8 manual_order_indicator;  // byte 16
+  UINT32 seq_num;                // bytes 17 to 20
+  UINT8 sender_id[20];           // bytes 21 to 40
+  UINT8 cross_type;              // byte 41
+  UINT64 price;                  // bytes 42 to 49, signed, read here as unsigned
+  UINT64 sending_time_epoch;     // bytes 50 to 57
+  UINT8 location[5];             // bytes 58 to 62
+  UINT32 security_id;            // bytes 63 to 66, signed, read here as unsigned
+  SidesGroups sides_groups;
+} RequestForCross;
+
+// The number of quote entries
+typedef struct _MassQuoteRequestEntriesGroup {
+  UINT32 security_id;     // bytes 0 to 3, signed, read here as unsigned
+  UINT64 price;           // bytes 4 to 11, signed, read here as unsigned
+  UINT32 order_qty;       // bytes 12 to 15
+  UINT8 quote_side;       // byte 16
+  UINT32 quote_entry_id;  // bytes 17 to 20
+  UINT16 quote_set_id;    // bytes 21 to 22
+} MassQuoteRequestEntriesGroup;
+
+// NoQuoteEntries Block
+typedef struct _MassQuoteRequestEntriesGroups {
+  UINT16 block_length;                                                                                       // bytes 0 to 1
+  UINT8 num_in_group;                                                                                        // byte 2
+  MassQuoteRequestEntriesGroup mass_quote_request_entries_group[:byte-size (((UINT32) num_in_group) * 23)];
+} MassQuoteRequestEntriesGroups;
+
+// MassQuoteRequest
+typedef struct _MassQuoteRequest {
+  UINT64 party_details_list_req_id;                                 // bytes 0 to 7
+  UINT64 sending_time_epoch;                                        // bytes 8 to 15
+  UINT8 manual_order_indicator;                                     // byte 16
+  UINT32 seq_num;                                                   // bytes 17 to 20
+  UINT8 sender_id[20];                                              // bytes 21 to 40
+  UINT64 quote_req_id_optional;                                     // bytes 41 to 48
+  UINT8 location[5];                                                // bytes 49 to 53
+  UINT32 quote_id;                                                  // bytes 54 to 57
+  UINT8 tot_no_quote_entries;                                       // byte 58
+  UINT8 mm_protection_reset;                                        // byte 59
+  UINT8 liquidity_flag;                                             // byte 60
+  UINT8 short_sale_type;                                            // byte 61
+  UINT8 quote_entry_open;                                           // byte 62
+  UINT8 quote_entry_control;                                        // byte 63
+  UINT8 reserved_60[60];                                            // bytes 64 to 123
+  MassQuoteRequestEntriesGroups mass_quote_request_entries_groups;
+} MassQuoteRequest;
+
+// The number of Quote Set IDs
+typedef struct _QuoteCancelBySetEntriesGroup {
+  UINT16 quote_set_id;  // bytes 0 to 1
+} QuoteCancelBySetEntriesGroup;
+
+// NoQuoteSets Block
+typedef struct _QuoteCancelBySetEntriesGroups {
+  UINT16 block_length;                                                                                       // bytes 0 to 1
+  UINT8 num_in_group;                                                                                        // byte 2
+  QuoteCancelBySetEntriesGroup quote_cancel_by_set_entries_group[:byte-size (((UINT32) num_in_group) * 2)];
+} QuoteCancelBySetEntriesGroups;
+
+// QuoteCancelBySet
+typedef struct _QuoteCancelBySet {
+  UINT64 party_details_list_req_id;                                  // bytes 0 to 7
+  UINT64 sending_time_epoch;                                         // bytes 8 to 15
+  UINT8 manual_order_indicator;                                      // byte 16
+  UINT32 seq_num;                                                    // bytes 17 to 20
+  UINT8 sender_id[20];                                               // bytes 21 to 40
+  UINT8 location[5];                                                 // bytes 41 to 45
+  UINT32 quote_id;                                                   // bytes 46 to 49
+  UINT8 cxl_linked_sessions;                                         // byte 50
+  UINT8 quote_entry_control;                                         // byte 51
+  QuoteCancelBySetEntriesGroups quote_cancel_by_set_entries_groups;
+} QuoteCancelBySet;
+
+// The number of Security Groups
+typedef struct _QuoteCancelByGroupEntriesGroup {
+  UINT8 security_group[6];  // bytes 0 to 5
+} QuoteCancelByGroupEntriesGroup;
+
+// NoQuoteEntries Block
+typedef struct _QuoteCancelByGroupEntriesGroups {
+  UINT16 block_length;                                                       // bytes 0 to 1
+  UINT8 num_in_group;                                                        // byte 2
+  UINT8 quote_cancel_by_group_entries_group[(((UINT32) num_in_group) * 6)];
+} QuoteCancelByGroupEntriesGroups;
+
+// QuoteCancelByGroup
+typedef struct _QuoteCancelByGroup {
+  UINT64 party_details_list_req_id;                                      // bytes 0 to 7
+  UINT64 sending_time_epoch;                                             // bytes 8 to 15
+  UINT8 manual_order_indicator;                                          // byte 16
+  UINT32 seq_num;                                                        // bytes 17 to 20
+  UINT8 sender_id[20];                                                   // bytes 21 to 40
+  UINT8 location[5];                                                     // bytes 41 to 45
+  UINT32 quote_id;                                                       // bytes 46 to 49
+  UINT8 cxl_linked_sessions;                                             // byte 50
+  UINT8 quote_entry_control;                                             // byte 51
+  QuoteCancelByGroupEntriesGroups quote_cancel_by_group_entries_groups;
+} QuoteCancelByGroup;
+
+// The number of instruments
+typedef struct _QuoteCancelByInstrumentEntriesGroup {
+  UINT32 security_id;  // bytes 0 to 3, signed, read here as unsigned
+} QuoteCancelByInstrumentEntriesGroup;
+
+// NoQuoteEntries Block
+typedef struct _QuoteCancelByInstrumentEntriesGroups {
+  UINT16 block_length;                                                                                                     // bytes 0 to 1
+  UINT8 num_in_group;                                                                                                      // byte 2
+  QuoteCancelByInstrumentEntriesGroup quote_cancel_by_instrument_entries_group[:byte-size (((UINT32) num_in_group) * 4)];
+} QuoteCancelByInstrumentEntriesGroups;
+
+// QuoteCancelByInstrument
+typedef struct _QuoteCancelByInstrument {
+  UINT64 party_details_list_req_id;                                                // bytes 0 to 7
+  UINT64 sending_time_epoch;                                                       // bytes 8 to 15
+  UINT8 manual_order_indicator;                                                    // byte 16
+  UINT32 seq_num;                                                                  // bytes 17 to 20
+  UINT8 sender_id[20];                                                             // bytes 21 to 40
+  UINT8 location[5];                                                               // bytes 41 to 45
+  UINT32 quote_id;                                                                 // bytes 46 to 49
+  UINT8 cxl_linked_sessions;                                                       // byte 50
+  QuoteCancelByInstrumentEntriesGroups quote_cancel_by_instrument_entries_groups;
+} QuoteCancelByInstrument;
+
+// iLink3 message body sent by the firm to Cme
+casetype _ClientPayload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x01F4: Negotiate negotiate;
+    case 0x01F7: Establish establish;
+    case 0x01FA: Sequence sequence;
+    case 0x01FB: Terminate terminate;
+    case 0x01FC: RetransmitRequest retransmit_request;
+    case 0x0202: NewOrderSingle new_order_single;
+    case 0x0203: OrderCancelReplaceRequest order_cancel_replace_request;
+    case 0x0204: OrderCancelRequest order_cancel_request;
+    case 0x0205: MassQuote mass_quote;
+    case 0x0206: PartyDetailsDefinitionRequest party_details_definition_request;
+    case 0x0210: QuoteCancel quote_cancel;
+    case 0x0211: OrderMassActionRequest order_mass_action_request;
+    case 0x0212: OrderMassStatusRequest order_mass_status_request;
+    case 0x0215: OrderStatusRequest order_status_request;
+    case 0x0219: PartyDetailsListRequest party_details_list_request;
+    case 0x021B: ExecutionAck execution_ack;
+    case 0x021F: RequestForQuote request_for_quote;
+    case 0x0220: NewOrderCross new_order_cross;
+    case 0x0230: SecurityDefinitionRequest security_definition_request;
+    case 0x0236: RequestForCross request_for_cross;
+    case 0x0237: MassQuoteRequest mass_quote_request;
+    case 0x0238: QuoteCancelBySet quote_cancel_by_set;
+    case 0x0239: QuoteCancelByGroup quote_cancel_by_group;
+    case 0x023A: QuoteCancelByInstrument quote_cancel_by_instrument;
+    default: UINT8 unknown[available];
+  }
+} ClientPayload;
+
+// Simple Open Frame sent by the firm to Cme
+typedef struct _ClientSimpleOpenFrame {
+  UINT16 message_length { message_length >= 12 };                                                                                                 // bytes 0 to 1
+  UINT16 encoding_type;                                                                                                                           // bytes 2 to 3
+  UINT16 block_length;                                                                                                                            // bytes 4 to 5
+  UINT16 template_id;                                                                                                                             // bytes 6 to 7
+  UINT16 schema_id;                                                                                                                               // bytes 8 to 9
+  UINT16 version;                                                                                                                                 // bytes 10 to 11
+  ClientPayload(template_id, (((UINT32) message_length) - 12)) client_payload[:byte-size-single-element-array (((UINT32) message_length) - 12)];
+} ClientSimpleOpenFrame;
+
+// ---- Packet: ClientPacket ----------------------------------------------------
+
+// Simple Open Frame Packet sent by the firm to Cme
+entrypoint typedef struct _ClientPacket (UINT32 available) {
+  ClientSimpleOpenFrame client_simple_open_frame[:byte-size available];
+} ClientPacket;
 

@@ -1,113 +1,179 @@
-// Chicago Board Options Exchange Spin Server
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Cboe NeoEquities SpinServer Pitch v1.0.13
 //
+// Protocol:
+//   Organization: Chicago Board Options Exchange
+//   Protocol: Spin Server
+//   Encoding: Pitch
+//   Version: 1.0.13
+//   Date: 10/27/2025
+//   Specification: Cboe Canada Equities Multicast PITCH Specification.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out NeoEquities_SpinServer_v1_0_13.3d
-//
-// What this definition does not state, and the model does:
-// - a Reassemble rule
-// - a run filling what frames it
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 8 bytes --------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-entrypoint typedef struct _PacketHeader {
-  UINT16 length;        // bytes 0 to 1
-  UINT8 message_count;  // byte 2
-  UINT8 unit_;          // byte 3
-  UINT32 sequence;      // bytes 4 to 7
-} PacketHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_LOGIN_MESSAGE 0x01                           // Login Message
+#define MESSAGE_TYPE_LOGIN_RESPONSE_MESSAGE 0x02                  // Login Response Message
+#define MESSAGE_TYPE_SPIN_IMAGE_AVAILABLE_MESSAGE 0x80            // Spin Image Available Message
+#define MESSAGE_TYPE_SPIN_REQUEST_MESSAGE 0x81                    // Spin Request Message
+#define MESSAGE_TYPE_SPIN_RESPONSE_MESSAGE 0x82                   // Spin Response Message
+#define MESSAGE_TYPE_SPIN_FINISHED_MESSAGE 0x83                   // Spin Finished Message
+#define MESSAGE_TYPE_INSTRUMENT_DEFINITION_REQUEST_MESSAGE 0x84   // Instrument Definition Request Message
+#define MESSAGE_TYPE_INSTRUMENT_DEFINITION_RESPONSE_MESSAGE 0x85  // Instrument Definition Response Message
+#define MESSAGE_TYPE_INSTRUMENT_DEFINITION_FINISHED_MESSAGE 0x86  // Instrument Definition Finished Message
+#define MESSAGE_TYPE_TRADE_REPLAY_REQUEST_MESSAGE 0x87            // Trade Replay Request Message
+#define MESSAGE_TYPE_TRADE_REPLAY_RESPONSE_MESSAGE 0x88           // Trade Replay Response Message
+#define MESSAGE_TYPE_TRADE_REPLAY_FINISHED_MESSAGE 0x89           // Trade Replay Finished Message
 
-// ---- Message Header: 2 bytes -------------------------------------------------
+// Status: one byte code
+#define STATUS_ACCEPTED_LOGIN_ACCEPTED 0x41                   // Accepted Login Accepted
+#define STATUS_NOT_AUTHORIZED_INVALID_USERNAME_PASSWORD 0x4E  // Not Authorized Invalid Username Password
+#define STATUS_SESSION_IN_USE 0x42                            // Session In Use
+#define STATUS_OUT_OF_RANGE 0x4F                              // Out Of Range
+#define STATUS_INVALID_SESSION_SPIN_ALREADY_IN_PROGRESS 0x53  // Invalid Session Spin Already In Progress
 
-entrypoint typedef struct _MessageHeader {
-  UINT8 message_length;  // byte 0
-  UINT8 message_type;    // byte 1
-} MessageHeader;
-
-// ---- Login Message: 20 bytes -------------------------------------------------
+// ---- Types -------------------------------------------------------------------
 
 // The first message the Member process sends to the Spin Server after connection to the Spin Server is established. Failure to login before sending any other message type will result in the connection being dropped by the Spin Server. The format is identical to the GRP Login message.
-entrypoint typedef struct _LoginMessage {
+typedef struct _LoginMessage {
   UINT8 session_sub_id[4];  // bytes 0 to 3
   UINT8 username[4];        // bytes 4 to 7
   UINT8 filler[2];          // bytes 8 to 9
   UINT8 password[10];       // bytes 10 to 19
 } LoginMessage;
 
-// ---- Login Response Message: 1 byte ------------------------------------------
-
 // Sent by the Spin Server to a Member's process in response to a Login message. The Status field reflects an accepted login or the reason the session was not accepted. If login fails, the connection will be dropped after the Login Response message is sent.
-entrypoint typedef struct _LoginResponseMessage {
+typedef struct _LoginResponseMessage {
   UINT8 status;  // byte 0
 } LoginResponseMessage;
 
-// ---- Spin Image Available Message: 4 bytes -----------------------------------
-
 // Sent once per second and indicates through what sequence number a spin is available.
-entrypoint typedef struct _SpinImageAvailableMessage {
+typedef struct _SpinImageAvailableMessage {
   UINT32 sequence;  // bytes 0 to 3
 } SpinImageAvailableMessage;
 
-// ---- Spin Request Message: 4 bytes -------------------------------------------
-
 // Used by a Member's process to request transmission of a spin of the unit's order book.
-entrypoint typedef struct _SpinRequestMessage {
+typedef struct _SpinRequestMessage {
   UINT32 sequence;  // bytes 0 to 3
 } SpinRequestMessage;
 
-// ---- Spin Response Message: 9 bytes ------------------------------------------
-
 // Sent in response to a Member's Spin Request message indicating whether a spin will be sent.
-entrypoint typedef struct _SpinResponseMessage {
+typedef struct _SpinResponseMessage {
   UINT32 sequence;     // bytes 0 to 3
   UINT32 order_count;  // bytes 4 to 7
   UINT8 status;        // byte 8
 } SpinResponseMessage;
 
-// ---- Spin Finished Message: 4 bytes ------------------------------------------
-
 // Indicates that all messages for the spin requested have been sent. A Spin Finished message is only sent if a Spin Request was not rejected. Upon receipt of a Spin Finished message, any buffered multicast messages should be applied to the Member's copy of the book to make it current.
-entrypoint typedef struct _SpinFinishedMessage {
+typedef struct _SpinFinishedMessage {
   UINT32 sequence;  // bytes 0 to 3
 } SpinFinishedMessage;
 
-// ---- Instrument Definition Request Message: 4 bytes --------------------------
-
 // Used by a Member's process to request transmission of this unit's Instrument Directory messages.
-entrypoint typedef struct _InstrumentDefinitionRequestMessage {
+typedef struct _InstrumentDefinitionRequestMessage {
   UINT32 sequence;  // bytes 0 to 3
 } InstrumentDefinitionRequestMessage;
 
-// ---- Instrument Definition Response Message: 9 bytes -------------------------
-
 // Indicates whether a spin will be sent in response to a Member's Instrument Definition Request message.
-entrypoint typedef struct _InstrumentDefinitionResponseMessage {
+typedef struct _InstrumentDefinitionResponseMessage {
   UINT32 sequence;          // bytes 0 to 3
   UINT32 instrument_count;  // bytes 4 to 7
   UINT8 status;             // byte 8
 } InstrumentDefinitionResponseMessage;
 
-// ---- Trade Replay Request Message: 4 bytes -----------------------------------
-
 // Used by a Member's process to request transmission of this unit's Trade, Trade Break, and Trade Correction messages. Note Order Executed messages will be converted to Trade messages.
-entrypoint typedef struct _TradeReplayRequestMessage {
+typedef struct _TradeReplayRequestMessage {
   UINT32 sequence;  // bytes 0 to 3
 } TradeReplayRequestMessage;
 
-// ---- Trade Replay Response Message: 13 bytes ---------------------------------
-
 // Indicates whether a spin will be sent in response to a Member's Trade Replay Request message.
-entrypoint typedef struct _TradeReplayResponseMessage {
+typedef struct _TradeReplayResponseMessage {
   UINT32 sequence;     // bytes 0 to 3
   UINT64 trade_count;  // bytes 4 to 11
   UINT8 status;        // byte 12
 } TradeReplayResponseMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x01: LoginMessage login_message;
+    case 0x02: LoginResponseMessage login_response_message;
+    case 0x80: SpinImageAvailableMessage spin_image_available_message;
+    case 0x81: SpinRequestMessage spin_request_message;
+    case 0x82: SpinResponseMessage spin_response_message;
+    case 0x83: SpinFinishedMessage spin_finished_message;
+    case 0x84: InstrumentDefinitionRequestMessage instrument_definition_request_message;
+    case 0x85: InstrumentDefinitionResponseMessage instrument_definition_response_message;
+    case 0x86: unit instrument_definition_finished_message;
+    case 0x87: TradeReplayRequestMessage trade_replay_request_message;
+    case 0x88: TradeReplayResponseMessage trade_replay_response_message;
+    case 0x89: unit trade_replay_finished_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT8 message_length { message_length >= 2 };                                                                                                                    // byte 0
+  UINT8 message_type;                                                                                                                                              // byte 1
+  Payload(message_type, (((UINT32) message_length) - 2)) payload[:byte-size-single-element-array (((UINT32) message_length) - 2)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+typedef struct _MessageRun (UINT8 message_count, UINT32 available, mutable UINT32 * tally) {
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size available];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} MessageRun;
+
+// Branch
+casetype _Messages (UINT8 selector, UINT8 message_count, UINT32 available, mutable UINT32 * tally) {
+  switch (selector) {
+    case 0x00: unit heartbeat;
+    default: MessageRun(message_count, available, tally) message;
+  }
+} Messages;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Pitch Tcp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 8) {
+  UINT16 length;                                                                                                             // bytes 0 to 1
+  UINT8 message_count;                                                                                                       // byte 2
+  UINT8 unit_;                                                                                                               // byte 3
+  UINT32 sequence;                                                                                                           // bytes 4 to 7
+  Messages(message_count, message_count, (available - 8), tally) messages[:byte-size-single-element-array (available - 8)];
+} Packet;
 

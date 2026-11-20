@@ -1,49 +1,74 @@
-// Chicago Board Options Exchange Multicast Trades
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Cboe MatchNow MulticastTrades Pitch v1.0.13
 //
+// Protocol:
+//   Organization: Chicago Board Options Exchange
+//   Protocol: Multicast Trades
+//   Encoding: Pitch
+//   Version: 1.0.13
+//   Date: 10/27/2025
+//   Specification: Cboe Canada Equities Multicast PITCH Specification.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out MatchNow_MulticastTrades_v1_0_13.3d
-//
-// What this definition does not state, and the model does:
-// - the dispatch that chooses a message by its type
-// - a run filling what frames it
-// - a field read in bits
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 8 bytes --------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-entrypoint typedef struct _PacketHeader {
-  UINT16 length;        // bytes 0 to 1
-  UINT8 message_count;  // byte 2
-  UINT8 unit_;          // byte 3
-  UINT32 sequence;      // bytes 4 to 7
-} PacketHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_UNIT_CLEAR_MESSAGE 0x97      // Unit Clear Message
+#define MESSAGE_TYPE_TRADING_STATUS_MESSAGE 0x43  // Trading Status Message
+#define MESSAGE_TYPE_TRADE_MESSAGE 0x42           // Trade Message
+#define MESSAGE_TYPE_END_OF_SESSION_MESSAGE 0x2D  // End Of Session Message
 
-// ---- Message Header: 2 bytes -------------------------------------------------
+// Trading Status: one byte code
+#define TRADING_STATUS_ACCEPTING 0x41          // Accepting
+#define TRADING_STATUS_HALTED 0x48             // Halted
+#define TRADING_STATUS_TRADING_SUSPENDED 0x53  // Trading Suspended
+#define TRADING_STATUS_TRADING 0x54            // Trading
 
-entrypoint typedef struct _MessageHeader {
-  UINT8 message_length;  // byte 0
-  UINT8 message_type;    // byte 1
-} MessageHeader;
+// Trade Condition: one byte code
+#define TRADE_CONDITION_REGULAR_TRADE 0x20  // Regular Trade
+#define TRADE_CONDITION_TRADE_BREAK 0x58    // Trade Break
 
-// ---- Unit Clear Message: 4 bytes ---------------------------------------------
+// ---- Types -------------------------------------------------------------------
 
 // Instructs feed recipients to clear all orders for the Cboe Canada order book in the unit specified in the Sequenced Unit Header. Distributed in rare recovery events such as a data center fail-over.
-entrypoint typedef struct _UnitClearMessage {
+typedef struct _UnitClearMessage {
   UINT8 reserved_4[4];  // bytes 0 to 3
 } UnitClearMessage;
 
-// ---- Trading Status Message: 30 bytes ----------------------------------------
-
 // Indicates the current trading status of a security in the MATCHNow system (9:30 a.m. - 4:00 p.m. ET). Sequenced Trading Status messages are sent upon system startup for all active securities with Trading Status = S (suspended).
-entrypoint typedef struct _TradingStatusMessage {
+typedef struct _TradingStatusMessage {
   UINT64 timestamp;           // bytes 0 to 7
   UINT8 symbol[14];           // bytes 8 to 21
   UINT8 listing_exchange[4];  // bytes 22 to 25
@@ -51,10 +76,68 @@ entrypoint typedef struct _TradingStatusMessage {
   UINT8 reserved_3[3];        // bytes 27 to 29
 } TradingStatusMessage;
 
-// ---- End Of Session Message: 4 bytes -----------------------------------------
+// Sends the trade price, trade quantity, execution id, and trade condition of a trade as well as the cumulative volume for the trading session. A Trade message will be sent for each execution, but not every Trade message indicates a trade. Trade Condition = X (Trade Break) is sent whenever an execution is broken.
+typedef struct _TradeMessage {
+  UINT64 timestamp;           // bytes 0 to 7
+  UINT8 symbol[14];           // bytes 8 to 21
+  UINT32 quantity;            // bytes 22 to 25
+  UINT64 price;               // bytes 26 to 33
+  UINT64 execution_id;        // bytes 34 to 41
+  UINT16 buy_broker_number;   // bytes 42 to 43
+  UINT16 sell_broker_number;  // bytes 44 to 45
+  UINT32 total_volume;        // bytes 46 to 49
+  UINT8 trade_condition;      // byte 50
+  UINT8 conditional : 1;      // byte 51
+  UINT8 odd_lot : 1;          // byte 51
+  UINT8 unused_6 : 6;         // byte 51
+  UINT8 reserved_2[2];        // bytes 52 to 53
+} TradeMessage;
 
 // Sent for each unit when the unit shuts down. No additional sequenced messages will be delivered for this unit, but heartbeats from the unit may be received.
-entrypoint typedef struct _EndOfSessionMessage {
+typedef struct _EndOfSessionMessage {
   UINT8 reserved_4[4];  // bytes 0 to 3
 } EndOfSessionMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x97: UnitClearMessage unit_clear_message;
+    case 0x43: TradingStatusMessage trading_status_message;
+    case 0x42: TradeMessage trade_message;
+    case 0x2D: EndOfSessionMessage end_of_session_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT8 message_length { message_length >= 2 };                                                                                                                    // byte 0
+  UINT8 message_type;                                                                                                                                              // byte 1
+  Payload(message_type, (((UINT32) message_length) - 2)) payload[:byte-size-single-element-array (((UINT32) message_length) - 2)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+typedef struct _MessageRun (UINT8 message_count, UINT32 available, mutable UINT32 * tally) {
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size available];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} MessageRun;
+
+// Branch
+casetype _Messages (UINT8 selector, UINT8 message_count, UINT32 available, mutable UINT32 * tally) {
+  switch (selector) {
+    case 0x00: unit heartbeat;
+    default: MessageRun(message_count, available, tally) message;
+  }
+} Messages;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Pitch Udp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 8) {
+  UINT16 length;                                                                                                             // bytes 0 to 1
+  UINT8 message_count;                                                                                                       // byte 2
+  UINT8 unit_;                                                                                                               // byte 3
+  UINT32 sequence;                                                                                                           // bytes 4 to 7
+  Messages(message_count, message_count, (available - 8), tally) messages[:byte-size-single-element-array (available - 8)];
+} Packet;
 

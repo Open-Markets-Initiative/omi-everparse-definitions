@@ -1,42 +1,111 @@
-// National Association of Securities Dealers Automated Quotations (Nasdaq) Match View
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nasdaq PsxEquities MatchView AsciiItch v1.1
 //
+// Protocol:
+//   Organization: National Association of Securities Dealers Automated Quotations (Nasdaq)
+//   Protocol: Match View
+//   Encoding: Ascii Itch
+//   Version: 1.1
+//   Date: 08/10/2011
+//   Specification: PSXMatchView-v1_1.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out PsxEquities_MatchView_v1_1.3d
-//
-// What this definition does not state, and the model does:
-// - the dispatch that chooses a message by its type
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 16 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-entrypoint typedef struct _PacketHeader {
-  UINT8 session[10];       // bytes 0 to 9
-  UINT32 sequence_number;  // bytes 10 to 13
-  UINT16 message_count;    // bytes 14 to 15
-} PacketHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_BEST_BID_AND_OFFER_MESSAGE 0x55  // Best Bid And Offer Message
 
-// ---- Message Header: 9 bytes -------------------------------------------------
-
-entrypoint typedef struct _MessageHeader {
-  UINT8 timestamp[8];  // bytes 0 to 7
-  UINT8 message_type;  // byte 8
-} MessageHeader;
-
-// ---- Best Bid And Offer Message: 28 bytes ------------------------------------
+// ---- Types -------------------------------------------------------------------
 
 // What the Nasdaq PSX execution system sees as the prevailing best bid and offer of the other exchanges. For this feed, the only message type is U .
-entrypoint typedef struct _BestBidAndOfferMessage {
+typedef struct _BestBidAndOfferMessage {
   UINT8 symbol[8];      // bytes 0 to 7
   UINT8 bid_price[10];  // bytes 8 to 17
   UINT8 ask_price[10];  // bytes 18 to 27
 } BestBidAndOfferMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x55: BestBidAndOfferMessage best_bid_and_offer_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// Mold Udp message data
+typedef struct _MessageData (UINT16 message_length) where (message_length >= 9) {
+  UINT8 timestamp[8];                                                                                                               // bytes 0 to 7
+  UINT8 message_type;                                                                                                               // byte 8
+  Payload(message_type, (((UINT32) message_length) - 9)) payload[:byte-size-single-element-array (((UINT32) message_length) - 9)];
+} MessageData;
+
+// Branch
+casetype _MessageBody (UINT16 selector, UINT16 message_length) {
+  switch (selector) {
+    case 0x0000: unit end_of_session;
+    default: MessageData(message_length) message_data;
+  }
+} MessageBody;
+
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16 message_length;                                                                                                                                           // bytes 0 to 1
+  MessageBody(message_length, message_length) message_body[:byte-size-single-element-array ((((UINT32) message_length) + 2) - 2)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+typedef struct _MessageRun (UINT16 message_count, UINT32 available, mutable UINT32 * tally) {
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size available];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} MessageRun;
+
+// Branch
+casetype _Messages (UINT16 selector, UINT16 message_count, UINT32 available, mutable UINT32 * tally) {
+  switch (selector) {
+    case 0x0000: unit heartbeat;
+    default: MessageRun(message_count, available, tally) message;
+  }
+} Messages;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Itch Udp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 16) {
+  UINT8 session[10];                                                                                                           // bytes 0 to 9
+  UINT32 sequence_number;                                                                                                      // bytes 10 to 13
+  UINT16 message_count;                                                                                                        // bytes 14 to 15
+  Messages(message_count, message_count, (available - 16), tally) messages[:byte-size-single-element-array (available - 16)];
+} Packet;
 

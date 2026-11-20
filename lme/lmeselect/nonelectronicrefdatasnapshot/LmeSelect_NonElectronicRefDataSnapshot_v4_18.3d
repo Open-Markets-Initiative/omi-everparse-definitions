@@ -1,50 +1,89 @@
-// The London Metal Exchange LMEsource NonElectronicRefData Refresh
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Lme LmeSelect NonElectronicRefDataSnapshot LmeSource v4.18
 //
+// Protocol:
+//   Organization: The London Metal Exchange
+//   Protocol: LMEsource NonElectronicRefData Refresh
+//   Encoding: LMEsource
+//   Version: 4.18
+//   Date: 08/18/2026
+//   Specification: lmesource-client-interface-specification-v4-18.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out LmeSelect_NonElectronicRefDataSnapshot_v4_18.3d
-//
-// What this definition does not state, and the model does:
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 16 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// LMEsource packet header, giving the packet size, the number of messages it carries, the sequence number of the first of them and the time the packet was sent
-entrypoint typedef struct _PacketHeader {
-  UINT16 pkt_size;   // bytes 0 to 1
-  UINT8 msg_count;   // byte 2
-  UINT8 filler;      // byte 3
-  UINT32 seq_num;    // bytes 4 to 7
-  UINT64 send_time;  // bytes 8 to 15
-} PacketHeader;
+// Msg Type: 2 byte code
+#define MSG_TYPE_SEQUENCE_RESET_MESSAGE 0x0064                  // Sequence Reset Message
+#define MSG_TYPE_INSTRUMENT_DEFINITION_MESSAGE 0x012F           // Instrument Definition Message
+#define MSG_TYPE_TRADABLE_INSTRUMENT_DEFINITION_MESSAGE 0x0130  // Tradable Instrument Definition Message
+#define MSG_TYPE_ORDER_STATISTICS_INTRADAY_MESSAGE 0x015E       // Order Statistics Intraday Message
+#define MSG_TYPE_REFRESH_COMPLETE_MESSAGE 0x00CB                // Refresh Complete Message
 
-// ---- Message Header: 4 bytes -------------------------------------------------
+// Option Type: one byte code
+#define OPTION_TYPE_CALL 0x43  // Call
+#define OPTION_TYPE_PUT 0x50   // Put
 
-// LMEsource message header, giving the size of the message and its type
-entrypoint typedef struct _MessageHeader {
-  UINT16 msg_size;  // bytes 0 to 1
-  UINT16 msg_type;  // bytes 2 to 3
-} MessageHeader;
+// Contract Type: one byte code
+#define CONTRACT_TYPE_FUTURE 0x46  // Future
+#define CONTRACT_TYPE_OPTION 0x4F  // Option
 
-// ---- Sequence Reset Message: 4 bytes -----------------------------------------
+// Instrument Type: one byte code
+#define INSTRUMENT_TYPE_OUTRIGHT 0x4F  // Outright
+#define INSTRUMENT_TYPE_STRATEGY 0x53  // Strategy
+
+// Trade At Reference: one byte code
+#define TRADE_AT_REFERENCE_FALSE 0x00  // False
+#define TRADE_AT_REFERENCE_TRUE 0x01   // True
+
+// Prompt Type: one byte code
+#define PROMPT_TYPE_SINGLE 0x53   // Single
+#define PROMPT_TYPE_ROLLING 0x52  // Rolling
+
+// Leg Buy Sell: one byte code
+#define LEG_BUY_SELL_BUY 0x42   // Buy
+#define LEG_BUY_SELL_SELL 0x53  // Sell
+
+// ---- Types -------------------------------------------------------------------
 
 // Sent on each multicast channel at start of day, and intraday in case of a disaster recovery. The client must ignore the sequence number of the Sequence Reset message itself and set the next expected sequence number to NewSeqNo, clear all cached data for all instruments and subscribe to the refresh channels to receive the current state of the market.
-entrypoint typedef struct _SequenceResetMessage {
+typedef struct _SequenceResetMessage {
   UINT32 new_seq_no;  // bytes 0 to 3
 } SequenceResetMessage;
 
-// ---- Instrument Definition Message: 99 bytes ---------------------------------
-
 // Describes a futures outright prompt date or option call or put strike.
-entrypoint typedef struct _InstrumentDefinitionMessage {
+typedef struct _InstrumentDefinitionMessage {
   UINT64 instrument_id;             // bytes 0 to 7
   UINT8 name[40];                   // bytes 8 to 47
   UINT8 contract_code[12];          // bytes 48 to 59
@@ -56,10 +95,51 @@ entrypoint typedef struct _InstrumentDefinitionMessage {
   UINT8 isin[12];                   // bytes 87 to 98
 } InstrumentDefinitionMessage;
 
-// ---- Order Statistics Intraday Message: 36 bytes -----------------------------
+// One strategy leg record of a tradable instrument definition, counted by RecordCount rather than by StrategyLegCount: the specification's length formula gives the repeat as the value of Record Count, StrategyLegCount being the number of legs the whole strategy has
+typedef struct _DefinitionLegs {
+  UINT32 leg_number;                  // bytes 0 to 3
+  UINT8 leg_buy_sell;                 // byte 4
+  UINT64 leg_ratio;                   // bytes 5 to 12
+  UINT64 leg_delta_hedge_price;       // bytes 13 to 20, signed, read here as unsigned
+  UINT64 leg_tradable_instrument_id;  // bytes 21 to 28
+} DefinitionLegs;
+
+// Describes an individual outright, strategy or Trade at Reference tradable instrument on the Ring or Inter Office venue. An option tradable instrument is published only once on the day of creation and is published at the start of day on the next business day.
+typedef struct _TradableInstrumentDefinitionMessage {
+  UINT64 tradable_instrument_id;                                              // bytes 0 to 7
+  UINT64 instrument_id;                                                       // bytes 8 to 15
+  UINT8 trading_venue[2];                                                     // bytes 16 to 17
+  UINT32 business_days_to_expiry;                                             // bytes 18 to 21
+  UINT32 last_trading_date;                                                   // bytes 22 to 25
+  UINT32 tick_size_id;                                                        // bytes 26 to 29
+  UINT8 contract_code[12];                                                    // bytes 30 to 41
+  UINT8 contract_type;                                                        // byte 42
+  UINT8 instrument_type;                                                      // byte 43
+  UINT8 trading_currency[3];                                                  // bytes 44 to 46
+  UINT8 market_code[4];                                                       // bytes 47 to 50
+  UINT8 market_segment_code[12];                                              // bytes 51 to 62
+  UINT8 product_code[2];                                                      // bytes 63 to 64
+  UINT64 underlying_tradable_instrument_id;                                   // bytes 65 to 72
+  UINT32 settlement_date;                                                     // bytes 73 to 76
+  UINT32 expiry_date;                                                         // bytes 77 to 80
+  UINT8 option_type;                                                          // byte 81
+  UINT64 strike_price;                                                        // bytes 82 to 89, signed, read here as unsigned
+  UINT8 cfi_code[6];                                                          // bytes 90 to 95
+  UINT8 isin[12];                                                             // bytes 96 to 107
+  UINT8 trade_at_reference;                                                   // byte 108
+  UINT8 price_code[2];                                                        // bytes 109 to 110
+  UINT8 prompt_date_label[6];                                                 // bytes 111 to 116
+  UINT8 prompt_type;                                                          // byte 117
+  UINT32 option_strike_relative_position;                                     // bytes 118 to 121
+  UINT32 strategy_type_code;                                                  // bytes 122 to 125
+  UINT16 remaining_records;                                                   // bytes 126 to 127
+  UINT16 record_count;                                                        // bytes 128 to 129
+  UINT32 strategy_leg_count;                                                  // bytes 130 to 133
+  DefinitionLegs definition_legs[:byte-size (((UINT32) record_count) * 29)];
+} TradableInstrumentDefinitionMessage;
 
 // Generated at the end of each Ring trading session for instruments that have traded. Two messages are published, one for each high price and low price. If no price has been received the field is set to null.
-entrypoint typedef struct _OrderStatisticsIntradayMessage {
+typedef struct _OrderStatisticsIntradayMessage {
   UINT64 time_of_event;           // bytes 0 to 7
   UINT64 tradable_instrument_id;  // bytes 8 to 15
   UINT8 trading_venue[2];         // bytes 16 to 17
@@ -68,10 +148,42 @@ entrypoint typedef struct _OrderStatisticsIntradayMessage {
   UINT64 order_low;               // bytes 28 to 35, signed, read here as unsigned
 } OrderStatisticsIntradayMessage;
 
-// ---- Refresh Complete Message: 4 bytes ---------------------------------------
-
 // Published to mark the end of a refresh cycle.
-entrypoint typedef struct _RefreshCompleteMessage {
+typedef struct _RefreshCompleteMessage {
   UINT32 last_seq_num;  // bytes 0 to 3
 } RefreshCompleteMessage;
+
+// Branch
+casetype _Payload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x0064: SequenceResetMessage sequence_reset_message;
+    case 0x012F: InstrumentDefinitionMessage instrument_definition_message;
+    case 0x0130: TradableInstrumentDefinitionMessage tradable_instrument_definition_message;
+    case 0x015E: OrderStatisticsIntradayMessage order_statistics_intraday_message;
+    case 0x00CB: RefreshCompleteMessage refresh_complete_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// LMEsource application messages carried by this packet; a message is never fragmented across packets
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16 msg_size { msg_size >= 4 };                                                                                                                               // bytes 0 to 1
+  UINT16 msg_type;                                                                                                                                                 // bytes 2 to 3
+  Payload(msg_type, (((UINT32) msg_size) - 4)) payload[:byte-size-single-element-array (((UINT32) msg_size) - 4)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// LMEsource multicast packet, a packet header followed by Msg Count complete messages
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 16) {
+  UINT16 pkt_size;                                                                                                      // bytes 0 to 1
+  UINT8 msg_count;                                                                                                      // byte 2
+  UINT8 filler;                                                                                                         // byte 3
+  UINT32 seq_num;                                                                                                       // bytes 4 to 7
+  UINT64 send_time;                                                                                                     // bytes 8 to 15
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size (available - 16)];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) msg_count); };
+} Packet;
 

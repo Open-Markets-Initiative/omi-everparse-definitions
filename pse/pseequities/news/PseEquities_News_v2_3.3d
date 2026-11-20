@@ -1,5 +1,34 @@
-// Philippine Stock Exchange Pse Equities Itch News
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Pse PseEquities News Itch v2.3
 //
+// Protocol:
+//   Organization: Philippine Stock Exchange
+//   Protocol: Pse Equities Itch News
+//   Encoding: Itch
+//   Version: 2.3
+//   Date: 10/5/2018
+//   Specification: PSE_Equities_Feed_Specification_v2.3.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
 // writes a C validator for each record below and proves, of that C, that it reads no byte
 // outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
@@ -7,6 +36,8 @@
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out PseEquities_News_v2_3.3d
 //
@@ -14,8 +45,41 @@
 // - the dispatch that chooses a message by its type
 // - a run counted by a field
 // - a length prefix framing what follows
-//
-// License: MIT No Attribution
+// - the packet as a whole, which is a field ended by a byte it does not carry, at packet.messages.message.payload.newsitemmessage.title
+
+// ---- Values ------------------------------------------------------------------
+
+// Message Type: one byte code
+#define MESSAGE_TYPE_TIME_STAMP_SECONDS_MESSAGE 0x54   // Time Stamp Seconds Message
+#define MESSAGE_TYPE_SYSTEM_EVENT_MESSAGE 0x53         // System Event Message
+#define MESSAGE_TYPE_ORDERBOOK_DIRECTORY_MESSAGE 0x52  // Orderbook Directory Message
+#define MESSAGE_TYPE_NEWS_ITEM_MESSAGE 0x4E            // News Item Message
+
+// Event Code: one byte code
+#define EVENT_CODE_START_OF_MESSAGES 0x4F                 // Start Of Messages
+#define EVENT_CODE_START_OF_SYSTEM_HOURS 0x53             // Start Of System Hours
+#define EVENT_CODE_PRE_OPEN_NO_CANCELLATION_PERIOD 0x52   // Pre Open No Cancellation Period
+#define EVENT_CODE_START_OF_MARKET_HOURS 0x51             // Start Of Market Hours
+#define EVENT_CODE_SCHEDULED_BREAK_BEGINS 0x41            // Scheduled Break Begins
+#define EVENT_CODE_SCHEDULED_BREAK_ENDS 0x42              // Scheduled Break Ends
+#define EVENT_CODE_PRE_CLOSE_COMMENCES 0x4C               // Pre Close Commences
+#define EVENT_CODE_PRE_CLOSE_NO_CANCELLATION_PERIOD 0x4A  // Pre Close No Cancellation Period
+#define EVENT_CODE_TRADING_AT_LAST 0x50                   // Trading At Last
+#define EVENT_CODE_END_OF_MARKET_HOURS 0x4D               // End Of Market Hours
+#define EVENT_CODE_END_OF_TRADING 0x45                    // End Of Trading
+#define EVENT_CODE_END_OF_SYSTEM_MESSAGES 0x43            // End Of System Messages
+
+// Price Type: one byte code
+#define PRICE_TYPE_PER_UNIT 0x55    // Per Unit
+#define PRICE_TYPE_PERCENTAGE 0x50  // Percentage
+
+// Instrument Type: one byte code
+#define INSTRUMENT_TYPE_COMMON_STOCK 0x43     // Common Stock
+#define INSTRUMENT_TYPE_PREFERRED_STOCK 0x50  // Preferred Stock
+#define INSTRUMENT_TYPE_WARRANT 0x57          // Warrant
+#define INSTRUMENT_TYPE_ETF 0x45              // Etf
+#define INSTRUMENT_TYPE_PDR 0x44              // Pdr
+#define INSTRUMENT_TYPE_INDEX 0x49            // Index
 
 // ---- Packet Header: 20 bytes -------------------------------------------------
 
@@ -31,7 +95,7 @@ entrypoint typedef struct _PacketHeader {
 // Mold Udp 64 Message Header
 entrypoint typedef struct _MessageHeader {
   UINT16BE message_length;  // bytes 0 to 1
-  UINT8 message_type;       // byte 2
+  UINT8 message_type;       // byte 2, values MESSAGE_TYPE_
 } MessageHeader;
 
 // ---- Time Stamp Seconds Message: 4 bytes -------------------------------------
@@ -47,7 +111,7 @@ entrypoint typedef struct _TimeStampSecondsMessage {
 entrypoint typedef struct _SystemEventMessage {
   UINT32BE timestamp;  // bytes 0 to 3
   UINT8 group[8];      // bytes 4 to 11
-  UINT8 event_code;    // byte 12
+  UINT8 event_code;    // byte 12, values EVENT_CODE_
   UINT32BE orderbook;  // bytes 13 to 16
 } SystemEventMessage;
 
@@ -57,7 +121,7 @@ entrypoint typedef struct _SystemEventMessage {
 entrypoint typedef struct _OrderbookDirectoryMessage {
   UINT32BE timestamp;                    // bytes 0 to 3
   UINT32BE orderbook;                    // bytes 4 to 7
-  UINT8 price_type;                      // byte 8
+  UINT8 price_type;                      // byte 8, values PRICE_TYPE_
   UINT8 isin[12];                        // bytes 9 to 20
   UINT8 sec_code[12];                    // bytes 21 to 32
   UINT8 currency[3];                     // bytes 33 to 35
@@ -68,7 +132,7 @@ entrypoint typedef struct _OrderbookDirectoryMessage {
   UINT32BE price_decimals;               // bytes 60 to 63
   UINT32BE delisting_date;               // bytes 64 to 67
   UINT32BE delisting_time;               // bytes 68 to 71
-  UINT8 instrument_type;                 // byte 72
+  UINT8 instrument_type;                 // byte 72, values INSTRUMENT_TYPE_
   UINT64BE shares;                       // bytes 73 to 80
   UINT8 product_code[8];                 // bytes 81 to 88
 } OrderbookDirectoryMessage;

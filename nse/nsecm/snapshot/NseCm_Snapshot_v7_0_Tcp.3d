@@ -1,30 +1,108 @@
-// National Stock Exchange of India Ltd Mtbt Order Book Snapshot Recovery
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nse NseCm Snapshot Tbt v7.0
 //
+// Protocol:
+//   Organization: National Stock Exchange of India Ltd
+//   Protocol: Mtbt Order Book Snapshot Recovery
+//   Encoding: Tbt
+//   Version: 7.0
+//   Date: 8/1/2026
+//   Specification: MTBT_FO_NNF_PROTOCOL_7.0_20260817172155.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out NseCm_Snapshot_v7_0_Tcp.3d
-//
-// What this definition does not state, and the model does:
-// - a Reassemble rule
-// - a run counted by a field
-// - a Composite rule
-//
-// License: MIT No Attribution
 
-// ---- Snapshot Header: 16 bytes -----------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Snapshot header has a size of 16 bytes
-entrypoint typedef struct _SnapshotHeader {
-  UINT16 trans_code;            // bytes 0 to 1, signed, read here as unsigned
-  UINT32 size;                  // bytes 2 to 5, signed, read here as unsigned
-  UINT32 number_of_records;     // bytes 6 to 9, signed, read here as unsigned
-  UINT32 last_sequence_number;  // bytes 10 to 13
-  UINT16 stream_id;             // bytes 14 to 15, signed, read here as unsigned
-} SnapshotHeader;
+// Trans Code: 2 byte code
+#define TRANS_CODE_ORDER_BOOK_SNAPSHOT 0x2905  // Order Book Snapshot
+
+// Message Type: one byte code
+#define MESSAGE_TYPE_NEW_ORDER_MESSAGE 0x4E         // New Order Message
+#define MESSAGE_TYPE_NEW_SPREAD_ORDER_MESSAGE 0x47  // New Spread Order Message
+
+// Order Type: one byte code
+#define ORDER_TYPE_BUY_ORDER 0x42   // Buy Order
+#define ORDER_TYPE_SELL_ORDER 0x53  // Sell Order
+
+// ---- Types -------------------------------------------------------------------
+
+// Outstanding normal order in the order book at the last snapshot refresh.
+typedef struct _NewOrderMessage {
+  UINT64 timestamp;   // bytes 0 to 7, signed, read here as unsigned
+  UINT8 order_id[8];  // bytes 8 to 15
+  UINT32 token;       // bytes 16 to 19, signed, read here as unsigned
+  UINT8 order_type;   // byte 20
+  UINT32 price;       // bytes 21 to 24, signed, read here as unsigned
+  UINT32 quantity;    // bytes 25 to 28, signed, read here as unsigned
+} NewOrderMessage;
+
+// Outstanding spread order in the order book at the last snapshot refresh.
+typedef struct _NewSpreadOrderMessage {
+  UINT64 timestamp;   // bytes 0 to 7, signed, read here as unsigned
+  UINT8 order_id[8];  // bytes 8 to 15
+  UINT32 token;       // bytes 16 to 19, signed, read here as unsigned
+  UINT8 order_type;   // byte 20
+  UINT32 price;       // bytes 21 to 24, signed, read here as unsigned
+  UINT32 quantity;    // bytes 25 to 28, signed, read here as unsigned
+} NewSpreadOrderMessage;
+
+// Branch
+casetype _Payload (UINT8 selector) {
+  switch (selector) {
+    case 0x4E: NewOrderMessage new_order_message;
+    case 0x47: NewSpreadOrderMessage new_spread_order_message;
+  }
+} Payload;
+
+// Order Book message. First field is always Message Type and must be read/interpreted first.
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT8 message_type;                                                                                                                                              // byte 0
+  Payload(message_type) payload;
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Single buffer containing the Snapshot Header followed by all Order Book messages.
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 16) {
+  UINT16 trans_code;                                                                                                 // bytes 0 to 1, signed, read here as unsigned
+  UINT32 size;                                                                                                       // bytes 2 to 5, signed, read here as unsigned
+  UINT32 number_of_records;                                                                                          // bytes 6 to 9, signed, read here as unsigned
+  UINT32 last_sequence_number;                                                                                       // bytes 10 to 13
+  UINT16 stream_id;                                                                                                  // bytes 14 to 15, signed, read here as unsigned
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size (available - 16)];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == number_of_records; };
+} Packet;
 

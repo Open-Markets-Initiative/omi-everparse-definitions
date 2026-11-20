@@ -1,44 +1,288 @@
-// Texas Stock Exchange FEED Full-Depth Market Data
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Txse TxseEquities Feed Rake v1.0
 //
+// Protocol:
+//   Organization: Texas Stock Exchange
+//   Protocol: FEED Full-Depth Market Data
+//   Encoding: RAKE Session and Framing Layer
+//   Version: 1.0
+//   Date: 6/12/2026
+//   Specification: TXSE FEED Market Data (0.12.draft).pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out TxseEquities_Feed_v1_0.3d
-//
-// What this definition does not state, and the model does:
-// - a run counted by a field
-// - a field read in bits
-//
-// License: MIT No Attribution
 
-// ---- Udp Header: 19 bytes ----------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Rake Udp packet header
-entrypoint typedef struct _UdpHeader {
-  UINT64 session;        // bytes 0 to 7
-  UINT64 sequence;       // bytes 8 to 15
-  UINT16 message_count;  // bytes 16 to 17
-  UINT8 packet_type;     // byte 18
-} UdpHeader;
+// Packet Type: one byte code
+#define PACKET_TYPE_SEQUENCED_DATA 0x00     // Sequenced Data
+#define PACKET_TYPE_HEARTBEAT 0x01          // Heartbeat
+#define PACKET_TYPE_START_OF_SESSION 0x02   // Start Of Session
+#define PACKET_TYPE_END_OF_SESSION 0x03     // End Of Session
+#define PACKET_TYPE_GAP_FILL_REQUEST 0x04   // Gap Fill Request
+#define PACKET_TYPE_GAP_FILL_RESPONSE 0x05  // Gap Fill Response
 
-// ---- Delete Order Message: 18 bytes ------------------------------------------
+// Message Type: one byte code
+#define MESSAGE_TYPE_TRADING_SESSION_STATUS_MESSAGE 0x69    // Trading Session Status Message
+#define MESSAGE_TYPE_DEFINE_SYMBOL_MESSAGE 0x73             // Define Symbol Message
+#define MESSAGE_TYPE_SYMBOL_STATUS_MESSAGE 0x79             // Symbol Status Message
+#define MESSAGE_TYPE_ADD_ORDER_MESSAGE 0x61                 // Add Order Message
+#define MESSAGE_TYPE_DELETE_ORDER_MESSAGE 0x64              // Delete Order Message
+#define MESSAGE_TYPE_EXECUTE_ORDER_MESSAGE 0x65             // Execute Order Message
+#define MESSAGE_TYPE_EXECUTE_ORDER_WITH_PRICE_MESSAGE 0x70  // Execute Order With Price Message
+#define MESSAGE_TYPE_MODIFY_SIZE_DOWN_MESSAGE 0x6D          // Modify Size Down Message
+#define MESSAGE_TYPE_REPLACE_ORDER_MESSAGE 0x72             // Replace Order Message
+#define MESSAGE_TYPE_TRADE_MESSAGE 0x74                     // Trade Message
+#define MESSAGE_TYPE_BREAK_TRADE_MESSAGE 0x62               // Break Trade Message
+#define MESSAGE_TYPE_AUCTION_PREAMBLE_MESSAGE 0x75          // Auction Preamble Message
+#define MESSAGE_TYPE_AUCTION_BAND_WINDOW_MESSAGE 0x76       // Auction Band Window Message
+#define MESSAGE_TYPE_AUCTION_PRINT_MESSAGE 0x6E             // Auction Print Message
+
+// Market Hours State: one byte code
+#define MARKET_HOURS_STATE_CLOSED_BEFORE_HOURS 0x00  // Closed Before Hours
+#define MARKET_HOURS_STATE_EARLY_SESSION 0x01        // Early Session
+#define MARKET_HOURS_STATE_REGULAR_SESSION 0x02      // Regular Session
+#define MARKET_HOURS_STATE_AFTER_HOURS_SESSION 0x03  // After Hours Session
+#define MARKET_HOURS_STATE_CLOSED_AFTER_HOURS 0x04   // Closed After Hours
+
+// Session Trading State: one byte code
+#define SESSION_TRADING_STATE_CLOSED 0x00   // Closed
+#define SESSION_TRADING_STATE_TRADING 0x01  // Trading
+#define SESSION_TRADING_STATE_HALTED 0x02   // Halted
+
+// Trading Session Status Operational Halt Reason: one byte code
+#define TRADING_SESSION_STATUS_OPERATIONAL_HALT_REASON_ADMINISTRATIVE 0x00  // Administrative
+
+// Trading Session Status Regulatory Halt Reason: one byte code
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_REASON_NOT_AVAILABLE 0x00                  // Reason Not Available
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_NEWS_PENDING 0x01                          // News Pending
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_NEWS_DISSEMINATION 0x02                    // News Dissemination
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_INFO_REQUESTED 0x03                        // Info Requested
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_ORDER_IMBALANCE 0x04                       // Order Imbalance
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_EXTRAORDINARY_MARKET_ACTIVITY 0x05         // Extraordinary Market Activity
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_LULD_PAUSE 0x06                            // Luld Pause
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_NON_COMPLIANCE 0x07                        // Non Compliance
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_FILINGS_NOT_CURRENT 0x08                   // Filings Not Current
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_SEC_SUSPENSION 0x09                        // Sec Suspension
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_REGULATORY_CONCERN 0x0A                    // Regulatory Concern
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_SUB_PENNY_TRADING 0x0B                     // Sub Penny Trading
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_ETF 0x0C                                   // Etf
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_IPO_NOT_TRADING 0x0D                       // Ipo Not Trading
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_CORPORATE_ACTION 0x0E                      // Corporate Action
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_CIRCUIT_BREAKER_L_1 0x0F                   // Circuit Breaker L 1
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_CIRCUIT_BREAKER_L_2 0x10                   // Circuit Breaker L 2
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_CIRCUIT_BREAKER_L_3 0x11                   // Circuit Breaker L 3
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_CIRCUIT_BREAKER_CARRYOVER 0x12             // Circuit Breaker Carryover
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_MERGER_EFFECTIVE 0x13                      // Merger Effective
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_NEW_SECURITY_OFFERING 0x14                 // New Security Offering
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_INDICATIVE_VALUE_NOT_AVAILABLE 0x15        // Indicative Value Not Available
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_QUOTATION_NOT_AVAILABLE 0x16               // Quotation Not Available
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_SINGLE_STOCK_TRADING_PAUSE 0x17            // Single Stock Trading Pause
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_OPERATIONAL 0x18                           // Operational
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_LULD_PAUSE_STRADDLE 0x19                   // Luld Pause Straddle
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_NEWS_RESUMPTION_TIMES 0x1A                 // News Resumption Times
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_SINGLE_STOCK_TRADING_PAUSE_QUOTING 0x1B    // Single Stock Trading Pause Quoting
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_QUALIFICATIONS_ISSUES_RESOLVED 0x1C        // Qualifications Issues Resolved
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_FILING_REQUIREMENTS_SATISFIED 0x1D         // Filing Requirements Satisfied
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_ISSUER_NEWS_NOT_FORTHCOMING 0x1E           // Issuer News Not Forthcoming
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_QUALIFICATIONS_HALT_ENDED 0x1F             // Qualifications Halt Ended
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_QUALIFICATIONS_HALT_CONCLUDED 0x20         // Qualifications Halt Concluded
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_REGULATORY_AUTHORITY_HALT_CONCLUDED 0x21   // Regulatory Authority Halt Concluded
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_NEW_ISSUE_AVAILABLE 0x22                   // New Issue Available
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_ISSUE_AVAILABLE 0x23                       // Issue Available
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_IPO_QUOTATION_RELEASED 0x24                // Ipo Quotation Released
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_IPO_POSITIONING_WINDOW_EXTENSION 0x25      // Ipo Positioning Window Extension
+#define TRADING_SESSION_STATUS_REGULATORY_HALT_REASON_CIRCUIT_BREAKER_QUOTATION_RESUMPTION 0x26  // Circuit Breaker Quotation Resumption
+
+// Symbol Trading State: one byte code
+#define SYMBOL_TRADING_STATE_TRADING 0x01         // Trading
+#define SYMBOL_TRADING_STATE_HALTED 0x02          // Halted
+#define SYMBOL_TRADING_STATE_RESUME_PENDING 0x03  // Resume Pending
+
+// Short Sale Restriction State: one byte code
+#define SHORT_SALE_RESTRICTION_STATE_NONE 0x00         // None
+#define SHORT_SALE_RESTRICTION_STATE_ACTIVATED 0x01    // Activated
+#define SHORT_SALE_RESTRICTION_STATE_CONTINUED 0x02    // Continued
+#define SHORT_SALE_RESTRICTION_STATE_DEACTIVATED 0x03  // Deactivated
+#define SHORT_SALE_RESTRICTION_STATE_IN_EFFECT 0x04    // In Effect
+
+// Symbol Status Operational Halt Reason: one byte code
+#define SYMBOL_STATUS_OPERATIONAL_HALT_REASON_ADMINISTRATIVE 0x00  // Administrative
+
+// Symbol Status Regulatory Halt Reason: one byte code
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_REASON_NOT_AVAILABLE 0x00                  // Reason Not Available
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_NEWS_PENDING 0x01                          // News Pending
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_NEWS_DISSEMINATION 0x02                    // News Dissemination
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_INFO_REQUESTED 0x03                        // Info Requested
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_ORDER_IMBALANCE 0x04                       // Order Imbalance
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_EXTRAORDINARY_MARKET_ACTIVITY 0x05         // Extraordinary Market Activity
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_LULD_PAUSE 0x06                            // Luld Pause
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_NON_COMPLIANCE 0x07                        // Non Compliance
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_FILINGS_NOT_CURRENT 0x08                   // Filings Not Current
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_SEC_SUSPENSION 0x09                        // Sec Suspension
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_REGULATORY_CONCERN 0x0A                    // Regulatory Concern
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_SUB_PENNY_TRADING 0x0B                     // Sub Penny Trading
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_ETF 0x0C                                   // Etf
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_IPO_NOT_TRADING 0x0D                       // Ipo Not Trading
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_CORPORATE_ACTION 0x0E                      // Corporate Action
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_CIRCUIT_BREAKER_L_1 0x0F                   // Circuit Breaker L 1
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_CIRCUIT_BREAKER_L_2 0x10                   // Circuit Breaker L 2
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_CIRCUIT_BREAKER_L_3 0x11                   // Circuit Breaker L 3
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_CIRCUIT_BREAKER_CARRYOVER 0x12             // Circuit Breaker Carryover
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_MERGER_EFFECTIVE 0x13                      // Merger Effective
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_NEW_SECURITY_OFFERING 0x14                 // New Security Offering
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_INDICATIVE_VALUE_NOT_AVAILABLE 0x15        // Indicative Value Not Available
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_QUOTATION_NOT_AVAILABLE 0x16               // Quotation Not Available
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_SINGLE_STOCK_TRADING_PAUSE 0x17            // Single Stock Trading Pause
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_OPERATIONAL 0x18                           // Operational
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_LULD_PAUSE_STRADDLE 0x19                   // Luld Pause Straddle
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_NEWS_RESUMPTION_TIMES 0x1A                 // News Resumption Times
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_SINGLE_STOCK_TRADING_PAUSE_QUOTING 0x1B    // Single Stock Trading Pause Quoting
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_QUALIFICATIONS_ISSUES_RESOLVED 0x1C        // Qualifications Issues Resolved
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_FILING_REQUIREMENTS_SATISFIED 0x1D         // Filing Requirements Satisfied
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_ISSUER_NEWS_NOT_FORTHCOMING 0x1E           // Issuer News Not Forthcoming
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_QUALIFICATIONS_HALT_ENDED 0x1F             // Qualifications Halt Ended
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_QUALIFICATIONS_HALT_CONCLUDED 0x20         // Qualifications Halt Concluded
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_REGULATORY_AUTHORITY_HALT_CONCLUDED 0x21   // Regulatory Authority Halt Concluded
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_NEW_ISSUE_AVAILABLE 0x22                   // New Issue Available
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_ISSUE_AVAILABLE 0x23                       // Issue Available
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_IPO_QUOTATION_RELEASED 0x24                // Ipo Quotation Released
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_IPO_POSITIONING_WINDOW_EXTENSION 0x25      // Ipo Positioning Window Extension
+#define SYMBOL_STATUS_REGULATORY_HALT_REASON_CIRCUIT_BREAKER_QUOTATION_RESUMPTION 0x26  // Circuit Breaker Quotation Resumption
+
+// Auction Type: one byte code
+#define AUCTION_TYPE_OPENING 0x01  // Opening
+#define AUCTION_TYPE_CLOSING 0x02  // Closing
+#define AUCTION_TYPE_HALT 0x03     // Halt
+#define AUCTION_TYPE_IPO 0x04      // Ipo
+
+// Excess Auction Side: one byte code
+#define EXCESS_AUCTION_SIDE_EQUAL 0x00  // Equal
+#define EXCESS_AUCTION_SIDE_BUY 0x01    // Buy
+#define EXCESS_AUCTION_SIDE_SELL 0x02   // Sell
+
+// ---- Types -------------------------------------------------------------------
+
+// Enum TradingSessionStatusOperationalHaltReason. Operational and technical reasons for trading halts initiated by the Exchange.
+casetype _OptionalTradingSessionStatusOperationalHaltReason (Bool present) {
+  switch (present) {
+    case true: UINT8 trading_session_status_operational_halt_reason;
+    case false: unit absent;
+  }
+} OptionalTradingSessionStatusOperationalHaltReason;
+
+// Enum TradingSessionStatusRegulatoryHaltReason. Regulatory reasons for trading halts and pauses.
+casetype _OptionalTradingSessionStatusRegulatoryHaltReason (Bool present) {
+  switch (present) {
+    case true: UINT8 trading_session_status_regulatory_halt_reason;
+    case false: unit absent;
+  }
+} OptionalTradingSessionStatusRegulatoryHaltReason;
+
+// Market-wide status representing the overall state of the trading session.
+typedef struct _TradingSessionStatusMessage {
+  UINT8 has_trading_session_status_operational_halt_reason : 1;                                                                                                 // byte 0
+  UINT8 has_trading_session_status_regulatory_halt_reason : 1;                                                                                                  // byte 0
+  UINT8 reserved_6 : 6;                                                                                                                                         // byte 0
+  UINT64 transact_time;                                                                                                                                         // bytes 1 to 8, signed, read here as unsigned
+  UINT8 market_hours_state;                                                                                                                                     // byte 9, signed, read here as unsigned
+  UINT8 session_trading_state;                                                                                                                                  // byte 10, signed, read here as unsigned
+  OptionalTradingSessionStatusOperationalHaltReason((has_trading_session_status_operational_halt_reason == 1)) trading_session_status_operational_halt_reason;
+  OptionalTradingSessionStatusRegulatoryHaltReason((has_trading_session_status_regulatory_halt_reason == 1)) trading_session_status_regulatory_halt_reason;
+} TradingSessionStatusMessage;
+
+// Symbol definition containing instrument details and trading parameters for a security. A DefineSymbol will be followed by a SymbolStatus message establishing the initial trading state for the symbol. Clients must treat a symbol as operationally HALTED while awaiting the accompanying SymbolStatus.
+typedef struct _DefineSymbolMessage {
+  UINT64 transact_time;      // bytes 0 to 7, signed, read here as unsigned
+  UINT16 symbol_id;          // bytes 8 to 9, signed, read here as unsigned
+  UINT8 symbol[8];           // bytes 10 to 17
+  UINT8 suffix[8];           // bytes 18 to 25
+  UINT8 matching_engine_id;  // byte 26, signed, read here as unsigned
+  UINT8 is_test : 1;         // byte 27
+  UINT8 reserved_7 : 7;      // byte 27
+  UINT32 lot_size;           // bytes 28 to 31, signed, read here as unsigned
+  UINT8 listing_market;      // byte 32, signed, read here as unsigned
+} DefineSymbolMessage;
+
+// Enum SymbolStatusOperationalHaltReason. Operational and technical reasons for trading halts initiated by the Exchange.
+casetype _OptionalSymbolStatusOperationalHaltReason (Bool present) {
+  switch (present) {
+    case true: UINT8 symbol_status_operational_halt_reason;
+    case false: unit absent;
+  }
+} OptionalSymbolStatusOperationalHaltReason;
+
+// Enum SymbolStatusRegulatoryHaltReason. Regulatory reasons for trading halts and pauses.
+casetype _OptionalSymbolStatusRegulatoryHaltReason (Bool present) {
+  switch (present) {
+    case true: UINT8 symbol_status_regulatory_halt_reason;
+    case false: unit absent;
+  }
+} OptionalSymbolStatusRegulatoryHaltReason;
+
+// Symbol-specific trading status representing the current state and restrictions for an individual security. A SymbolStatus is sent for every symbol, including those that open in the TRADING state. Clients must treat a symbol as operationally HALTED while awaiting the first SymbolStatus. Subsequent SymbolStatus messages are sent whenever the trading state or short-sale restriction changes.
+typedef struct _SymbolStatusMessage {
+  UINT8 has_symbol_status_operational_halt_reason : 1;                                                                                // byte 0
+  UINT8 has_symbol_status_regulatory_halt_reason : 1;                                                                                 // byte 0
+  UINT8 reserved_6 : 6;                                                                                                               // byte 0
+  UINT64 transact_time;                                                                                                               // bytes 1 to 8, signed, read here as unsigned
+  UINT16 symbol_id;                                                                                                                   // bytes 9 to 10, signed, read here as unsigned
+  UINT8 symbol_trading_state;                                                                                                         // byte 11, signed, read here as unsigned
+  UINT8 short_sale_restriction_state;                                                                                                 // byte 12, signed, read here as unsigned
+  OptionalSymbolStatusOperationalHaltReason((has_symbol_status_operational_halt_reason == 1)) symbol_status_operational_halt_reason;
+  OptionalSymbolStatusRegulatoryHaltReason((has_symbol_status_regulatory_halt_reason == 1)) symbol_status_regulatory_halt_reason;
+} SymbolStatusMessage;
+
+// Details for a newly added order for display to the TXSE book.
+typedef struct _AddOrderMessage {
+  UINT64 transact_time;  // bytes 0 to 7, signed, read here as unsigned
+  UINT16 symbol_id;      // bytes 8 to 9, signed, read here as unsigned
+  UINT64 order_id;       // bytes 10 to 17, signed, read here as unsigned
+  UINT8 is_buy : 1;      // byte 18
+  UINT8 reserved_7 : 7;  // byte 18
+  UINT64 price;          // bytes 19 to 26, signed, read here as unsigned
+  UINT32 qty;            // bytes 27 to 30, signed, read here as unsigned
+} AddOrderMessage;
 
 // Details for an order deleted in its entirety from the TXSE book.
-entrypoint typedef struct _DeleteOrderMessage {
+typedef struct _DeleteOrderMessage {
   UINT64 transact_time;  // bytes 0 to 7, signed, read here as unsigned
   UINT16 symbol_id;      // bytes 8 to 9, signed, read here as unsigned
   UINT64 order_id;       // bytes 10 to 17, signed, read here as unsigned
 } DeleteOrderMessage;
 
-// ---- Execute Order Message: 30 bytes -----------------------------------------
-
 // Indicates that an order displayed on the TXSE book has executed in part or in full at its previously displayed price.
-entrypoint typedef struct _ExecuteOrderMessage {
+typedef struct _ExecuteOrderMessage {
   UINT64 transact_time;  // bytes 0 to 7, signed, read here as unsigned
   UINT16 symbol_id;      // bytes 8 to 9, signed, read here as unsigned
   UINT64 order_id;       // bytes 10 to 17, signed, read here as unsigned
@@ -46,20 +290,28 @@ entrypoint typedef struct _ExecuteOrderMessage {
   UINT64 exec_id;        // bytes 22 to 29, signed, read here as unsigned
 } ExecuteOrderMessage;
 
-// ---- Modify Size Down Message: 22 bytes --------------------------------------
+// Indicates that an order displayed on the TXSE book has executed in part or in full at this specified price.
+typedef struct _ExecuteOrderWithPriceMessage {
+  UINT64 transact_time;                    // bytes 0 to 7, signed, read here as unsigned
+  UINT16 symbol_id;                        // bytes 8 to 9, signed, read here as unsigned
+  UINT64 order_id;                         // bytes 10 to 17, signed, read here as unsigned
+  UINT32 qty;                              // bytes 18 to 21, signed, read here as unsigned
+  UINT64 exec_id;                          // bytes 22 to 29, signed, read here as unsigned
+  UINT64 exec_price;                       // bytes 30 to 37, signed, read here as unsigned
+  UINT8 is_included_in_auction_print : 1;  // byte 38
+  UINT8 reserved_7 : 7;                    // byte 38
+} ExecuteOrderWithPriceMessage;
 
 // Modify an order by reducing its size without losing priority on the TXSE book.
-entrypoint typedef struct _ModifySizeDownMessage {
+typedef struct _ModifySizeDownMessage {
   UINT64 transact_time;  // bytes 0 to 7, signed, read here as unsigned
   UINT16 symbol_id;      // bytes 8 to 9, signed, read here as unsigned
   UINT64 order_id;       // bytes 10 to 17, signed, read here as unsigned
   UINT32 qty;            // bytes 18 to 21, signed, read here as unsigned
 } ModifySizeDownMessage;
 
-// ---- Replace Order Message: 38 bytes -----------------------------------------
-
 // Replace an order, possibly changing price level and size (which can increase), losing priority on the TXSE book.
-entrypoint typedef struct _ReplaceOrderMessage {
+typedef struct _ReplaceOrderMessage {
   UINT64 transact_time;  // bytes 0 to 7, signed, read here as unsigned
   UINT16 symbol_id;      // bytes 8 to 9, signed, read here as unsigned
   UINT64 old_order_id;   // bytes 10 to 17, signed, read here as unsigned
@@ -68,10 +320,8 @@ entrypoint typedef struct _ReplaceOrderMessage {
   UINT32 qty;            // bytes 34 to 37, signed, read here as unsigned
 } ReplaceOrderMessage;
 
-// ---- Trade Message: 30 bytes -------------------------------------------------
-
 // Execution of non-displayed liquidity.
-entrypoint typedef struct _TradeMessage {
+typedef struct _TradeMessage {
   UINT64 transact_time;  // bytes 0 to 7, signed, read here as unsigned
   UINT16 symbol_id;      // bytes 8 to 9, signed, read here as unsigned
   UINT64 price;          // bytes 10 to 17, signed, read here as unsigned
@@ -79,19 +329,15 @@ entrypoint typedef struct _TradeMessage {
   UINT64 exec_id;        // bytes 22 to 29, signed, read here as unsigned
 } TradeMessage;
 
-// ---- Break Trade Message: 18 bytes -------------------------------------------
-
 // Break a previous trade or execution by execution identifier.
-entrypoint typedef struct _BreakTradeMessage {
+typedef struct _BreakTradeMessage {
   UINT64 transact_time;  // bytes 0 to 7, signed, read here as unsigned
   UINT16 symbol_id;      // bytes 8 to 9, signed, read here as unsigned
   UINT64 exec_id;        // bytes 10 to 17, signed, read here as unsigned
 } BreakTradeMessage;
 
-// ---- Auction Preamble Message: 32 bytes --------------------------------------
-
 // Published every 5 seconds during the Accumulation Period to indicate projected auction size. Reports the matched volume and excess side that would result if the auction crossed at that moment, considering only Auction-Only orders; the Continuous Book is excluded. Emitted for OPENING and CLOSING auction types only. Not emitted for HALT or IPO auctions, which proceed directly to the Band Window phase at onset (see AuctionBandWindow).
-entrypoint typedef struct _AuctionPreambleMessage {
+typedef struct _AuctionPreambleMessage {
   UINT64 transact_time;       // bytes 0 to 7, signed, read here as unsigned
   UINT16 symbol_id;           // bytes 8 to 9, signed, read here as unsigned
   UINT8 auction_type;         // byte 10, signed, read here as unsigned
@@ -101,10 +347,8 @@ entrypoint typedef struct _AuctionPreambleMessage {
   UINT64 reserved_8;          // bytes 24 to 31, signed, read here as unsigned
 } AuctionPreambleMessage;
 
-// ---- Auction Band Window Message: 60 bytes -----------------------------------
-
 // Published every 5 seconds during the Band Window to report Auction-Only volume positioned at each Participation Band boundary. The Participation Band is a volatility-based price range; its derivation methodology is described in the Participation Bands specification. Auction-Only orders entered during the Band Window that are priced outside the band have their price adjusted to the nearest boundary. The Continuous Book is excluded. Volume counting at boundaries: a limit order is counted at each boundary price at which it would be eligible to execute; a market order is counted at both boundaries. Example: a limit buy at 10.05 counts at the lower boundary if lower = 10.05, but not at the upper boundary if upper = 10.10.
-entrypoint typedef struct _AuctionBandWindowMessage {
+typedef struct _AuctionBandWindowMessage {
   UINT64 transact_time;             // bytes 0 to 7, signed, read here as unsigned
   UINT16 symbol_id;                 // bytes 8 to 9, signed, read here as unsigned
   UINT8 auction_type;               // byte 10, signed, read here as unsigned
@@ -119,10 +363,8 @@ entrypoint typedef struct _AuctionBandWindowMessage {
   UINT64 reserved_8;                // bytes 52 to 59, signed, read here as unsigned
 } AuctionBandWindowMessage;
 
-// ---- Auction Print Message: 31 bytes -----------------------------------------
-
 // Summary of an auction cross. Emitted before any per-order auction execution messages for the same cross. Universal lifecycle terminator emitted for every auction. Encoding: (a) matchedShares > 0 with a valid auctionPrice indicates a normal cross; (b) matchedShares = 0 with a valid auctionPrice indicates a zero-share completion (e.g., halt-into-close default or demand failure); (c) matchedShares = 0 with auctionPrice = CANCELED_SENTINEL indicates a canceled auction. Where the feed publishes per-order auction executions, those executions share this message's execId.
-entrypoint typedef struct _AuctionPrintMessage {
+typedef struct _AuctionPrintMessage {
   UINT64 transact_time;   // bytes 0 to 7, signed, read here as unsigned
   UINT16 symbol_id;       // bytes 8 to 9, signed, read here as unsigned
   UINT8 auction_type;     // byte 10, signed, read here as unsigned
@@ -130,4 +372,47 @@ entrypoint typedef struct _AuctionPrintMessage {
   UINT32 matched_shares;  // bytes 19 to 22, signed, read here as unsigned
   UINT64 exec_id;         // bytes 23 to 30, signed, read here as unsigned
 } AuctionPrintMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x69: TradingSessionStatusMessage trading_session_status_message;
+    case 0x73: DefineSymbolMessage define_symbol_message;
+    case 0x79: SymbolStatusMessage symbol_status_message;
+    case 0x61: AddOrderMessage add_order_message;
+    case 0x64: DeleteOrderMessage delete_order_message;
+    case 0x65: ExecuteOrderMessage execute_order_message;
+    case 0x70: ExecuteOrderWithPriceMessage execute_order_with_price_message;
+    case 0x6D: ModifySizeDownMessage modify_size_down_message;
+    case 0x72: ReplaceOrderMessage replace_order_message;
+    case 0x74: TradeMessage trade_message;
+    case 0x62: BreakTradeMessage break_trade_message;
+    case 0x75: AuctionPreambleMessage auction_preamble_message;
+    case 0x76: AuctionBandWindowMessage auction_band_window_message;
+    case 0x6E: AuctionPrintMessage auction_print_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// Each individual message has a length, a stream id, a message type, and an application payload.
+typedef struct _UdpSequencedMessage (mutable UINT32 * tally) {
+  UINT16 message_length { message_length >= 2 };                                                                                                                   // bytes 0 to 1
+  UINT8 stream_id;                                                                                                                                                 // byte 2
+  UINT8 message_type;                                                                                                                                              // byte 3
+  Payload(message_type, (((UINT32) message_length) - 2)) payload[:byte-size-single-element-array (((UINT32) message_length) - 2)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} UdpSequencedMessage;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Rake Udp Packet: UdpHeader followed by MessageCount UdpSequencedMessage(s)
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 19) {
+  UINT64 session;                                                                                                                         // bytes 0 to 7
+  UINT64 sequence;                                                                                                                        // bytes 8 to 15
+  UINT16 message_count;                                                                                                                   // bytes 16 to 17
+  UINT8 packet_type;                                                                                                                      // byte 18
+  unit udp_sequenced_message_tally_start {:on-success *tally = 0; return true; };
+  UdpSequencedMessage(tally) udp_sequenced_message[:byte-size (available - 19)];
+  unit udp_sequenced_message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} Packet;
 

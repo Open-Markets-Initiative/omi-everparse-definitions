@@ -1,43 +1,76 @@
-// OTC Markets Group
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: OtcMarkets LinkAts ExtendedTrade Link v4.10.4
 //
+// Protocol:
+//   Organization: OTC Markets Group
+//   Protocol:
+//   Encoding: Otc Link
+//   Version: 4.10.4
+//   Date: 6/16/2026
+//   Specification: OTC Markets Multicast Data Feeds v4.10.4.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out LinkAts_ExtendedTrade_v4_10_4.3d
-//
-// What this definition does not state, and the model does:
-// - a field read in bits
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Message Header: 3 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Otc Udp Message Header
-entrypoint typedef struct _MessageHeader {
-  UINT16BE message_size;  // bytes 0 to 1
-  UINT8 message_type;     // byte 2
-} MessageHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_START_OF_SPIN_MESSAGE 0x0B   // Start Of Spin Message
+#define MESSAGE_TYPE_END_OF_SPIN_MESSAGE 0x0C     // End Of Spin Message
+#define MESSAGE_TYPE_MARKET_OPEN_MESSAGE 0x0D     // Market Open Message
+#define MESSAGE_TYPE_MARKET_CLOSE_MESSAGE 0x0E    // Market Close Message
+#define MESSAGE_TYPE_EXTENDED_TRADE_MESSAGE 0x12  // Extended Trade Message
 
-// ---- Start Of Spin Message: 17 bytes -----------------------------------------
+// Spin Type: one byte code
+#define SPIN_TYPE_REFERENCE 0x01    // Reference
+#define SPIN_TYPE_MARKET_DATA 0x02  // Market Data
+#define SPIN_TYPE_OPENING 0x03      // Opening
+
+// Trade Action: one byte code
+#define TRADE_ACTION_ADD 0x02  // Add
+
+// ---- Types -------------------------------------------------------------------
 
 // This message appears on all channels and indicates the beginning of a spin message cycle.
-entrypoint typedef struct _StartOfSpinMessage {
+typedef struct _StartOfSpinMessage {
   UINT32BE channel_seq_num;        // bytes 0 to 3
   UINT8 spin_type;                 // byte 4
   UINT64BE spin_start_time_milli;  // bytes 5 to 12
   UINT32BE spin_last_seq_num;      // bytes 13 to 16
 } StartOfSpinMessage;
 
-// ---- End Of Spin Message: 21 bytes -------------------------------------------
-
 // This message appears on all channels and indicates the end of a spin message cycle.
-entrypoint typedef struct _EndOfSpinMessage {
+typedef struct _EndOfSpinMessage {
   UINT32BE channel_seq_num;      // bytes 0 to 3
   UINT8 spin_type;               // byte 4
   UINT32BE spin_msg_ct;          // bytes 5 to 8
@@ -45,21 +78,82 @@ entrypoint typedef struct _EndOfSpinMessage {
   UINT32BE spin_last_seq_num;    // bytes 17 to 20
 } EndOfSpinMessage;
 
-// ---- Market Open Message: 20 bytes -------------------------------------------
-
 // This message is sent out at 6 AM on all channels. The message can also be sent mid-day if a technical outage caused a temporary closure of the market.
-entrypoint typedef struct _MarketOpenMessage {
+typedef struct _MarketOpenMessage {
   UINT32BE channel_seq_num;  // bytes 0 to 3
   UINT64BE market_open;      // bytes 4 to 11
   UINT64BE market_close;     // bytes 12 to 19
 } MarketOpenMessage;
 
-// ---- Market Close Message: 16 bytes ------------------------------------------
-
 // This message is sent out at 5 PM on all channels. The message can also be sent mid-day if a technical outage causes a temporary closure of the market.
-entrypoint typedef struct _MarketCloseMessage {
+typedef struct _MarketCloseMessage {
   UINT32BE channel_seq_num;          // bytes 0 to 3
   UINT64BE market_close_time_milli;  // bytes 4 to 11
   UINT32BE market_msg_ct;            // bytes 12 to 15
 } MarketCloseMessage;
+
+// Extended Trade Channel message. Created for every trade that occurs on OTC Markets OTC Link ATS, OTC Link ECN, and OTC Link NQB platforms. Differs from Trade in that TradeID is 8 bytes, and TradeSize and TradePrice are 8 bytes with 8 decimal places assumed for fractional shares.
+typedef struct _ExtendedTradeMessage {
+  UINT32BE channel_seq_num;    // bytes 0 to 3
+  UINT64BE trade_id;           // bytes 4 to 11
+  UINT8 trade_action;          // byte 12
+  UINT8 trade_flags;           // byte 13
+  UINT32BE security_id;        // bytes 14 to 17
+  UINT8 irregular : 1;         // byte 18
+  UINT8 reserved_7 : 7;        // byte 18
+  UINT8 venue[3];              // bytes 19 to 21
+  UINT8 deprecated_utf_85[5];  // bytes 22 to 26
+  UINT64BE trade_price;        // bytes 27 to 34
+  UINT64BE trade_size;         // bytes 35 to 42
+  UINT64BE trade_time_milli;   // bytes 43 to 50
+} ExtendedTradeMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x0B: StartOfSpinMessage start_of_spin_message;
+    case 0x0C: EndOfSpinMessage end_of_spin_message;
+    case 0x0D: MarketOpenMessage market_open_message;
+    case 0x0E: MarketCloseMessage market_close_message;
+    case 0x12: ExtendedTradeMessage extended_trade_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16BE message_size { message_size >= 3 };                                                                                                                     // bytes 0 to 1
+  UINT8 message_type;                                                                                                                                              // byte 2
+  Payload(message_type, (((UINT32) message_size) - 3)) payload[:byte-size-single-element-array (((UINT32) message_size) - 3)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+typedef struct _MessageRun (UINT8 message_count, UINT32 available, mutable UINT32 * tally) {
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size available];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} MessageRun;
+
+// Branch
+casetype _MessageBlock (UINT8 selector, UINT8 message_count, UINT32 available, mutable UINT32 * tally) {
+  switch (selector) {
+    case 1: unit heartbeat_packet;
+    default: MessageRun(message_count, available, tally) message;
+  }
+} MessageBlock;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Otc Udp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 12) {
+  UINT16BE packet_size;                                                                                                             // bytes 0 to 1
+  UINT32BE seq_num;                                                                                                                 // bytes 2 to 5
+  UINT8 heartbeat : 1;                                                                                                              // byte 6
+  UINT8 seq_num_reset : 1;                                                                                                          // byte 6
+  UINT8 reserved_4 : 4;                                                                                                             // byte 6
+  UINT8 replay : 1;                                                                                                                 // byte 6
+  UINT8 test : 1;                                                                                                                   // byte 6
+  UINT8 message_count;                                                                                                              // byte 7
+  UINT32BE packet_milli;                                                                                                            // bytes 8 to 11
+  MessageBlock(heartbeat, message_count, (available - 12), tally) message_block[:byte-size-single-element-array (available - 12)];
+} Packet;
 

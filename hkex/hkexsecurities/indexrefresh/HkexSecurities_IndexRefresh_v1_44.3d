@@ -1,53 +1,84 @@
-// Hong Kong Exchanges and Clearing Orion Market Data Cash Index Refresh
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Hkex HkexSecurities IndexRefresh Omd v1.44
 //
+// Protocol:
+//   Organization: Hong Kong Exchanges and Clearing
+//   Protocol: Orion Market Data Cash Index Refresh
+//   Encoding: Orion Market Data
+//   Version: 1.44
+//   Date: 7/21/2025
+//   Specification: HKEX_OMD-C_Binary_Interface_Specifications_v1.44.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out HkexSecurities_IndexRefresh_v1_44.3d
-//
-// What this definition does not state, and the model does:
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 16 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Omd packet header (no payload compression; byte 3 is Filler)
-entrypoint typedef struct _PacketHeader {
-  UINT16 pkt_size;   // bytes 0 to 1
-  UINT8 msg_count;   // byte 2
-  UINT8 filler;      // byte 3
-  UINT32 seq_num;    // bytes 4 to 7
-  UINT64 send_time;  // bytes 8 to 15
-} PacketHeader;
+// Msg Type: 2 byte code
+#define MSG_TYPE_INDEX_DEFINITION_MESSAGE 0x0046  // Index Definition Message
+#define MSG_TYPE_INDEX_DATA_MESSAGE 0x0047        // Index Data Message
+#define MSG_TYPE_REFRESH_COMPLETE_MESSAGE 0x00CB  // Refresh Complete Message
 
-// ---- Msg Header: 4 bytes -----------------------------------------------------
+// Index Source: one byte code
+#define INDEX_SOURCE_CSI_AND_CES 0x43  // Csi And Ces
+#define INDEX_SOURCE_HSI 0x48          // Hsi
+#define INDEX_SOURCE_S_AND_P 0x53      // S And P
 
-// Omd message header
-entrypoint typedef struct _MsgHeader {
-  UINT16 msg_size;  // bytes 0 to 1
-  UINT16 msg_type;  // bytes 2 to 3
-} MsgHeader;
+// Index Status: one byte code
+#define INDEX_STATUS_CLOSING_VALUE 0x43                      // Closing Value
+#define INDEX_STATUS_INDICATIVE 0x49                         // Indicative
+#define INDEX_STATUS_OPENING_INDEX 0x4F                      // Opening Index
+#define INDEX_STATUS_LAST_CLOSE_VALUE_PREVIOUS_SESSION 0x50  // Last Close Value Previous Session
+#define INDEX_STATUS_PRELIMINARY_CLOSE 0x52                  // Preliminary Close
+#define INDEX_STATUS_STOP_LOSS_INDEX 0x53                    // Stop Loss Index
+#define INDEX_STATUS_REAL_TIME_INDEX_VALUE 0x54              // Real Time Index Value
 
-// ---- Index Definition Message: 16 bytes --------------------------------------
+// Exception: one byte code
+#define EXCEPTION_INDEX_WITH_HSIL_DEFINED_EXCEPTIONAL_RULE_APPLIED 0x23  // Index With Hsil Defined Exceptional Rule Applied
+#define EXCEPTION_NORMAL_INDEX 0x20                                      // Normal Index
+
+// ---- Types -------------------------------------------------------------------
 
 // The Index Definition message contains the static referential data for the given index and is generated at the start of the business day. May be re-disseminated during trading hours.
-entrypoint typedef struct _IndexDefinitionMessage {
+typedef struct _IndexDefinitionMessage {
   UINT8 index_code[11];    // bytes 0 to 10
   UINT8 index_source;      // byte 11
   UINT8 currency_code[3];  // bytes 12 to 14
   UINT8 filler_1;          // byte 15
 } IndexDefinitionMessage;
 
-// ---- Index Data Message: 108 bytes -------------------------------------------
-
 // The Index Data message contains all the real-time data for a given index. Fields may be populated with null values to indicate when an update is not provided.
-entrypoint typedef struct _IndexDataMessage {
+typedef struct _IndexDataMessage {
   UINT8 index_code[11];         // bytes 0 to 10
   UINT8 index_status;           // byte 11
   UINT64 index_time;            // bytes 12 to 19, signed, read here as unsigned
@@ -66,10 +97,39 @@ entrypoint typedef struct _IndexDataMessage {
   UINT8 filler_3[3];            // bytes 105 to 107
 } IndexDataMessage;
 
-// ---- Refresh Complete Message: 4 bytes ---------------------------------------
-
 // This message is published to mark the end of a refresh.
-entrypoint typedef struct _RefreshCompleteMessage {
+typedef struct _RefreshCompleteMessage {
   UINT32 last_seq_num;  // bytes 0 to 3
 } RefreshCompleteMessage;
+
+// Branch
+casetype _Payload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x0046: IndexDefinitionMessage index_definition_message;
+    case 0x0047: IndexDataMessage index_data_message;
+    case 0x00CB: RefreshCompleteMessage refresh_complete_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16 msg_size { msg_size >= 4 };                                                                                                                               // bytes 0 to 1
+  UINT16 msg_type;                                                                                                                                                 // bytes 2 to 3
+  Payload(msg_type, (((UINT32) msg_size) - 4)) payload[:byte-size-single-element-array (((UINT32) msg_size) - 4)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Omd Udp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 16) {
+  UINT16 pkt_size;                                                                                                      // bytes 0 to 1
+  UINT8 msg_count;                                                                                                      // byte 2
+  UINT8 filler;                                                                                                         // byte 3
+  UINT32 seq_num;                                                                                                       // bytes 4 to 7
+  UINT64 send_time;                                                                                                     // bytes 8 to 15
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size (available - 16)];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) msg_count); };
+} Packet;
 

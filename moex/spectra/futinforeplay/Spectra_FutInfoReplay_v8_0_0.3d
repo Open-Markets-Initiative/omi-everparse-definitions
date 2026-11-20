@@ -1,53 +1,323 @@
-// Moscow Exchange SIMBA Spectra Futures Instrument Replay
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Moex Spectra FutInfoReplay Simba v8.0.0
 //
+// Protocol:
+//   Organization: Moscow Exchange
+//   Protocol: SIMBA Spectra Futures Instrument Replay
+//   Encoding: SIMBA
+//   Version: 8.0.0
+//   Date: 09/04/2025
+//   Specification: spectra_simba_en.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, UdpPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out Spectra_FutInfoReplay_v8_0_0.3d
-//
-// What this definition does not state, and the model does:
-// - a field read in bits
-// - a run filling what frames it
-// - a block whose stated length holds more than its fields
-// - a run counted by a field
-// - a field present only on a condition
-//
-// License: MIT No Attribution
 
-// ---- Sbe Header: 8 bytes -----------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Root block length, message template id, message schema id and schema version
-entrypoint typedef struct _SbeHeader {
-  UINT16 block_length;  // bytes 0 to 1
-  UINT16 template_id;   // bytes 2 to 3
-  UINT16 schema_id;     // bytes 4 to 5
-  UINT16 version;       // bytes 6 to 7
-} SbeHeader;
+// Template Id: 2 byte code
+#define TEMPLATE_ID_HEARTBEAT_MESSAGE 0x0001                          // Heartbeat Message
+#define TEMPLATE_ID_SEQUENCE_RESET_MESSAGE 0x0002                     // Sequence Reset Message
+#define TEMPLATE_ID_BEST_PRICES_MESSAGE 0x000E                        // Best Prices Message
+#define TEMPLATE_ID_EMPTY_BOOK_MESSAGE 0x0004                         // Empty Book Message
+#define TEMPLATE_ID_ORDER_UPDATE_MESSAGE 0x000F                       // Order Update Message
+#define TEMPLATE_ID_ORDER_EXECUTION_MESSAGE 0x0010                    // Order Execution Message
+#define TEMPLATE_ID_ORDER_BOOK_SNAPSHOT_MESSAGE 0x0011                // Order Book Snapshot Message
+#define TEMPLATE_ID_SECURITY_DEFINITION_MESSAGE 0x0015                // Security Definition Message
+#define TEMPLATE_ID_SECURITY_STATUS_MESSAGE 0x0009                    // Security Status Message
+#define TEMPLATE_ID_SECURITY_DEFINITION_UPDATE_REPORT_MESSAGE 0x000A  // Security Definition Update Report Message
+#define TEMPLATE_ID_TRADING_SESSION_STATUS_MESSAGE 0x001A             // Trading Session Status Message
+#define TEMPLATE_ID_DISCRETE_AUCTION_MESSAGE 0x0018                   // Discrete Auction Message
+#define TEMPLATE_ID_SECURITY_MASS_STATUS_MESSAGE 0x0013               // Security Mass Status Message
+#define TEMPLATE_ID_SECURITY_GROUP_STATUS_MESSAGE 0x0016              // Security Group Status Message
+#define TEMPLATE_ID_LOGON_MESSAGE 0x03E8                              // Logon Message
+#define TEMPLATE_ID_LOGOUT_MESSAGE 0x03E9                             // Logout Message
+#define TEMPLATE_ID_MARKET_DATA_REQUEST_MESSAGE 0x03EA                // Market Data Request Message
+#define TEMPLATE_ID_MARKET_DATA_DUMMY_MESSAGE 0x03EB                  // Market Data Dummy Message
 
-// ---- Sequence Reset Message: 4 bytes -----------------------------------------
+// Security Alt Id Source: one byte code
+#define SECURITY_ALT_ID_SOURCE_ISIN 0x34             // Isin
+#define SECURITY_ALT_ID_SOURCE_EXCHANGE_SYMBOL 0x38  // Exchange Symbol
+
+// Security Trading Status: one byte code
+#define SECURITY_TRADING_STATUS_TRADING_HALT 0x02                     // Trading Halt
+#define SECURITY_TRADING_STATUS_READY_TO_TRADE 0x11                   // Ready To Trade
+#define SECURITY_TRADING_STATUS_NOT_AVAILABLE_FOR_TRADING 0x12        // Not Available For Trading
+#define SECURITY_TRADING_STATUS_NOT_TRADED_ON_THIS_MARKET 0x13        // Not Traded On This Market
+#define SECURITY_TRADING_STATUS_UNKNOWN_OR_INVALID 0x14               // Unknown Or Invalid
+#define SECURITY_TRADING_STATUS_PRE_OPEN 0x15                         // Pre Open
+#define SECURITY_TRADING_STATUS_DISCRETE_AUCTION_OPEN 0x77            // Discrete Auction Open
+#define SECURITY_TRADING_STATUS_DISCRETE_AUCTION_CLOSE 0x79           // Discrete Auction Close
+#define SECURITY_TRADING_STATUS_INSTRUMENT_HALT 0x7A                  // Instrument Halt
+#define SECURITY_TRADING_STATUS_CLOSE_POSITION 0x7B                   // Close Position
+#define SECURITY_TRADING_STATUS_DISCRETE_AUCTION_CLOSE_POSITION 0x7C  // Discrete Auction Close Position
+
+// Market Segment Id: one byte code
+#define MARKET_SEGMENT_ID_DERIVATIVES 0x44  // Derivatives
+
+// Trading Session Id: one byte code
+#define TRADING_SESSION_ID_DAY 0x01      // Day
+#define TRADING_SESSION_ID_MORNING 0x03  // Morning
+#define TRADING_SESSION_ID_EVENING 0x05  // Evening
+#define TRADING_SESSION_ID_WEEKEND 0x64  // Weekend
+
+// Negative Prices: one byte code
+#define NEGATIVE_PRICES_NOT_ELIGIBLE 0x00  // Not Eligible
+#define NEGATIVE_PRICES_ELIGIBLE 0x01      // Eligible
+
+// Section Id: 4 byte code
+#define SECTION_ID_ALL_SECTIONS 0x00000000       // All Sections
+#define SECTION_ID_STOCK_SECTION 0x00000001      // Stock Section
+#define SECTION_ID_COMMODITY_SECTION 0x00000002  // Commodity Section
+#define SECTION_ID_MONEY_SECTION 0x00000003      // Money Section
+
+// Trad Ses Status: one byte code
+#define TRAD_SES_STATUS_HALTED 0x01    // Halted
+#define TRAD_SES_STATUS_OPEN 0x02      // Open
+#define TRAD_SES_STATUS_CLOSED 0x03    // Closed
+#define TRAD_SES_STATUS_PRE_OPEN 0x04  // Pre Open
+
+// Trad Ses Event: one byte code
+#define TRAD_SES_EVENT_TRADING_RESUMES 0x00            // Trading Resumes
+#define TRAD_SES_EVENT_CHANGE_OF_TRADING_SESSION 0x01  // Change Of Trading Session
+#define TRAD_SES_EVENT_CHANGE_OF_TRADING_STATUS 0x03   // Change Of Trading Status
+
+// Halt Type: one byte code
+#define HALT_TYPE_EMPTY_HALTS 0x00                                        // Empty Halts
+#define HALT_TYPE_SESSION 0x01                                            // Session
+#define HALT_TYPE_SECTION 0x02                                            // Section
+#define HALT_TYPE_SECTION_AND_TRADE_MODE 0x03                             // Section And Trade Mode
+#define HALT_TYPE_FUT_BASE_CONTRACT 0x04                                  // Fut Base Contract
+#define HALT_TYPE_INSTRUMENTS_FROM_TRADE_MODE 0x05                        // Instruments From Trade Mode
+#define HALT_TYPE_INSTRUMENTS_FROM_TRADE_MODE_AND_FUT_BASE_CONTRACT 0x06  // Instruments From Trade Mode And Fut Base Contract
+#define HALT_TYPE_GROUP_INSTRUMENTS 0x07                                  // Group Instruments
+#define HALT_TYPE_GROUP_INSTRUMENTS_AND_FUT_BASE_CONTRACT 0x08            // Group Instruments And Fut Base Contract
+
+// Section Id Optional: 4 byte code
+#define SECTION_ID_OPTIONAL_ALL_SECTIONS 0x00000000       // All Sections
+#define SECTION_ID_OPTIONAL_STOCK_SECTION 0x00000001      // Stock Section
+#define SECTION_ID_OPTIONAL_COMMODITY_SECTION 0x00000002  // Commodity Section
+#define SECTION_ID_OPTIONAL_MONEY_SECTION 0x00000003      // Money Section
+
+// ---- Types -------------------------------------------------------------------
+
+// MarketDataDummyMessage
+typedef struct _MarketDataPacketHeader {
+  UINT32 msg_seq_num;             // bytes 0 to 3
+  UINT16 msg_size;                // bytes 4 to 5
+  UINT16 last_fragment : 1;       // bytes 6 to 7
+  UINT16 start_of_snapshot : 1;   // bytes 6 to 7
+  UINT16 end_of_snapshot : 1;     // bytes 6 to 7
+  UINT16 incremental_packet : 1;  // bytes 6 to 7
+  UINT16 poss_dup_flag : 1;       // bytes 6 to 7
+  UINT16 reserved_bits : 11;      // bytes 6 to 7
+  UINT64 sending_time;            // bytes 8 to 15
+} MarketDataPacketHeader;
 
 // SequenceResetMessage
-entrypoint typedef struct _SequenceResetMessage {
+typedef struct _SequenceResetMessage {
   UINT32 new_seq_no;  // bytes 0 to 3
 } SequenceResetMessage;
 
-// ---- Group Size: 3 bytes -----------------------------------------------------
+// NoMDFeedTypes
+typedef struct _SecurityDefinitionMessageNoMdFeedTypesGroup {
+  UINT8 md_feed_type[25];  // bytes 0 to 24
+  UINT32 market_depth;     // bytes 25 to 28
+  UINT32 md_book_type;     // bytes 29 to 32
+} SecurityDefinitionMessageNoMdFeedTypesGroup;
 
-// groupSize
-entrypoint typedef struct _GroupSize {
-  UINT16 block_length;        // bytes 0 to 1
-  UINT8 num_in_group_uint_8;  // byte 2
-} GroupSize;
+// NoMDFeedTypes Block
+typedef struct _SecurityDefinitionMessageNoMdFeedTypesGroups {
+  UINT16 block_length;                                                                                                                               // bytes 0 to 1
+  UINT8 num_in_group_uint_8;                                                                                                                         // byte 2
+  SecurityDefinitionMessageNoMdFeedTypesGroup security_definition_message_no_md_feed_types_group[:byte-size (((UINT32) num_in_group_uint_8) * 33)];
+} SecurityDefinitionMessageNoMdFeedTypesGroups;
 
-// ---- Trading Session Status Message: 48 bytes --------------------------------
+// NoUnderlyings
+typedef struct _SecurityDefinitionMessageNoUnderlyingsGroup {
+  UINT8 underlying_symbol[25];    // bytes 0 to 24
+  UINT8 underlying_board[4];      // bytes 25 to 28
+  UINT32 underlying_security_id;  // bytes 29 to 32, signed, read here as unsigned
+  UINT32 underlying_future_id;    // bytes 33 to 36, signed, read here as unsigned
+} SecurityDefinitionMessageNoUnderlyingsGroup;
+
+// NoUnderlyings Block
+typedef struct _SecurityDefinitionMessageNoUnderlyingsGroups {
+  UINT16 block_length;                                                                                                                             // bytes 0 to 1
+  UINT8 num_in_group_uint_8;                                                                                                                       // byte 2
+  SecurityDefinitionMessageNoUnderlyingsGroup security_definition_message_no_underlyings_group[:byte-size (((UINT32) num_in_group_uint_8) * 37)];
+} SecurityDefinitionMessageNoUnderlyingsGroups;
+
+// NoLegs
+typedef struct _SecurityDefinitionMessageNoLegsGroup {
+  UINT8 leg_symbol[25];    // bytes 0 to 24
+  UINT32 leg_security_id;  // bytes 25 to 28, signed, read here as unsigned
+  UINT32 leg_ratio_qty;    // bytes 29 to 32, signed, read here as unsigned
+} SecurityDefinitionMessageNoLegsGroup;
+
+// NoLegs Block
+typedef struct _SecurityDefinitionMessageNoLegsGroups {
+  UINT16 block_length;                                                                                                               // bytes 0 to 1
+  UINT8 num_in_group_uint_8;                                                                                                         // byte 2
+  SecurityDefinitionMessageNoLegsGroup security_definition_message_no_legs_group[:byte-size (((UINT32) num_in_group_uint_8) * 33)];
+} SecurityDefinitionMessageNoLegsGroups;
+
+// NoInstrAttrib
+typedef struct _SecurityDefinitionMessageNoInstrAttribGroup {
+  UINT32 instr_attrib_type;      // bytes 0 to 3, signed, read here as unsigned
+  UINT8 instr_attrib_value[31];  // bytes 4 to 34
+} SecurityDefinitionMessageNoInstrAttribGroup;
+
+// NoInstrAttrib Block
+typedef struct _SecurityDefinitionMessageNoInstrAttribGroups {
+  UINT16 block_length;                                                                                                                              // bytes 0 to 1
+  UINT8 num_in_group_uint_8;                                                                                                                        // byte 2
+  SecurityDefinitionMessageNoInstrAttribGroup security_definition_message_no_instr_attrib_group[:byte-size (((UINT32) num_in_group_uint_8) * 35)];
+} SecurityDefinitionMessageNoInstrAttribGroups;
+
+// NoEvents
+typedef struct _SecurityDefinitionMessageNoEventsGroup {
+  UINT32 event_type;  // bytes 0 to 3, signed, read here as unsigned
+  UINT32 event_date;  // bytes 4 to 7
+  UINT64 event_time;  // bytes 8 to 15
+} SecurityDefinitionMessageNoEventsGroup;
+
+// NoEvents Block
+typedef struct _SecurityDefinitionMessageNoEventsGroups {
+  UINT16 block_length;                                                                                                                   // bytes 0 to 1
+  UINT8 num_in_group_uint_8;                                                                                                             // byte 2
+  SecurityDefinitionMessageNoEventsGroup security_definition_message_no_events_group[:byte-size (((UINT32) num_in_group_uint_8) * 16)];
+} SecurityDefinitionMessageNoEventsGroups;
+
+casetype _OptionalSecurityDescData (Bool present, UINT32 length) {
+  switch (present) {
+    case true: UINT8 security_desc_data[length];
+    case false: unit absent;
+  }
+} OptionalSecurityDescData;
+
+// SecurityDesc data struct
+typedef struct _SecurityDesc {
+  UINT16 security_desc_length;                                                                                    // bytes 0 to 1
+  OptionalSecurityDescData((security_desc_length > 0x0000), ((UINT32) security_desc_length)) security_desc_data;
+} SecurityDesc;
+
+casetype _OptionalQuotationListData (Bool present, UINT32 length) {
+  switch (present) {
+    case true: UINT8 quotation_list_data[length];
+    case false: unit absent;
+  }
+} OptionalQuotationListData;
+
+// QuotationList data struct
+typedef struct _QuotationList {
+  UINT16 quotation_list_length;                                                                                       // bytes 0 to 1
+  OptionalQuotationListData((quotation_list_length > 0x0000), ((UINT32) quotation_list_length)) quotation_list_data;
+} QuotationList;
+
+// SecurityDefinitionMessage
+typedef struct _SecurityDefinitionMessage {
+  UINT32 tot_num_reports;                                                                            // bytes 0 to 3
+  UINT8 symbol[25];                                                                                  // bytes 4 to 28
+  UINT32 security_id;                                                                                // bytes 29 to 32, signed, read here as unsigned
+  UINT8 security_alt_id[25];                                                                         // bytes 33 to 57
+  UINT8 security_alt_id_source;                                                                      // byte 58
+  UINT8 security_type[4];                                                                            // bytes 59 to 62
+  UINT8 cfi_code[6];                                                                                 // bytes 63 to 68
+  UINT64 strike_price;                                                                               // bytes 69 to 76, signed, read here as unsigned
+  UINT32 contract_multiplier;                                                                        // bytes 77 to 80, signed, read here as unsigned
+  UINT8 security_trading_status;                                                                     // byte 81
+  UINT8 currency[3];                                                                                 // bytes 82 to 84
+  UINT8 market_segment_id;                                                                           // byte 85
+  UINT8 trading_session_id;                                                                          // byte 86
+  UINT32 exchange_trading_session_id_int_32_null_optional;                                           // bytes 87 to 90, signed, read here as unsigned
+  UINT64 volatility;                                                                                 // bytes 91 to 98, signed, read here as unsigned
+  UINT64 high_limit_px;                                                                              // bytes 99 to 106, signed, read here as unsigned
+  UINT64 low_limit_px;                                                                               // bytes 107 to 114, signed, read here as unsigned
+  UINT64 min_price_increment;                                                                        // bytes 115 to 122, signed, read here as unsigned
+  UINT64 min_price_increment_amount;                                                                 // bytes 123 to 130, signed, read here as unsigned
+  UINT64 initial_margin_on_buy;                                                                      // bytes 131 to 138, signed, read here as unsigned
+  UINT64 initial_margin_on_sell;                                                                     // bytes 139 to 146, signed, read here as unsigned
+  UINT64 initial_margin_syntetic;                                                                    // bytes 147 to 154, signed, read here as unsigned
+  UINT64 theor_price;                                                                                // bytes 155 to 162, signed, read here as unsigned
+  UINT64 theor_price_limit;                                                                          // bytes 163 to 170, signed, read here as unsigned
+  UINT64 underlying_qty;                                                                             // bytes 171 to 178, signed, read here as unsigned
+  UINT8 underlying_currency[3];                                                                      // bytes 179 to 181
+  UINT32 maturity_date;                                                                              // bytes 182 to 185
+  UINT32 maturity_time;                                                                              // bytes 186 to 189
+  UINT64 unused_bits_0_to_3 : 4;                                                                     // bytes 190 to 197
+  UINT64 anonymous_trading : 1;                                                                      // bytes 190 to 197
+  UINT64 private_trading : 1;                                                                        // bytes 190 to 197
+  UINT64 unused_bits_6_to_7 : 2;                                                                     // bytes 190 to 197
+  UINT64 multi_leg : 1;                                                                              // bytes 190 to 197
+  UINT64 unused_bits_9_to_17 : 9;                                                                    // bytes 190 to 197
+  UINT64 collateral : 1;                                                                             // bytes 190 to 197
+  UINT64 intraday_exercise : 1;                                                                      // bytes 190 to 197
+  UINT64 reserved_44 : 44;                                                                           // bytes 190 to 197
+  UINT64 min_price_increment_amount_curr;                                                            // bytes 198 to 205, signed, read here as unsigned
+  UINT64 settl_price_open;                                                                           // bytes 206 to 213, signed, read here as unsigned
+  UINT8 valuation_method[4];                                                                         // bytes 214 to 217
+  UINT8 risk_free_rate[8];                                                                           // bytes 218 to 225
+  UINT8 fixed_spot_discount[8];                                                                      // bytes 226 to 233
+  UINT8 projected_spot_discount[8];                                                                  // bytes 234 to 241
+  UINT8 settl_currency[3];                                                                           // bytes 242 to 244
+  UINT8 negative_prices;                                                                             // byte 245
+  UINT32 derivative_contract_multiplier;                                                             // bytes 246 to 249, signed, read here as unsigned
+  UINT8 interest_rate_risk_up[8];                                                                    // bytes 250 to 257
+  UINT8 interest_rate_risk_down[8];                                                                  // bytes 258 to 265
+  UINT8 risk_free_rate_2[8];                                                                         // bytes 266 to 273
+  UINT8 interest_rate_2_risk_up[8];                                                                  // bytes 274 to 281
+  UINT8 interest_rate_2_risk_down[8];                                                                // bytes 282 to 289
+  UINT64 settl_price;                                                                                // bytes 290 to 297, signed, read here as unsigned
+  UINT32 trade_mode_id;                                                                              // bytes 298 to 301, signed, read here as unsigned
+  UINT64 group_mask;                                                                                 // bytes 302 to 309, signed, read here as unsigned
+  UINT32 section_id;                                                                                 // bytes 310 to 313, signed, read here as unsigned
+  UINT32 base_contract_id;                                                                           // bytes 314 to 317, signed, read here as unsigned
+  UINT64 day_session : 1;                                                                            // bytes 318 to 325
+  UINT64 evening_session : 1;                                                                        // bytes 318 to 325
+  UINT64 weekend_session : 1;                                                                        // bytes 318 to 325
+  UINT64 morning_session : 1;                                                                        // bytes 318 to 325
+  UINT64 reserved_60 : 60;                                                                           // bytes 318 to 325
+  SecurityDefinitionMessageNoMdFeedTypesGroups security_definition_message_no_md_feed_types_groups;
+  SecurityDefinitionMessageNoUnderlyingsGroups security_definition_message_no_underlyings_groups;
+  SecurityDefinitionMessageNoLegsGroups security_definition_message_no_legs_groups;
+  SecurityDefinitionMessageNoInstrAttribGroups security_definition_message_no_instr_attrib_groups;
+  SecurityDefinitionMessageNoEventsGroups security_definition_message_no_events_groups;
+  SecurityDesc security_desc;
+  QuotationList quotation_list;
+} SecurityDefinitionMessage;
 
 // TradingSessionStatusMessage
-entrypoint typedef struct _TradingSessionStatusMessage {
+typedef struct _TradingSessionStatusMessage {
   UINT64 trad_ses_open_time;                                // bytes 0 to 7
   UINT64 trad_ses_close_time;                               // bytes 8 to 15
   UINT8 trading_session_id;                                 // byte 16
@@ -60,10 +330,164 @@ entrypoint typedef struct _TradingSessionStatusMessage {
   UINT64 clr_sess_begin;                                    // bytes 40 to 47
 } TradingSessionStatusMessage;
 
-// ---- Security Group Status Message: 38 bytes ---------------------------------
+casetype _OptionalUnderlyingSymbolTextData (Bool present, UINT32 length) {
+  switch (present) {
+    case true: UINT8 underlying_symbol_text_data[length];
+    case false: unit absent;
+  }
+} OptionalUnderlyingSymbolTextData;
+
+// UnderlyingSymbolText data struct
+typedef struct _UnderlyingSymbolText {
+  UINT16 underlying_symbol_text_length;                                                                                                              // bytes 0 to 1
+  OptionalUnderlyingSymbolTextData((underlying_symbol_text_length > 0x0000), ((UINT32) underlying_symbol_text_length)) underlying_symbol_text_data;
+} UnderlyingSymbolText;
+
+// NoUnderlyings
+typedef struct _DiscreteAuctionMessageNoUnderlyingsGroup {
+  UnderlyingSymbolText underlying_symbol_text;
+} DiscreteAuctionMessageNoUnderlyingsGroup;
+
+// NoUnderlyings
+casetype _DiscreteAuctionMessageNoUnderlyingsGroupPart1 (Bool present) {
+  switch (present) {
+    case true: DiscreteAuctionMessageNoUnderlyingsGroup block;
+    case false: unit none;
+  }
+} DiscreteAuctionMessageNoUnderlyingsGroupPart1;
+
+// NoUnderlyings
+typedef struct _DiscreteAuctionMessageNoUnderlyingsGroupBlock2 {
+  DiscreteAuctionMessageNoUnderlyingsGroup first;
+  DiscreteAuctionMessageNoUnderlyingsGroup second;
+} DiscreteAuctionMessageNoUnderlyingsGroupBlock2;
+
+// NoUnderlyings
+casetype _DiscreteAuctionMessageNoUnderlyingsGroupPart2 (Bool present) {
+  switch (present) {
+    case true: DiscreteAuctionMessageNoUnderlyingsGroupBlock2 block;
+    case false: unit none;
+  }
+} DiscreteAuctionMessageNoUnderlyingsGroupPart2;
+
+// NoUnderlyings
+typedef struct _DiscreteAuctionMessageNoUnderlyingsGroupBlock4 {
+  DiscreteAuctionMessageNoUnderlyingsGroupBlock2 first;
+  DiscreteAuctionMessageNoUnderlyingsGroupBlock2 second;
+} DiscreteAuctionMessageNoUnderlyingsGroupBlock4;
+
+// NoUnderlyings
+casetype _DiscreteAuctionMessageNoUnderlyingsGroupPart4 (Bool present) {
+  switch (present) {
+    case true: DiscreteAuctionMessageNoUnderlyingsGroupBlock4 block;
+    case false: unit none;
+  }
+} DiscreteAuctionMessageNoUnderlyingsGroupPart4;
+
+// NoUnderlyings
+typedef struct _DiscreteAuctionMessageNoUnderlyingsGroupBlock8 {
+  DiscreteAuctionMessageNoUnderlyingsGroupBlock4 first;
+  DiscreteAuctionMessageNoUnderlyingsGroupBlock4 second;
+} DiscreteAuctionMessageNoUnderlyingsGroupBlock8;
+
+// NoUnderlyings
+casetype _DiscreteAuctionMessageNoUnderlyingsGroupPart8 (Bool present) {
+  switch (present) {
+    case true: DiscreteAuctionMessageNoUnderlyingsGroupBlock8 block;
+    case false: unit none;
+  }
+} DiscreteAuctionMessageNoUnderlyingsGroupPart8;
+
+// NoUnderlyings
+typedef struct _DiscreteAuctionMessageNoUnderlyingsGroupBlock16 {
+  DiscreteAuctionMessageNoUnderlyingsGroupBlock8 first;
+  DiscreteAuctionMessageNoUnderlyingsGroupBlock8 second;
+} DiscreteAuctionMessageNoUnderlyingsGroupBlock16;
+
+// NoUnderlyings
+casetype _DiscreteAuctionMessageNoUnderlyingsGroupPart16 (Bool present) {
+  switch (present) {
+    case true: DiscreteAuctionMessageNoUnderlyingsGroupBlock16 block;
+    case false: unit none;
+  }
+} DiscreteAuctionMessageNoUnderlyingsGroupPart16;
+
+// NoUnderlyings
+typedef struct _DiscreteAuctionMessageNoUnderlyingsGroupBlock32 {
+  DiscreteAuctionMessageNoUnderlyingsGroupBlock16 first;
+  DiscreteAuctionMessageNoUnderlyingsGroupBlock16 second;
+} DiscreteAuctionMessageNoUnderlyingsGroupBlock32;
+
+// NoUnderlyings
+casetype _DiscreteAuctionMessageNoUnderlyingsGroupPart32 (Bool present) {
+  switch (present) {
+    case true: DiscreteAuctionMessageNoUnderlyingsGroupBlock32 block;
+    case false: unit none;
+  }
+} DiscreteAuctionMessageNoUnderlyingsGroupPart32;
+
+// NoUnderlyings
+typedef struct _DiscreteAuctionMessageNoUnderlyingsGroupBlock64 {
+  DiscreteAuctionMessageNoUnderlyingsGroupBlock32 first;
+  DiscreteAuctionMessageNoUnderlyingsGroupBlock32 second;
+} DiscreteAuctionMessageNoUnderlyingsGroupBlock64;
+
+// NoUnderlyings
+casetype _DiscreteAuctionMessageNoUnderlyingsGroupPart64 (Bool present) {
+  switch (present) {
+    case true: DiscreteAuctionMessageNoUnderlyingsGroupBlock64 block;
+    case false: unit none;
+  }
+} DiscreteAuctionMessageNoUnderlyingsGroupPart64;
+
+// NoUnderlyings
+typedef struct _DiscreteAuctionMessageNoUnderlyingsGroupBlock128 {
+  DiscreteAuctionMessageNoUnderlyingsGroupBlock64 first;
+  DiscreteAuctionMessageNoUnderlyingsGroupBlock64 second;
+} DiscreteAuctionMessageNoUnderlyingsGroupBlock128;
+
+// NoUnderlyings
+casetype _DiscreteAuctionMessageNoUnderlyingsGroupPart128 (Bool present) {
+  switch (present) {
+    case true: DiscreteAuctionMessageNoUnderlyingsGroupBlock128 block;
+    case false: unit none;
+  }
+} DiscreteAuctionMessageNoUnderlyingsGroupPart128;
+
+// NoUnderlyings
+typedef struct _DiscreteAuctionMessageNoUnderlyingsGroupCounted (UINT32 count) {
+  DiscreteAuctionMessageNoUnderlyingsGroupPart128(((count & 128) != 0)) part128;
+  DiscreteAuctionMessageNoUnderlyingsGroupPart64(((count & 64) != 0)) part64;
+  DiscreteAuctionMessageNoUnderlyingsGroupPart32(((count & 32) != 0)) part32;
+  DiscreteAuctionMessageNoUnderlyingsGroupPart16(((count & 16) != 0)) part16;
+  DiscreteAuctionMessageNoUnderlyingsGroupPart8(((count & 8) != 0)) part8;
+  DiscreteAuctionMessageNoUnderlyingsGroupPart4(((count & 4) != 0)) part4;
+  DiscreteAuctionMessageNoUnderlyingsGroupPart2(((count & 2) != 0)) part2;
+  DiscreteAuctionMessageNoUnderlyingsGroupPart1(((count & 1) != 0)) part1;
+} DiscreteAuctionMessageNoUnderlyingsGroupCounted;
+
+// NoUnderlyings Block
+typedef struct _DiscreteAuctionMessageNoUnderlyingsGroups {
+  UINT16 block_length;                                                                                                            // bytes 0 to 1
+  UINT8 num_in_group_uint_8;                                                                                                      // byte 2
+  DiscreteAuctionMessageNoUnderlyingsGroupCounted(((UINT32) num_in_group_uint_8)) discrete_auction_message_no_underlyings_group;
+} DiscreteAuctionMessageNoUnderlyingsGroups;
+
+// DiscreteAuctionMessage
+typedef struct _DiscreteAuctionMessage {
+  UINT64 trad_ses_open_time;                                                                 // bytes 0 to 7
+  UINT64 trad_ses_close_time_from;                                                           // bytes 8 to 15
+  UINT64 trad_ses_close_time_till;                                                           // bytes 16 to 23
+  UINT64 auction_id;                                                                         // bytes 24 to 31, signed, read here as unsigned
+  UINT32 exchange_trading_session_id_int_32;                                                 // bytes 32 to 35, signed, read here as unsigned
+  UINT32 event_id_open;                                                                      // bytes 36 to 39, signed, read here as unsigned
+  UINT32 event_id_close;                                                                     // bytes 40 to 43, signed, read here as unsigned
+  UINT64 trade_period_id;                                                                    // bytes 44 to 51, signed, read here as unsigned
+  DiscreteAuctionMessageNoUnderlyingsGroups discrete_auction_message_no_underlyings_groups;
+} DiscreteAuctionMessage;
 
 // SecurityGroupStatusMessage
-entrypoint typedef struct _SecurityGroupStatusMessage {
+typedef struct _SecurityGroupStatusMessage {
   UINT64 security_group_id;          // bytes 0 to 7, signed, read here as unsigned
   UINT8 halt_type;                   // byte 8
   UINT32 trade_mode_mask;            // bytes 9 to 12, signed, read here as unsigned
@@ -73,4 +497,33 @@ entrypoint typedef struct _SecurityGroupStatusMessage {
   UINT8 security_trading_status;     // byte 29
   UINT64 status_change_time;         // bytes 30 to 37
 } SecurityGroupStatusMessage;
+
+// Branch
+casetype _Payload (UINT16 selector) {
+  switch (selector) {
+    case 0x0001: unit heartbeat_message;
+    case 0x0002: SequenceResetMessage sequence_reset_message;
+    case 0x0015: SecurityDefinitionMessage security_definition_message;
+    case 0x001A: TradingSessionStatusMessage trading_session_status_message;
+    case 0x0018: DiscreteAuctionMessage discrete_auction_message;
+    case 0x0016: SecurityGroupStatusMessage security_group_status_message;
+  }
+} Payload;
+
+// Moex Simba Market Data Message
+typedef struct _Message {
+  UINT16 block_length;           // bytes 0 to 1
+  UINT16 template_id;            // bytes 2 to 3
+  UINT16 schema_id;              // bytes 4 to 5
+  UINT16 version;                // bytes 6 to 7
+  Payload(template_id) payload;
+} Message;
+
+// ---- Packet: UdpPacket -------------------------------------------------------
+
+// Moex Simba Snapshot Packet
+entrypoint typedef struct _UdpPacket (UINT32 available) where (available >= 16) {
+  MarketDataPacketHeader market_data_packet_header;  // bytes 0 to 15
+  Message message[:byte-size (available - 16)];
+} UdpPacket;
 

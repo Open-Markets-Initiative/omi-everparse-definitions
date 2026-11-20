@@ -1,41 +1,59 @@
-// Chicago Board Options Exchange Multicast Latency Feed
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Cboe CboeEurope LatencyFeed Pitch v1.4
 //
+// Protocol:
+//   Organization: Chicago Board Options Exchange
+//   Protocol: Multicast Latency Feed
+//   Encoding: Pitch
+//   Version: 1.4
+//   Date: 2/19/2016
+//   Specification: BATS_Europe_Multicast_Latency_Feed_Specification.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out CboeEurope_LatencyFeed_v1_4.3d
-//
-// What this definition does not state, and the model does:
-// - the dispatch that chooses a message by its type
-// - a run filling what frames it
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 8 bytes --------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-entrypoint typedef struct _PacketHeader {
-  UINT16 length;        // bytes 0 to 1
-  UINT8 message_count;  // byte 2
-  UINT8 unit_;          // byte 3
-  UINT32 sequence;      // bytes 4 to 7
-} PacketHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_LATENCY_STAT_MESSAGE 0x90  // Latency Stat Message
 
-// ---- Message Header: 2 bytes -------------------------------------------------
+// Measurement Type: one byte code
+#define MEASUREMENT_TYPE_ORDER_TO_QUOTE 0x00  // Order To Quote
 
-entrypoint typedef struct _MessageHeader {
-  UINT8 message_length;  // byte 0
-  UINT8 message_type;    // byte 1
-} MessageHeader;
-
-// ---- Latency Stat Message: 110 bytes -----------------------------------------
+// ---- Types -------------------------------------------------------------------
 
 // A Latency Stat Message demonstrates performance for a specific Matching Engine unit for a specific timeframe
-entrypoint typedef struct _LatencyStatMessage {
+typedef struct _LatencyStatMessage {
   UINT8 measurement_type;          // byte 0
   UINT8 matching_unit;             // byte 1
   UINT32 begin_time;               // bytes 2 to 5
@@ -54,4 +72,44 @@ entrypoint typedef struct _LatencyStatMessage {
   UINT8 percentile_50[8];          // bytes 94 to 101
   UINT8 percentile_25[8];          // bytes 102 to 109
 } LatencyStatMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x90: LatencyStatMessage latency_stat_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT8 message_length { message_length >= 2 };                                                                                                                    // byte 0
+  UINT8 message_type;                                                                                                                                              // byte 1
+  Payload(message_type, (((UINT32) message_length) - 2)) payload[:byte-size-single-element-array (((UINT32) message_length) - 2)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+typedef struct _MessageRun (UINT8 message_count, UINT32 available, mutable UINT32 * tally) {
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size available];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} MessageRun;
+
+// Branch
+casetype _Messages (UINT8 selector, UINT8 message_count, UINT32 available, mutable UINT32 * tally) {
+  switch (selector) {
+    case 0x00: unit heartbeat;
+    default: MessageRun(message_count, available, tally) message;
+  }
+} Messages;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Pitch Udp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 8) {
+  UINT16 length;                                                                                                             // bytes 0 to 1
+  UINT8 message_count;                                                                                                       // byte 2
+  UINT8 unit_;                                                                                                               // byte 3
+  UINT32 sequence;                                                                                                           // bytes 4 to 7
+  Messages(message_count, message_count, (available - 8), tally) messages[:byte-size-single-element-array (available - 8)];
+} Packet;
 

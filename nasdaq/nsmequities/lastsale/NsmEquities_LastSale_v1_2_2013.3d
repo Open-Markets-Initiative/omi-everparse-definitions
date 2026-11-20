@@ -1,57 +1,233 @@
-// National Association of Securities Dealers Automated Quotations (Nasdaq) Last Sale
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nasdaq NsmEquities LastSale AsciiItch v1.2.2013
 //
+// Protocol:
+//   Organization: National Association of Securities Dealers Automated Quotations (Nasdaq)
+//   Protocol: Last Sale
+//   Encoding: Ascii Itch
+//   Version: 1.2.2013
+//   Date: 11/01/2013
+//   Specification: NQLastSale-V1_1.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out NsmEquities_LastSale_v1_2_2013.3d
-//
-// What this definition does not state, and the model does:
-// - the dispatch that chooses a message by its type
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 16 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-entrypoint typedef struct _PacketHeader {
-  UINT8 session[10];       // bytes 0 to 9
-  UINT32 sequence_number;  // bytes 10 to 13
-  UINT16 message_count;    // bytes 14 to 15
-} PacketHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_SYSTEM_EVENT_MESSAGE 0x53                                        // System Event Message
+#define MESSAGE_TYPE_TRADE_REPORT_MESSAGE 0x54                                        // Trade Report Message
+#define MESSAGE_TYPE_TRADE_CANCEL_ERROR_MESSAGE 0x58                                  // Trade Cancel Error Message
+#define MESSAGE_TYPE_TRADE_CORRECTION_MESSAGE 0x43                                    // Trade Correction Message
+#define MESSAGE_TYPE_STOCK_TRADING_ACTION_MESSAGE 0x48                                // Stock Trading Action Message
+#define MESSAGE_TYPE_REG_SHO_SHORT_SALE_PRICE_TEST_RESTRICTED_INDICATOR_MESSAGE 0x59  // Reg Sho Short Sale Price Test Restricted Indicator Message
+#define MESSAGE_TYPE_STOCK_DIRECTORY_MESSAGE 0x52                                     // Stock Directory Message
+#define MESSAGE_TYPE_ADJUSTED_CLOSING_PRICE_MESSAGE 0x47                              // Adjusted Closing Price Message
 
-// ---- Message Header: 9 bytes -------------------------------------------------
+// Event Code: one byte code
+#define EVENT_CODE_START_OF_TRANSMISSIONS 0x4F  // Start Of Transmissions
+#define EVENT_CODE_START_OF_SYSTEM_HOURS 0x53   // Start Of System Hours
+#define EVENT_CODE_START_OF_MARKET_HOURS 0x51   // Start Of Market Hours
+#define EVENT_CODE_END_OF_MARKET_HOURS 0x4D     // End Of Market Hours
+#define EVENT_CODE_END_OF_SYSTEM_HOURS 0x45     // End Of System Hours
+#define EVENT_CODE_END_OF_TRANSMISSIONS 0x43    // End Of Transmissions
 
-entrypoint typedef struct _MessageHeader {
-  UINT8 timestamp[8];  // bytes 0 to 7
-  UINT8 message_type;  // byte 8
-} MessageHeader;
+// Market Center Identifier: one byte code
+#define MARKET_CENTER_IDENTIFIER_NASDAQ 0x51  // Nasdaq
+#define MARKET_CENTER_IDENTIFIER_TRF 0x4C     // Trf
 
-// ---- System Event Message: 1 byte --------------------------------------------
+// Security Class: one byte code
+#define SECURITY_CLASS_NASDAQ 0x51     // Nasdaq
+#define SECURITY_CLASS_NYSE 0x4E       // Nyse
+#define SECURITY_CLASS_NYSE_MKT 0x41   // Nyse Mkt
+#define SECURITY_CLASS_NYSE_ARCA 0x50  // Nyse Arca
+#define SECURITY_CLASS_BATS 0x5A       // Bats
+
+// Settlement Type: one byte code
+#define SETTLEMENT_TYPE_REGULAR_SETTLEMENT 0x40   // Regular Settlement
+#define SETTLEMENT_TYPE_CASH_SETTLEMENT 0x43      // Cash Settlement
+#define SETTLEMENT_TYPE_NEXT_DAY_SETTLEMENT 0x4E  // Next Day Settlement
+#define SETTLEMENT_TYPE_SELLER_SETTLEMENT 0x52    // Seller Settlement
+
+// Trade Through Exemption: one byte code
+#define TRADE_THROUGH_EXEMPTION_INTERMARKET_SWEEP 0x46  // Intermarket Sweep
+#define TRADE_THROUGH_EXEMPTION_OPENING_PRINT 0x4F      // Opening Print
+#define TRADE_THROUGH_EXEMPTION_DERIVATIVE_PRICED 0x34  // Derivative Priced
+#define TRADE_THROUGH_EXEMPTION_RE_OPENING_PRINT 0x35   // Re Opening Print
+#define TRADE_THROUGH_EXEMPTION_CLOSING_PRINT 0x36      // Closing Print
+#define TRADE_THROUGH_EXEMPTION_NOT_APPLICABLE 0x20     // Not Applicable
+
+// Extended Hours Or Sold Code: one byte code
+#define EXTENDED_HOURS_OR_SOLD_CODE_EXTENDED_HOURS_TRADE 0x54                                   // Extended Hours Trade
+#define EXTENDED_HOURS_OR_SOLD_CODE_EXTENDED_HOURS_TRADE_REPORTED_LATE_OR_OUT_OF_SEQUENCE 0x55  // Extended Hours Trade Reported Late Or Out Of Sequence
+#define EXTENDED_HOURS_OR_SOLD_CODE_SOLD_LAST_REPORTED_LATE_BUT_IN_SEQUENCE 0x4C                // Sold Last Reported Late But In Sequence
+#define EXTENDED_HOURS_OR_SOLD_CODE_SOLD_OUT_OF_SEQUENCE 0x5A                                   // Sold Out Of Sequence
+#define EXTENDED_HOURS_OR_SOLD_CODE_NOT_APPLICABLE 0x20                                         // Not Applicable
+
+// Special Sale Condition: one byte code
+#define SPECIAL_SALE_CONDITION_ACQUISITION 0x41                  // Acquisition
+#define SPECIAL_SALE_CONDITION_BUNCHED 0x42                      // Bunched
+#define SPECIAL_SALE_CONDITION_DISTRIBUTION 0x44                 // Distribution
+#define SPECIAL_SALE_CONDITION_PRICE_VARIATION_TRANSACTION 0x48  // Price Variation Transaction
+#define SPECIAL_SALE_CONDITION_OFFICIAL_CLOSE_PRICE 0x4D         // Official Close Price
+#define SPECIAL_SALE_CONDITION_PRIOR_REFERENCE_PRICE 0x50        // Prior Reference Price
+#define SPECIAL_SALE_CONDITION_OFFICIAL_OPENING_PRICE 0x51       // Official Opening Price
+#define SPECIAL_SALE_CONDITION_SPLIT_TRADE 0x53                  // Split Trade
+#define SPECIAL_SALE_CONDITION_AVERAGE_PRICE_TRADE 0x57          // Average Price Trade
+#define SPECIAL_SALE_CONDITION_CROSS_TRADE 0x58                  // Cross Trade
+#define SPECIAL_SALE_CONDITION_ODD_LOT_EXECUTION 0x6F            // Odd Lot Execution
+#define SPECIAL_SALE_CONDITION_NOT_APPLICABLE 0x20               // Not Applicable
+
+// Original Settlement Type: one byte code
+#define ORIGINAL_SETTLEMENT_TYPE_REGULAR_SETTLEMENT 0x40   // Regular Settlement
+#define ORIGINAL_SETTLEMENT_TYPE_CASH_SETTLEMENT 0x43      // Cash Settlement
+#define ORIGINAL_SETTLEMENT_TYPE_NEXT_DAY_SETTLEMENT 0x4E  // Next Day Settlement
+#define ORIGINAL_SETTLEMENT_TYPE_SELLER_SETTLEMENT 0x52    // Seller Settlement
+
+// Original Trade Through Exemption: one byte code
+#define ORIGINAL_TRADE_THROUGH_EXEMPTION_INTERMARKET_SWEEP 0x46  // Intermarket Sweep
+#define ORIGINAL_TRADE_THROUGH_EXEMPTION_OPENING_PRINT 0x4F      // Opening Print
+#define ORIGINAL_TRADE_THROUGH_EXEMPTION_DERIVATIVE_PRICED 0x34  // Derivative Priced
+#define ORIGINAL_TRADE_THROUGH_EXEMPTION_RE_OPENING_PRINT 0x35   // Re Opening Print
+#define ORIGINAL_TRADE_THROUGH_EXEMPTION_CLOSING_PRINT 0x36      // Closing Print
+#define ORIGINAL_TRADE_THROUGH_EXEMPTION_NOT_APPLICABLE 0x20     // Not Applicable
+
+// Original Extended Hours Or Sold Code: one byte code
+#define ORIGINAL_EXTENDED_HOURS_OR_SOLD_CODE_EXTENDED_HOURS_TRADE 0x54                                   // Extended Hours Trade
+#define ORIGINAL_EXTENDED_HOURS_OR_SOLD_CODE_EXTENDED_HOURS_TRADE_REPORTED_LATE_OR_OUT_OF_SEQUENCE 0x55  // Extended Hours Trade Reported Late Or Out Of Sequence
+#define ORIGINAL_EXTENDED_HOURS_OR_SOLD_CODE_SOLD_LAST_REPORTED_LATE_BUT_IN_SEQUENCE 0x4C                // Sold Last Reported Late But In Sequence
+#define ORIGINAL_EXTENDED_HOURS_OR_SOLD_CODE_SOLD_OUT_OF_SEQUENCE 0x5A                                   // Sold Out Of Sequence
+#define ORIGINAL_EXTENDED_HOURS_OR_SOLD_CODE_NOT_APPLICABLE 0x20                                         // Not Applicable
+
+// Original Special Sale Condition: one byte code
+#define ORIGINAL_SPECIAL_SALE_CONDITION_ACQUISITION 0x41                  // Acquisition
+#define ORIGINAL_SPECIAL_SALE_CONDITION_BUNCHED 0x42                      // Bunched
+#define ORIGINAL_SPECIAL_SALE_CONDITION_DISTRIBUTION 0x44                 // Distribution
+#define ORIGINAL_SPECIAL_SALE_CONDITION_PRICE_VARIATION_TRANSACTION 0x48  // Price Variation Transaction
+#define ORIGINAL_SPECIAL_SALE_CONDITION_OFFICIAL_CLOSE_PRICE 0x4D         // Official Close Price
+#define ORIGINAL_SPECIAL_SALE_CONDITION_PRIOR_REFERENCE_PRICE 0x50        // Prior Reference Price
+#define ORIGINAL_SPECIAL_SALE_CONDITION_OFFICIAL_OPENING_PRICE 0x51       // Official Opening Price
+#define ORIGINAL_SPECIAL_SALE_CONDITION_SPLIT_TRADE 0x53                  // Split Trade
+#define ORIGINAL_SPECIAL_SALE_CONDITION_AVERAGE_PRICE_TRADE 0x57          // Average Price Trade
+#define ORIGINAL_SPECIAL_SALE_CONDITION_CROSS_TRADE 0x58                  // Cross Trade
+#define ORIGINAL_SPECIAL_SALE_CONDITION_ODD_LOT_EXECUTION 0x6F            // Odd Lot Execution
+#define ORIGINAL_SPECIAL_SALE_CONDITION_NOT_APPLICABLE 0x20               // Not Applicable
+
+// Corrected Settlement Type: one byte code
+#define CORRECTED_SETTLEMENT_TYPE_REGULAR_SETTLEMENT 0x40   // Regular Settlement
+#define CORRECTED_SETTLEMENT_TYPE_CASH_SETTLEMENT 0x43      // Cash Settlement
+#define CORRECTED_SETTLEMENT_TYPE_NEXT_DAY_SETTLEMENT 0x4E  // Next Day Settlement
+#define CORRECTED_SETTLEMENT_TYPE_SELLER_SETTLEMENT 0x52    // Seller Settlement
+
+// Corrected Trade Through Exemption: one byte code
+#define CORRECTED_TRADE_THROUGH_EXEMPTION_INTERMARKET_SWEEP 0x46  // Intermarket Sweep
+#define CORRECTED_TRADE_THROUGH_EXEMPTION_OPENING_PRINT 0x4F      // Opening Print
+#define CORRECTED_TRADE_THROUGH_EXEMPTION_DERIVATIVE_PRICED 0x34  // Derivative Priced
+#define CORRECTED_TRADE_THROUGH_EXEMPTION_RE_OPENING_PRINT 0x35   // Re Opening Print
+#define CORRECTED_TRADE_THROUGH_EXEMPTION_CLOSING_PRINT 0x36      // Closing Print
+#define CORRECTED_TRADE_THROUGH_EXEMPTION_NOT_APPLICABLE 0x20     // Not Applicable
+
+// Corrected Extended Hours Or Sold Code: one byte code
+#define CORRECTED_EXTENDED_HOURS_OR_SOLD_CODE_EXTENDED_HOURS_TRADE 0x54                                   // Extended Hours Trade
+#define CORRECTED_EXTENDED_HOURS_OR_SOLD_CODE_EXTENDED_HOURS_TRADE_REPORTED_LATE_OR_OUT_OF_SEQUENCE 0x55  // Extended Hours Trade Reported Late Or Out Of Sequence
+#define CORRECTED_EXTENDED_HOURS_OR_SOLD_CODE_SOLD_LAST_REPORTED_LATE_BUT_IN_SEQUENCE 0x4C                // Sold Last Reported Late But In Sequence
+#define CORRECTED_EXTENDED_HOURS_OR_SOLD_CODE_SOLD_OUT_OF_SEQUENCE 0x5A                                   // Sold Out Of Sequence
+#define CORRECTED_EXTENDED_HOURS_OR_SOLD_CODE_NOT_APPLICABLE 0x20                                         // Not Applicable
+
+// Corrected Special Sale Condition: one byte code
+#define CORRECTED_SPECIAL_SALE_CONDITION_ACQUISITION 0x41                  // Acquisition
+#define CORRECTED_SPECIAL_SALE_CONDITION_BUNCHED 0x42                      // Bunched
+#define CORRECTED_SPECIAL_SALE_CONDITION_DISTRIBUTION 0x44                 // Distribution
+#define CORRECTED_SPECIAL_SALE_CONDITION_PRICE_VARIATION_TRANSACTION 0x48  // Price Variation Transaction
+#define CORRECTED_SPECIAL_SALE_CONDITION_OFFICIAL_CLOSE_PRICE 0x4D         // Official Close Price
+#define CORRECTED_SPECIAL_SALE_CONDITION_PRIOR_REFERENCE_PRICE 0x50        // Prior Reference Price
+#define CORRECTED_SPECIAL_SALE_CONDITION_OFFICIAL_OPENING_PRICE 0x51       // Official Opening Price
+#define CORRECTED_SPECIAL_SALE_CONDITION_SPLIT_TRADE 0x53                  // Split Trade
+#define CORRECTED_SPECIAL_SALE_CONDITION_AVERAGE_PRICE_TRADE 0x57          // Average Price Trade
+#define CORRECTED_SPECIAL_SALE_CONDITION_CROSS_TRADE 0x58                  // Cross Trade
+#define CORRECTED_SPECIAL_SALE_CONDITION_ODD_LOT_EXECUTION 0x6F            // Odd Lot Execution
+#define CORRECTED_SPECIAL_SALE_CONDITION_NOT_APPLICABLE 0x20               // Not Applicable
+
+// Current Trading State: one byte code
+#define CURRENT_TRADING_STATE_HALTED 0x48          // Halted
+#define CURRENT_TRADING_STATE_PAUSED 0x50          // Paused
+#define CURRENT_TRADING_STATE_QUOTATION_ONLY 0x51  // Quotation Only
+#define CURRENT_TRADING_STATE_TRADING 0x54         // Trading
+
+// Reg Sho Action: one byte code
+#define REG_SHO_ACTION_NO_PRICE_TEST 0x30          // No Price Test
+#define REG_SHO_ACTION_RESTRICTION_IN_EFFECT 0x31  // Restriction In Effect
+#define REG_SHO_ACTION_RESTRICTION_REMAINS 0x32    // Restriction Remains
+
+// Market Category: one byte code
+#define MARKET_CATEGORY_NYSE 0x4E                         // Nyse
+#define MARKET_CATEGORY_NYSE_MKT 0x41                     // Nyse Mkt
+#define MARKET_CATEGORY_NYSE_ARCA 0x50                    // Nyse Arca
+#define MARKET_CATEGORY_NASDAQ_GLOBAL_SELECT_MARKET 0x51  // Nasdaq Global Select Market
+#define MARKET_CATEGORY_NASDAQ_GLOBAL_MARKET 0x47         // Nasdaq Global Market
+#define MARKET_CATEGORY_NASDAQ_CAPITAL_MARKET 0x53        // Nasdaq Capital Market
+#define MARKET_CATEGORY_BATS 0x5A                         // Bats
+#define MARKET_CATEGORY_NOT_AVAILABLE 0x20                // Not Available
+
+// Financial Status Indicator: one byte code
+#define FINANCIAL_STATUS_INDICATOR_NORMAL 0x4E                             // Normal
+#define FINANCIAL_STATUS_INDICATOR_DEFICIENT 0x44                          // Deficient
+#define FINANCIAL_STATUS_INDICATOR_DELINQUENT 0x45                         // Delinquent
+#define FINANCIAL_STATUS_INDICATOR_BANKRUPT 0x51                           // Bankrupt
+#define FINANCIAL_STATUS_INDICATOR_DEFICIENT_AND_BANKRUPT 0x47             // Deficient And Bankrupt
+#define FINANCIAL_STATUS_INDICATOR_DEFICIENT_AND_DELINQUENT 0x48           // Deficient And Delinquent
+#define FINANCIAL_STATUS_INDICATOR_DELINQUENT_AND_BANKRUPT 0x4A            // Delinquent And Bankrupt
+#define FINANCIAL_STATUS_INDICATOR_DEFICIENT_DELINQUENT_AND_BANKRUPT 0x4B  // Deficient Delinquent And Bankrupt
+#define FINANCIAL_STATUS_INDICATOR_SUSPENDED 0x53                          // Suspended
+#define FINANCIAL_STATUS_INDICATOR_IN_COMPLIANCE_OR_NOT_LISTED 0x20        // In Compliance Or Not Listed
+
+// ---- Types -------------------------------------------------------------------
 
 // System Event Messages is used to signal key market or data feed control events.
-entrypoint typedef struct _SystemEventMessage {
+typedef struct _SystemEventMessage {
   UINT8 event_code;  // byte 0
 } SystemEventMessage;
 
-// ---- Sale Condition Modifier: 4 bytes ----------------------------------------
-
 // Sale Condition Modifier
-entrypoint typedef struct _SaleConditionModifier {
+typedef struct _SaleConditionModifier {
   UINT8 settlement_type;              // byte 0
   UINT8 trade_through_exemption;      // byte 1
   UINT8 extended_hours_or_sold_code;  // byte 2
   UINT8 special_sale_condition;       // byte 3
 } SaleConditionModifier;
 
-// ---- Trade Report Message: 43 bytes ------------------------------------------
-
 // The following message is used to relay NASDAQ execution system and TRF trade transactions that are reported for the current business day. Please note that NASDAQ only reports one-side of a trade execution on the NASDAQ Last Sale (NLS) feed and other data feed products.
-entrypoint typedef struct _TradeReportMessage {
+typedef struct _TradeReportMessage {
   UINT8 market_center_identifier;                 // byte 0
   UINT8 issue_symbol[8];                          // bytes 1 to 8
   UINT8 security_class;                           // byte 9
@@ -61,20 +237,16 @@ entrypoint typedef struct _TradeReportMessage {
   SaleConditionModifier sale_condition_modifier;  // bytes 39 to 42
 } TradeReportMessage;
 
-// ---- Original Sale Condition Modifier: 4 bytes -------------------------------
-
 // Original Sale Condition Modifier
-entrypoint typedef struct _OriginalSaleConditionModifier {
+typedef struct _OriginalSaleConditionModifier {
   UINT8 original_settlement_type;              // byte 0
   UINT8 original_trade_through_exemption;      // byte 1
   UINT8 original_extended_hours_or_sold_code;  // byte 2
   UINT8 original_special_sale_condition;       // byte 3
 } OriginalSaleConditionModifier;
 
-// ---- Trade Cancel Error Message: 43 bytes ------------------------------------
-
 // The following message is used in the event that a NASDAQ or TRF trade transaction is cancelled on the same business day that it is reported.
-entrypoint typedef struct _TradeCancelErrorMessage {
+typedef struct _TradeCancelErrorMessage {
   UINT8 market_center_identifier;                                  // byte 0
   UINT8 issue_symbol[8];                                           // bytes 1 to 8
   UINT8 security_class;                                            // byte 9
@@ -84,20 +256,16 @@ entrypoint typedef struct _TradeCancelErrorMessage {
   OriginalSaleConditionModifier original_sale_condition_modifier;  // bytes 39 to 42
 } TradeCancelErrorMessage;
 
-// ---- Corrected Sale Condition Modifier: 4 bytes ------------------------------
-
 // Corrected Sale Condition Modifier
-entrypoint typedef struct _CorrectedSaleConditionModifier {
+typedef struct _CorrectedSaleConditionModifier {
   UINT8 corrected_settlement_type;              // byte 0
   UINT8 corrected_trade_through_exemption;      // byte 1
   UINT8 corrected_extended_hours_or_sold_code;  // byte 2
   UINT8 corrected_special_sale_condition;       // byte 3
 } CorrectedSaleConditionModifier;
 
-// ---- Trade Correction Message: 76 bytes --------------------------------------
-
 // The following message is used in the event that a TRF trade transaction is corrected on the same business day that it is reported.
-entrypoint typedef struct _TradeCorrectionMessage {
+typedef struct _TradeCorrectionMessage {
   UINT8 market_center_identifier;                                    // byte 0
   UINT8 issue_symbol[8];                                             // bytes 1 to 8
   UINT8 security_class;                                              // byte 9
@@ -111,39 +279,91 @@ entrypoint typedef struct _TradeCorrectionMessage {
   CorrectedSaleConditionModifier corrected_sale_condition_modifier;  // bytes 72 to 75
 } TradeCorrectionMessage;
 
-// ---- Stock Trading Action Message: 14 bytes ----------------------------------
-
 // NASDAQ uses this administrative message to indicate the current trading status of a security to the trading community.
-entrypoint typedef struct _StockTradingActionMessage {
+typedef struct _StockTradingActionMessage {
   UINT8 issue_symbol[8];        // bytes 0 to 7
   UINT8 security_class;         // byte 8
   UINT8 current_trading_state;  // byte 9
   UINT8 reason[4];              // bytes 10 to 13
 } StockTradingActionMessage;
 
-// ---- Reg Sho Short Sale Price Test Restricted Indicator Message: 9 bytes -----
-
 // Denotes the Reg SHO Short Sale Price Test Restriction (Rule 201) status for an issue: a full pre-opening spin for NASDAQ-listed issues and intraday status changes.
-entrypoint typedef struct _RegShoShortSalePriceTestRestrictedIndicatorMessage {
+typedef struct _RegShoShortSalePriceTestRestrictedIndicatorMessage {
   UINT8 stock[8];        // bytes 0 to 7
   UINT8 reg_sho_action;  // byte 8
 } RegShoShortSalePriceTestRestrictedIndicatorMessage;
 
-// ---- Stock Directory Message: 10 bytes ---------------------------------------
-
 // At the start of each trading day, NASDAQ disseminates stock directory messages for all active symbols in the NASDAQ system.
-entrypoint typedef struct _StockDirectoryMessage {
+typedef struct _StockDirectoryMessage {
   UINT8 issue_symbol[8];             // bytes 0 to 7
   UINT8 market_category;             // byte 8
   UINT8 financial_status_indicator;  // byte 9
 } StockDirectoryMessage;
 
-// ---- Adjusted Closing Price Message: 19 bytes --------------------------------
-
 // At the start of each trading day, NASDAQ disseminates the adjusted closing price for all active symbols in the NASDAQ system.
-entrypoint typedef struct _AdjustedClosingPriceMessage {
+typedef struct _AdjustedClosingPriceMessage {
   UINT8 stock[8];                    // bytes 0 to 7
   UINT8 security_class;              // byte 8
   UINT8 adjusted_closing_price[10];  // bytes 9 to 18
 } AdjustedClosingPriceMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x53: SystemEventMessage system_event_message;
+    case 0x54: TradeReportMessage trade_report_message;
+    case 0x58: TradeCancelErrorMessage trade_cancel_error_message;
+    case 0x43: TradeCorrectionMessage trade_correction_message;
+    case 0x48: StockTradingActionMessage stock_trading_action_message;
+    case 0x59: RegShoShortSalePriceTestRestrictedIndicatorMessage reg_sho_short_sale_price_test_restricted_indicator_message;
+    case 0x52: StockDirectoryMessage stock_directory_message;
+    case 0x47: AdjustedClosingPriceMessage adjusted_closing_price_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// Mold Udp message data
+typedef struct _MessageData (UINT16 message_length) where (message_length >= 9) {
+  UINT8 timestamp[8];                                                                                                               // bytes 0 to 7
+  UINT8 message_type;                                                                                                               // byte 8
+  Payload(message_type, (((UINT32) message_length) - 9)) payload[:byte-size-single-element-array (((UINT32) message_length) - 9)];
+} MessageData;
+
+// Branch
+casetype _MessageBody (UINT16 selector, UINT16 message_length) {
+  switch (selector) {
+    case 0x0000: unit end_of_session;
+    default: MessageData(message_length) message_data;
+  }
+} MessageBody;
+
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16 message_length;                                                                                                                                           // bytes 0 to 1
+  MessageBody(message_length, message_length) message_body[:byte-size-single-element-array ((((UINT32) message_length) + 2) - 2)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+typedef struct _MessageRun (UINT16 message_count, UINT32 available, mutable UINT32 * tally) {
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size available];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} MessageRun;
+
+// Branch
+casetype _Messages (UINT16 selector, UINT16 message_count, UINT32 available, mutable UINT32 * tally) {
+  switch (selector) {
+    case 0x0000: unit heartbeat;
+    default: MessageRun(message_count, available, tally) message;
+  }
+} Messages;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Itch Udp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 16) {
+  UINT8 session[10];                                                                                                           // bytes 0 to 9
+  UINT32 sequence_number;                                                                                                      // bytes 10 to 13
+  UINT16 message_count;                                                                                                        // bytes 14 to 15
+  Messages(message_count, message_count, (available - 16), tally) messages[:byte-size-single-element-array (available - 16)];
+} Packet;
 

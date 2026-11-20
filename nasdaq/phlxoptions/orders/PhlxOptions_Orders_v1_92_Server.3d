@@ -1,85 +1,369 @@
-// National Association of Securities Dealers Automated Quotations (Nasdaq) PHLX Orders
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nasdaq PhlxOptions Orders Itch v1.92
 //
+// Protocol:
+//   Organization: National Association of Securities Dealers Automated Quotations (Nasdaq)
+//   Protocol: PHLX Orders
+//   Encoding: Itch
+//   Version: 1.92
+//   Date: 04/25/2025
+//   Specification: topoplusorders - TCP Update.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ServerPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out PhlxOptions_Orders_v1_92_Server.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a length prefix framing what follows
-// - a field read in bits
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Server Packet Header: 3 bytes -------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Packet header of a packet sent by the server
-entrypoint typedef struct _ServerPacketHeader {
-  UINT16BE packet_length;    // bytes 0 to 1
-  UINT8 server_packet_type;  // byte 2
-} ServerPacketHeader;
+// Server Packet Type: one byte code
+#define SERVER_PACKET_TYPE_DEBUG_PACKET 0x2B             // Debug Packet
+#define SERVER_PACKET_TYPE_LOGIN_ACCEPTED_PACKET 0x41    // Login Accepted Packet
+#define SERVER_PACKET_TYPE_LOGIN_REJECTED_PACKET 0x4A    // Login Rejected Packet
+#define SERVER_PACKET_TYPE_SEQUENCED_DATA_PACKET 0x53    // Sequenced Data Packet
+#define SERVER_PACKET_TYPE_SERVER_HEARTBEAT_PACKET 0x48  // Server Heartbeat Packet
+#define SERVER_PACKET_TYPE_END_OF_SESSION_PACKET 0x5A    // End Of Session Packet
 
-// ---- Login Accepted Packet: 30 bytes -----------------------------------------
+// Reject Reason Code: one byte code
+#define REJECT_REASON_CODE_NOT_AUTHORIZED 0x41         // Not Authorized
+#define REJECT_REASON_CODE_SESSION_NOT_AVAILABLE 0x53  // Session Not Available
+
+// Sequenced Message Type: one byte code
+#define SEQUENCED_MESSAGE_TYPE_SYSTEM_EVENT_MESSAGE 0x53                  // System Event Message
+#define SEQUENCED_MESSAGE_TYPE_OPTIONS_DIRECTORY_MESSAGE 0x44             // Options Directory Message
+#define SEQUENCED_MESSAGE_TYPE_COMPLEX_ORDER_STRATEGY_MESSAGE 0x52        // Complex Order Strategy Message
+#define SEQUENCED_MESSAGE_TYPE_SECURITY_TRADING_ACTION_MESSAGE 0x48       // Security Trading Action Message
+#define SEQUENCED_MESSAGE_TYPE_COMPLEX_TRADING_ACTION_MESSAGE 0x49        // Complex Trading Action Message
+#define SEQUENCED_MESSAGE_TYPE_SECURITY_OPEN_CLOSED_MESSAGE 0x50          // Security Open Closed Message
+#define SEQUENCED_MESSAGE_TYPE_STRATEGY_OPEN_CLOSED_MESSAGE 0x51          // Strategy Open Closed Message
+#define SEQUENCED_MESSAGE_TYPE_SIMPLE_ORDER_MESSAGE 0x4F                  // Simple Order Message
+#define SEQUENCED_MESSAGE_TYPE_COMPLEX_ORDER_MESSAGE 0x58                 // Complex Order Message
+#define SEQUENCED_MESSAGE_TYPE_AUCTION_NOTIFICATION_MESSAGE 0x41          // Auction Notification Message
+#define SEQUENCED_MESSAGE_TYPE_COMPLEX_AUCTION_NOTIFICATION_MESSAGE 0x43  // Complex Auction Notification Message
+#define SEQUENCED_MESSAGE_TYPE_END_OF_REPLAY_SEQUENCE_MESSAGE 0x4D        // End Of Replay Sequence Message
+
+// Event Code: one byte code
+#define EVENT_CODE_START_OF_MESSAGES 0x4F                      // Start Of Messages
+#define EVENT_CODE_START_OF_SYSTEM_HOURS 0x53                  // Start Of System Hours
+#define EVENT_CODE_START_OF_OPENING_PROCESS 0x51               // Start Of Opening Process
+#define EVENT_CODE_START_OF_NORMAL_HOURS_CLOSING_PROCESS 0x4E  // Start Of Normal Hours Closing Process
+#define EVENT_CODE_START_OF_LATE_HOURS_CLOSING_PROCESS 0x4C    // Start Of Late Hours Closing Process
+#define EVENT_CODE_END_OF_SYSTEM_HOURS 0x45                    // End Of System Hours
+#define EVENT_CODE_END_OF_MESSAGES 0x43                        // End Of Messages
+#define EVENT_CODE_END_OF_WCO_EARLY_CLOSING 0x57               // End Of Wco Early Closing
+
+// Option Type: one byte code
+#define OPTION_TYPE_CALL 0x43   // Call
+#define OPTION_TYPE_PUT 0x50    // Put
+#define OPTION_TYPE_STOCK 0x20  // Stock
+
+// Option Closing Type: one byte code
+#define OPTION_CLOSING_TYPE_NORMAL 0x4E             // Normal
+#define OPTION_CLOSING_TYPE_LATE 0x4C               // Late
+#define OPTION_CLOSING_TYPE_WCO_EARLY_CLOSING 0x57  // Wco Early Closing
+
+// Phlx Tradable: one byte code
+#define PHLX_TRADABLE_TRADABLE 0x59      // Tradable
+#define PHLX_TRADABLE_NOT_TRADABLE 0x4E  // Not Tradable
+
+// Action: one byte code
+#define ACTION_ADD 0x41     // Add
+#define ACTION_DELETE 0x44  // Delete
+
+// Side: one byte code
+#define SIDE_BUY 0x42     // Buy
+#define SIDE_SELL 0x53    // Sell
+#define SIDE_HIDDEN 0x2A  // Hidden
+
+// Current Trading State: one byte code
+#define CURRENT_TRADING_STATE_HALT_IN_EFFECT 0x48        // Halt In Effect
+#define CURRENT_TRADING_STATE_PHLX_TRADING_RESUMED 0x54  // Phlx Trading Resumed
+
+// Open State: one byte code
+#define OPEN_STATE_OPEN_FOR_AUTO_EXECUTION 0x59    // Open For Auto Execution
+#define OPEN_STATE_CLOSED_FOR_AUTO_EXECUTION 0x4E  // Closed For Auto Execution
+
+// Order Status: one byte code
+#define ORDER_STATUS_OPEN 0x4F            // Open
+#define ORDER_STATUS_FILLED 0x46          // Filled
+#define ORDER_STATUS_CANCELLED 0x43       // Cancelled
+#define ORDER_STATUS_RENOTIFICATION 0x52  // Renotification
+
+// Order Type: one byte code
+#define ORDER_TYPE_MARKET 0x4D     // Market
+#define ORDER_TYPE_LIMIT 0x4C      // Limit
+#define ORDER_TYPE_ANONYMOUS 0x2A  // Anonymous
+
+// Market Qualifier: one byte code
+#define MARKET_QUALIFIER_OPENING_ORDER 0x4F  // Opening Order
+#define MARKET_QUALIFIER_IMPLIED_ORDER 0x49  // Implied Order
+#define MARKET_QUALIFIER_NA 0x20             // Na
+
+// All Or None: one byte code
+#define ALL_OR_NONE_ALL_OR_NONE_ORDER 0x59      // All Or None Order
+#define ALL_OR_NONE_NOT_ALL_OR_NONE_ORDER 0x4E  // Not All Or None Order
+
+// Time In Force: one byte code
+#define TIME_IN_FORCE_DAY_ORDER 0x44  // Day Order
+#define TIME_IN_FORCE_GTC 0x47        // Gtc
+#define TIME_IN_FORCE_IOC 0x49        // Ioc
+
+// Customer Firm Indicator: one byte code
+#define CUSTOMER_FIRM_INDICATOR_CUSTOMER_ORDER 0x43         // Customer Order
+#define CUSTOMER_FIRM_INDICATOR_FIRM_ORDER 0x46             // Firm Order
+#define CUSTOMER_FIRM_INDICATOR_ON_FLOOR_MARKET_MAKER 0x4D  // On Floor Market Maker
+#define CUSTOMER_FIRM_INDICATOR_BROKER_DEALER_ORDER 0x42    // Broker Dealer Order
+#define CUSTOMER_FIRM_INDICATOR_PROFESSIONAL_ORDER 0x50     // Professional Order
+#define CUSTOMER_FIRM_INDICATOR_NA_FOR_IMPLIED_ORDER 0x20   // Na For Implied Order
+
+// Open Close Indicator: one byte code
+#define OPEN_CLOSE_INDICATOR_OPENS_POSITION 0x4F   // Opens Position
+#define OPEN_CLOSE_INDICATOR_CLOSES_POSITION 0x43  // Closes Position
+#define OPEN_CLOSE_INDICATOR_NA 0x20               // Na
+
+// Debit Or Credit: one byte code
+#define DEBIT_OR_CREDIT_NET_DEBIT 0x44             // Net Debit
+#define DEBIT_OR_CREDIT_NET_CREDIT 0x43            // Net Credit
+#define DEBIT_OR_CREDIT_EVEN_OR_MARKET_ORDER 0x20  // Even Or Market Order
+#define DEBIT_OR_CREDIT_ANONYMOUS 0x2A             // Anonymous
+
+// Leg Open Close Indicator: one byte code
+#define LEG_OPEN_CLOSE_INDICATOR_OPENS_POSITION 0x4F   // Opens Position
+#define LEG_OPEN_CLOSE_INDICATOR_CLOSES_POSITION 0x43  // Closes Position
+#define LEG_OPEN_CLOSE_INDICATOR_STOCK_LEG 0x20        // Stock Leg
+
+// Auction Type: one byte code
+#define AUCTION_TYPE_COLA 0x43            // Cola
+#define AUCTION_TYPE_OPENING 0x4F         // Opening
+#define AUCTION_TYPE_REOPENING 0x52       // Reopening
+#define AUCTION_TYPE_PIXL 0x50            // Pixl
+#define AUCTION_TYPE_SOLICITATION 0x53    // Solicitation
+#define AUCTION_TYPE_ORDER_EXPOSURE 0x49  // Order Exposure
+
+// Auction Side: one byte code
+#define AUCTION_SIDE_BUY 0x42                   // Buy
+#define AUCTION_SIDE_SELL 0x53                  // Sell
+#define AUCTION_SIDE_SOLICITATION_AUCTION 0x2A  // Solicitation Auction
+
+// ---- Types -------------------------------------------------------------------
+
+// Debug packets are intended to provide human readable text that may aid in debugging problems
+typedef struct _DebugPacket (UINT16 packet_length) where (packet_length >= 1) {
+  UINT8 debug_text[(((UINT32) packet_length) - 1)];
+} DebugPacket;
 
 // The SoupBinTCP server sends a Login Accepted Packet in response to receiving a valid Login Request from the client
-entrypoint typedef struct _LoginAcceptedPacket {
+typedef struct _LoginAcceptedPacket {
   UINT8 accepted_session[10];          // bytes 0 to 9
   UINT8 accepted_sequence_number[20];  // bytes 10 to 29
 } LoginAcceptedPacket;
 
-// ---- Login Rejected Packet: 1 byte -------------------------------------------
-
 // The SoupBinTCP server sends this packet in response to an invalid Login Request Packet from the client
-entrypoint typedef struct _LoginRejectedPacket {
+typedef struct _LoginRejectedPacket {
   UINT8 reject_reason_code;  // byte 0
 } LoginRejectedPacket;
 
-// ---- Timestamp: 8 bytes ------------------------------------------------------
-
 // Time the message was sent: seconds after midnight and the nanosecond portion, U.S. Eastern Time
-entrypoint typedef struct _Timestamp {
+typedef struct _Timestamp {
   UINT32BE seconds;      // bytes 0 to 3
   UINT32BE nanoseconds;  // bytes 4 to 7
 } Timestamp;
 
-// ---- System Event Message: 10 bytes ------------------------------------------
-
 // The system event message type is used to signal a market or data feed handler event.
-entrypoint typedef struct _SystemEventMessage {
+typedef struct _SystemEventMessage {
   Timestamp timestamp;  // bytes 0 to 7
   UINT8 event_code;     // byte 8
   UINT8 version;        // byte 9
 } SystemEventMessage;
 
-// ---- Complex Trading Action Message: 13 bytes --------------------------------
+// At the start of each trading day, PHLX disseminates directory messages for all symbols trading on the PHLX option system.
+typedef struct _OptionsDirectoryMessage {
+  Timestamp timestamp;             // bytes 0 to 7
+  UINT32BE option_id;              // bytes 8 to 11
+  UINT8 security_symbol[5];        // bytes 12 to 16
+  UINT16BE year : 7;               // bytes 17 to 18
+  UINT16BE month : 4;              // bytes 17 to 18
+  UINT16BE day : 5;                // bytes 17 to 18
+  UINT32BE explicit_strike_price;  // bytes 19 to 22, signed, read here as unsigned
+  UINT8 option_type;               // byte 23
+  UINT8 source;                    // byte 24
+  UINT8 underlying_symbol[13];     // bytes 25 to 37
+  UINT8 option_closing_type;       // byte 38
+  UINT8 phlx_tradable;             // byte 39
+} OptionsDirectoryMessage;
+
+// Complex Order Strategy Leg Information
+typedef struct _ComplexOrderStrategyLeg {
+  UINT32BE option_id;              // bytes 0 to 3
+  UINT8 security_symbol[5];        // bytes 4 to 8
+  UINT16BE year : 7;               // bytes 9 to 10
+  UINT16BE month : 4;              // bytes 9 to 10
+  UINT16BE day : 5;                // bytes 9 to 10
+  UINT32BE explicit_strike_price;  // bytes 11 to 14, signed, read here as unsigned
+  UINT8 option_type;               // byte 15
+  UINT8 side;                      // byte 16
+  UINT32BE leg_ratio;              // bytes 17 to 20
+} ComplexOrderStrategyLeg;
+
+// Whenever a complex order is added in the system for an underlying, the order is normalized and results in either the creation of a new complex strategy or is added to an existing strategy. A Complex Order Strategy Message containing the strategy definition will be sent.
+typedef struct _ComplexOrderStrategyMessage {
+  Timestamp timestamp;                                                                              // bytes 0 to 7
+  UINT32BE strategy_id;                                                                             // bytes 8 to 11
+  UINT8 source;                                                                                     // byte 12
+  UINT8 underlying_symbol[13];                                                                      // bytes 13 to 25
+  UINT8 action;                                                                                     // byte 26
+  UINT8 number_of_legs;                                                                             // byte 27
+  ComplexOrderStrategyLeg complex_order_strategy_leg[:byte-size (((UINT32) number_of_legs) * 21)];
+} ComplexOrderStrategyMessage;
+
+// PHLX uses this administrative message to indicate the current trading status of an index or equity option within the PHLX Options Market.
+typedef struct _SecurityTradingActionMessage {
+  Timestamp timestamp;             // bytes 0 to 7
+  UINT32BE option_id;              // bytes 8 to 11
+  UINT8 security_symbol[5];        // bytes 12 to 16
+  UINT16BE year : 7;               // bytes 17 to 18
+  UINT16BE month : 4;              // bytes 17 to 18
+  UINT16BE day : 5;                // bytes 17 to 18
+  UINT32BE explicit_strike_price;  // bytes 19 to 22, signed, read here as unsigned
+  UINT8 option_type;               // byte 23
+  UINT8 current_trading_state;     // byte 24
+} SecurityTradingActionMessage;
 
 // PHLX uses this administrative message to indicate the current trading status of a strategy within the PHLX Options Market.
-entrypoint typedef struct _ComplexTradingActionMessage {
+typedef struct _ComplexTradingActionMessage {
   Timestamp timestamp;          // bytes 0 to 7
   UINT32BE strategy_id;         // bytes 8 to 11
   UINT8 current_trading_state;  // byte 12
 } ComplexTradingActionMessage;
 
-// ---- Strategy Open Closed Message: 13 bytes ----------------------------------
+// PHLX uses this administrative message to indicate when an option has completed the opening process and is now available for auto execution or when the option has closed and is no longer available for auto execution.
+typedef struct _SecurityOpenClosedMessage {
+  Timestamp timestamp;             // bytes 0 to 7
+  UINT32BE option_id;              // bytes 8 to 11
+  UINT8 security_symbol[5];        // bytes 12 to 16
+  UINT16BE year : 7;               // bytes 17 to 18
+  UINT16BE month : 4;              // bytes 17 to 18
+  UINT16BE day : 5;                // bytes 17 to 18
+  UINT32BE explicit_strike_price;  // bytes 19 to 22, signed, read here as unsigned
+  UINT8 option_type;               // byte 23
+  UINT8 open_state;                // byte 24
+} SecurityOpenClosedMessage;
 
 // PHLX uses this administrative message to indicate when a strategy has completed the opening process or when the strategy has closed and is no longer available for auto execution.
-entrypoint typedef struct _StrategyOpenClosedMessage {
+typedef struct _StrategyOpenClosedMessage {
   Timestamp timestamp;   // bytes 0 to 7
   UINT32BE strategy_id;  // bytes 8 to 11
   UINT8 open_state;      // byte 12
 } StrategyOpenClosedMessage;
 
-// ---- Complex Auction Notification Message: 27 bytes --------------------------
+// When a Single Order is received or any change is made to an order, an Order message containing the current order status will be sent.
+typedef struct _SimpleOrderMessage {
+  Timestamp timestamp;               // bytes 0 to 7
+  UINT32BE option_id;                // bytes 8 to 11
+  UINT8 security_symbol[5];          // bytes 12 to 16
+  UINT16BE year : 7;                 // bytes 17 to 18
+  UINT16BE month : 4;                // bytes 17 to 18
+  UINT16BE day : 5;                  // bytes 17 to 18
+  UINT32BE explicit_strike_price;    // bytes 19 to 22, signed, read here as unsigned
+  UINT8 option_type;                 // byte 23
+  UINT32BE order_id;                 // bytes 24 to 27
+  UINT8 side;                        // byte 28
+  UINT32BE original_order_volume;    // bytes 29 to 32
+  UINT32BE executable_order_volume;  // bytes 33 to 36
+  UINT8 order_status;                // byte 37
+  UINT8 order_type;                  // byte 38
+  UINT8 market_qualifier;            // byte 39
+  UINT32BE limit_price;              // bytes 40 to 43, signed, read here as unsigned
+  UINT8 all_or_none;                 // byte 44
+  UINT8 time_in_force;               // byte 45
+  UINT8 customer_firm_indicator;     // byte 46
+  UINT8 open_close_indicator;        // byte 47
+} SimpleOrderMessage;
+
+// Complex Order Leg Information
+typedef struct _ComplexOrderLeg {
+  UINT8 leg_open_close_indicator;  // byte 0
+  UINT32BE option_id;              // bytes 1 to 4
+  UINT8 security_symbol[5];        // bytes 5 to 9
+  UINT16BE year : 7;               // bytes 10 to 11
+  UINT16BE month : 4;              // bytes 10 to 11
+  UINT16BE day : 5;                // bytes 10 to 11
+  UINT32BE explicit_strike_price;  // bytes 12 to 15, signed, read here as unsigned
+  UINT8 option_type;               // byte 16
+  UINT8 side;                      // byte 17
+  UINT32BE leg_ratio;              // bytes 18 to 21
+} ComplexOrderLeg;
+
+// When a Complex Order is received or any change is made to a complex order for an underlying, a Complex Order Message containing the order information will be sent.
+typedef struct _ComplexOrderMessage {
+  Timestamp timestamp;                                                             // bytes 0 to 7
+  UINT32BE strategy_id;                                                            // bytes 8 to 11
+  UINT32BE order_id;                                                               // bytes 12 to 15
+  UINT8 side;                                                                      // byte 16
+  UINT32BE original_order_volume;                                                  // bytes 17 to 20
+  UINT32BE executable_order_volume;                                                // bytes 21 to 24
+  UINT8 order_status;                                                              // byte 25
+  UINT8 order_type;                                                                // byte 26
+  UINT32BE limit_price;                                                            // bytes 27 to 30, signed, read here as unsigned
+  UINT8 debit_or_credit;                                                           // byte 31
+  UINT8 all_or_none;                                                               // byte 32
+  UINT8 time_in_force;                                                             // byte 33
+  UINT8 customer_firm_indicator;                                                   // byte 34
+  UINT8 underlying_symbol[13];                                                     // bytes 35 to 47
+  UINT8 number_of_legs;                                                            // byte 48
+  ComplexOrderLeg complex_order_leg[:byte-size (((UINT32) number_of_legs) * 22)];
+} ComplexOrderMessage;
+
+// When a symbol goes into an auction, an Auction Notification Message is sent. Also if any auction parameters change during the auction, size for example, a new Auction Notification message will be sent for that symbol.
+typedef struct _AuctionNotificationMessage {
+  Timestamp timestamp;             // bytes 0 to 7
+  UINT32BE option_id;              // bytes 8 to 11
+  UINT8 security_symbol[5];        // bytes 12 to 16
+  UINT16BE year : 7;               // bytes 17 to 18
+  UINT16BE month : 4;              // bytes 17 to 18
+  UINT16BE day : 5;                // bytes 17 to 18
+  UINT32BE explicit_strike_price;  // bytes 19 to 22, signed, read here as unsigned
+  UINT8 option_type;               // byte 23
+  UINT32BE auction_id;             // bytes 24 to 27
+  UINT8 auction_type;              // byte 28
+  UINT32BE price;                  // bytes 29 to 32, signed, read here as unsigned
+  UINT8 auction_side;              // byte 33
+  UINT32BE matched_volume;         // bytes 34 to 37
+  UINT32BE imbalance_volume;       // bytes 38 to 41
+  UINT8 customer_firm_indicator;   // byte 42
+  UINT8 reserved_3[3];             // bytes 43 to 45
+} AuctionNotificationMessage;
 
 // When a Complex Order Live Auction (COLA) or PIXL/Solicitation auction starts for a strategy of an underlying, a COLA/PIXL/Solicitation notification message containing the auction information will be sent.
-entrypoint typedef struct _ComplexAuctionNotificationMessage {
+typedef struct _ComplexAuctionNotificationMessage {
   Timestamp timestamp;    // bytes 0 to 7
   UINT32BE strategy_id;   // bytes 8 to 11
   UINT32BE auction_id;    // bytes 12 to 15
@@ -90,10 +374,60 @@ entrypoint typedef struct _ComplexAuctionNotificationMessage {
   UINT32BE volume;        // bytes 23 to 26
 } ComplexAuctionNotificationMessage;
 
-// ---- End Of Replay Sequence Message: 20 bytes --------------------------------
-
 // The End of replay Sequence message reflects the sequence number at the time replay of existing messages is complete. The firms can then use this sequence number to resume on the real time Mold channel. Only for SoupBINTCP.
-entrypoint typedef struct _EndOfReplaySequenceMessage {
+typedef struct _EndOfReplaySequenceMessage {
   UINT8 end_of_replay_sequence_number[20];  // bytes 0 to 19
 } EndOfReplaySequenceMessage;
+
+// The sequenced (server to client) message carried by the packet, opaque bytes unless an application source dispatches it
+casetype _SequencedMessage (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x53: SystemEventMessage system_event_message;
+    case 0x44: OptionsDirectoryMessage options_directory_message;
+    case 0x52: ComplexOrderStrategyMessage complex_order_strategy_message;
+    case 0x48: SecurityTradingActionMessage security_trading_action_message;
+    case 0x49: ComplexTradingActionMessage complex_trading_action_message;
+    case 0x50: SecurityOpenClosedMessage security_open_closed_message;
+    case 0x51: StrategyOpenClosedMessage strategy_open_closed_message;
+    case 0x4F: SimpleOrderMessage simple_order_message;
+    case 0x58: ComplexOrderMessage complex_order_message;
+    case 0x41: AuctionNotificationMessage auction_notification_message;
+    case 0x43: ComplexAuctionNotificationMessage complex_auction_notification_message;
+    case 0x4D: EndOfReplaySequenceMessage end_of_replay_sequence_message;
+    default: UINT8 unknown[available];
+  }
+} SequencedMessage;
+
+// The Sequenced Data Packets act as an envelope to carry the actual sequenced data messages that are transferred from the server to the client. Each Sequenced Data Packet carries one message from the higher-lever protocol
+typedef struct _SequencedDataPacket (UINT16 packet_length) where (packet_length >= 2) {
+  UINT8 sequenced_message_type;                                                                                                                                // byte 0
+  SequencedMessage(sequenced_message_type, (((UINT32) packet_length) - 2)) sequenced_message[:byte-size-single-element-array (((UINT32) packet_length) - 2)];
+} SequencedDataPacket;
+
+// Branch
+casetype _ServerPayload (UINT8 selector, UINT32 length, UINT16 packet_length, UINT32 available) {
+  switch (selector) {
+    case 0x2B: DebugPacket(packet_length) debug_packet;
+    case 0x41: LoginAcceptedPacket login_accepted_packet;
+    case 0x4A: LoginRejectedPacket login_rejected_packet;
+    case 0x53: SequencedDataPacket(packet_length) sequenced_data_packet[:byte-size-single-element-array length];
+    case 0x48: unit server_heartbeat_packet;
+    case 0x5A: unit end_of_session_packet;
+    default: UINT8 unknown[available];
+  }
+} ServerPayload;
+
+// Soup Bin Tcp Packet sent by the server
+typedef struct _ServerSoupBinTcpPacket {
+  UINT16BE packet_length { packet_length >= 1 };                                                                                                                                                                // bytes 0 to 1
+  UINT8 server_packet_type;                                                                                                                                                                                     // byte 2
+  ServerPayload(server_packet_type, (((UINT32) packet_length) - 1), packet_length, ((((UINT32) packet_length) + 2) - 3)) server_payload[:byte-size-single-element-array ((((UINT32) packet_length) + 2) - 3)];
+} ServerSoupBinTcpPacket;
+
+// ---- Packet: ServerPacket ----------------------------------------------------
+
+// SoupBinTCP Packet sent by the server
+entrypoint typedef struct _ServerPacket (UINT32 available) {
+  ServerSoupBinTcpPacket server_soup_bin_tcp_packet[:byte-size available];
+} ServerPacket;
 

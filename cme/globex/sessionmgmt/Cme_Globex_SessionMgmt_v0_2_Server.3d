@@ -1,54 +1,93 @@
-// CME Group Session Management
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Cme Globex SessionMgmt Sbe v0.2
 //
+// Protocol:
+//   Organization: CME Group
+//   Protocol: Session Management
+//   Encoding: Simple Binary Encoding
+//   Version: 0.2
+//   Date: 3/10/2021
+//   Specification: https://www.cmegroup.com/confluence/display/EPICSANDBOX/CME+MDP+3.0+Market+Data
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ServerPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out Cme_Globex_SessionMgmt_v0_2_Server.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - the dispatch that chooses a message by its type
-// - a block whose stated length holds more than its fields
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Server Technical Header: 14 bytes ---------------------------------------
+// ---- Values ------------------------------------------------------------------
+
+// Template Id: 2 byte code
+#define TEMPLATE_ID_NEGOTIATE 0x00C8                // Negotiate
+#define TEMPLATE_ID_NEGOTIATION_REJECT 0x00C9       // Negotiation Reject
+#define TEMPLATE_ID_NEGOTIATION_RESPONSE 0x00CA     // Negotiation Response
+#define TEMPLATE_ID_TERMINATE 0x00CB                // Terminate
+#define TEMPLATE_ID_MARKET_DATA_REQUEST 0x00CD      // Market Data Request
+#define TEMPLATE_ID_REQUEST_ACK 0x00CE              // Request Ack
+#define TEMPLATE_ID_REQUEST_REJECT 0x00CF           // Request Reject
+#define TEMPLATE_ID_SECURITY_LIST_REQUEST 0x00D0    // Security List Request
+#define TEMPLATE_ID_SECURITY_STATUS_REQUEST 0x00D1  // Security Status Request
+#define TEMPLATE_ID_SUBSCRIBER_HEARTBEAT 0x00D2     // Subscriber Heartbeat
+
+// Error Codes: one byte code
+#define ERROR_CODES_HMAC_REJECT 0x00      // Hmac Reject
+#define ERROR_CODES_INVALID_VALUE 0x01    // Invalid Value
+#define ERROR_CODES_SLOW_CONNECTION 0x02  // Slow Connection
+#define ERROR_CODES_OTHER 0x03            // Other
+
+// Subscription Req Type: one byte code
+#define SUBSCRIPTION_REQ_TYPE_SNAPSHOT 0x00              // Snapshot
+#define SUBSCRIPTION_REQ_TYPE_SNAPSHOT_AND_UPDATES 0x01  // Snapshot And Updates
+#define SUBSCRIPTION_REQ_TYPE_UNSUBSCRIBE 0x02           // Unsubscribe
+
+// Md Req Id Status: one byte code
+#define MD_REQ_ID_STATUS_FULL_ACK 0x00     // Full Ack
+#define MD_REQ_ID_STATUS_PARTIAL_ACK 0x01  // Partial Ack
+
+// Md Req Rej Reason: one byte code
+#define MD_REQ_REJ_REASON_UNKNOWN_SECURITY 0x00   // Unknown Security
+#define MD_REQ_REJ_REASON_UNKNOWN_MESSAGE 0x01    // Unknown Message
+#define MD_REQ_REJ_REASON_UNSUPPORTED_SCOPE 0x02  // Unsupported Scope
+#define MD_REQ_REJ_REASON_OTHER 0x03              // Other
+
+// ---- Types -------------------------------------------------------------------
 
 // Cme Technical Header sent by Cme to the subscriber
-entrypoint typedef struct _ServerTechnicalHeader {
+typedef struct _ServerTechnicalHeader {
   UINT16 encoding_type;            // bytes 0 to 1
   UINT32 message_sequence_number;  // bytes 2 to 5
   UINT64 sending_time;             // bytes 6 to 13
 } ServerTechnicalHeader;
 
-// ---- Simple Binary Header: 8 bytes -------------------------------------------
-
-// Template ID and length of message root
-entrypoint typedef struct _SimpleBinaryHeader {
-  UINT16 block_length;  // bytes 0 to 1
-  UINT16 template_id;   // bytes 2 to 3
-  UINT16 schema_id;     // bytes 4 to 5
-  UINT16 version;       // bytes 6 to 7
-} SimpleBinaryHeader;
-
-// ---- Message Header: 10 bytes ------------------------------------------------
-
-// Message Size followed by the Simple Binary Header
-entrypoint typedef struct _MessageHeader {
-  UINT16 message_size;                      // bytes 0 to 1
-  SimpleBinaryHeader simple_binary_header;  // bytes 2 to 9
-} MessageHeader;
-
-// ---- Negotiation Reject: 70 bytes --------------------------------------------
-
 // NegotiationReject
-entrypoint typedef struct _NegotiationReject {
+typedef struct _NegotiationReject {
   UINT8 reason[48];          // bytes 0 to 47
   UINT64 uuid;               // bytes 48 to 55
   UINT64 request_timestamp;  // bytes 56 to 63
@@ -56,20 +95,16 @@ entrypoint typedef struct _NegotiationReject {
   UINT8 padding_5[5];        // bytes 65 to 69
 } NegotiationReject;
 
-// ---- Negotiation Response: 22 bytes ------------------------------------------
-
 // NegotiationResponse
-entrypoint typedef struct _NegotiationResponse {
+typedef struct _NegotiationResponse {
   UINT64 uuid;                             // bytes 0 to 7
   UINT64 request_timestamp;                // bytes 8 to 15
   UINT16 secret_key_secure_id_expiration;  // bytes 16 to 17
   UINT8 padding_4[4];                      // bytes 18 to 21
 } NegotiationResponse;
 
-// ---- Terminate: 70 bytes -----------------------------------------------------
-
 // Terminate
-entrypoint typedef struct _Terminate {
+typedef struct _Terminate {
   UINT8 reason[48];          // bytes 0 to 47
   UINT64 uuid;               // bytes 48 to 55
   UINT64 request_timestamp;  // bytes 56 to 63
@@ -77,20 +112,73 @@ entrypoint typedef struct _Terminate {
   UINT8 padding_5[5];        // bytes 65 to 69
 } Terminate;
 
-// ---- Group Size: 3 bytes -----------------------------------------------------
+// Number of SecurityGroups acknowledged
+typedef struct _RequestAckSecurityGroup {
+  UINT8 security_group[6];  // bytes 0 to 5
+} RequestAckSecurityGroup;
 
-// Repeating group dimensions
-entrypoint typedef struct _GroupSize {
-  UINT16 block_length;  // bytes 0 to 1
-  UINT8 num_in_group;   // byte 2
-} GroupSize;
+// NoSecurityGroups Block
+typedef struct _RequestAckSecurityGroups {
+  UINT16 block_length;                                              // bytes 0 to 1
+  UINT8 num_in_group;                                               // byte 2
+  UINT8 request_ack_security_group[(((UINT32) num_in_group) * 6)];
+} RequestAckSecurityGroups;
 
-// ---- Request Reject: 105 bytes -----------------------------------------------
+// Number of securities acknowledged
+typedef struct _RequestAckRelatedSymbolGroup {
+  UINT32 security_id;  // bytes 0 to 3, signed, read here as unsigned
+} RequestAckRelatedSymbolGroup;
+
+// NoRelatedSym Block
+typedef struct _RequestAckRelatedSymbolGroups {
+  UINT16 block_length;                                                                                      // bytes 0 to 1
+  UINT8 num_in_group;                                                                                       // byte 2
+  RequestAckRelatedSymbolGroup request_ack_related_symbol_group[:byte-size (((UINT32) num_in_group) * 4)];
+} RequestAckRelatedSymbolGroups;
+
+// RequestAck
+typedef struct _RequestAck {
+  UINT32 md_req_id;                                                 // bytes 0 to 3
+  UINT8 subscription_req_type;                                      // byte 4
+  UINT8 md_req_id_status;                                           // byte 5
+  RequestAckSecurityGroups request_ack_security_groups;
+  RequestAckRelatedSymbolGroups request_ack_related_symbol_groups;
+} RequestAck;
 
 // RequestReject
-entrypoint typedef struct _RequestReject {
+typedef struct _RequestReject {
   UINT32 md_req_id_optional;  // bytes 0 to 3
   UINT8 md_req_rej_reason;    // byte 4
   UINT8 session_text[100];    // bytes 5 to 104
 } RequestReject;
+
+// Cme Session Message body sent by Cme to the subscriber
+casetype _ServerPayload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x00C9: NegotiationReject negotiation_reject;
+    case 0x00CA: NegotiationResponse negotiation_response;
+    case 0x00CB: Terminate terminate;
+    case 0x00CE: RequestAck request_ack;
+    case 0x00CF: RequestReject request_reject;
+    default: UINT8 unknown[available];
+  }
+} ServerPayload;
+
+// One technical header and the message it carries: the unit the wire repeats
+typedef struct _ServerTcpFrame {
+  ServerTechnicalHeader server_technical_header;                                                                                                            // bytes 0 to 13
+  UINT16 message_size { message_size >= 10 };                                                                                                               // bytes 14 to 15
+  UINT16 block_length;                                                                                                                                      // bytes 16 to 17
+  UINT16 template_id;                                                                                                                                       // bytes 18 to 19
+  UINT16 schema_id;                                                                                                                                         // bytes 20 to 21
+  UINT16 version;                                                                                                                                           // bytes 22 to 23
+  ServerPayload(template_id, ((((UINT32) message_size) + 14) - 24)) server_payload[:byte-size-single-element-array ((((UINT32) message_size) + 14) - 24)];
+} ServerTcpFrame;
+
+// ---- Packet: ServerPacket ----------------------------------------------------
+
+// Cme Sbe Tcp Packet sent by Cme to the subscriber
+entrypoint typedef struct _ServerPacket (UINT32 available) {
+  ServerTcpFrame server_tcp_frame[:byte-size available];
+} ServerPacket;
 

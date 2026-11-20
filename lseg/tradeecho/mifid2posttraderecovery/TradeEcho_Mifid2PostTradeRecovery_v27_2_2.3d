@@ -1,51 +1,269 @@
-// London Stock Exchange MiFID II Post Trade Recovery
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Lseg TradeEcho Mifid2PostTradeRecovery Gtp v27.2.2
 //
+// Protocol:
+//   Organization: London Stock Exchange
+//   Protocol: MiFID II Post Trade Recovery
+//   Encoding: Group Ticker Plant
+//   Version: 27.2.2
+//   Date: 01/27/2026
+//   Specification: gtp-002-technical-guide-tradecho-mifid-post-trade-reporting-issue-27-2-2.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out TradeEcho_Mifid2PostTradeRecovery_v27_2_2.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a run counted by a field
-// - a field read in bits
-//
-// License: MIT No Attribution
 
-// ---- Unit Header: 8 bytes ----------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Gtp Tcp Unit Header
-entrypoint typedef struct _UnitHeader {
-  UINT16 length;            // bytes 0 to 1
-  UINT8 message_count;      // byte 2
-  UINT8 market_data_group;  // byte 3
-  UINT32 sequence_number;   // bytes 4 to 7
-} UnitHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_LOGIN_REQUEST_MESSAGE 0x01                 // Login Request Message
+#define MESSAGE_TYPE_RECOVERY_REQUEST_MESSAGE 0x81              // Recovery Request Message
+#define MESSAGE_TYPE_LOGIN_RESPONSE_MESSAGE 0x02                // Login Response Message
+#define MESSAGE_TYPE_RECOVERY_RESPONSE_MESSAGE 0x82             // Recovery Response Message
+#define MESSAGE_TYPE_REPLAY_AND_RECOVERY_COMPLETE_MESSAGE 0x83  // Replay And Recovery Complete Message
+#define MESSAGE_TYPE_SYSTEM_EVENT_MESSAGE 0x53                  // System Event Message
+#define MESSAGE_TYPE_INSTRUMENT_DIRECTORY_MESSAGE 0x70          // Instrument Directory Message
+#define MESSAGE_TYPE_INSTRUMENT_STATUS_MESSAGE 0x48             // Instrument Status Message
+#define MESSAGE_TYPE_STATISTICS_SNAPSHOT_MESSAGE 0x6B           // Statistics Snapshot Message
+#define MESSAGE_TYPE_MIFID_II_TRADE_REPORT_MESSAGE 0x54         // Mifid Ii Trade Report Message
 
-// ---- Message Header: 3 bytes -------------------------------------------------
+// Request Level: one byte code
+#define REQUEST_LEVEL_INSTRUMENT 0x00         // Instrument
+#define REQUEST_LEVEL_GROUP_SEGMENT 0x01      // Group Segment
+#define REQUEST_LEVEL_MULTICAST_CHANNEL 0x02  // Multicast Channel
 
-// Gtp Tcp Message Header
-entrypoint typedef struct _MessageHeader {
-  UINT16 message_length;  // bytes 0 to 1
-  UINT8 message_type;     // byte 2
-} MessageHeader;
+// Request Order Book Type: one byte code
+#define REQUEST_ORDER_BOOK_TYPE_ALL_BOOKS 0x00  // All Books
+#define REQUEST_ORDER_BOOK_TYPE_OFF_BOOK 0x02   // Off Book
 
-// ---- Login Request Message: 8 bytes ------------------------------------------
+// Source Venue: 2 byte code
+#define SOURCE_VENUE_TRAD_ECHO 0x000B  // Trad Echo
+
+// Recovery Type: one byte code
+#define RECOVERY_TYPE_INSTRUMENT_DIRECTORY 0x00                               // Instrument Directory
+#define RECOVERY_TYPE_ORDER_BOOK_NOT_APPLICABLE_TO_MI_FID_II_POST_TRADE 0x01  // Order Book Not Applicable To Mi Fid Ii Post Trade
+#define RECOVERY_TYPE_ALL_TRADES 0x02                                         // All Trades
+#define RECOVERY_TYPE_STATISTICS 0x03                                         // Statistics
+#define RECOVERY_TYPE_INSTRUMENT_STATUS 0x04                                  // Instrument Status
+#define RECOVERY_TYPE_RESERVED 0x05                                           // Reserved
+#define RECOVERY_TYPE_SYSTEM_EVENT 0x06                                       // System Event
+
+// Login Status: one byte code
+#define LOGIN_STATUS_LOGIN_ACCEPTED 0x41                     // Login Accepted
+#define LOGIN_STATUS_COMP_ID_INACTIVE_SUSPENDED 0x61         // Comp Id Inactive Suspended
+#define LOGIN_STATUS_LOGIN_LIMIT_REACHED 0x62                // Login Limit Reached
+#define LOGIN_STATUS_SERVICE_UNAVAILABLE 0x63                // Service Unavailable
+#define LOGIN_STATUS_MAXIMUM_CONNECTIONS_LIMIT_REACHED 0x64  // Maximum Connections Limit Reached
+#define LOGIN_STATUS_FAILED_OTHER 0x65                       // Failed Other
+#define LOGIN_STATUS_INVALID_COMP_ID_OR_IP_ADDRESS 0x66      // Invalid Comp Id Or Ip Address
+
+// Recovery Status: one byte code
+#define RECOVERY_STATUS_REQUEST_ACCEPTED 0x41                        // Request Accepted
+#define RECOVERY_STATUS_OUT_OF_RANGE 0x4F                            // Out Of Range
+#define RECOVERY_STATUS_INVALID_GROUP_OR_INSTRUMENT 0x61             // Invalid Group Or Instrument
+#define RECOVERY_STATUS_REQUEST_LIMIT_REACHED 0x62                   // Request Limit Reached
+#define RECOVERY_STATUS_CONCURRENT_LIMIT_REACHED 0x63                // Concurrent Limit Reached
+#define RECOVERY_STATUS_INVALID_RECOVERY_TYPE_OR_REQUEST_LEVEL 0x64  // Invalid Recovery Type Or Request Level
+#define RECOVERY_STATUS_FAILED_OTHER 0x65                            // Failed Other
+
+// Trading Status: one byte code
+#define TRADING_STATUS_INACTIVE 0x31         // Inactive
+#define TRADING_STATUS_SUSPENDED 0x32        // Suspended
+#define TRADING_STATUS_ACTIVE 0x33           // Active
+#define TRADING_STATUS_REGULATORY_HALT 0x50  // Regulatory Halt
+
+// Event Code: one byte code
+#define EVENT_CODE_START_OF_DAY 0x4F        // Start Of Day
+#define EVENT_CODE_START_OF_OPEN 0x54       // Start Of Open
+#define EVENT_CODE_START_OF_PRE_CLOSE 0x50  // Start Of Pre Close
+#define EVENT_CODE_END_OF_DAY 0x43          // End Of Day
+
+// Session Change Reason: one byte code
+#define SESSION_CHANGE_REASON_SCHEDULED_TRANSITION 0x00  // Scheduled Transition
+
+// Order Book Type: one byte code
+#define ORDER_BOOK_TYPE_OFF_BOOK 0x02  // Off Book
+
+// Venue Type: one byte code
+#define VENUE_TYPE_UNSPECIFIED 0x00       // Unspecified
+#define VENUE_TYPE_MTF 0x01               // Mtf
+#define VENUE_TYPE_OTF 0x02               // Otf
+#define VENUE_TYPE_REGULATED_MARKET 0x03  // Regulated Market
+
+// Venue Book Definition Id: one byte code
+#define VENUE_BOOK_DEFINITION_ID_ON_BOOK 0x00   // On Book
+#define VENUE_BOOK_DEFINITION_ID_OFF_BOOK 0x01  // Off Book
+
+// Transaction To Be Cleared: one byte code
+#define TRANSACTION_TO_BE_CLEARED_NO 0x30   // No
+#define TRANSACTION_TO_BE_CLEARED_YES 0x31  // Yes
+
+// Market Mechanism: one byte code
+#define MARKET_MECHANISM_CENTRAL_LIMIT_ORDER_BOOK 0x31    // Central Limit Order Book
+#define MARKET_MECHANISM_QUOTE_DRIVEN_MARKET 0x32         // Quote Driven Market
+#define MARKET_MECHANISM_DARK_ORDER_BOOK 0x33             // Dark Order Book
+#define MARKET_MECHANISM_OFF_BOOK 0x34                    // Off Book
+#define MARKET_MECHANISM_PERIODIC_AUCTION 0x35            // Periodic Auction
+#define MARKET_MECHANISM_REQUEST_FOR_QUOTES 0x36          // Request For Quotes
+#define MARKET_MECHANISM_ANY_OTHER_INCLUDING_HYBRID 0x37  // Any Other Including Hybrid
+#define MARKET_MECHANISM_HYBRID_MARKET 0x38               // Hybrid Market
+#define MARKET_MECHANISM_OTHER_MARKET 0x39                // Other Market
+
+// Trading Mode: one byte code
+#define TRADING_MODE_UNDEFINED_AUCTION 0x31                      // Undefined Auction
+#define TRADING_MODE_CONTINUOUS_TRADING 0x32                     // Continuous Trading
+#define TRADING_MODE_AT_MARKET_CLOSE_TRADING 0x33                // At Market Close Trading
+#define TRADING_MODE_OUT_OF_MAIN_SESSION_TRADING 0x34            // Out Of Main Session Trading
+#define TRADING_MODE_TRADE_REPORTING_ON_EXCHANGE 0x35            // Trade Reporting On Exchange
+#define TRADING_MODE_TRADE_REPORTING_OFF_EXCHANGE 0x36           // Trade Reporting Off Exchange
+#define TRADING_MODE_TRADE_REPORTING_SYSTEMIC_INTERNALISER 0x37  // Trade Reporting Systemic Internaliser
+#define TRADING_MODE_SCHEDULED_OPENING_AUCTION 0x4F              // Scheduled Opening Auction
+#define TRADING_MODE_SCHEDULED_CLOSING_AUCTION 0x4B              // Scheduled Closing Auction
+#define TRADING_MODE_SCHEDULED_INTRADAY_AUCTION 0x49             // Scheduled Intraday Auction
+#define TRADING_MODE_UNSCHEDULED_AUCTION 0x55                    // Unscheduled Auction
+
+// Transaction Category: one byte code
+#define TRANSACTION_CATEGORY_TRADE_THAT_HAS_RECEIVED_PRICE_IMPROVEMENT 0x52            // Trade That Has Received Price Improvement
+#define TRANSACTION_CATEGORY_PACKAGE_TRADE_EXCLUDING_EXCHANGE_FOR_PHYSICALS 0x5A       // Package Trade Excluding Exchange For Physicals
+#define TRANSACTION_CATEGORY_EXCHANGE_FOR_PHYSICALS_TRADE 0x59                         // Exchange For Physicals Trade
+#define TRANSACTION_CATEGORY_RFMD_GIVE_UP_TRADE 0x47                                   // Rfmd Give Up Trade
+#define TRANSACTION_CATEGORY_RFMD_GIVE_UP_TRADE_AND_EXCHANGE_FOR_PHYSICALS_TRADE 0x48  // Rfmd Give Up Trade And Exchange For Physicals Trade
+#define TRANSACTION_CATEGORY_NONE_APPLY 0x2D                                           // None Apply
+
+// Negotiation Indicator: one byte code
+#define NEGOTIATION_INDICATOR_NEGOTIATION_TRADE 0x4E                                                           // Negotiation Trade
+#define NEGOTIATION_INDICATOR_NEGOTIATED_TRADE_IN_LIQUID_FINANCIAL_INSTRUMENTS 0x31                            // Negotiated Trade In Liquid Financial Instruments
+#define NEGOTIATION_INDICATOR_NEGOTIATED_TRADE_IN_ILLIQUID_FINANCIAL_INSTRUMENTS 0x32                          // Negotiated Trade In Illiquid Financial Instruments
+#define NEGOTIATION_INDICATOR_NEGOTIATED_TRADE_SUBJECT_TO_CONDITIONS_OTHER_THAN_THE_CURRENT_MARKET_PRICE 0x33  // Negotiated Trade Subject To Conditions Other Than The Current Market Price
+#define NEGOTIATION_INDICATOR_NEGOTIATED_TRADE_LARGER_THAN_LIS_BROUGHT_ONTO_A_VENUE 0x37                       // Negotiated Trade Larger Than Lis Brought Onto A Venue
+#define NEGOTIATION_INDICATOR_NEGOTIATED_TRADE_WITH_PRE_TRADE_TRANSPARENCY_WAIVER 0x38                         // Negotiated Trade With Pre Trade Transparency Waiver
+#define NEGOTIATION_INDICATOR_NOT_A_NEGOTIATED_TRADE 0x2D                                                      // Not A Negotiated Trade
+
+// Agency Cross Indicator: one byte code
+#define AGENCY_CROSS_INDICATOR_AGENCY_CROSS_TRADE 0x58       // Agency Cross Trade
+#define AGENCY_CROSS_INDICATOR_MATCHED_PRINCIPAL_TRADE 0x4D  // Matched Principal Trade
+#define AGENCY_CROSS_INDICATOR_NO_AGENCY_CROSS_TRADE 0x2D    // No Agency Cross Trade
+
+// Modification Indicator: one byte code
+#define MODIFICATION_INDICATOR_TRADE_CANCELLATION 0x43  // Trade Cancellation
+#define MODIFICATION_INDICATOR_TRADE_AMENDMENT 0x41     // Trade Amendment
+#define MODIFICATION_INDICATOR_NEW_TRADE 0x2D           // New Trade
+
+// Reference Price Indicator: one byte code
+#define REFERENCE_PRICE_INDICATOR_BENCHMARK_TRADE 0x42                                                       // Benchmark Trade
+#define REFERENCE_PRICE_INDICATOR_REFERENCE_PRICE_TRADE 0x53                                                 // Reference Price Trade
+#define REFERENCE_PRICE_INDICATOR_BENCHMARK_TRADE_AND_PORTFOLIO_TRANSACTION_AND_CONTINGENT_TRANSACTION 0x4F  // Benchmark Trade And Portfolio Transaction And Contingent Transaction
+#define REFERENCE_PRICE_INDICATOR_PORTFOLIO_TRANSACTION_AND_CONTINGENT_TRANSACTION 0x4E                      // Portfolio Transaction And Contingent Transaction
+#define REFERENCE_PRICE_INDICATOR_BENCHMARK_TRADE_AND_CONTINGENT_TRANSACTION 0x4D                            // Benchmark Trade And Contingent Transaction
+#define REFERENCE_PRICE_INDICATOR_BENCHMARK_TRADE_AND_PORTFOLIO_TRANSACTION 0x59                             // Benchmark Trade And Portfolio Transaction
+#define REFERENCE_PRICE_INDICATOR_CONTINGENT_TRANSACTION 0x43                                                // Contingent Transaction
+#define REFERENCE_PRICE_INDICATOR_PORTFOLIO_TRANSACTION 0x50                                                 // Portfolio Transaction
+#define REFERENCE_PRICE_INDICATOR_MARKET_CLOSING_PRICE 0x31                                                  // Market Closing Price
+#define REFERENCE_PRICE_INDICATOR_MARKET_CLOSING_PRICE_AND_PORTFOLIO_TRANSACTION 0x32                        // Market Closing Price And Portfolio Transaction
+#define REFERENCE_PRICE_INDICATOR_REFERENCE_PRICE_TRADE_AND_MARKET_CLOSING_PRICE 0x36                        // Reference Price Trade And Market Closing Price
+#define REFERENCE_PRICE_INDICATOR_NOT_A_REFERENCE_PRICE_TRADE 0x2D                                           // Not A Reference Price Trade
+
+// Special Dividend Indicator: one byte code
+#define SPECIAL_DIVIDEND_INDICATOR_SPECIAL_DIVIDEND_TRADE 0x45     // Special Dividend Trade
+#define SPECIAL_DIVIDEND_INDICATOR_NO_SPECIAL_DIVIDEND_TRADE 0x2D  // No Special Dividend Trade
+
+// Off Book Automated Indicator: one byte code
+#define OFF_BOOK_AUTOMATED_INDICATOR_OFF_BOOK_NON_AUTOMATED 0x4D         // Off Book Non Automated
+#define OFF_BOOK_AUTOMATED_INDICATOR_OFF_BOOK_AUTOMATED 0x51             // Off Book Automated
+#define OFF_BOOK_AUTOMATED_INDICATOR_UNSPECIFIED_OR_DOES_NOT_APPLY 0x2D  // Unspecified Or Does Not Apply
+
+// Price Formation Indicator: one byte code
+#define PRICE_FORMATION_INDICATOR_PLAIN_VANILLA_TRADE 0x50                        // Plain Vanilla Trade
+#define PRICE_FORMATION_INDICATOR_NON_PRICE_FORMING_TRADE 0x54                    // Non Price Forming Trade
+#define PRICE_FORMATION_INDICATOR_TRADE_NOT_CONTRIBUTING_TO_PRICE_DISCOVERY 0x4A  // Trade Not Contributing To Price Discovery
+#define PRICE_FORMATION_INDICATOR_PENDING_PRICE 0x4E                              // Pending Price
+#define PRICE_FORMATION_INDICATOR_PRICE_IS_NOT_APPLICABLE 0x5A                    // Price Is Not Applicable
+
+// Algorithmic Indicator: one byte code
+#define ALGORITHMIC_INDICATOR_ALGORITHMIC_TRADE 0x48         // Algorithmic Trade
+#define ALGORITHMIC_INDICATOR_NOT_AN_ALGORITHMIC_TRADE 0x2D  // Not An Algorithmic Trade
+
+// Post Trade Deferral Reason: one byte code
+#define POST_TRADE_DEFERRAL_REASON_NON_IMMEDIATE_PUBLICATION_DEFERRAL_FOR_LARGE_IN_SCALE 0x32                          // Non Immediate Publication Deferral For Large In Scale
+#define POST_TRADE_DEFERRAL_REASON_NON_IMMEDIATE_PUBLICATION_DEFERRAL_FOR_ILLIQUID_INSTRUMENT 0x33                     // Non Immediate Publication Deferral For Illiquid Instrument
+#define POST_TRADE_DEFERRAL_REASON_NON_IMMEDIATE_PUBLICATION_DEFERRAL_FOR_SIZE_SPECIFIC 0x34                           // Non Immediate Publication Deferral For Size Specific
+#define POST_TRADE_DEFERRAL_REASON_NON_IMMEDIATE_PUBLICATION_DEFERRALS_OF_ILLIQUID_INSTRUMENT_AND_SIZE_SPECIFIC 0x35   // Non Immediate Publication Deferrals Of Illiquid Instrument And Size Specific
+#define POST_TRADE_DEFERRAL_REASON_NON_IMMEDIATE_PUBLICATION_DEFERRALS_OF_ILLIQUID_INSTRUMENT_AND_LARGE_IN_SCALE 0x36  // Non Immediate Publication Deferrals Of Illiquid Instrument And Large In Scale
+#define POST_TRADE_DEFERRAL_REASON_NON_IMMEDIATE_PUBLICATION_DEFERRAL_FOR_MEDIUM_SIZE_LIQUID_MARKET 0x41               // Non Immediate Publication Deferral For Medium Size Liquid Market
+#define POST_TRADE_DEFERRAL_REASON_NON_IMMEDIATE_PUBLICATION_DEFERRAL_FOR_MEDIUM_SIZE_ILLIQUID_MARKET 0x42             // Non Immediate Publication Deferral For Medium Size Illiquid Market
+#define POST_TRADE_DEFERRAL_REASON_NON_IMMEDIATE_PUBLICATION_DEFERRAL_FOR_LARGE_SIZE_LIQUID_MARKET 0x43                // Non Immediate Publication Deferral For Large Size Liquid Market
+#define POST_TRADE_DEFERRAL_REASON_NON_IMMEDIATE_PUBLICATION_DEFERRAL_FOR_LARGE_SIZE_ILLIQUID_MARKET 0x44              // Non Immediate Publication Deferral For Large Size Illiquid Market
+#define POST_TRADE_DEFERRAL_REASON_NON_IMMEDIATE_PUBLICATION_DEFERRAL_FOR_VERY_LARGE_SIZE_LIQUID_MARKET 0x45           // Non Immediate Publication Deferral For Very Large Size Liquid Market
+#define POST_TRADE_DEFERRAL_REASON_NON_IMMEDIATE_PUBLICATION_DEFERRAL_FOR_VERY_LARGE_SIZE_ILLIQUID_MARKET 0x46         // Non Immediate Publication Deferral For Very Large Size Illiquid Market
+#define POST_TRADE_DEFERRAL_REASON_NON_IMMEDIATE_PUBLICATION_DEFERRAL_FOR_ET_CS_ET_NS_SF_PS_EMISSION_ALLOWANCES 0x47   // Non Immediate Publication Deferral For Et Cs Et Ns Sf Ps Emission Allowances
+#define POST_TRADE_DEFERRAL_REASON_IMMEDIATE_PUBLICATION 0x2D                                                          // Immediate Publication
+
+// Deferral Enrichment Type: one byte code
+#define DEFERRAL_ENRICHMENT_TYPE_LIMITED_DETAILS_TRADE 0x31                                                        // Limited Details Trade
+#define DEFERRAL_ENRICHMENT_TYPE_DAILY_AGGREGATED_TRADE 0x32                                                       // Daily Aggregated Trade
+#define DEFERRAL_ENRICHMENT_TYPE_VOLUME_OMISSION_TRADE 0x33                                                        // Volume Omission Trade
+#define DEFERRAL_ENRICHMENT_TYPE_FOUR_WEEKS_AGGREGATION_TRADE 0x34                                                 // Four Weeks Aggregation Trade
+#define DEFERRAL_ENRICHMENT_TYPE_INDEFINITE_AGGREGATION_TRADE 0x35                                                 // Indefinite Aggregation Trade
+#define DEFERRAL_ENRICHMENT_TYPE_VOLUME_OMISSION_TRADE_ELIGIBLE_FOR_SUBSEQUENT_ENRICHMENT_IN_AGGREGATED_FORM 0x36  // Volume Omission Trade Eligible For Subsequent Enrichment In Aggregated Form
+#define DEFERRAL_ENRICHMENT_TYPE_FULL_DETAILS_OF_EARLIER_LIMITED_DETAILS_TRADE 0x37                                // Full Details Of Earlier Limited Details Trade
+#define DEFERRAL_ENRICHMENT_TYPE_FULL_DETAILS_OF_EARLIER_DAILY_AGGREGATED_TRADE 0x38                               // Full Details Of Earlier Daily Aggregated Trade
+#define DEFERRAL_ENRICHMENT_TYPE_FULL_DETAILS_OF_EARLIER_VOLUME_OMISSION_TRADE 0x39                                // Full Details Of Earlier Volume Omission Trade
+#define DEFERRAL_ENRICHMENT_TYPE_FULL_DETAILS_OF_EARLIER_FOUR_WEEKS_AGGREGATION_TRADE 0x56                         // Full Details Of Earlier Four Weeks Aggregation Trade
+#define DEFERRAL_ENRICHMENT_TYPE_FULL_DETAILS_IN_AGGREGATED_FORM_OF_EARLIER_VOLUME_OMISSION_TRADE 0x57             // Full Details In Aggregated Form Of Earlier Volume Omission Trade
+#define DEFERRAL_ENRICHMENT_TYPE_VOLUME_OMISSION_FOR_SOVEREIGN_BONDS_TRADE 0x4A                                    // Volume Omission For Sovereign Bonds Trade
+#define DEFERRAL_ENRICHMENT_TYPE_FULL_DETAILS_OF_EARLIER_VOLUME_OMISSION_SOVEREIGN_BOND_TRADE 0x4C                 // Full Details Of Earlier Volume Omission Sovereign Bond Trade
+#define DEFERRAL_ENRICHMENT_TYPE_FOUR_WEEKS_AGGREGATION_FOR_SOVEREIGN_BONDS_TRADE 0x4B                             // Four Weeks Aggregation For Sovereign Bonds Trade
+#define DEFERRAL_ENRICHMENT_TYPE_FULL_DETAILS_OF_EARLIER_AGGREGATED_SOVEREIGN_BOND_TRADE 0x4D                      // Full Details Of Earlier Aggregated Sovereign Bond Trade
+#define DEFERRAL_ENRICHMENT_TYPE_NOT_APPLICABLE_OR_NO_RELEVANT_ENRICHMENT_TYPE 0x2D                                // Not Applicable Or No Relevant Enrichment Type
+
+// Duplicative Indicator: one byte code
+#define DUPLICATIVE_INDICATOR_DUPLICATIVE_TRADE_REPORT 0x31                                                          // Duplicative Trade Report
+#define DUPLICATIVE_INDICATOR_INTRA_GROUP_TRADE 0x32                                                                 // Intra Group Trade
+#define DUPLICATIVE_INDICATOR_DUPLICATIVE_TRADE_REPORT_AND_INTRA_GROUP_TRADE 0x33                                    // Duplicative Trade Report And Intra Group Trade
+#define DUPLICATIVE_INDICATOR_CROSS_BORDER_DUPLICATIVE_TRADE_REPORT 0x34                                             // Cross Border Duplicative Trade Report
+#define DUPLICATIVE_INDICATOR_DUPLICATIVE_TRADE_REPORT_AND_CROSS_BORDER_DUPLICATIVE_TRADE_REPORT 0x35                // Duplicative Trade Report And Cross Border Duplicative Trade Report
+#define DUPLICATIVE_INDICATOR_DUPLICATIVE_TRADE_REPORT_AND_INTRA_GROUP_TRADE_AND_CROSS_BORDER_DUPLICATI_t5zk2o 0x36  // Duplicative Trade Report And Intra Group Trade And Cross Border Duplicative Trade Report
+#define DUPLICATIVE_INDICATOR_INTRA_GROUP_TRADE_AND_CROSS_BORDER_DUPLICATIVE_TRADE_REPORT 0x37                       // Intra Group Trade And Cross Border Duplicative Trade Report
+#define DUPLICATIVE_INDICATOR_UNIQUE_TRADE_REPORT 0x2D                                                               // Unique Trade Report
+
+// ---- Types -------------------------------------------------------------------
 
 // Used by the client to log in to the replay or recovery channel.
-entrypoint typedef struct _LoginRequestMessage {
+typedef struct _LoginRequestMessage {
   UINT8 username[8];  // bytes 0 to 7
 } LoginRequestMessage;
 
-// ---- Recovery Request Message: 27 bytes --------------------------------------
-
 // Used by the client to request data on the recovery channel.
-entrypoint typedef struct _RecoveryRequestMessage {
+typedef struct _RecoveryRequestMessage {
   UINT8 request_level;            // byte 0
   UINT64 instrument;              // bytes 1 to 8
   UINT8 group_id[6];              // bytes 9 to 14
@@ -56,44 +274,61 @@ entrypoint typedef struct _RecoveryRequestMessage {
   UINT32 request_id;              // bytes 23 to 26
 } RecoveryRequestMessage;
 
-// ---- Login Response Message: 1 byte ------------------------------------------
-
 // Used by the server to accept or reject a login request to the replay or recovery channel.
-entrypoint typedef struct _LoginResponseMessage {
+typedef struct _LoginResponseMessage {
   UINT8 login_status;  // byte 0
 } LoginResponseMessage;
 
-// ---- Recovery Response Message: 13 bytes -------------------------------------
-
 // Used by the server to respond to a snapshot request on the recovery channel.
-entrypoint typedef struct _RecoveryResponseMessage {
+typedef struct _RecoveryResponseMessage {
   UINT32 sequence_number;  // bytes 0 to 3
   UINT32 count;            // bytes 4 to 7
   UINT8 recovery_status;   // byte 8
   UINT32 request_id;       // bytes 9 to 12
 } RecoveryResponseMessage;
 
-// ---- Replay And Recovery Complete Message: 5 bytes ---------------------------
-
 // Used by the server to indicate the successful completion of servicing a message replay or a recovery request.
-entrypoint typedef struct _ReplayAndRecoveryCompleteMessage {
+typedef struct _ReplayAndRecoveryCompleteMessage {
   UINT32 request_id;     // bytes 0 to 3
   UINT8 trading_status;  // byte 4
 } ReplayAndRecoveryCompleteMessage;
 
-// ---- System Event Message: 11 bytes ------------------------------------------
-
 // Broadcast at the start and end of day on TRADEcho. Session transition is advertised via one system event message for all instruments allocated to the same multicast channel
-entrypoint typedef struct _SystemEventMessage {
+typedef struct _SystemEventMessage {
   UINT64 timestamp;     // bytes 0 to 7
   UINT8 event_code;     // byte 8
   UINT16 source_venue;  // bytes 9 to 10
 } SystemEventMessage;
 
-// ---- Instrument Status Message: 27 bytes -------------------------------------
+// Used to disseminate a limited set of data for all configured instrument types on the real-time channels
+typedef struct _InstrumentDirectoryMessage {
+  UINT64 timestamp;                           // bytes 0 to 7
+  UINT64 instrument;                          // bytes 8 to 15
+  UINT8 isin[12];                             // bytes 16 to 27
+  UINT8 unused_2 : 2;                         // byte 28
+  UINT8 off_book : 1;                         // byte 28
+  UINT8 unused_5 : 5;                         // byte 28
+  UINT16 source_venue;                        // bytes 29 to 30
+  UINT8 venue_instrument_id[11];              // bytes 31 to 41
+  UINT8 tick_id[2];                           // bytes 42 to 43
+  UINT64 price_band_tolerances;               // bytes 44 to 51, signed, read here as unsigned
+  UINT64 dynamic_circuit_breaker_tolerances;  // bytes 52 to 59, signed, read here as unsigned
+  UINT64 static_circuit_breaker_tolerances;   // bytes 60 to 67, signed, read here as unsigned
+  UINT8 segment[6];                           // bytes 68 to 73
+  UINT8 reserved_12[12];                      // bytes 74 to 85
+  UINT8 security_exchange[11];                // bytes 86 to 96
+  UINT8 currency[3];                          // bytes 97 to 99
+  UINT8 reserved_1;                           // byte 100
+  UINT8 reserved_4[4];                        // bytes 101 to 104
+  UINT64 average_daily_turnover_adt;          // bytes 105 to 112, signed, read here as unsigned
+  UINT8 reserved_8[8];                        // bytes 113 to 120
+  UINT8 second_reserved_1;                    // byte 121
+  UINT8 second_reserved_8[8];                 // bytes 122 to 129
+  UINT8 third_reserved_8[8];                  // bytes 130 to 137
+} InstrumentDirectoryMessage;
 
 // Should a specific instrument be subject to individual status change, such as suspension or halt, this will be communicated by the instrument status message
-entrypoint typedef struct _InstrumentStatusMessage {
+typedef struct _InstrumentStatusMessage {
   UINT64 timestamp;             // bytes 0 to 7
   UINT64 instrument;            // bytes 8 to 15
   UINT16 source_venue;          // bytes 16 to 17
@@ -103,10 +338,8 @@ entrypoint typedef struct _InstrumentStatusMessage {
   UINT8 order_book_type;        // byte 26
 } InstrumentStatusMessage;
 
-// ---- Statistics Snapshot Message: 270 bytes ----------------------------------
-
 // A snapshot of an instrument's statistics that is used for recovery
-entrypoint typedef struct _StatisticsSnapshotMessage {
+typedef struct _StatisticsSnapshotMessage {
   UINT64 timestamp;                      // bytes 0 to 7
   UINT64 instrument;                     // bytes 8 to 15
   UINT16 source_venue;                   // bytes 16 to 17
@@ -148,10 +381,8 @@ entrypoint typedef struct _StatisticsSnapshotMessage {
   UINT64 dynamic_reference_price;        // bytes 262 to 269, signed, read here as unsigned
 } StatisticsSnapshotMessage;
 
-// ---- Mifid Ii Trade Report Message: 533 bytes --------------------------------
-
 // Sent to report the MiFID compliant details of a privately negotiated trade
-entrypoint typedef struct _MifidIiTradeReportMessage {
+typedef struct _MifidIiTradeReportMessage {
   UINT64 timestamp;                                        // bytes 0 to 7
   UINT64 instrument;                                       // bytes 8 to 15
   UINT8 transaction_identification_code[52];               // bytes 16 to 67
@@ -236,4 +467,47 @@ entrypoint typedef struct _MifidIiTradeReportMessage {
   UINT8 esma_supplementary_deferral_flags[4];              // bytes 525 to 528
   UINT8 trading_system[4];                                 // bytes 529 to 532
 } MifidIiTradeReportMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x01: LoginRequestMessage login_request_message;
+    case 0x81: RecoveryRequestMessage recovery_request_message;
+    case 0x02: LoginResponseMessage login_response_message;
+    case 0x82: RecoveryResponseMessage recovery_response_message;
+    case 0x83: ReplayAndRecoveryCompleteMessage replay_and_recovery_complete_message;
+    case 0x53: SystemEventMessage system_event_message;
+    case 0x70: InstrumentDirectoryMessage instrument_directory_message;
+    case 0x48: InstrumentStatusMessage instrument_status_message;
+    case 0x6B: StatisticsSnapshotMessage statistics_snapshot_message;
+    case 0x54: MifidIiTradeReportMessage mifid_ii_trade_report_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// Gtp Tcp Message
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16 message_length { message_length >= 3 };                                                                                                                   // bytes 0 to 1
+  UINT8 message_type;                                                                                                                                              // byte 2
+  Payload(message_type, (((UINT32) message_length) - 3)) payload[:byte-size-single-element-array (((UINT32) message_length) - 3)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// One unit on the tcp stream: the unit header and its payload messages
+typedef struct _TcpUnit (mutable UINT32 * tally) {
+  UINT16 length { length >= 8 };                                                                                            // bytes 0 to 1
+  UINT8 message_count;                                                                                                      // byte 2
+  UINT8 market_data_group;                                                                                                  // byte 3
+  UINT32 sequence_number;                                                                                                   // bytes 4 to 7
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size (((UINT32) length) - 8)];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} TcpUnit;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Gtp Tcp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) {
+  TcpUnit(tally) tcp_unit[:byte-size available];
+} Packet;
 

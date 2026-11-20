@@ -1,71 +1,229 @@
-// Miami International Holdings Depth Of Market
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Miax PearlEquities DepthOfMarket Mach v1.3.d
 //
+// Protocol:
+//   Organization: Miami International Holdings
+//   Protocol: Depth Of Market
+//   Encoding: Mach
+//   Version: 1.3.d
+//   Date: 02/04/2026
+//   Specification: pearl_equities_dom_feed.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, TcpPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out PearlEquities_DepthOfMarket_v1_3_d_Tcp.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a length prefix framing what follows
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Esesm Packet Header: 3 bytes --------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// ESesM packet header
-entrypoint typedef struct _EsesmPacketHeader {
-  UINT16 esesm_packet_length;  // bytes 0 to 1
-  UINT8 esesm_packet_type;     // byte 2
-} EsesmPacketHeader;
+// Esesm Packet Type: one byte code
+#define ESESM_PACKET_TYPE_SEQUENCED_DATA_PACKET 0x73     // Sequenced Data Packet
+#define ESESM_PACKET_TYPE_UNSEQUENCED_DATA_PACKET 0x55   // Unsequenced Data Packet
+#define ESESM_PACKET_TYPE_LOGIN_REQUEST 0x6C             // Login Request
+#define ESESM_PACKET_TYPE_LOGIN_RESPONSE 0x72            // Login Response
+#define ESESM_PACKET_TYPE_SYNCHRONIZATION_COMPLETE 0x63  // Synchronization Complete
+#define ESESM_PACKET_TYPE_RETRANSMISSION_REQUEST 0x61    // Retransmission Request
+#define ESESM_PACKET_TYPE_LOGOUT_REQUEST 0x58            // Logout Request
+#define ESESM_PACKET_TYPE_GOODBYE_PACKET 0x47            // Goodbye Packet
+#define ESESM_PACKET_TYPE_TRADING_SESSION_UPDATE 0x75    // Trading Session Update
+#define ESESM_PACKET_TYPE_SERVER_HEARTBEAT 0x30          // Server Heartbeat
+#define ESESM_PACKET_TYPE_CLIENT_HEARTBEAT 0x31          // Client Heartbeat
+#define ESESM_PACKET_TYPE_TEST_PACKET 0x54               // Test Packet
 
-// ---- Refresh Request Message: 1 byte -----------------------------------------
+// Unsequenced Message Type: one byte code
+#define UNSEQUENCED_MESSAGE_TYPE_REFRESH_REQUEST_MESSAGE 0x52              // Refresh Request Message
+#define UNSEQUENCED_MESSAGE_TYPE_REFRESH_RESPONSE_MESSAGE 0x72             // Refresh Response Message
+#define UNSEQUENCED_MESSAGE_TYPE_END_OF_REFRESH_NOTIFICATION_MESSAGE 0x45  // End Of Refresh Notification Message
+
+// Refresh Message Type: one byte code
+#define REFRESH_MESSAGE_TYPE_SYMBOL_UPDATE_REFRESH 0x53            // Symbol Update Refresh
+#define REFRESH_MESSAGE_TYPE_SECURITY_TRADING_STATUS_REFRESH 0x74  // Security Trading Status Refresh
+#define REFRESH_MESSAGE_TYPE_SYSTEM_STATE_REFRESH 0x73             // System State Refresh
+#define REFRESH_MESSAGE_TYPE_ORDER_BOOK_REFRESH 0x4F               // Order Book Refresh
+
+// Login Status: one byte code
+#define LOGIN_STATUS_SUCCESSFUL 0x20                                                     // Successful
+#define LOGIN_STATUS_INVALID_TRADING_SESSION_REQUESTED 0x53                              // Invalid Trading Session Requested
+#define LOGIN_STATUS_INVALID_START_SEQUENCE_NUMBER_REQUESTED 0x4E                        // Invalid Start Sequence Number Requested
+#define LOGIN_STATUS_NO_ACTIVE_TRADING_SESSION_EXISTS 0x55                               // No Active Trading Session Exists
+#define LOGIN_STATUS_REJECTED 0x58                                                       // Rejected
+#define LOGIN_STATUS_INCOMPATIBLE_SESSION_PROTOCOL_VERSION 0x49                          // Incompatible Session Protocol Version
+#define LOGIN_STATUS_INCOMPATIBLE_APPLICATION_PROTOCOL_VERSION 0x41                      // Incompatible Application Protocol Version
+#define LOGIN_STATUS_INVALID_NUMBER_OF_MATCHING_ENGINES_SPECIFIED_IN_LOGIN_REQUEST 0x43  // Invalid Number Of Matching Engines Specified In Login Request
+#define LOGIN_STATUS_REQUEST_REJECTED_BECAUSE_CLIENT_ALREADY_LOGGED_IN 0x4C              // Request Rejected Because Client Already Logged In
+
+// Logout Reason: one byte code
+#define LOGOUT_REASON_GRACEFUL_LOGOUT 0x20                     // Graceful Logout
+#define LOGOUT_REASON_BAD_PACKET 0x42                          // Bad Packet
+#define LOGOUT_REASON_TIMED_OUT 0x4C                           // Timed Out
+#define LOGOUT_REASON_APPLICATION_TERMINATING_CONNECTION 0x41  // Application Terminating Connection
+
+// Goodbye Reason: one byte code
+#define GOODBYE_REASON_BAD_PACKET 0x42                          // Bad Packet
+#define GOODBYE_REASON_TIMED_OUT 0x4C                           // Timed Out
+#define GOODBYE_REASON_APPLICATION_TERMINATING_CONNECTION 0x41  // Application Terminating Connection
+
+// ---- Types -------------------------------------------------------------------
+
+// The ESesM server uses Sequenced data packets to send all messages that must be recoverable by the client in case of a connection loss
+typedef struct _SequencedDataPacket {
+  UINT64 sequence_number;        // bytes 0 to 7
+  UINT8 matching_engine_id;      // byte 8
+  UINT8 sequenced_message_type;  // byte 9
+} SequencedDataPacket;
 
 // Sent by the firm over the DoM Retransmission Interface (ESeSM Unsequenced Data Packet) to request a Last Value Refresh of a particular data set identified by Refresh Message Type.
-entrypoint typedef struct _RefreshRequestMessage {
+typedef struct _RefreshRequestMessage {
   UINT8 refresh_message_type;  // byte 0
 } RefreshRequestMessage;
 
-// ---- Refresh Response Message: 8 bytes ---------------------------------------
-
 // Sent by MIAX Pearl Equities over the DoM Retransmission Interface (ESeSM Unsequenced Data Packet) carrying one Application Message that satisfies a previous Refresh Request.
-entrypoint typedef struct _RefreshResponseMessage {
+typedef struct _RefreshResponseMessage {
   UINT64 sequence_number;  // bytes 0 to 7
 } RefreshResponseMessage;
 
-// ---- End Of Refresh Notification Message: 1 byte -----------------------------
-
 // Sent by MIAX Pearl Equities over the DoM Retransmission Interface (ESeSM Unsequenced Data Packet) when the refresh response is complete.
-entrypoint typedef struct _EndOfRefreshNotificationMessage {
+typedef struct _EndOfRefreshNotificationMessage {
   UINT8 refresh_message_type;  // byte 0
 } EndOfRefreshNotificationMessage;
 
-// ---- Synchronization Complete: 1 byte ----------------------------------------
+// Branch
+casetype _UnsequencedMessage (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x52: RefreshRequestMessage refresh_request_message;
+    case 0x72: RefreshResponseMessage refresh_response_message;
+    case 0x45: EndOfRefreshNotificationMessage end_of_refresh_notification_message;
+    default: UINT8 unknown[available];
+  }
+} UnsequencedMessage;
+
+// Each unsequenced data packet carries one unsequenced message from the higher-lever protocol
+typedef struct _UnsequencedDataPacket (UINT32 available) where (available >= 1) {
+  UINT8 unsequenced_message_type;                                                                                                      // byte 0
+  UnsequencedMessage(unsequenced_message_type, (available - 1)) unsequenced_message[:byte-size-single-element-array (available - 1)];
+} UnsequencedDataPacket;
+
+// The trading session and sequence number the client asks of one matching engine, repeated once for each the login request counts
+typedef struct _RequestedMatchingEngine {
+  UINT8 requested_trading_session_id;  // byte 0
+  UINT64 requested_sequence_number;    // bytes 1 to 8
+} RequestedMatchingEngine;
+
+// The ESesM client must send a Login request packet immediately upon establishing a new TCP/IP socket connection to the server
+typedef struct _LoginRequest {
+  UINT8 esesm_version[5];                                                                                     // bytes 0 to 4
+  UINT8 username[5];                                                                                          // bytes 5 to 9
+  UINT8 computer_id[8];                                                                                       // bytes 10 to 17
+  UINT8 application_protocol[8];                                                                              // bytes 18 to 25
+  UINT8 number_of_matching_engines;                                                                           // byte 26
+  RequestedMatchingEngine requested_matching_engine[:byte-size (((UINT32) number_of_matching_engines) * 9)];
+} LoginRequest;
+
+// The login status, trading session and highest sequence number of one matching engine, repeated once for each the login response counts
+typedef struct _LoginMatchingEngine {
+  UINT8 login_status;              // byte 0
+  UINT8 trading_session_id;        // byte 1
+  UINT64 highest_sequence_number;  // bytes 2 to 9
+} LoginMatchingEngine;
+
+// The ESesM server sends a Login response packet in response to a Login request packet from the client
+typedef struct _LoginResponse {
+  UINT8 number_of_matching_engines;                                                                    // byte 0
+  LoginMatchingEngine login_matching_engine[:byte-size (((UINT32) number_of_matching_engines) * 10)];
+} LoginResponse;
 
 // The ESesM server sends a Synchronization complete packet when it is done replaying all the old packets and is ready to start sending new packets from the Matching Engine
-entrypoint typedef struct _SynchronizationComplete {
+typedef struct _SynchronizationComplete {
   UINT8 matching_engine_id;  // byte 0
 } SynchronizationComplete;
 
-// ---- Retransmission Request: 16 bytes ----------------------------------------
-
 // The ESesM client uses this packet to request a retransmission server to retransmit a range of packets
-entrypoint typedef struct _RetransmissionRequest {
+typedef struct _RetransmissionRequest {
   UINT64 start_sequence_number;  // bytes 0 to 7
   UINT64 end_sequence_number;    // bytes 8 to 15
 } RetransmissionRequest;
 
-// ---- Trading Session Update: 2 bytes -----------------------------------------
+// The client may send a Logout request packet to request the connection be terminated
+typedef struct _LogoutRequest (UINT16 esesm_packet_length) where (esesm_packet_length >= 2) {
+  UINT8 logout_reason;                                      // byte 0
+  UINT8 logout_text[(((UINT32) esesm_packet_length) - 2)];
+} LogoutRequest;
+
+// The server may send a GoodBye packet to inform the client a reason for termination of the connection just before it terminates the connection
+typedef struct _GoodbyePacket (UINT16 esesm_packet_length) where (esesm_packet_length >= 2) {
+  UINT8 goodbye_reason;                                     // byte 0
+  UINT8 logout_text[(((UINT32) esesm_packet_length) - 2)];
+} GoodbyePacket;
 
 // The ESesM server sends a Trading Session Update packet to inform the client that a new trading session is starting on the specified Matching Engine
-entrypoint typedef struct _TradingSessionUpdate {
+typedef struct _TradingSessionUpdate {
   UINT8 matching_engine_id;  // byte 0
   UINT8 trading_session_id;  // byte 1
 } TradingSessionUpdate;
+
+// Test packets are intended to provide human readable text that may aid in debugging problems
+typedef struct _TestPacket (UINT16 esesm_packet_length) where (esesm_packet_length >= 1) {
+  UINT8 test_text[(((UINT32) esesm_packet_length) - 1)];
+} TestPacket;
+
+// Branch
+casetype _EsesmPayload (UINT8 selector, UINT32 length, UINT32 length_2, UINT16 esesm_packet_length, UINT32 available) {
+  switch (selector) {
+    case 0x73: SequencedDataPacket sequenced_data_packet[:byte-size-single-element-array length];
+    case 0x55: UnsequencedDataPacket(length_2) unsequenced_data_packet[:byte-size-single-element-array length_2];
+    case 0x6C: LoginRequest login_request;
+    case 0x72: LoginResponse login_response;
+    case 0x63: SynchronizationComplete synchronization_complete;
+    case 0x61: RetransmissionRequest retransmission_request;
+    case 0x58: LogoutRequest(esesm_packet_length) logout_request;
+    case 0x47: GoodbyePacket(esesm_packet_length) goodbye_packet;
+    case 0x75: TradingSessionUpdate trading_session_update;
+    case 0x30: unit server_heartbeat;
+    case 0x31: unit client_heartbeat;
+    case 0x54: TestPacket(esesm_packet_length) test_packet;
+    default: UINT8 unknown[available];
+  }
+} EsesmPayload;
+
+// ESesM Tcp Packet
+typedef struct _EsesmTcpPacket {
+  UINT16 esesm_packet_length { esesm_packet_length >= 1 };                                                                                                                                                                                                                 // bytes 0 to 1
+  UINT8 esesm_packet_type;                                                                                                                                                                                                                                                 // byte 2
+  EsesmPayload(esesm_packet_type, (((UINT32) esesm_packet_length) - 1), (((UINT32) esesm_packet_length) - 1), esesm_packet_length, ((((UINT32) esesm_packet_length) + 2) - 3)) esesm_payload[:byte-size-single-element-array ((((UINT32) esesm_packet_length) + 2) - 3)];
+} EsesmTcpPacket;
+
+// ---- Packet: TcpPacket -------------------------------------------------------
+
+// ESesM Packet
+entrypoint typedef struct _TcpPacket (UINT32 available) {
+  EsesmTcpPacket esesm_tcp_packet[:byte-size available];
+} TcpPacket;
 

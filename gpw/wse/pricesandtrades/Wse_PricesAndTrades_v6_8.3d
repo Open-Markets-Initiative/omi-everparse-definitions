@@ -1,45 +1,131 @@
-// Gie da Papier w Warto ciowych w Warszawie Warsaw Stock Exchange Prices and Trades
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Gpw Wse PricesAndTrades Xdp v6.8
 //
+// Protocol:
+//   Organization: Gie da Papier w Warto ciowych w Warszawie
+//   Protocol: Warsaw Stock Exchange Prices and Trades
+//   Encoding: Exchange Data Publisher
+//   Version: 6.8
+//   Date: 02/11/2020
+//   Specification: WSE_CDE_XDP_Message_Specifications_v_68.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out Wse_PricesAndTrades_v6_8.3d
-//
-// What this definition does not state, and the model does:
-// - a field filling what is left of what holds it
-// - a run filling what frames it
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 16 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// All messages are preceded by a common packet header format, which section 1.1 states for every Market Information message
-entrypoint typedef struct _PacketHeader {
-  UINT16BE packet_length;           // bytes 0 to 1
-  UINT16BE packet_type;             // bytes 2 to 3
-  UINT32BE packet_sequence_number;  // bytes 4 to 7
-  UINT32BE send_time;               // bytes 8 to 11
-  UINT16BE service_id;              // bytes 12 to 13
-  UINT8 delivery_flag;              // byte 14
-  UINT8 number_msg_entries;         // byte 15
-} PacketHeader;
+// Packet Type: 2 byte code
+#define PACKET_TYPE_MARKET_DATA_MESSAGES 0x01F5  // Market Data Messages
 
-// ---- Message Header: 4 bytes -------------------------------------------------
+// Delivery Flag: one byte code
+#define DELIVERY_FLAG_REAL_TIME_MESSAGE_UNCOMPRESSED 0x00       // Real Time Message Uncompressed
+#define DELIVERY_FLAG_RETRANSMISSION_MESSAGE_UNCOMPRESSED 0x02  // Retransmission Message Uncompressed
+#define DELIVERY_FLAG_REAL_TIME_MESSAGE_ZLIB_COMPRESSED 0x10    // Real Time Message Zlib Compressed
+#define DELIVERY_FLAG_REFRESH_MESSAGE_ZLIB_COMPRESSED 0x11      // Refresh Message Zlib Compressed
+#define DELIVERY_FLAG_RETRANSMISSION_MESSAGE_COMPRESSED 0x12    // Retransmission Message Compressed
 
-entrypoint typedef struct _MessageHeader {
-  UINT16BE message_size;  // bytes 0 to 1
-  UINT16BE message_type;  // bytes 2 to 3
-} MessageHeader;
+// Message Type: 2 byte code
+#define MESSAGE_TYPE_TRADE_FULL_INFORMATION_MESSAGE 0x00F0  // Trade Full Information Message
+#define MESSAGE_TYPE_PRICE_UPDATE_MESSAGE 0x00F1            // Price Update Message
+#define MESSAGE_TYPE_TRADE_PUBLICATION_MESSAGE 0x00F3       // Trade Publication Message
+#define MESSAGE_TYPE_AUCTION_SUMMARY_MESSAGE 0x00F5         // Auction Summary Message
+#define MESSAGE_TYPE_VWAP_CLOSING_PRICE_MESSAGE 0x00F7      // Vwap Closing Price Message
 
-// ---- Trade Full Information Message: 272 bytes -------------------------------
+// System Id: 4 byte code
+#define SYSTEM_ID_ALL_NON_UTP_SYSTEMS 0x00000001  // All Non Utp Systems
+#define SYSTEM_ID_UTP_TRADING_UNIT_1 0x0000000B   // Utp Trading Unit 1
+#define SYSTEM_ID_UTP_TRADING_UNIT_2 0x0000000C   // Utp Trading Unit 2
+
+// Last Trade Indicator: one byte code
+#define LAST_TRADE_INDICATOR_NOT_LAST_OF_A_SERIES_OF_TRADE_AT_THE_SAME_PRICE 0x30  // Not Last Of A Series Of Trade At The Same Price
+#define LAST_TRADE_INDICATOR_LAST_OF_A_SERIES_OF_TRADE_AT_THE_SAME_PRICE_AND 0x31  // Last Of A Series Of Trade At The Same Price And
+
+// Type Of Trade: one byte code
+#define TYPE_OF_TRADE_TRADE_DOES_NOT_STEM_FROM_A_CROSS_ORDER 0x30  // Trade Does Not Stem From A Cross Order
+#define TYPE_OF_TRADE_TRADE_STEMS_FROM_A_CROSS_ORDER 0x31          // Trade Stems From A Cross Order
+#define TYPE_OF_TRADE_VALUATION_TRADE 0x34                         // Valuation Trade
+#define TYPE_OF_TRADE_INTERNALIZED_TRADE 0x35                      // Internalized Trade
+#define TYPE_OF_TRADE_INTERNALIZED_CROSS_TRADE 0x36                // Internalized Cross Trade
+
+// Trade Origin: one byte code
+#define TRADE_ORIGIN_ORDERS_FROM_THE_BOOK 0x42            // Orders From The Book
+#define TRADE_ORIGIN_BLOCK_TRADE 0x4F                     // Block Trade
+#define TRADE_ORIGIN_IPO_TRADE 0x49                       // Ipo Trade
+#define TRADE_ORIGIN_TENDER_OFFER_TRADE 0x54              // Tender Offer Trade
+#define TRADE_ORIGIN_BISO_TRADE 0x53                      // Biso Trade
+#define TRADE_ORIGIN_TRADE_REPORTING_FOR_FUTURE_USE 0x52  // Trade Reporting For Future Use
+
+// Tick Direction: one byte code
+#define TICK_DIRECTION_POSITIVE_RISING 0x2B                                                                   // Positive Rising
+#define TICK_DIRECTION_NEGATIVE_FALLING 0x2D                                                                  // Negative Falling
+#define TICK_DIRECTION_NO_VARIATION_UNCHANGED_OR_DATA_FIELD_NOT_SIGNIFICANT_USED_FOR_TRADE_CANCELLATION 0x30  // No Variation Unchanged Or Data Field Not Significant Used For Trade Cancellation
+
+// Opening Trade Indicator: one byte code
+#define OPENING_TRADE_INDICATOR_OPENING 0x4F                                        // Opening
+#define OPENING_TRADE_INDICATOR_CORE_CONTINUOUS 0x53                                // Core Continuous
+#define OPENING_TRADE_INDICATOR_BOND_SPOT_ALWAYS_FILLS_THE_FIELD_WITH_A_SPACE 0x20  // Bond Spot Always Fills The Field With A Space
+
+// Type Of Price: 2 byte code
+#define TYPE_OF_PRICE_BID_PRICE 0x0002                                                                       // Bid Price
+#define TYPE_OF_PRICE_ASK_PRICE 0x0003                                                                       // Ask Price
+#define TYPE_OF_PRICE_FIRST_TRADED_PRICE_OF_THE_DAY 0x001E                                                   // First Traded Price Of The Day
+#define TYPE_OF_PRICE_NEW_LAST_PRICE 0x0021                                                                  // New Last Price
+#define TYPE_OF_PRICE_NEW_PREVIOUS_DAYS_CLOSING_PRICE_THE_LAST_ADJUSTED_CLOSING_PRICE_OR_LP_MIDPOINT 0x0022  // New Previous Days Closing Price The Last Adjusted Closing Price Or Lp Midpoint
+#define TYPE_OF_PRICE_DAILY_SETTLEMENT_PRICE 0x0023                                                          // Daily Settlement Price
+#define TYPE_OF_PRICE_FINAL_SETTLEMENT_PRICE 0x0024                                                          // Final Settlement Price
+#define TYPE_OF_PRICE_THEORETICAL_PRICE 0x0025                                                               // Theoretical Price
+#define TYPE_OF_PRICE_ALTERNATIVE_INDICATIVE_PRICE_AIP 0x0033                                                // Alternative Indicative Price Aip
+
+// Type Of Last Price: 2 byte code
+#define TYPE_OF_LAST_PRICE_FIRST_TRADED_PRICE 0x0004                                          // First Traded Price
+#define TYPE_OF_LAST_PRICE_N_TH_TRADED_PRICE_RESUME_AFTER_UNHALTING_OF_THE_INSTRUMENT 0x0007  // N Th Traded Price Resume After Unhalting Of The Instrument
+
+// Instrument Valuation Price: one byte code
+#define INSTRUMENT_VALUATION_PRICE_NOT_A_VALUATION_PRICE 0x30  // Not A Valuation Price
+#define INSTRUMENT_VALUATION_PRICE_VALUATION_PRICE 0x31        // Valuation Price
+
+// Sending Indicator: 2 byte code
+#define SENDING_INDICATOR_REAL_TIME_NOT_USED_FOR_WSE 0x0001  // Real Time Not Used For Wse
+#define SENDING_INDICATOR_BATCH_MODE 0x0002                  // Batch Mode
+
+// Closing Price Rule: 2 byte code
+#define CLOSING_PRICE_RULE_LTP_LAST_TRADED_PRICE 0x0001                                            // Ltp Last Traded Price
+#define CLOSING_PRICE_RULE_VWAP_VOLUME_WEIGHTED_AVERAGE_PRICE_NOT_PROVIDED_FOR_DERIVATIVES 0x0002  // Vwap Volume Weighted Average Price Not Provided For Derivatives
+
+// ---- Types -------------------------------------------------------------------
 
 // Trade full information message is sent each time a trade or a cancellation of a trade has occurred
-entrypoint typedef struct _TradeFullInformationMessage {
+typedef struct _TradeFullInformationMessage {
   UINT32BE symbol_index;                    // bytes 0 to 3
   UINT32BE source_time;                     // bytes 4 to 7
   UINT32BE trade_id_number;                 // bytes 8 to 11
@@ -81,10 +167,8 @@ entrypoint typedef struct _TradeFullInformationMessage {
   UINT8 mmt_benchmark_indicator[4];         // bytes 268 to 271
 } TradeFullInformationMessage;
 
-// ---- Price Update Message: 40 bytes ------------------------------------------
-
 // The Price update message contains a bid price or an ask price in case of alternative indicative price (AIP), or the modification of the last reference price on a given instrument
-entrypoint typedef struct _PriceUpdateMessage {
+typedef struct _PriceUpdateMessage {
   UINT32BE symbol_index;            // bytes 0 to 3
   UINT32BE source_time;             // bytes 4 to 7
   UINT32BE source_seq_num;          // bytes 8 to 11
@@ -100,10 +184,8 @@ entrypoint typedef struct _PriceUpdateMessage {
   UINT8 variation_scale_code;       // byte 39
 } PriceUpdateMessage;
 
-// ---- Trade Publication Message: 284 bytes ------------------------------------
-
 // A trade publication message is sent by the reporting system whenever a trade is reported
-entrypoint typedef struct _TradePublicationMessage {
+typedef struct _TradePublicationMessage {
   UINT32BE symbol_index;                    // bytes 0 to 3
   UINT32BE source_time;                     // bytes 4 to 7
   UINT32BE source_seq_num;                  // bytes 8 to 11
@@ -141,10 +223,8 @@ entrypoint typedef struct _TradePublicationMessage {
   UINT8 reserved_2[2];                      // bytes 282 to 283
 } TradePublicationMessage;
 
-// ---- Auction Summary Message: 48 bytes ---------------------------------------
-
 // An Auction Summary message summarizes an instrument's opening or auction trades
-entrypoint typedef struct _AuctionSummaryMessage {
+typedef struct _AuctionSummaryMessage {
   UINT32BE symbol_index;             // bytes 0 to 3
   UINT32BE source_time;              // bytes 4 to 7
   UINT32BE source_seq_num;           // bytes 8 to 11
@@ -163,10 +243,8 @@ entrypoint typedef struct _AuctionSummaryMessage {
   UINT8 variation_scale_code;        // byte 47
 } AuctionSummaryMessage;
 
-// ---- Vwap Closing Price Message: 52 bytes ------------------------------------
-
 // This message contains the Volume-Weighted Average Price for an instrument, along with few statistical information related to the cumulated traded value and volume
-entrypoint typedef struct _VwapClosingPriceMessage {
+typedef struct _VwapClosingPriceMessage {
   UINT32BE symbol_index;            // bytes 0 to 3
   UINT32BE source_time;             // bytes 4 to 7
   UINT32BE source_seq_num;          // bytes 8 to 11
@@ -182,4 +260,44 @@ entrypoint typedef struct _VwapClosingPriceMessage {
   UINT8 scale_code;                 // byte 46
   UINT8 reserved_5[5];              // bytes 47 to 51
 } VwapClosingPriceMessage;
+
+// Branch
+casetype _Payload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x00F0: TradeFullInformationMessage trade_full_information_message;
+    case 0x00F1: PriceUpdateMessage price_update_message;
+    case 0x00F3: TradePublicationMessage trade_publication_message;
+    case 0x00F5: AuctionSummaryMessage auction_summary_message;
+    case 0x00F7: VwapClosingPriceMessage vwap_closing_price_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16BE message_size { message_size >= 2 };                                                                                                                     // bytes 0 to 1
+  UINT16BE message_type;                                                                                                                                           // bytes 2 to 3
+  Payload(message_type, ((((UINT32) message_size) + 2) - 4)) payload[:byte-size-single-element-array ((((UINT32) message_size) + 2) - 4)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// The packet's message area: the messages it counts, or one ZliB block holding them
+typedef struct _MessageBuffer (UINT8 number_msg_entries, UINT32 available, mutable UINT32 * tally) {
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size available];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) number_msg_entries); };
+} MessageBuffer;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Gpw Xdp Udp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 16) {
+  UINT16BE packet_length;                                                                                                       // bytes 0 to 1
+  UINT16BE packet_type;                                                                                                         // bytes 2 to 3
+  UINT32BE packet_sequence_number;                                                                                              // bytes 4 to 7
+  UINT32BE send_time;                                                                                                           // bytes 8 to 11
+  UINT16BE service_id;                                                                                                          // bytes 12 to 13
+  UINT8 delivery_flag;                                                                                                          // byte 14
+  UINT8 number_msg_entries;                                                                                                     // byte 15
+  MessageBuffer(number_msg_entries, (available - 16), tally) message_buffer[:byte-size-single-element-array (available - 16)];
+} Packet;
 

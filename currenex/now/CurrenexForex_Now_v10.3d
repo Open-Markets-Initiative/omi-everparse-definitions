@@ -1,5 +1,34 @@
-// Currenex Now Forex Market Data
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Currenex Now Cbp v10
 //
+// Protocol:
+//   Organization: Currenex
+//   Protocol: Now Forex Market Data
+//   Encoding: Currenex Binary Protocol
+//   Version: 10
+//   Date: 5/7/2018
+//   Specification: Currenex_NOW_Itch_Specification.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
 // writes a C validator for each record below and proves, of that C, that it reads no byte
 // outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
@@ -7,6 +36,8 @@
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out CurrenexForex_Now_v10.3d
 //
@@ -14,16 +45,37 @@
 // - a run filling what frames it
 // - a field of no fixed width
 // - a run of a stated number of entries
-//
-// License: MIT No Attribution
+// - the packet as a whole, which is a field of no fixed width, at packet.itchframe.messagebody.subscriptionrequestmessage.subscribetonowpaidgivenwithbucketedsize
+
+// ---- Values ------------------------------------------------------------------
+
+// Message Type: one byte code
+#define MESSAGE_TYPE_LOGON_MESSAGE 0x41                        // Logon Message
+#define MESSAGE_TYPE_LOGOUT_MESSAGE 0x42                       // Logout Message
+#define MESSAGE_TYPE_HEART_BEAT_MESSAGE 0x43                   // Heart Beat Message
+#define MESSAGE_TYPE_INSTRUMENT_INFO 0x44                      // Instrument Info
+#define MESSAGE_TYPE_INSTRUMENT_INFO_ACK_MESSAGE 0x45          // Instrument Info Ack Message
+#define MESSAGE_TYPE_SUBSCRIPTION_REQUEST_MESSAGE 0x58         // Subscription Request Message
+#define MESSAGE_TYPE_MASS_SUBSCRIPTION_REQUEST_MESSAGE 0x59    // Mass Subscription Request Message
+#define MESSAGE_TYPE_SUBSCRIPTION_REPLY_MESSAGE 0x47           // Subscription Reply Message
+#define MESSAGE_TYPE_MASS_SUBSCRIPTION_REPLY_MESSAGE 0x5A      // Mass Subscription Reply Message
+#define MESSAGE_TYPE_DEPTH_OF_BOOK_MESSAGE 0x64                // Depth Of Book Message
+#define MESSAGE_TYPE_PAID_GIVEN_MESSAGE 0x6B                   // Paid Given Message
+#define MESSAGE_TYPE_WAMR_WITH_CONFIDENCE_FACTOR_MESSAGE 0x72  // Wamr With Confidence Factor Message
+#define MESSAGE_TYPE_MID_ACTIVITY_INDICATOR_MESSAGE 0x78       // Mid Activity Indicator Message
+#define MESSAGE_TYPE_REJECT_MESSAGE 0x4B                       // Reject Message
+
+// Instrument Type: one byte code
+#define INSTRUMENT_TYPE_FOREIGN_EXCHANGE 0x31  // Foreign Exchange
+#define INSTRUMENT_TYPE_CASH_METALS 0x32       // Cash Metals
 
 // ---- Message Header: 9 bytes -------------------------------------------------
 
 // Currenex Itch Market Data Message Header
 entrypoint typedef struct _MessageHeader {
   UINT32BE sequence_number;  // bytes 0 to 3
-  UINT32BE timestamp;        // bytes 4 to 7
-  UINT8 message_type;        // byte 8
+  UINT32BE timestamp;        // bytes 4 to 7, signed, read here as unsigned
+  UINT8 message_type;        // byte 8, values MESSAGE_TYPE_
 } MessageHeader;
 
 // ---- Logon Message: 44 bytes -------------------------------------------------
@@ -57,7 +109,7 @@ entrypoint typedef struct _HeartBeatMessage {
 entrypoint typedef struct _InstrumentInfo {
   UINT32BE session_id;        // bytes 0 to 3, signed, read here as unsigned
   UINT16BE instrument_index;  // bytes 4 to 5, signed, read here as unsigned
-  UINT8 instrument_type;      // byte 6
+  UINT8 instrument_type;      // byte 6, values INSTRUMENT_TYPE_
   UINT8 instrument_id[20];    // bytes 7 to 26
   UINT64BE settlement_date;   // bytes 27 to 34, signed, read here as unsigned
 } InstrumentInfo;

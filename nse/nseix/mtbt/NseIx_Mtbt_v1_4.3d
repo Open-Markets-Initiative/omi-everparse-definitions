@@ -1,0 +1,217 @@
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nse NseIx Mtbt Tbt v1.4
+//
+// Protocol:
+//   Organization: National Stock Exchange of India Ltd
+//   Protocol: Multicast Tick By Tick
+//   Encoding: Tbt
+//   Version: 1.4
+//   Date: 1/28/2026
+//   Specification: NSEIFSCMTBTAPIv1_4_2_20260324142815.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
+//
+// Verify and write the validators: everparse.sh --odir out NseIx_Mtbt_v1_4.3d
+
+// ---- Values ------------------------------------------------------------------
+
+// Message Type: one byte code
+#define MESSAGE_TYPE_NEW_ORDER_MESSAGE 0x4E                      // New Order Message
+#define MESSAGE_TYPE_ORDER_MODIFICATION_MESSAGE 0x4D             // Order Modification Message
+#define MESSAGE_TYPE_ORDER_CANCELLATION_MESSAGE 0x58             // Order Cancellation Message
+#define MESSAGE_TYPE_TRADE_MESSAGE 0x54                          // Trade Message
+#define MESSAGE_TYPE_NEW_SPREAD_ORDER_MESSAGE 0x47               // New Spread Order Message
+#define MESSAGE_TYPE_SPREAD_ORDER_MODIFICATION_MESSAGE 0x48      // Spread Order Modification Message
+#define MESSAGE_TYPE_SPREAD_ORDER_CANCELLATION_MESSAGE 0x4A      // Spread Order Cancellation Message
+#define MESSAGE_TYPE_SPREAD_TRADE_MESSAGE 0x4B                   // Spread Trade Message
+#define MESSAGE_TYPE_MARKET_STATUS_MESSAGE 0x53                  // Market Status Message
+#define MESSAGE_TYPE_INDICATIVE_PRICE_AND_QUANTITY_MESSAGE 0x50  // Indicative Price And Quantity Message
+#define MESSAGE_TYPE_HEARTBEAT_MESSAGE 0x5A                      // Heartbeat Message
+
+// Order Type: one byte code
+#define ORDER_TYPE_BUY_ORDER 0x42   // Buy Order
+#define ORDER_TYPE_SELL_ORDER 0x53  // Sell Order
+
+// Status: 2 byte code
+#define STATUS_PREOPEN 0x0000        // Preopen
+#define STATUS_OPEN 0x0001           // Open
+#define STATUS_CLOSED 0x0002         // Closed
+#define STATUS_PREOPEN_END 0x0003    // Preopen End
+#define STATUS_PRE_CLOSE 0x0004      // Pre Close
+#define STATUS_PRE_CLOSE_END 0x0005  // Pre Close End
+
+// Session Indc: 2 byte code
+#define SESSION_INDC_T_SESSION 0x0001    // T Session
+#define SESSION_INDC_T_1_SESSION 0x0002  // T 1 Session
+
+// Identifier: one byte code
+#define IDENTIFIER_INDICATIVE_OPEN_PRICE 0x4F   // Indicative Open Price
+#define IDENTIFIER_INDICATIVE_CLOSE_PRICE 0x43  // Indicative Close Price
+
+// ---- Types -------------------------------------------------------------------
+
+// Sent for every new order request, including the active orders (section 6.1).
+typedef struct _NewOrderMessage {
+  UINT64 timestamp;   // bytes 0 to 7, signed, read here as unsigned
+  UINT8 order_id[8];  // bytes 8 to 15
+  UINT32 token;       // bytes 16 to 19, signed, read here as unsigned
+  UINT8 order_type;   // byte 20
+  UINT32 price;       // bytes 21 to 24, signed, read here as unsigned
+  UINT32 quantity;    // bytes 25 to 28, signed, read here as unsigned
+} NewOrderMessage;
+
+// Sent for every order modification request (section 6.1). When the original Order Id is not found, the message is treated as a new order.
+typedef struct _OrderModificationMessage {
+  UINT64 timestamp;   // bytes 0 to 7, signed, read here as unsigned
+  UINT8 order_id[8];  // bytes 8 to 15
+  UINT32 token;       // bytes 16 to 19, signed, read here as unsigned
+  UINT8 order_type;   // byte 20
+  UINT32 price;       // bytes 21 to 24, signed, read here as unsigned
+  UINT32 quantity;    // bytes 25 to 28, signed, read here as unsigned
+} OrderModificationMessage;
+
+// Sent for every order cancellation request (section 6.1). When the original Order Id is not found, the message is ignored.
+typedef struct _OrderCancellationMessage {
+  UINT64 timestamp;   // bytes 0 to 7, signed, read here as unsigned
+  UINT8 order_id[8];  // bytes 8 to 15
+  UINT32 token;       // bytes 16 to 19, signed, read here as unsigned
+  UINT8 order_type;   // byte 20
+  UINT32 price;       // bytes 21 to 24, signed, read here as unsigned
+  UINT32 quantity;    // bytes 25 to 28, signed, read here as unsigned
+} OrderCancellationMessage;
+
+// Sent whenever an order in the order book gets executed fully or partially (section 6.2). Either Buy Order ID or Sell Order ID can be zero, in which case that Order ID should be ignored; both are never zero at the same time.
+typedef struct _TradeMessage {
+  UINT64 timestamp;        // bytes 0 to 7, signed, read here as unsigned
+  UINT8 buy_order_id[8];   // bytes 8 to 15
+  UINT8 sell_order_id[8];  // bytes 16 to 23
+  UINT32 token;            // bytes 24 to 27, signed, read here as unsigned
+  UINT32 trade_price;      // bytes 28 to 31, signed, read here as unsigned
+  UINT32 trade_quantity;   // bytes 32 to 35, signed, read here as unsigned
+} TradeMessage;
+
+// Sent for every new spread order request, including the active orders (section 6.3).
+typedef struct _NewSpreadOrderMessage {
+  UINT64 timestamp;   // bytes 0 to 7, signed, read here as unsigned
+  UINT8 order_id[8];  // bytes 8 to 15
+  UINT32 token;       // bytes 16 to 19, signed, read here as unsigned
+  UINT8 order_type;   // byte 20
+  UINT32 price;       // bytes 21 to 24, signed, read here as unsigned
+  UINT32 quantity;    // bytes 25 to 28, signed, read here as unsigned
+} NewSpreadOrderMessage;
+
+// Sent for every spread order modification request (section 6.3).
+typedef struct _SpreadOrderModificationMessage {
+  UINT64 timestamp;   // bytes 0 to 7, signed, read here as unsigned
+  UINT8 order_id[8];  // bytes 8 to 15
+  UINT32 token;       // bytes 16 to 19, signed, read here as unsigned
+  UINT8 order_type;   // byte 20
+  UINT32 price;       // bytes 21 to 24, signed, read here as unsigned
+  UINT32 quantity;    // bytes 25 to 28, signed, read here as unsigned
+} SpreadOrderModificationMessage;
+
+// Sent for every spread order cancellation request (section 6.3).
+typedef struct _SpreadOrderCancellationMessage {
+  UINT64 timestamp;   // bytes 0 to 7, signed, read here as unsigned
+  UINT8 order_id[8];  // bytes 8 to 15
+  UINT32 token;       // bytes 16 to 19, signed, read here as unsigned
+  UINT8 order_type;   // byte 20
+  UINT32 price;       // bytes 21 to 24, signed, read here as unsigned
+  UINT32 quantity;    // bytes 25 to 28, signed, read here as unsigned
+} SpreadOrderCancellationMessage;
+
+// Sent whenever a spread order in the order book gets executed fully or partially (section 6.4). Buy Order ID or Sell Order ID can be zero, in which case that Order ID should be ignored.
+typedef struct _SpreadTradeMessage {
+  UINT64 timestamp;        // bytes 0 to 7, signed, read here as unsigned
+  UINT8 buy_order_id[8];   // bytes 8 to 15
+  UINT8 sell_order_id[8];  // bytes 16 to 23
+  UINT32 token;            // bytes 24 to 27, signed, read here as unsigned
+  UINT32 trade_price;      // bytes 28 to 31, signed, read here as unsigned
+  UINT32 quantity;         // bytes 32 to 35, signed, read here as unsigned
+} SpreadTradeMessage;
+
+// Sent whenever the status of the market is changed to preopen, preopen-end, open, closed, preclose and preclose-end, for both T and T+1 sessions (section 6.5).
+typedef struct _MarketStatusMessage {
+  UINT64 timestamp;     // bytes 0 to 7, signed, read here as unsigned
+  UINT8 instrument[6];  // bytes 8 to 13
+  UINT16 status;        // bytes 14 to 15, signed, read here as unsigned
+  UINT16 session_indc;  // bytes 16 to 17, signed, read here as unsigned
+} MarketStatusMessage;
+
+// Indicative equilibrium price and quantity, sent for contracts with pre-open and pre-close sessions, only between the preopen or preclose and the preopen end or preclose end statuses, when the indicative price and quantity are determined or updated during order collection (section 6.6).
+typedef struct _IndicativePriceAndQuantityMessage {
+  UINT64 timestamp;            // bytes 0 to 7, signed, read here as unsigned
+  UINT32 token;                // bytes 8 to 11, signed, read here as unsigned
+  UINT8 identifier;            // byte 12
+  UINT32 indicative_price;     // bytes 13 to 16, signed, read here as unsigned
+  UINT32 indicative_quantity;  // bytes 17 to 20, signed, read here as unsigned
+} IndicativePriceAndQuantityMessage;
+
+// Sent when there is no data available for a few seconds; the sequence number field in the Stream Header will have the value 0 (zero) (section 9).
+typedef struct _HeartbeatMessage {
+  UINT32 last_sequence_no;  // bytes 0 to 3, signed, read here as unsigned
+} HeartbeatMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x4E: NewOrderMessage new_order_message;
+    case 0x4D: OrderModificationMessage order_modification_message;
+    case 0x58: OrderCancellationMessage order_cancellation_message;
+    case 0x54: TradeMessage trade_message;
+    case 0x47: NewSpreadOrderMessage new_spread_order_message;
+    case 0x48: SpreadOrderModificationMessage spread_order_modification_message;
+    case 0x4A: SpreadOrderCancellationMessage spread_order_cancellation_message;
+    case 0x4B: SpreadTradeMessage spread_trade_message;
+    case 0x53: MarketStatusMessage market_status_message;
+    case 0x50: IndicativePriceAndQuantityMessage indicative_price_and_quantity_message;
+    case 0x5A: HeartbeatMessage heartbeat_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// STREAM_DATA. First field is always Message Type and must be read/interpreted first.
+typedef struct _Message (UINT32 available) where (available >= 1) {
+  UINT8 message_type;                                                                               // byte 0
+  Payload(message_type, (available - 1)) payload[:byte-size-single-element-array (available - 1)];
+} Message;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Mtbt Udp Packet. One STREAM_DATA message per packet.
+entrypoint typedef struct _Packet {
+  UINT16 message_length { message_length >= 8 };                                                                      // bytes 0 to 1, signed, read here as unsigned
+  UINT16 stream_id;                                                                                                   // bytes 2 to 3, signed, read here as unsigned
+  UINT32 sequence_number;                                                                                             // bytes 4 to 7
+  Message((((UINT32) message_length) - 8)) message[:byte-size-single-element-array (((UINT32) message_length) - 8)];
+} Packet;
+

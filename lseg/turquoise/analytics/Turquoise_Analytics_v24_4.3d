@@ -1,51 +1,128 @@
-// London Stock Exchange Analytics
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Lseg Turquoise Analytics Gtp v24.4
 //
+// Protocol:
+//   Organization: London Stock Exchange
+//   Protocol: Analytics
+//   Encoding: Group Ticker Plant
+//   Version: 24.4
+//   Date: 4/24/2024
+//   Specification: gtp-002-technical-guide-turquoise-issue-24-4.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out Turquoise_Analytics_v24_4.3d
-//
-// What this definition does not state, and the model does:
-// - a run counted by a field
-// - a field read in bits
-//
-// License: MIT No Attribution
 
-// ---- Unit Header: 8 bytes ----------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-entrypoint typedef struct _UnitHeader {
-  UINT16 length;            // bytes 0 to 1
-  UINT8 message_count;      // byte 2
-  UINT8 market_data_group;  // byte 3
-  UINT32 sequence_number;   // bytes 4 to 7
-} UnitHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_SYSTEM_EVENT_MESSAGE 0x53          // System Event Message
+#define MESSAGE_TYPE_INSTRUMENT_DIRECTORY_MESSAGE 0x70  // Instrument Directory Message
+#define MESSAGE_TYPE_INSTRUMENT_STATUS_MESSAGE 0x48     // Instrument Status Message
+#define MESSAGE_TYPE_ANALYTICS_MESSAGE 0x61             // Analytics Message
 
-// ---- Message Header: 3 bytes -------------------------------------------------
+// Event Code: one byte code
+#define EVENT_CODE_END_OF_DAY 0x43    // End Of Day
+#define EVENT_CODE_START_OF_DAY 0x4F  // Start Of Day
 
-// Gtp Udp Message Header
-entrypoint typedef struct _MessageHeader {
-  UINT16 message_length;  // bytes 0 to 1
-  UINT8 message_type;     // byte 2
-} MessageHeader;
+// Source Venue: 2 byte code
+#define SOURCE_VENUE_TURQUOISE_LIT_ORDER_BOOK_T_G_H_L 0x0005                 // Turquoise Lit Order Book TGHL
+#define SOURCE_VENUE_TURQUOISE_PLATO_ORDER_BOOK_T_G_H_L 0x0006               // Turquoise Plato Order Book TGHL
+#define SOURCE_VENUE_TURQUOISE_PLATO_LIT_AUCTIONS_ORDER_BOOK_T_G_H_L 0x000C  // Turquoise Plato Lit Auctions Order Book TGHL
+#define SOURCE_VENUE_TURQUOISE_LIT_ORDER_BOOK_T_G_H_E 0x000E                 // Turquoise Lit Order Book TGHE
+#define SOURCE_VENUE_TURQUOISE_PLATO_ORDER_BOOK_T_G_H_E 0x000F               // Turquoise Plato Order Book TGHE
+#define SOURCE_VENUE_TURQUOISE_PLATO_LIT_AUCTIONS_ORDER_BOOK_T_G_H_E 0x0010  // Turquoise Plato Lit Auctions Order Book TGHE
 
-// ---- System Event Message: 11 bytes ------------------------------------------
+// Trading Status: one byte code
+#define TRADING_STATUS_HALTED 0x48                                      // Halted
+#define TRADING_STATUS_HALTED_MATCHING_PARTITION_SUSPENDED 0x4A         // Halted Matching Partition Suspended
+#define TRADING_STATUS_HALTED_SYSTEM_SUSPENDED 0x4B                     // Halted System Suspended
+#define TRADING_STATUS_HALTED_REGULATORY_HALT 0x50                      // Halted Regulatory Halt
+#define TRADING_STATUS_REGULAR_TRADING_START_OF_TRQB_SESSION 0x54       // Regular Trading Start Of Trqb Session
+#define TRADING_STATUS_END_OF_REGULAR_TRADING_END_OF_TRQB_SESSION 0x74  // End Of Regular Trading End Of Trqb Session
+#define TRADING_STATUS_CLOSED 0x63                                      // Closed
+#define TRADING_STATUS_SUSPENDED 0x32                                   // Suspended
+#define TRADING_STATUS_NO_ACTIVE_SESSION 0x77                           // No Active Session
+
+// Session Change Reason: one byte code
+#define SESSION_CHANGE_REASON_SCHEDULED_TRANSITION 0x00          // Scheduled Transition
+#define SESSION_CHANGE_REASON_EXTENDED_BY_MARKET_OPS 0x01        // Extended By Market Ops
+#define SESSION_CHANGE_REASON_SHORTENED_BY_MARKET_OPS 0x02       // Shortened By Market Ops
+#define SESSION_CHANGE_REASON_MARKET_ORDER_IMBALANCE 0x03        // Market Order Imbalance
+#define SESSION_CHANGE_REASON_PRICE_OUTSIDE_RANGE 0x04           // Price Outside Range
+#define SESSION_CHANGE_REASON_AESP_CIRCUIT_BREAKER_TRIPPED 0x05  // Aesp Circuit Breaker Tripped
+#define SESSION_CHANGE_REASON_UNAVAILABLE 0x09                   // Unavailable
+
+// Order Book Type: one byte code
+#define ORDER_BOOK_TYPE_ELECTRONIC 0x03  // Electronic
+
+// ---- Types -------------------------------------------------------------------
 
 // Sent to indicate the start and end of the day.
-entrypoint typedef struct _SystemEventMessage {
+typedef struct _SystemEventMessage {
   UINT64 timestamp;     // bytes 0 to 7
   UINT8 event_code;     // byte 8
   UINT16 source_venue;  // bytes 9 to 10
 } SystemEventMessage;
 
-// ---- Instrument Status Message: 27 bytes -------------------------------------
+// Used to disseminate a common and limited set of data for all configured instrument types, except strategy instruments, on the real-time channels
+typedef struct _InstrumentDirectoryMessage {
+  UINT64 timestamp;                           // bytes 0 to 7
+  UINT64 instrument;                          // bytes 8 to 15
+  UINT8 isin[12];                             // bytes 16 to 27
+  UINT8 unused_3 : 3;                         // byte 28
+  UINT8 electronic_order_book : 1;            // byte 28
+  UINT8 unused_4 : 4;                         // byte 28
+  UINT16 source_venue;                        // bytes 29 to 30
+  UINT8 venue_instrument_id[11];              // bytes 31 to 41
+  UINT8 tick_id[2];                           // bytes 42 to 43
+  UINT64 price_band_tolerances;               // bytes 44 to 51, signed, read here as unsigned
+  UINT64 dynamic_circuit_breaker_tolerances;  // bytes 52 to 59, signed, read here as unsigned
+  UINT64 static_circuit_breaker_tolerances;   // bytes 60 to 67, signed, read here as unsigned
+  UINT8 segment[6];                           // bytes 68 to 73
+  UINT8 reserved_12[12];                      // bytes 74 to 85
+  UINT8 reserved_11[11];                      // bytes 86 to 96
+  UINT8 currency[3];                          // bytes 97 to 99
+  UINT8 reserved_1;                           // byte 100
+  UINT8 reserved_4[4];                        // bytes 101 to 104
+  UINT64 average_daily_turnover_adt;          // bytes 105 to 112, signed, read here as unsigned
+  UINT8 reserved_8[8];                        // bytes 113 to 120
+  UINT8 second_reserved_1;                    // byte 121
+  UINT8 second_reserved_8[8];                 // bytes 122 to 129
+  UINT8 third_reserved_8[8];                  // bytes 130 to 137
+} InstrumentDirectoryMessage;
 
 // Used to communicate scheduled and unscheduled session changes
-entrypoint typedef struct _InstrumentStatusMessage {
+typedef struct _InstrumentStatusMessage {
   UINT64 timestamp;             // bytes 0 to 7
   UINT64 instrument;            // bytes 8 to 15
   UINT16 source_venue;          // bytes 16 to 17
@@ -55,10 +132,8 @@ entrypoint typedef struct _InstrumentStatusMessage {
   UINT8 order_book_type;        // byte 26
 } InstrumentStatusMessage;
 
-// ---- Analytics Message: 106 bytes --------------------------------------------
-
 // Used to disseminate additional statistics including order book activity statistics
-entrypoint typedef struct _AnalyticsMessage {
+typedef struct _AnalyticsMessage {
   UINT64 timestamp;                        // bytes 0 to 7
   UINT64 instrument;                       // bytes 8 to 15
   UINT16 source_venue;                     // bytes 16 to 17
@@ -78,4 +153,35 @@ entrypoint typedef struct _AnalyticsMessage {
   UINT64 vwap_buy;                         // bytes 90 to 97, signed, read here as unsigned
   UINT64 vwap_sell;                        // bytes 98 to 105, signed, read here as unsigned
 } AnalyticsMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x53: SystemEventMessage system_event_message;
+    case 0x70: InstrumentDirectoryMessage instrument_directory_message;
+    case 0x48: InstrumentStatusMessage instrument_status_message;
+    case 0x61: AnalyticsMessage analytics_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16 message_length { message_length >= 3 };                                                                                                                   // bytes 0 to 1
+  UINT8 message_type;                                                                                                                                              // byte 2
+  Payload(message_type, (((UINT32) message_length) - 3)) payload[:byte-size-single-element-array (((UINT32) message_length) - 3)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Gtp Udp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 8) {
+  UINT16 length;                                                                                                            // bytes 0 to 1
+  UINT8 message_count;                                                                                                      // byte 2
+  UINT8 market_data_group;                                                                                                  // byte 3
+  UINT32 sequence_number;                                                                                                   // bytes 4 to 7
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size (available - 8)];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} Packet;
 

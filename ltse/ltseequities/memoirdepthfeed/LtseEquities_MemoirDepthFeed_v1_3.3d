@@ -1,47 +1,102 @@
-// Long-Term Stock Exchange Member Order Information Record Depth Feed
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Ltse LtseEquities MemoirDepthFeed Sbe v1.3
 //
+// Protocol:
+//   Organization: Long-Term Stock Exchange
+//   Protocol: Member Order Information Record Depth Feed
+//   Encoding: Simple Binary Encoding
+//   Version: 1.3
+//   Date: 12/13/2023
+//   Specification: (v1.3) LTSE MEMOIR Depth Feed.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out LtseEquities_MemoirDepthFeed_v1_3.3d
-//
-// What this definition does not state, and the model does:
-// - the dispatch that chooses a message by its type
-// - a run counted by a field
-// - a length prefix framing what follows
-// - a block whose stated length holds more than its fields
-//
-// License: MIT No Attribution
 
-// ---- Common Header: 18 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Memx Udp Common Header
-entrypoint typedef struct _CommonHeader {
-  UINT8 message_type;        // byte 0
-  UINT8 header_length;       // byte 1
-  UINT64BE session_id;       // bytes 2 to 9
-  UINT64BE sequence_number;  // bytes 10 to 17
-} CommonHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_HEARTBEAT_MESSAGE 0x00         // Heartbeat Message
+#define MESSAGE_TYPE_SESSION_SHUTDOWN_MESSAGE 0x01  // Session Shutdown Message
+#define MESSAGE_TYPE_SEQUENCED_MESSAGE 0x02         // Sequenced Message
 
-// ---- Sbe Header: 6 bytes -----------------------------------------------------
+// Template Id: one byte code
+#define TEMPLATE_ID_INSTRUMENT_DIRECTORY_MESSAGE 0x01     // Instrument Directory Message
+#define TEMPLATE_ID_REG_SHO_RESTRICTION_MESSAGE 0x02      // Reg Sho Restriction Message
+#define TEMPLATE_ID_SECURITY_TRADING_STATUS_MESSAGE 0x03  // Security Trading Status Message
+#define TEMPLATE_ID_TRADING_SESSION_STATUS_MESSAGE 0x05   // Trading Session Status Message
+#define TEMPLATE_ID_ORDER_ADDED_MESSAGE 0x0A              // Order Added Message
+#define TEMPLATE_ID_ORDER_DELETED_MESSAGE 0x0B            // Order Deleted Message
+#define TEMPLATE_ID_ORDER_REDUCED_MESSAGE 0x0C            // Order Reduced Message
+#define TEMPLATE_ID_ORDER_EXECUTED_MESSAGE 0x0D           // Order Executed Message
+#define TEMPLATE_ID_TRADE_MESSAGE 0x0E                    // Trade Message
+#define TEMPLATE_ID_BROKEN_TRADE_MESSAGE 0x0F             // Broken Trade Message
+#define TEMPLATE_ID_CORRECTED_TRADE_MESSAGE 0x10          // Corrected Trade Message
+#define TEMPLATE_ID_CLEAR_BOOK_MESSAGE 0x12               // Clear Book Message
+#define TEMPLATE_ID_SNAPSHOT_COMPLETE_MESSAGE 0x64        // Snapshot Complete Message
 
-// Sbe Header
-entrypoint typedef struct _SbeHeader {
-  UINT16BE block_length;  // bytes 0 to 1
-  UINT8 template_id;      // byte 2
-  UINT8 schema_id;        // byte 3
-  UINT16BE version;       // bytes 4 to 5
-} SbeHeader;
+// Is Test Symbol: one byte code
+#define IS_TEST_SYMBOL_FALSE 0x00  // False
+#define IS_TEST_SYMBOL_TRUE 0x01   // True
 
-// ---- Instrument Directory Message: 36 bytes ----------------------------------
+// Short Sale Restriction: one byte code
+#define SHORT_SALE_RESTRICTION_FALSE 0x00  // False
+#define SHORT_SALE_RESTRICTION_TRUE 0x01   // True
+
+// Security Trading Status: one byte code
+#define SECURITY_TRADING_STATUS_HALTED 0x48   // Halted
+#define SECURITY_TRADING_STATUS_PAUSED 0x50   // Paused
+#define SECURITY_TRADING_STATUS_QUOTING 0x51  // Quoting
+#define SECURITY_TRADING_STATUS_TRADING 0x54  // Trading
+
+// Security Trading Status Reason: one byte code
+#define SECURITY_TRADING_STATUS_REASON_NONE 0x58            // None
+#define SECURITY_TRADING_STATUS_REASON_REGULATORY 0x52      // Regulatory
+#define SECURITY_TRADING_STATUS_REASON_ADMINISTRATIVE 0x41  // Administrative
+
+// Trading Session: one byte code
+#define TRADING_SESSION_OPENING 0x31       // Opening
+#define TRADING_SESSION_TRADING 0x32       // Trading
+#define TRADING_SESSION_POST_TRADING 0x33  // Post Trading
+#define TRADING_SESSION_CLOSED 0x34        // Closed
+
+// Side: one byte code
+#define SIDE_BUY 0x42   // Buy
+#define SIDE_SELL 0x53  // Sell
+
+// ---- Types -------------------------------------------------------------------
 
 // InstrumentDirectoryMessage
-entrypoint typedef struct _InstrumentDirectoryMessage {
+typedef struct _InstrumentDirectoryMessage {
   UINT64BE timestamp;    // bytes 0 to 7
   UINT16BE security_id;  // bytes 8 to 9
   UINT8 symbol[6];       // bytes 10 to 15
@@ -52,37 +107,29 @@ entrypoint typedef struct _InstrumentDirectoryMessage {
   UINT64BE mpv;          // bytes 28 to 35, signed, read here as unsigned
 } InstrumentDirectoryMessage;
 
-// ---- Reg Sho Restriction Message: 11 bytes -----------------------------------
-
 // RegSHORestrictionMessage
-entrypoint typedef struct _RegShoRestrictionMessage {
+typedef struct _RegShoRestrictionMessage {
   UINT64BE timestamp;            // bytes 0 to 7
   UINT16BE security_id;          // bytes 8 to 9
   UINT8 short_sale_restriction;  // byte 10
 } RegShoRestrictionMessage;
 
-// ---- Security Trading Status Message: 12 bytes -------------------------------
-
 // SecurityTradingStatusMessage
-entrypoint typedef struct _SecurityTradingStatusMessage {
+typedef struct _SecurityTradingStatusMessage {
   UINT64BE timestamp;                    // bytes 0 to 7
   UINT16BE security_id;                  // bytes 8 to 9
   UINT8 security_trading_status;         // byte 10
   UINT8 security_trading_status_reason;  // byte 11
 } SecurityTradingStatusMessage;
 
-// ---- Trading Session Status Message: 9 bytes ---------------------------------
-
 // TradingSessionStatusMessage
-entrypoint typedef struct _TradingSessionStatusMessage {
+typedef struct _TradingSessionStatusMessage {
   UINT64BE timestamp;     // bytes 0 to 7
   UINT8 trading_session;  // byte 8
 } TradingSessionStatusMessage;
 
-// ---- Order Added Message: 31 bytes -------------------------------------------
-
 // OrderAddedMessage
-entrypoint typedef struct _OrderAddedMessage {
+typedef struct _OrderAddedMessage {
   UINT64BE timestamp;    // bytes 0 to 7
   UINT16BE security_id;  // bytes 8 to 9
   UINT64BE order_id;     // bytes 10 to 17
@@ -91,29 +138,23 @@ entrypoint typedef struct _OrderAddedMessage {
   UINT64BE price;        // bytes 23 to 30, signed, read here as unsigned
 } OrderAddedMessage;
 
-// ---- Order Deleted Message: 18 bytes -----------------------------------------
-
 // OrderDeletedMessage
-entrypoint typedef struct _OrderDeletedMessage {
+typedef struct _OrderDeletedMessage {
   UINT64BE timestamp;    // bytes 0 to 7
   UINT16BE security_id;  // bytes 8 to 9
   UINT64BE order_id;     // bytes 10 to 17
 } OrderDeletedMessage;
 
-// ---- Order Reduced Message: 22 bytes -----------------------------------------
-
 // OrderReducedMessage
-entrypoint typedef struct _OrderReducedMessage {
+typedef struct _OrderReducedMessage {
   UINT64BE timestamp;    // bytes 0 to 7
   UINT16BE security_id;  // bytes 8 to 9
   UINT64BE order_id;     // bytes 10 to 17
   UINT32BE quantity;     // bytes 18 to 21
 } OrderReducedMessage;
 
-// ---- Order Executed Message: 38 bytes ----------------------------------------
-
 // OrderExecutedMessage
-entrypoint typedef struct _OrderExecutedMessage {
+typedef struct _OrderExecutedMessage {
   UINT64BE timestamp;    // bytes 0 to 7
   UINT16BE security_id;  // bytes 8 to 9
   UINT64BE order_id;     // bytes 10 to 17
@@ -122,10 +163,8 @@ entrypoint typedef struct _OrderExecutedMessage {
   UINT64BE price;        // bytes 30 to 37, signed, read here as unsigned
 } OrderExecutedMessage;
 
-// ---- Trade Message: 30 bytes -------------------------------------------------
-
 // TradeMessage
-entrypoint typedef struct _TradeMessage {
+typedef struct _TradeMessage {
   UINT64BE timestamp;    // bytes 0 to 7
   UINT16BE security_id;  // bytes 8 to 9
   UINT64BE trade_id;     // bytes 10 to 17
@@ -133,10 +172,8 @@ entrypoint typedef struct _TradeMessage {
   UINT64BE price;        // bytes 22 to 29, signed, read here as unsigned
 } TradeMessage;
 
-// ---- Broken Trade Message: 30 bytes ------------------------------------------
-
 // BrokenTradeMessage
-entrypoint typedef struct _BrokenTradeMessage {
+typedef struct _BrokenTradeMessage {
   UINT64BE timestamp;          // bytes 0 to 7
   UINT16BE security_id;        // bytes 8 to 9
   UINT64BE trade_id;           // bytes 10 to 17
@@ -144,10 +181,8 @@ entrypoint typedef struct _BrokenTradeMessage {
   UINT64BE original_price;     // bytes 22 to 29, signed, read here as unsigned
 } BrokenTradeMessage;
 
-// ---- Corrected Trade Message: 42 bytes ---------------------------------------
-
 // CorrectedTradeMessage
-entrypoint typedef struct _CorrectedTradeMessage {
+typedef struct _CorrectedTradeMessage {
   UINT64BE timestamp;           // bytes 0 to 7
   UINT16BE security_id;         // bytes 8 to 9
   UINT64BE trade_id;            // bytes 10 to 17
@@ -157,19 +192,80 @@ entrypoint typedef struct _CorrectedTradeMessage {
   UINT64BE corrected_price;     // bytes 34 to 41, signed, read here as unsigned
 } CorrectedTradeMessage;
 
-// ---- Clear Book Message: 10 bytes --------------------------------------------
-
 // ClearBookMessage
-entrypoint typedef struct _ClearBookMessage {
+typedef struct _ClearBookMessage {
   UINT64BE timestamp;    // bytes 0 to 7
   UINT16BE security_id;  // bytes 8 to 9
 } ClearBookMessage;
 
-// ---- Snapshot Complete Message: 16 bytes -------------------------------------
-
 // SnapshotCompleteMessage
-entrypoint typedef struct _SnapshotCompleteMessage {
+typedef struct _SnapshotCompleteMessage {
   UINT64BE timestamp;              // bytes 0 to 7
   UINT64BE as_of_sequence_number;  // bytes 8 to 15
 } SnapshotCompleteMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x01: InstrumentDirectoryMessage instrument_directory_message;
+    case 0x02: RegShoRestrictionMessage reg_sho_restriction_message;
+    case 0x03: SecurityTradingStatusMessage security_trading_status_message;
+    case 0x05: TradingSessionStatusMessage trading_session_status_message;
+    case 0x0A: OrderAddedMessage order_added_message;
+    case 0x0B: OrderDeletedMessage order_deleted_message;
+    case 0x0C: OrderReducedMessage order_reduced_message;
+    case 0x0D: OrderExecutedMessage order_executed_message;
+    case 0x0E: TradeMessage trade_message;
+    case 0x0F: BrokenTradeMessage broken_trade_message;
+    case 0x10: CorrectedTradeMessage corrected_trade_message;
+    case 0x12: ClearBookMessage clear_book_message;
+    case 0x64: SnapshotCompleteMessage snapshot_complete_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// Sbe Message
+typedef struct _SbeMessage {
+  UINT16BE block_length;                                                                                           // bytes 0 to 1
+  UINT8 template_id;                                                                                               // byte 2
+  UINT8 schema_id;                                                                                                 // byte 3
+  UINT16BE version;                                                                                                // bytes 4 to 5
+  Payload(template_id, ((UINT32) block_length)) payload[:byte-size-single-element-array ((UINT32) block_length)];
+} SbeMessage;
+
+// Memx Udp Message
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16BE message_length;                                                                                                                                         // bytes 0 to 1
+  SbeMessage sbe_message;
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// Memx Udp Sequenced Message
+typedef struct _SequencedMessage (UINT32 available, mutable UINT32 * tally) where (available >= 2) {
+  UINT16BE message_count;                                                                                                   // bytes 0 to 1
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size (available - 2)];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} SequencedMessage;
+
+// Branch
+casetype _SequencedMessages (UINT8 selector, UINT32 available, mutable UINT32 * tally) {
+  switch (selector) {
+    case 0x00: unit heartbeat;
+    case 0x01: unit session_shutdown;
+    case 0x02: SequencedMessage(available, tally) sequenced_message;
+    default: UINT8 unknown[available];
+  }
+} SequencedMessages;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Memx Udp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 18) {
+  UINT8 message_type;                                                                                                             // byte 0
+  UINT8 header_length;                                                                                                            // byte 1
+  UINT64BE session_id;                                                                                                            // bytes 2 to 9
+  UINT64BE sequence_number;                                                                                                       // bytes 10 to 17
+  SequencedMessages(message_type, (available - 18), tally) sequenced_messages[:byte-size-single-element-array (available - 18)];
+} Packet;
 

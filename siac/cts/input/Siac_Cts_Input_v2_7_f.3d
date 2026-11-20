@@ -1,142 +1,207 @@
-// The Securities Industry Automation Corporation
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Siac Cts Input Cta v2.7.f
 //
+// Protocol:
+//   Organization: The Securities Industry Automation Corporation
+//   Protocol:
+//   Encoding: Consolidated Tape Association
+//   Version: 2.7.f
+//   Date: 01/29/2026
+//   Specification: CTS_Pillar_Input_Specification.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out Siac_Cts_Input_v2_7_f.3d
 //
-// What this definition does not state, and the model does:
-// - a Reassemble rule
-// - a run counted by a field
-//
-// License: MIT No Attribution
+// What this definition reads more loosely than the model states:
+// - a pad ending its frame after a run of no fixed width is what is left of the frame, and is not checked to reach no further than the boundary
 
-// ---- Block Header: 10 bytes --------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Cta participant input block header
-entrypoint typedef struct _BlockHeader {
-  UINT8 version;                   // byte 0
-  UINT16BE block_size;             // bytes 1 to 2
-  UINT32BE block_sequence_number;  // bytes 3 to 6
-  UINT8 messages_in_block;         // byte 7
-  UINT16BE block_checksum;         // bytes 8 to 9
-} BlockHeader;
+// Message Category: one byte code
+#define MESSAGE_CATEGORY_ADMINISTRATIVE 0x41  // Administrative
+#define MESSAGE_CATEGORY_CONTROL 0x43         // Control
+#define MESSAGE_CATEGORY_INDICES 0x49         // Indices
+#define MESSAGE_CATEGORY_MARKET_STATUS 0x4D   // Market Status
+#define MESSAGE_CATEGORY_PRIOR_DAY 0x50       // Prior Day
+#define MESSAGE_CATEGORY_TRADE 0x54           // Trade
 
-// ---- Timestamp 1: 8 bytes ----------------------------------------------------
+// Instrument Type: one byte code
+#define INSTRUMENT_TYPE_CTA_ELIGIBLE_EQUITY 0x30  // Cta Eligible Equity
+#define INSTRUMENT_TYPE_LOCAL_ISSUE 0x31          // Local Issue
+#define INSTRUMENT_TYPE_CORPORATE_BOND 0x32       // Corporate Bond
+#define INSTRUMENT_TYPE_GOVERNMENT_BOND 0x33      // Government Bond
+
+// Trade Reporting Facility Id: one byte code
+#define TRADE_REPORTING_FACILITY_ID_TRF_NOT_APPLICABLE 0x20         // Trf Not Applicable
+#define TRADE_REPORTING_FACILITY_ID_FINRA_ADF 0x64                  // Finra Adf
+#define TRADE_REPORTING_FACILITY_ID_FINRA_NASDAQ_TRF_CHICAGO 0x42   // Finra Nasdaq Trf Chicago
+#define TRADE_REPORTING_FACILITY_ID_FINRA_NYSE_TRF 0x4E             // Finra Nyse Trf
+#define TRADE_REPORTING_FACILITY_ID_FINRA_NASDAQ_TRF_CARTERET 0x54  // Finra Nasdaq Trf Carteret
+
+// Stop Stock Indicator: one byte code
+#define STOP_STOCK_INDICATOR_STOP_STOCK_NOT_APPLICABLE 0x30  // Stop Stock Not Applicable
+#define STOP_STOCK_INDICATOR_STOP_STOCK 0x31                 // Stop Stock
+
+// Trade Through Exempt Indicator: one byte code
+#define TRADE_THROUGH_EXEMPT_INDICATOR_NOT_A_TRADE_THROUGH_EXEMPTION 0x30  // Not A Trade Through Exemption
+#define TRADE_THROUGH_EXEMPT_INDICATOR_TRADE_THROUGH_EXEMPTION 0x31        // Trade Through Exemption
+
+// Short Sale Restriction Indicator: one byte code
+#define SHORT_SALE_RESTRICTION_INDICATOR_SHORT_SALE_RESTRICTION_NOT_APPLICABLE 0x20  // Short Sale Restriction Not Applicable
+#define SHORT_SALE_RESTRICTION_INDICATOR_SHORT_SALE_RESTRICTION_ACTIVATED 0x41       // Short Sale Restriction Activated
+#define SHORT_SALE_RESTRICTION_INDICATOR_SHORT_SALE_RESTRICTION_CONTINUED 0x43       // Short Sale Restriction Continued
+#define SHORT_SALE_RESTRICTION_INDICATOR_SHORT_SALE_RESTRICTION_DEACTIVATED 0x44     // Short Sale Restriction Deactivated
+#define SHORT_SALE_RESTRICTION_INDICATOR_SHORT_SALE_RESTRICTION_IN_EFFECT 0x45       // Short Sale Restriction In Effect
+
+// Cancel Error Action: one byte code
+#define CANCEL_ERROR_ACTION_CANCEL 0x31  // Cancel
+#define CANCEL_ERROR_ACTION_ERROR 0x32   // Error
+
+// Security Status: one byte code
+#define SECURITY_STATUS_SECURITY_STATUS_NOT_APPLICABLE 0x20            // Security Status Not Applicable
+#define SECURITY_STATUS_TRADING_HALT 0x32                              // Trading Halt
+#define SECURITY_STATUS_RESUME 0x33                                    // Resume
+#define SECURITY_STATUS_PRICE_INDICATION 0x35                          // Price Indication
+#define SECURITY_STATUS_TRADING_RANGE_INDICATION 0x36                  // Trading Range Indication
+#define SECURITY_STATUS_MARKET_IMBALANCE_BUY 0x37                      // Market Imbalance Buy
+#define SECURITY_STATUS_MARKET_IMBALANCE_SELL 0x38                     // Market Imbalance Sell
+#define SECURITY_STATUS_CLOSING_IMBALANCE_BUY 0x39                     // Closing Imbalance Buy
+#define SECURITY_STATUS_CLOSING_IMBALANCE_SELL 0x41                    // Closing Imbalance Sell
+#define SECURITY_STATUS_NO_MARKET_IMBALANCE 0x43                       // No Market Imbalance
+#define SECURITY_STATUS_NO_CLOSING_IMBALANCE 0x44                      // No Closing Imbalance
+#define SECURITY_STATUS_SHORT_SALE_RESTRICTION 0x45                    // Short Sale Restriction
+#define SECURITY_STATUS_LIMIT_UP_LIMIT_DOWN_LULD_REFERENCE_PRICE 0x46  // Limit Up Limit Down Luld Reference Price
+
+// Halt Reason: one byte code
+#define HALT_REASON_HALT_REASON_NOT_APPLICABLE 0x20                    // Halt Reason Not Applicable
+#define HALT_REASON_ADDITIONAL_INFORMATION_REQUESTED 0x41              // Additional Information Requested
+#define HALT_REASON_REGULATORY_CONCERN 0x43                            // Regulatory Concern
+#define HALT_REASON_NEWS_RELEASED 0x44                                 // News Released
+#define HALT_REASON_MERGER_EFFECTIVE 0x45                              // Merger Effective
+#define HALT_REASON_ETF_COMPONENT_PRICES_NOT_AVAILABLE 0x46            // Etf Component Prices Not Available
+#define HALT_REASON_ORDER_IMBALANCE 0x49                               // Order Imbalance
+#define HALT_REASON_LIMIT_UP_LIMIT_DOWN_LULD_TRADING_PAUSE 0x4D        // Limit Up Limit Down Luld Trading Pause
+#define HALT_REASON_CORPORATE_ACTION 0x4E                              // Corporate Action
+#define HALT_REASON_NEW_SECURITY_OFFERING 0x4F                         // New Security Offering
+#define HALT_REASON_NEWS_PENDING 0x50                                  // News Pending
+#define HALT_REASON_INTRADAY_INDICATIVE_VALUE_NOT_AVAILABLE 0x56       // Intraday Indicative Value Not Available
+#define HALT_REASON_OPERATIONAL 0x58                                   // Operational
+#define HALT_REASON_SUB_PENNY_TRADING 0x59                             // Sub Penny Trading
+#define HALT_REASON_MARKET_WIDE_CIRCUIT_BREAKER_LEVEL_1_BREACHED 0x31  // Market Wide Circuit Breaker Level 1 Breached
+#define HALT_REASON_MARKET_WIDE_CIRCUIT_BREAKER_LEVEL_2_BREACHED 0x32  // Market Wide Circuit Breaker Level 2 Breached
+#define HALT_REASON_MARKET_WIDE_CIRCUIT_BREAKER_LEVEL_3_BREACHED 0x33  // Market Wide Circuit Breaker Level 3 Breached
+
+// Sale Condition Category: one byte code
+#define SALE_CONDITION_CATEGORY_SALE_CONDITION_CATEGORY_NOT_APPLICABLE 0x20  // Sale Condition Category Not Applicable
+#define SALE_CONDITION_CATEGORY_SALE_CONDITION_CATEGORY_1 0x31               // Sale Condition Category 1
+#define SALE_CONDITION_CATEGORY_SALE_CONDITION_CATEGORY_2 0x32               // Sale Condition Category 2
+#define SALE_CONDITION_CATEGORY_SALE_CONDITION_CATEGORY_3 0x33               // Sale Condition Category 3
+#define SALE_CONDITION_CATEGORY_SALE_CONDITION_CATEGORY_4 0x34               // Sale Condition Category 4
+
+// ---- Types -------------------------------------------------------------------
 
 // Participant-provided timestamp
-entrypoint typedef struct _Timestamp1 {
+typedef struct _Timestamp1 {
   UINT32BE seconds;      // bytes 0 to 3
   UINT32BE nanoseconds;  // bytes 4 to 7
 } Timestamp1;
 
-// ---- Message Header: 26 bytes ------------------------------------------------
-
-// Cta participant input message header (26 bytes)
-entrypoint typedef struct _MessageHeader {
-  UINT16BE message_length;                // bytes 0 to 1
-  UINT8 message_category;                 // byte 2
-  UINT8 message_type;                     // byte 3
-  UINT8 participant_i_d;                  // byte 4
-  Timestamp1 timestamp_1;                 // bytes 5 to 12
-  UINT8 message_i_d;                      // byte 13
-  UINT8 reserved[4];                      // bytes 14 to 17
-  UINT64BE participant_reference_number;  // bytes 18 to 25, signed, read here as unsigned
-} MessageHeader;
-
-// ---- Rejection Message: 14 bytes ---------------------------------------------
-
 // Used for all errors to notify a Participant that CTS has found an error in the Block Header, Message Header or Message body of a Participant Input message.
-entrypoint typedef struct _RejectionMessage {
+typedef struct _RejectionMessage {
   UINT8 error_code;                       // byte 0
   UINT32BE block_sequence_number;         // bytes 1 to 4
   UINT64BE participant_reference_number;  // bytes 5 to 12, signed, read here as unsigned
   UINT8 message_i_d;                      // byte 13
 } RejectionMessage;
 
-// ---- Warning Message: 12 bytes -----------------------------------------------
-
 // Sent from CTS to a Participant in response to a Block Sequence Number Gap. The block will still be processed by CTS.
-entrypoint typedef struct _WarningMessage {
+typedef struct _WarningMessage {
   UINT32BE previous_block_sequence_number;         // bytes 0 to 3
   UINT64BE previous_participant_reference_number;  // bytes 4 to 11, signed, read here as unsigned
 } WarningMessage;
 
-// ---- Sequence Information And Message Count Response Message: 20 bytes -------
-
 // Generated by CTS to a Participant in response to a Sequence Information and Message Count Inquiry message. Transmitted in a separate block.
-entrypoint typedef struct _SequenceInformationAndMessageCountResponseMessage {
+typedef struct _SequenceInformationAndMessageCountResponseMessage {
   UINT32BE current_block_sequence_number;      // bytes 0 to 3
   UINT64BE last_participant_reference_number;  // bytes 4 to 11, signed, read here as unsigned
   UINT64BE message_count;                      // bytes 12 to 19
 } SequenceInformationAndMessageCountResponseMessage;
 
-// ---- Test Message: 256 bytes -------------------------------------------------
-
 // Generated by CTS or a Participant to exercise the line and verify transmission integrity. Transmitted as the only message in a block.
-entrypoint typedef struct _TestMessage {
+typedef struct _TestMessage {
   UINT8 data[256];  // bytes 0 to 255
 } TestMessage;
 
-// ---- Index Message: 19 bytes -------------------------------------------------
-
 // Contains the index and the index value.
-entrypoint typedef struct _IndexMessage {
+typedef struct _IndexMessage {
   UINT8 index_symbol[11];  // bytes 0 to 10
   UINT64BE index_value;    // bytes 11 to 18, signed, read here as unsigned
 } IndexMessage;
 
-// ---- Bid And Offer Index Message: 27 bytes -----------------------------------
-
 // Contains the Bid and Offer index values.
-entrypoint typedef struct _BidAndOfferIndexMessage {
+typedef struct _BidAndOfferIndexMessage {
   UINT8 index_symbol[11];      // bytes 0 to 10
   UINT64BE bid_index_value;    // bytes 11 to 18, signed, read here as unsigned
   UINT64BE offer_index_value;  // bytes 19 to 26, signed, read here as unsigned
 } BidAndOfferIndexMessage;
 
-// ---- Approximate Trades And Total Dollar Value Message: 12 bytes -------------
-
 // Allows a Participant to report the total trades and total dollar value of trades at their respective market centers.
-entrypoint typedef struct _ApproximateTradesAndTotalDollarValueMessage {
+typedef struct _ApproximateTradesAndTotalDollarValueMessage {
   UINT32BE total_trades;  // bytes 0 to 3
   UINT64BE dollar_value;  // bytes 4 to 11
 } ApproximateTradesAndTotalDollarValueMessage;
 
-// ---- Crossing Session Message: 24 bytes --------------------------------------
-
 // Used to report the total volume and dollar value of trades transacted after the close of a Participant's regular session.
-entrypoint typedef struct _CrossingSessionMessage {
+typedef struct _CrossingSessionMessage {
   UINT64BE crossing_session_i_total_trades_volume;   // bytes 0 to 7
   UINT64BE crossing_session_ii_dollar_value;         // bytes 8 to 15
   UINT64BE crossing_session_ii_total_trades_volume;  // bytes 16 to 23
 } CrossingSessionMessage;
 
-// ---- Corrected Prior Day Trade Date And Time: 8 bytes ------------------------
-
 // Corrected Prior Day Trade Date and Time
-entrypoint typedef struct _CorrectedPriorDayTradeDateAndTime {
+typedef struct _CorrectedPriorDayTradeDateAndTime {
   UINT32BE seconds;      // bytes 0 to 3
   UINT32BE nanoseconds;  // bytes 4 to 7
 } CorrectedPriorDayTradeDateAndTime;
 
-// ---- Original Prior Day Trade Date And Time: 8 bytes -------------------------
-
 // Original Prior Day Trade Date and Time
-entrypoint typedef struct _OriginalPriorDayTradeDateAndTime {
+typedef struct _OriginalPriorDayTradeDateAndTime {
   UINT32BE seconds;      // bytes 0 to 3
   UINT32BE nanoseconds;  // bytes 4 to 7
 } OriginalPriorDayTradeDateAndTime;
 
-// ---- Prior Day Trade Correction Message: 69 bytes ----------------------------
-
 // Used to correct a transaction originally reported earlier than the current day.
-entrypoint typedef struct _PriorDayTradeCorrectionMessage {
+typedef struct _PriorDayTradeCorrectionMessage {
   UINT8 security_symbol[11];                                                  // bytes 0 to 10
   UINT8 instrument_type;                                                      // byte 11
   UINT8 corrected_sale_condition[4];                                          // bytes 12 to 15
@@ -158,10 +223,8 @@ entrypoint typedef struct _PriorDayTradeCorrectionMessage {
   OriginalPriorDayTradeDateAndTime original_prior_day_trade_date_and_time;    // bytes 61 to 68
 } PriorDayTradeCorrectionMessage;
 
-// ---- Fractional Prior Day Trade Correction Message: 77 bytes -----------------
-
 // Used to correct a prior day transaction when either the original or corrected volume is a fractional value.
-entrypoint typedef struct _FractionalPriorDayTradeCorrectionMessage {
+typedef struct _FractionalPriorDayTradeCorrectionMessage {
   UINT8 security_symbol[11];                                                  // bytes 0 to 10
   UINT8 instrument_type;                                                      // byte 11
   UINT8 corrected_sale_condition[4];                                          // bytes 12 to 15
@@ -183,18 +246,14 @@ entrypoint typedef struct _FractionalPriorDayTradeCorrectionMessage {
   OriginalPriorDayTradeDateAndTime original_prior_day_trade_date_and_time;    // bytes 69 to 76
 } FractionalPriorDayTradeCorrectionMessage;
 
-// ---- Prior Day Trade Date And Time: 8 bytes ----------------------------------
-
 // Prior Day Trade Date and Time
-entrypoint typedef struct _PriorDayTradeDateAndTime {
+typedef struct _PriorDayTradeDateAndTime {
   UINT32BE seconds;      // bytes 0 to 3
   UINT32BE nanoseconds;  // bytes 4 to 7
 } PriorDayTradeDateAndTime;
 
-// ---- Prior Day Trade Message: 41 bytes ---------------------------------------
-
 // Reports a CTA eligible Equity, Local Issue or Bond transaction which occurred earlier than the current trading day and was not reported.
-entrypoint typedef struct _PriorDayTradeMessage {
+typedef struct _PriorDayTradeMessage {
   UINT8 security_symbol[11];                               // bytes 0 to 10
   UINT8 instrument_type;                                   // byte 11
   UINT8 sale_condition[4];                                 // bytes 12 to 15
@@ -208,10 +267,8 @@ entrypoint typedef struct _PriorDayTradeMessage {
   PriorDayTradeDateAndTime prior_day_trade_date_and_time;  // bytes 33 to 40
 } PriorDayTradeMessage;
 
-// ---- Fractional Prior Day Trade Message: 45 bytes ----------------------------
-
 // Reports a trade with fractional volume which occurred earlier than the current trading day and was not reported.
-entrypoint typedef struct _FractionalPriorDayTradeMessage {
+typedef struct _FractionalPriorDayTradeMessage {
   UINT8 security_symbol[11];                               // bytes 0 to 10
   UINT8 instrument_type;                                   // byte 11
   UINT8 sale_condition[4];                                 // bytes 12 to 15
@@ -225,10 +282,8 @@ entrypoint typedef struct _FractionalPriorDayTradeMessage {
   PriorDayTradeDateAndTime prior_day_trade_date_and_time;  // bytes 37 to 44
 } FractionalPriorDayTradeMessage;
 
-// ---- Prior Day Trade Cancel Error Message: 42 bytes --------------------------
-
 // Used to cancel or error a trade or correction originally reported earlier than the current day.
-entrypoint typedef struct _PriorDayTradeCancelErrorMessage {
+typedef struct _PriorDayTradeCancelErrorMessage {
   UINT8 security_symbol[11];                               // bytes 0 to 10
   UINT8 instrument_type;                                   // byte 11
   UINT8 sale_condition[4];                                 // bytes 12 to 15
@@ -243,10 +298,8 @@ entrypoint typedef struct _PriorDayTradeCancelErrorMessage {
   UINT8 cancel_error_action;                               // byte 41
 } PriorDayTradeCancelErrorMessage;
 
-// ---- Fractional Prior Day Trade Cancel Error Message: 46 bytes ---------------
-
 // Reports the cancellation or error of a fractional trade or correction originally reported earlier than the current day.
-entrypoint typedef struct _FractionalPriorDayTradeCancelErrorMessage {
+typedef struct _FractionalPriorDayTradeCancelErrorMessage {
   UINT8 security_symbol[11];                               // bytes 0 to 10
   UINT8 instrument_type;                                   // byte 11
   UINT8 sale_condition[4];                                 // bytes 12 to 15
@@ -261,10 +314,8 @@ entrypoint typedef struct _FractionalPriorDayTradeCancelErrorMessage {
   UINT8 cancel_error_action;                               // byte 45
 } FractionalPriorDayTradeCancelErrorMessage;
 
-// ---- Auction Status Message: 99 bytes ----------------------------------------
-
 // Transmitted when a Participant in a CTA eligible security requires Auction Information. Initial Auction Collar is published after the LULD Trading Pause.
-entrypoint typedef struct _AuctionStatusMessage {
+typedef struct _AuctionStatusMessage {
   UINT8 security_symbol[11];                      // bytes 0 to 10
   UINT8 instrument_type;                          // byte 11
   UINT64BE auction_collar_reference_price;        // bytes 12 to 19
@@ -274,18 +325,14 @@ entrypoint typedef struct _AuctionStatusMessage {
   UINT8 reserved_62[62];                          // bytes 37 to 98
 } AuctionStatusMessage;
 
-// ---- Timestamp 2: 8 bytes ----------------------------------------------------
-
 // Timestamp 2
-entrypoint typedef struct _Timestamp2 {
+typedef struct _Timestamp2 {
   UINT32BE seconds;      // bytes 0 to 3
   UINT32BE nanoseconds;  // bytes 4 to 7
 } Timestamp2;
 
-// ---- Trade Correction Message: 49 bytes --------------------------------------
-
 // Used to correct CTA eligible Equity, Local Issue or Bond trade information.
-entrypoint typedef struct _TradeCorrectionMessage {
+typedef struct _TradeCorrectionMessage {
   UINT8 security_symbol[11];                         // bytes 0 to 10
   UINT8 instrument_type;                             // byte 11
   UINT8 corrected_sale_condition[4];                 // bytes 12 to 15
@@ -300,10 +347,8 @@ entrypoint typedef struct _TradeCorrectionMessage {
   UINT64BE original_participant_reference_number;    // bytes 41 to 48, signed, read here as unsigned
 } TradeCorrectionMessage;
 
-// ---- Fractional Trade Correction Message: 53 bytes ---------------------------
-
 // Used to correct a trade when the corrected Trade Volume is a fractional value.
-entrypoint typedef struct _FractionalTradeCorrectionMessage {
+typedef struct _FractionalTradeCorrectionMessage {
   UINT8 security_symbol[11];                         // bytes 0 to 10
   UINT8 instrument_type;                             // byte 11
   UINT8 corrected_sale_condition[4];                 // bytes 12 to 15
@@ -318,10 +363,8 @@ entrypoint typedef struct _FractionalTradeCorrectionMessage {
   UINT64BE original_participant_reference_number;    // bytes 45 to 52, signed, read here as unsigned
 } FractionalTradeCorrectionMessage;
 
-// ---- Long Trade Message: 40 bytes --------------------------------------------
-
 // Used to report trade information for CTA eligible Equity, Local Issue or Bonds.
-entrypoint typedef struct _LongTradeMessage {
+typedef struct _LongTradeMessage {
   UINT8 security_symbol[11];             // bytes 0 to 10
   UINT8 instrument_type;                 // byte 11
   UINT8 sale_condition[4];               // bytes 12 to 15
@@ -334,10 +377,8 @@ entrypoint typedef struct _LongTradeMessage {
   Timestamp2 timestamp_2;                // bytes 32 to 39
 } LongTradeMessage;
 
-// ---- Fractional Long Trade Message: 44 bytes ---------------------------------
-
 // Used to report trade information for CTA eligible Equity, Local Issues or Bonds in fractional volume.
-entrypoint typedef struct _FractionalLongTradeMessage {
+typedef struct _FractionalLongTradeMessage {
   UINT8 security_symbol[11];             // bytes 0 to 10
   UINT8 instrument_type;                 // byte 11
   UINT8 sale_condition[4];               // bytes 12 to 15
@@ -350,10 +391,8 @@ entrypoint typedef struct _FractionalLongTradeMessage {
   Timestamp2 timestamp_2;                // bytes 36 to 43
 } FractionalLongTradeMessage;
 
-// ---- Trading Status Message: 51 bytes ----------------------------------------
-
 // Allows a Participant that is the listing exchange to notify CTS of Trading Halts, Resumes, Indications, Imbalances, Short Sale Restriction Indicators and LULD Reference Prices. Bidirectional.
-entrypoint typedef struct _TradingStatusMessage {
+typedef struct _TradingStatusMessage {
   UINT8 security_symbol[11];                                   // bytes 0 to 10
   UINT8 instrument_type;                                       // byte 11
   UINT64BE last_price_opening_reopening_luld_reference_price;  // bytes 12 to 19
@@ -367,10 +406,8 @@ entrypoint typedef struct _TradingStatusMessage {
   UINT32BE trading_status_id;                                  // bytes 47 to 50
 } TradingStatusMessage;
 
-// ---- Short Trade Message: 14 bytes -------------------------------------------
-
 // Reports trade information for CTA eligible Equity, Local Issues or Bonds when the trade meets all criteria for the compact Short format; otherwise the Long Trade message is used.
-entrypoint typedef struct _ShortTradeMessage {
+typedef struct _ShortTradeMessage {
   UINT8 security_symbol_short[5];  // bytes 0 to 4
   UINT8 sale_condition_short;      // byte 5
   UINT8 sale_condition_category;   // byte 6
@@ -379,10 +416,8 @@ entrypoint typedef struct _ShortTradeMessage {
   UINT8 reserved_3[3];             // bytes 11 to 13
 } ShortTradeMessage;
 
-// ---- Fractional Short Trade Message: 16 bytes --------------------------------
-
 // Reports trade information with fractional volume when the trade meets all criteria for the compact Short format; otherwise the Long Trade or Fractional Long Trade message is used.
-entrypoint typedef struct _FractionalShortTradeMessage {
+typedef struct _FractionalShortTradeMessage {
   UINT8 security_symbol_short[5];          // bytes 0 to 4
   UINT8 sale_condition_short;              // byte 5
   UINT8 sale_condition_category;           // byte 6
@@ -391,10 +426,8 @@ entrypoint typedef struct _FractionalShortTradeMessage {
   UINT8 reserved_3[3];                     // bytes 13 to 15
 } FractionalShortTradeMessage;
 
-// ---- Trade Cancel Error Message: 31 bytes ------------------------------------
-
 // Allows a Participant to cancel or error trade reports for CTA eligible Equity, Local Issue or Bond originally reported using a fixed message format.
-entrypoint typedef struct _TradeCancelErrorMessage {
+typedef struct _TradeCancelErrorMessage {
   UINT8 security_symbol[11];                       // bytes 0 to 10
   UINT8 instrument_type;                           // byte 11
   UINT8 trade_through_exempt_indicator;            // byte 12
@@ -403,4 +436,183 @@ entrypoint typedef struct _TradeCancelErrorMessage {
   Timestamp2 timestamp_2;                          // bytes 22 to 29
   UINT8 cancel_error_action;                       // byte 30
 } TradeCancelErrorMessage;
+
+// Branch
+casetype _MessagePayload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x4152: RejectionMessage rejection_message;
+    case 0x4157: WarningMessage warning_message;
+    case 0x4341: unit start_of_day_message;
+    case 0x4349: unit sequence_information_and_message_count_inquiry_message;
+    case 0x434E: SequenceInformationAndMessageCountResponseMessage sequence_information_and_message_count_response_message;
+    case 0x4354: unit line_integrity_message;
+    case 0x435A: unit end_of_day_message;
+    case 0x4335: TestMessage test_message;
+    case 0x4949: IndexMessage index_message;
+    case 0x4951: BidAndOfferIndexMessage bid_and_offer_index_message;
+    case 0x4D4F: ApproximateTradesAndTotalDollarValueMessage approximate_trades_and_total_dollar_value_message;
+    case 0x4D50: CrossingSessionMessage crossing_session_message;
+    case 0x5043: PriorDayTradeCorrectionMessage prior_day_trade_correction_message;
+    case 0x504F: FractionalPriorDayTradeCorrectionMessage fractional_prior_day_trade_correction_message;
+    case 0x5054: PriorDayTradeMessage prior_day_trade_message;
+    case 0x5052: FractionalPriorDayTradeMessage fractional_prior_day_trade_message;
+    case 0x5058: PriorDayTradeCancelErrorMessage prior_day_trade_cancel_error_message;
+    case 0x5045: FractionalPriorDayTradeCancelErrorMessage fractional_prior_day_trade_cancel_error_message;
+    case 0x5441: AuctionStatusMessage auction_status_message;
+    case 0x5443: TradeCorrectionMessage trade_correction_message;
+    case 0x544F: FractionalTradeCorrectionMessage fractional_trade_correction_message;
+    case 0x544C: LongTradeMessage long_trade_message;
+    case 0x5452: FractionalLongTradeMessage fractional_long_trade_message;
+    case 0x5453: TradingStatusMessage trading_status_message;
+    case 0x5454: ShortTradeMessage short_trade_message;
+    case 0x5448: FractionalShortTradeMessage fractional_short_trade_message;
+    case 0x5458: TradeCancelErrorMessage trade_cancel_error_message;
+    default: UINT8 unknown[available];
+  }
+} MessagePayload;
+
+// Cta participant input message
+typedef struct _Message {
+  UINT16BE message_length { message_length >= 26 };                                                                                                                                                    // bytes 0 to 1
+  UINT8 message_category;                                                                                                                                                                              // byte 2
+  UINT8 message_type;                                                                                                                                                                                  // byte 3
+  UINT8 participant_i_d;                                                                                                                                                                               // byte 4
+  Timestamp1 timestamp_1;                                                                                                                                                                              // bytes 5 to 12
+  UINT8 message_i_d;                                                                                                                                                                                   // byte 13
+  UINT8 reserved[4];                                                                                                                                                                                   // bytes 14 to 17
+  UINT64BE participant_reference_number;                                                                                                                                                               // bytes 18 to 25, signed, read here as unsigned
+  MessagePayload(((((UINT16) message_category) << 8) | ((UINT16) message_type)), (((UINT32) message_length) - 26)) message_payload[:byte-size-single-element-array (((UINT32) message_length) - 26)];
+} Message;
+
+// Cta participant input message
+casetype _MessagePart1 (Bool present) {
+  switch (present) {
+    case true: Message block;
+    case false: unit none;
+  }
+} MessagePart1;
+
+// Cta participant input message
+typedef struct _MessageBlock2 {
+  Message first;
+  Message second;
+} MessageBlock2;
+
+// Cta participant input message
+casetype _MessagePart2 (Bool present) {
+  switch (present) {
+    case true: MessageBlock2 block;
+    case false: unit none;
+  }
+} MessagePart2;
+
+// Cta participant input message
+typedef struct _MessageBlock4 {
+  MessageBlock2 first;
+  MessageBlock2 second;
+} MessageBlock4;
+
+// Cta participant input message
+casetype _MessagePart4 (Bool present) {
+  switch (present) {
+    case true: MessageBlock4 block;
+    case false: unit none;
+  }
+} MessagePart4;
+
+// Cta participant input message
+typedef struct _MessageBlock8 {
+  MessageBlock4 first;
+  MessageBlock4 second;
+} MessageBlock8;
+
+// Cta participant input message
+casetype _MessagePart8 (Bool present) {
+  switch (present) {
+    case true: MessageBlock8 block;
+    case false: unit none;
+  }
+} MessagePart8;
+
+// Cta participant input message
+typedef struct _MessageBlock16 {
+  MessageBlock8 first;
+  MessageBlock8 second;
+} MessageBlock16;
+
+// Cta participant input message
+casetype _MessagePart16 (Bool present) {
+  switch (present) {
+    case true: MessageBlock16 block;
+    case false: unit none;
+  }
+} MessagePart16;
+
+// Cta participant input message
+typedef struct _MessageBlock32 {
+  MessageBlock16 first;
+  MessageBlock16 second;
+} MessageBlock32;
+
+// Cta participant input message
+casetype _MessagePart32 (Bool present) {
+  switch (present) {
+    case true: MessageBlock32 block;
+    case false: unit none;
+  }
+} MessagePart32;
+
+// Cta participant input message
+typedef struct _MessageBlock64 {
+  MessageBlock32 first;
+  MessageBlock32 second;
+} MessageBlock64;
+
+// Cta participant input message
+casetype _MessagePart64 (Bool present) {
+  switch (present) {
+    case true: MessageBlock64 block;
+    case false: unit none;
+  }
+} MessagePart64;
+
+// Cta participant input message
+typedef struct _MessageBlock128 {
+  MessageBlock64 first;
+  MessageBlock64 second;
+} MessageBlock128;
+
+// Cta participant input message
+casetype _MessagePart128 (Bool present) {
+  switch (present) {
+    case true: MessageBlock128 block;
+    case false: unit none;
+  }
+} MessagePart128;
+
+// Cta participant input message
+typedef struct _MessageCounted (UINT32 count) {
+  MessagePart128(((count & 128) != 0)) part128;
+  MessagePart64(((count & 64) != 0)) part64;
+  MessagePart32(((count & 32) != 0)) part32;
+  MessagePart16(((count & 16) != 0)) part16;
+  MessagePart8(((count & 8) != 0)) part8;
+  MessagePart4(((count & 4) != 0)) part4;
+  MessagePart2(((count & 2) != 0)) part2;
+  MessagePart1(((count & 1) != 0)) part1;
+} MessageCounted;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Cta Tcp Participant Input Block
+entrypoint typedef struct _Packet {
+  UINT16BE block_separator;                              // bytes 0 to 1
+  UINT8 version;                                         // byte 2
+  UINT16BE block_size;                                   // bytes 3 to 4
+  UINT32BE block_sequence_number;                        // bytes 5 to 8
+  UINT8 messages_in_block;                               // byte 9
+  UINT16BE block_checksum;                               // bytes 10 to 11
+  MessageCounted(((UINT32) messages_in_block)) message;
+  UINT8 block_pad_byte[:consume-all];
+} Packet;
 

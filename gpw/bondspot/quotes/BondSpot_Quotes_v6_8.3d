@@ -1,45 +1,85 @@
-// Gie da Papier w Warto ciowych w Warszawie BondSpot Quotes
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Gpw BondSpot Quotes Xdp v6.8
 //
+// Protocol:
+//   Organization: Gie da Papier w Warto ciowych w Warszawie
+//   Protocol: BondSpot Quotes
+//   Encoding: Exchange Data Publisher
+//   Version: 6.8
+//   Date: 02/11/2020
+//   Specification: WSE_CDE_XDP_Message_Specifications_v_68.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out BondSpot_Quotes_v6_8.3d
-//
-// What this definition does not state, and the model does:
-// - a field filling what is left of what holds it
-// - a run filling what frames it
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 16 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// All messages are preceded by a common packet header format, which section 1.1 states for every Market Information message
-entrypoint typedef struct _PacketHeader {
-  UINT16BE packet_length;           // bytes 0 to 1
-  UINT16BE packet_type;             // bytes 2 to 3
-  UINT32BE packet_sequence_number;  // bytes 4 to 7
-  UINT32BE send_time;               // bytes 8 to 11
-  UINT16BE service_id;              // bytes 12 to 13
-  UINT8 delivery_flag;              // byte 14
-  UINT8 number_msg_entries;         // byte 15
-} PacketHeader;
+// Packet Type: 2 byte code
+#define PACKET_TYPE_MARKET_DATA_MESSAGES 0x01F5  // Market Data Messages
 
-// ---- Message Header: 4 bytes -------------------------------------------------
+// Delivery Flag: one byte code
+#define DELIVERY_FLAG_REAL_TIME_MESSAGE_UNCOMPRESSED 0x00       // Real Time Message Uncompressed
+#define DELIVERY_FLAG_RETRANSMISSION_MESSAGE_UNCOMPRESSED 0x02  // Retransmission Message Uncompressed
+#define DELIVERY_FLAG_REAL_TIME_MESSAGE_ZLIB_COMPRESSED 0x10    // Real Time Message Zlib Compressed
+#define DELIVERY_FLAG_REFRESH_MESSAGE_ZLIB_COMPRESSED 0x11      // Refresh Message Zlib Compressed
+#define DELIVERY_FLAG_RETRANSMISSION_MESSAGE_COMPRESSED 0x12    // Retransmission Message Compressed
 
-entrypoint typedef struct _MessageHeader {
-  UINT16BE message_size;  // bytes 0 to 1
-  UINT16BE message_type;  // bytes 2 to 3
-} MessageHeader;
+// Message Type: 2 byte code
+#define MESSAGE_TYPE_QUOTES_AND_BBO_5_MESSAGE 0x008C  // Quotes And Bbo 5 Message
 
-// ---- Quotes And Bbo 5 Message: 48 bytes --------------------------------------
+// System Id: 4 byte code
+#define SYSTEM_ID_ALL_NON_UTP_SYSTEMS 0x00000001  // All Non Utp Systems
+#define SYSTEM_ID_UTP_TRADING_UNIT_1 0x0000000B   // Utp Trading Unit 1
+#define SYSTEM_ID_UTP_TRADING_UNIT_2 0x0000000C   // Utp Trading Unit 2
+
+// Type Of Ask Price: one byte code
+#define TYPE_OF_ASK_PRICE_LIMIT_ORDER_AND_PEG_ORDER 0x00               // Limit Order And Peg Order
+#define TYPE_OF_ASK_PRICE_MARKET_ORDER_AND_MARKET_TO_LIMIT_ORDER 0x01  // Market Order And Market To Limit Order
+
+// Type Of Bid Price: one byte code
+#define TYPE_OF_BID_PRICE_LIMIT_ORDER_AND_PEG_ORDER 0x00               // Limit Order And Peg Order
+#define TYPE_OF_BID_PRICE_MARKET_ORDER_AND_MARKET_TO_LIMIT_ORDER 0x01  // Market Order And Market To Limit Order
+
+// Quote Condition: one byte code
+#define QUOTE_CONDITION_NO_LIQUIDITY_PROVIDER_LP 0x30  // No Liquidity Provider Lp
+#define QUOTE_CONDITION_LP_ONLY_ON_ASK_SIDE 0x31       // Lp Only On Ask Side
+#define QUOTE_CONDITION_LP_ONLY_ON_BID_SIDE 0x32       // Lp Only On Bid Side
+#define QUOTE_CONDITION_LP_ON_ASK_AND_BID_SIDES 0x33   // Lp On Ask And Bid Sides
+
+// ---- Types -------------------------------------------------------------------
 
 // A Quotes BBO5 message indicates the modification of one or more of the N best limits (N being the number of limits disseminated for the given exchange 1 ) for an instrument and, during the Pre-Opening phase, the modification of the market summary for the instrument
-entrypoint typedef struct _QuotesAndBbo5Message {
+typedef struct _QuotesAndBbo5Message {
   UINT32BE symbol_index;            // bytes 0 to 3
   UINT32BE source_seq_num;          // bytes 4 to 7
   UINT32BE source_time;             // bytes 8 to 11
@@ -59,4 +99,40 @@ entrypoint typedef struct _QuotesAndBbo5Message {
   UINT8 price_scale_code;           // byte 46
   UINT8 reserved_1;                 // byte 47
 } QuotesAndBbo5Message;
+
+// Branch
+casetype _Payload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x008C: QuotesAndBbo5Message quotes_and_bbo_5_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16BE message_size { message_size >= 2 };                                                                                                                     // bytes 0 to 1
+  UINT16BE message_type;                                                                                                                                           // bytes 2 to 3
+  Payload(message_type, ((((UINT32) message_size) + 2) - 4)) payload[:byte-size-single-element-array ((((UINT32) message_size) + 2) - 4)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// The packet's message area: the messages it counts, or one ZliB block holding them
+typedef struct _MessageBuffer (UINT8 number_msg_entries, UINT32 available, mutable UINT32 * tally) {
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size available];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) number_msg_entries); };
+} MessageBuffer;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Gpw Xdp Udp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 16) {
+  UINT16BE packet_length;                                                                                                       // bytes 0 to 1
+  UINT16BE packet_type;                                                                                                         // bytes 2 to 3
+  UINT32BE packet_sequence_number;                                                                                              // bytes 4 to 7
+  UINT32BE send_time;                                                                                                           // bytes 8 to 11
+  UINT16BE service_id;                                                                                                          // bytes 12 to 13
+  UINT8 delivery_flag;                                                                                                          // byte 14
+  UINT8 number_msg_entries;                                                                                                     // byte 15
+  MessageBuffer(number_msg_entries, (available - 16), tally) message_buffer[:byte-size-single-element-array (available - 16)];
+} Packet;
 

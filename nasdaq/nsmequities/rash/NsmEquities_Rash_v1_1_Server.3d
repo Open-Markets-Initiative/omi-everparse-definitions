@@ -1,63 +1,284 @@
-// National Association of Securities Dealers Automated Quotations (Nasdaq) Rash
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nasdaq NsmEquities Rash AsciiRash v1.1
 //
+// Protocol:
+//   Organization: National Association of Securities Dealers Automated Quotations (Nasdaq)
+//   Protocol: Rash
+//   Encoding: Ascii Rash
+//   Version: 1.1
+//   Date: 03/13/2026
+//   Specification: rash_sb.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ServerPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out NsmEquities_Rash_v1_1_Server.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a length prefix framing what follows
-//
-// License: MIT No Attribution
 
-// ---- Server Packet Header: 3 bytes -------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Packet header of a packet sent by the server
-entrypoint typedef struct _ServerPacketHeader {
-  UINT16BE packet_length;    // bytes 0 to 1
-  UINT8 server_packet_type;  // byte 2
-} ServerPacketHeader;
+// Server Packet Type: one byte code
+#define SERVER_PACKET_TYPE_DEBUG_PACKET 0x2B             // Debug Packet
+#define SERVER_PACKET_TYPE_LOGIN_ACCEPTED_PACKET 0x41    // Login Accepted Packet
+#define SERVER_PACKET_TYPE_LOGIN_REJECTED_PACKET 0x4A    // Login Rejected Packet
+#define SERVER_PACKET_TYPE_SEQUENCED_DATA_PACKET 0x53    // Sequenced Data Packet
+#define SERVER_PACKET_TYPE_SERVER_HEARTBEAT_PACKET 0x48  // Server Heartbeat Packet
+#define SERVER_PACKET_TYPE_END_OF_SESSION_PACKET 0x5A    // End Of Session Packet
 
-// ---- Login Accepted Packet: 30 bytes -----------------------------------------
+// Reject Reason Code: one byte code
+#define REJECT_REASON_CODE_NOT_AUTHORIZED 0x41         // Not Authorized
+#define REJECT_REASON_CODE_SESSION_NOT_AVAILABLE 0x53  // Session Not Available
+
+// Sequenced Message Type: one byte code
+#define SEQUENCED_MESSAGE_TYPE_SYSTEM_EVENT_MESSAGE 0x53                             // System Event Message
+#define SEQUENCED_MESSAGE_TYPE_ACCEPTED_ORDER_MESSAGE 0x41                           // Accepted Order Message
+#define SEQUENCED_MESSAGE_TYPE_ACCEPTED_ORDER_MESSAGE_WITH_CROSS_FUNCTIONALITY 0x52  // Accepted Order Message With Cross Functionality
+#define SEQUENCED_MESSAGE_TYPE_CANCELED_ORDER_MESSAGE 0x43                           // Canceled Order Message
+#define SEQUENCED_MESSAGE_TYPE_REJECTED_ORDER_MESSAGE 0x4A                           // Rejected Order Message
+#define SEQUENCED_MESSAGE_TYPE_EXECUTED_ORDER_MESSAGE 0x45                           // Executed Order Message
+#define SEQUENCED_MESSAGE_TYPE_BROKEN_TRADE_MESSAGE 0x42                             // Broken Trade Message
+#define SEQUENCED_MESSAGE_TYPE_EXECUTED_WITH_REFERENCE_PRICE_MESSAGE 0x47            // Executed With Reference Price Message
+#define SEQUENCED_MESSAGE_TYPE_TRADE_CORRECTION_MESSAGE 0x46                         // Trade Correction Message
+
+// Event Code: one byte code
+#define EVENT_CODE_START_OF_DAY 0x53  // Start Of Day
+#define EVENT_CODE_END_OF_DAY 0x45    // End Of Day
+
+// Side: one byte code
+#define SIDE_BUY 0x42           // Buy
+#define SIDE_SELL 0x53          // Sell
+#define SIDE_SHORT 0x54         // Short
+#define SIDE_SHORT_EXEMPT 0x45  // Short Exempt
+
+// Display: one byte code
+#define DISPLAY_ANONYMOUS_PRICE_TO_COMPLY 0x59                    // Anonymous Price To Comply
+#define DISPLAY_NON_DISPLAYED 0x4E                                // Non Displayed
+#define DISPLAY_ATTRIBUTABLE_PRICE_TO_DISPLAY 0x41                // Attributable Price To Display
+#define DISPLAY_IMBALANCE_ONLY 0x49                               // Imbalance Only
+#define DISPLAY_POST_ONLY 0x50                                    // Post Only
+#define DISPLAY_MID_POINT_PEG_POST_ONLY 0x57                      // Mid Point Peg Post Only
+#define DISPLAY_POST_ONLY_AND_ATTRIBUTABLE_PRICE_TO_DISPLAY 0x4C  // Post Only And Attributable Price To Display
+#define DISPLAY_RETAIL_ORDER_TYPE_1 0x4F                          // Retail Order Type 1
+#define DISPLAY_RETAIL_ORDER_TYPE_2 0x54                          // Retail Order Type 2
+#define DISPLAY_RETAIL_PRICE_IMPROVEMENT_ORDER 0x51               // Retail Price Improvement Order
+#define DISPLAY_MID_POINT_PEG 0x4D                                // Mid Point Peg
+#define DISPLAY_M_ELO_AND_CONTINUOUS_BOOK_MIDPOINT 0x42           // M Elo And Continuous Book Midpoint
+#define DISPLAY_CONTRA_MIDPOINT_ONLY 0x43                         // Contra Midpoint Only
+#define DISPLAY_CONTRA_MIDPOINT_ONLY_POST_ONLY 0x63               // Contra Midpoint Only Post Only
+#define DISPLAY_DIRECT_LISTING_CAPITAL_RAISE 0x64                 // Direct Listing Capital Raise
+
+// Peg Type: one byte code
+#define PEG_TYPE_MIDPOINT 0x4D          // Midpoint
+#define PEG_TYPE_NO_PEG 0x4E            // No Peg
+#define PEG_TYPE_MARKET 0x50            // Market
+#define PEG_TYPE_PRIMARY 0x52           // Primary
+#define PEG_TYPE_MARKET_MAKER_PEG 0x51  // Market Maker Peg
+#define PEG_TYPE_INAV_PEG 0x49          // Inav Peg
+
+// Peg Difference Sign: one byte code
+#define PEG_DIFFERENCE_SIGN_PLUS 0x2B   // Plus
+#define PEG_DIFFERENCE_SIGN_MINUS 0x2D  // Minus
+
+// Discretion Peg Type: one byte code
+#define DISCRETION_PEG_TYPE_MIDPOINT 0x4D  // Midpoint
+#define DISCRETION_PEG_TYPE_NO_PEG 0x4E    // No Peg
+#define DISCRETION_PEG_TYPE_MARKET 0x50    // Market
+#define DISCRETION_PEG_TYPE_PRIMARY 0x52   // Primary
+#define DISCRETION_PEG_TYPE_INAV_PEG 0x49  // Inav Peg
+
+// Discretion Peg Difference Sign: one byte code
+#define DISCRETION_PEG_DIFFERENCE_SIGN_PLUS 0x2B   // Plus
+#define DISCRETION_PEG_DIFFERENCE_SIGN_MINUS 0x2D  // Minus
+
+// Inter Market Sweep Eligibility: one byte code
+#define INTER_MARKET_SWEEP_ELIGIBILITY_ELIGIBLE 0x59                          // Eligible
+#define INTER_MARKET_SWEEP_ELIGIBILITY_NOT_ELIGIBLE 0x4E                      // Not Eligible
+#define INTER_MARKET_SWEEP_ELIGIBILITY_TRADE_AT_INTERMARKET_SWEEP_ORDER 0x79  // Trade At Intermarket Sweep Order
+
+// Cross Type: one byte code
+#define CROSS_TYPE_OPENING_CROSS 0x4F           // Opening Cross
+#define CROSS_TYPE_CLOSING_CROSS 0x43           // Closing Cross
+#define CROSS_TYPE_INTRADAY_CROSS 0x49          // Intraday Cross
+#define CROSS_TYPE_IMMEDIATELY_LIVE 0x4E        // Immediately Live
+#define CROSS_TYPE_RETAIL_CROSS 0x52            // Retail Cross
+#define CROSS_TYPE_EXTENDED_LIFE 0x45           // Extended Life
+#define CROSS_TYPE_EXTENDED_TRADING_CLOSE 0x41  // Extended Trading Close
+
+// Cancel Reason: one byte code
+#define CANCEL_REASON_USER_REQUESTED_CANCEL 0x55                    // User Requested Cancel
+#define CANCEL_REASON_IMMEDIATE_OR_CANCEL 0x49                      // Immediate Or Cancel
+#define CANCEL_REASON_TIMEOUT 0x54                                  // Timeout
+#define CANCEL_REASON_SUPERVISORY 0x53                              // Supervisory
+#define CANCEL_REASON_REGULATORY_RESTRICTION 0x44                   // Regulatory Restriction
+#define CANCEL_REASON_SELF_MATCH_PREVENTION 0x51                    // Self Match Prevention
+#define CANCEL_REASON_SYSTEM_CANCEL 0x5A                            // System Cancel
+#define CANCEL_REASON_CROSS_CANCEL 0x43                             // Cross Cancel
+#define CANCEL_REASON_INSUFFICIENT_QUANTITY 0x71                    // Insufficient Quantity
+#define CANCEL_REASON_MARKET_COLLARS 0x4B                           // Market Collars
+#define CANCEL_REASON_HALTED 0x48                                   // Halted
+#define CANCEL_REASON_OPEN_PROTECTION 0x58                          // Open Protection
+#define CANCEL_REASON_CLOSED 0x45                                   // Closed
+#define CANCEL_REASON_REJECTED_BY_AWAY_DESTINATION 0x4A             // Rejected By Away Destination
+#define CANCEL_REASON_ADMINISTRATIVE_CANCEL 0x41                    // Administrative Cancel
+#define CANCEL_REASON_POST_ONLY_CANCEL_NMS 0x46                     // Post Only Cancel Nms
+#define CANCEL_REASON_POST_ONLY_CANCEL_CONTRA_DISPLAYED_ORDER 0x47  // Post Only Cancel Contra Displayed Order
+
+// Reject Reason: one byte code
+#define REJECT_REASON_RISK_RESTRICTED_STOCK 0x61                                // Risk Restricted Stock
+#define REJECT_REASON_ADVANCE_FEATURES_NOT_ALLOWED 0x41                         // Advance Features Not Allowed
+#define REJECT_REASON_RISK_SHORT_SELL_RESTRICTED 0x62                           // Risk Short Sell Restricted
+#define REJECT_REASON_QUOTE_NOT_AVAILABLE_FOR_PEGGED_ORDER 0x42                 // Quote Not Available For Pegged Order
+#define REJECT_REASON_NASDAQ_OMX_PSX_IS_CLOSED 0x43                             // Nasdaq Omx Psx Is Closed
+#define REJECT_REASON_RISK_EXCEEDS_ADV_LIMIT 0x64                               // Risk Exceeds Adv Limit
+#define REJECT_REASON_INVALID_DISPLAY_VALUE 0x44                                // Invalid Display Value
+#define REJECT_REASON_RISK_FAT_FINGER 0x65                                      // Risk Fat Finger
+#define REJECT_REASON_INVALID_PEG 0x45                                          // Invalid Peg
+#define REJECT_REASON_ORDER_NOT_MARKETABLE 0x46                                 // Order Not Marketable
+#define REJECT_REASON_DESTINATION_NOT_AVAILABLE 0x47                            // Destination Not Available
+#define REJECT_REASON_SECURITY_IS_HALTED 0x48                                   // Security Is Halted
+#define REJECT_REASON_INVALID_ORDER_SIDE 0x49                                   // Invalid Order Side
+#define REJECT_REASON_PROCESSING_ERROR 0x4A                                     // Processing Error
+#define REJECT_REASON_INVALID_MINIMUM_QUANTITY 0x4B                             // Invalid Minimum Quantity
+#define REJECT_REASON_RISK_LOCATE_REQUIRED 0x6C                                 // Risk Locate Required
+#define REJECT_REASON_INVALID_FIRM 0x4C                                         // Invalid Firm
+#define REJECT_REASON_OUTSIDE_OF_PERMITTED_TIMES_FOR_CLEARING_DESTINATION 0x4D  // Outside Of Permitted Times For Clearing Destination
+#define REJECT_REASON_RISK_MAX_NOTIONAL_EXCEEDED 0x6E                           // Risk Max Notional Exceeded
+#define REJECT_REASON_INVALID_ROUTING_INSTRUCTIONS 0x4E                         // Invalid Routing Instructions
+#define REJECT_REASON_RISK_ORDER_TYPE_RESTRICTED 0x6F                           // Risk Order Type Restricted
+#define REJECT_REASON_OTHER 0x4F                                                // Other
+#define REJECT_REASON_PEGGING_NOT_ALLOWED 0x50                                  // Pegging Not Allowed
+#define REJECT_REASON_RISK_MAX_SHARES_EXCEEDED 0x70                             // Risk Max Shares Exceeded
+#define REJECT_REASON_MIDPOINT_PEG_NOT_ACCEPTED_IN_CROSSED_MARKET 0x71          // Midpoint Peg Not Accepted In Crossed Market
+#define REJECT_REASON_INVALID_ORDER_QUANTITY 0x51                               // Invalid Order Quantity
+#define REJECT_REASON_RISK_MARKET_IMPACT 0x72                                   // Risk Market Impact
+#define REJECT_REASON_ROUTING_NOT_ALLOWED 0x52                                  // Routing Not Allowed
+#define REJECT_REASON_RISK_OPEN_EXPOSURE_EXCEEDED 0x73                          // Risk Open Exposure Exceeded
+#define REJECT_REASON_INVALID_SYMBOL 0x53                                       // Invalid Symbol
+#define REJECT_REASON_TEST_MODE 0x54                                            // Test Mode
+#define REJECT_REASON_RISK_PORT_MESSAGE_RATE_EXCEEDED 0x75                      // Risk Port Message Rate Exceeded
+#define REJECT_REASON_POSSIBLE_DUPLICATE_ORDER 0x55                             // Possible Duplicate Order
+#define REJECT_REASON_RISK_SYMBOL_MESSAGE_RATE_EXCEEDED 0x76                    // Risk Symbol Message Rate Exceeded
+#define REJECT_REASON_RISK_DUPLICATE_MESSAGE_RATE_EXCEEDED 0x77                 // Risk Duplicate Message Rate Exceeded
+#define REJECT_REASON_INVALID_DESTINATION 0x57                                  // Invalid Destination
+#define REJECT_REASON_RISK_EXECUTED_EXPOSURE_EXCEEDED 0x78                      // Risk Executed Exposure Exceeded
+#define REJECT_REASON_INVALID_PRICE 0x58                                        // Invalid Price
+#define REJECT_REASON_RISK_NOTIONAL_EXPOSURE_EXCEEDED 0x79                      // Risk Notional Exposure Exceeded
+#define REJECT_REASON_INVALID_ORDER_TYPE 0x56                                   // Invalid Order Type
+#define REJECT_REASON_NO_SHARES_FOUND_FOR_ROUTING 0x59                          // No Shares Found For Routing
+#define REJECT_REASON_QUANTITY_EXCEEDS_THRESHOLD 0x5A                           // Quantity Exceeds Threshold
+
+// Liquidity: one byte code
+#define LIQUIDITY_ADDED 0x41                                                                             // Added
+#define LIQUIDITY_REMOVED 0x52                                                                           // Removed
+#define LIQUIDITY_NON_DISPLAYED_AND_ADDED_LIQUIDITY 0x4A                                                 // Non Displayed And Added Liquidity
+#define LIQUIDITY_ROUTED 0x58                                                                            // Routed
+#define LIQUIDITY_DOT 0x44                                                                               // Dot
+#define LIQUIDITY_OPENING_TRADE 0x46                                                                     // Opening Trade
+#define LIQUIDITY_ON_CLOSE_ORDER 0x47                                                                    // On Close Order
+#define LIQUIDITY_OPENING_CROSS 0x4F                                                                     // Opening Cross
+#define LIQUIDITY_OPENING_CROSS_IMBALANCE_ONLY 0x4D                                                      // Opening Cross Imbalance Only
+#define LIQUIDITY_CLOSING_CROSS 0x43                                                                     // Closing Cross
+#define LIQUIDITY_CLOSING_CROSS_IMBALANCE_ONLY 0x4C                                                      // Closing Cross Imbalance Only
+#define LIQUIDITY_HALT_IPO_CROSS 0x48                                                                    // Halt Ipo Cross
+#define LIQUIDITY_HALT_CROSS 0x4B                                                                        // Halt Cross
+#define LIQUIDITY_RE_ROUTED_BY_NYSE 0x59                                                                 // Re Routed By Nyse
+#define LIQUIDITY_ODD_LOT_EXECUTION 0x53                                                                 // Odd Lot Execution
+#define LIQUIDITY_ADDED_LIQUIDITY 0x55                                                                   // Added Liquidity
+#define LIQUIDITY_ROUTED_TO_BX 0x42                                                                      // Routed To Bx
+#define LIQUIDITY_NYSE_OTHER 0x45                                                                        // Nyse Other
+#define LIQUIDITY_ROUTED_TO_PSX 0x50                                                                     // Routed To Psx
+#define LIQUIDITY_EXECUTED_IN_OPEN_CLOSE_OR_RE_OPEN_ON_ARCA 0x54                                         // Executed In Open Close Or Re Open On Arca
+#define LIQUIDITY_PASSIVE_MIDPOINT_EXECUTION 0x4E                                                        // Passive Midpoint Execution
+#define LIQUIDITY_ADDED_POST_ONLY 0x57                                                                   // Added Post Only
+#define LIQUIDITY_REMOVED_LIQUIDITY_AT_A_MIDPOINT 0x6D                                                   // Removed Liquidity At A Midpoint
+#define LIQUIDITY_ADDED_LIQUIDITY_VIA_A_MIDPOINT_ORDER 0x6B                                              // Added Liquidity Via A Midpoint Order
+#define LIQUIDITY_SUPPLEMENTAL_ORDER_EXECUTION 0x30                                                      // Supplemental Order Execution
+#define LIQUIDITY_DISPLAYED_LIQUIDITY_ADDING_ORDER_IMPROVES_THE_NBBO 0x37                                // Displayed Liquidity Adding Order Improves The Nbbo
+#define LIQUIDITY_DISPLAYED_LIQUIDITY_ADDING_ORDER_SETS_THE_QBBO_WHILE_JOINING_THE_NBBO 0x38             // Displayed Liquidity Adding Order Sets The Qbbo While Joining The Nbbo
+#define LIQUIDITY_RETAIL_DESIGNATED_EXECUTION_THAT_REMOVED_LIQUIDITY 0x64                                // Retail Designated Execution That Removed Liquidity
+#define LIQUIDITY_RETAIL_DESIGNATED_EXECUTION_THAT_ADDED_DISPLAYED_LIQUIDITY 0x65                        // Retail Designated Execution That Added Displayed Liquidity
+#define LIQUIDITY_RETAIL_DESIGNATED_EXECUTION_THAT_ADDED_NON_DISPLAYED_LIQUIDITY 0x66                    // Retail Designated Execution That Added Non Displayed Liquidity
+#define LIQUIDITY_RPI_ORDER_PROVIDES_LIQUIDITY 0x6A                                                      // Rpi Order Provides Liquidity
+#define LIQUIDITY_RETAIL_ORDER_REMOVES_RPI_LIQUIDITY 0x72                                                // Retail Order Removes Rpi Liquidity
+#define LIQUIDITY_RETAIL_ORDER_REMOVES_PRICE_IMPROVING_NON_DISPLAYED_LIQUIDITY_OTHER_THAN_R_ugd00m 0x74  // Retail Order Removes Price Improving Non Displayed Liquidity Other Than Rpi Liquidity
+#define LIQUIDITY_ADDED_DISPLAYED_LIQUIDITY_IN_A_GROUP_A_SYMBOL 0x34                                     // Added Displayed Liquidity In A Group A Symbol
+#define LIQUIDITY_ADDED_NON_DISPLAYED_GROUP_A_OR_PRE_MARKET_IMPROVES_NBBO 0x35                           // Added Non Displayed Group A Or Pre Market Improves Nbbo
+#define LIQUIDITY_REMOVED_LIQUIDITY_IN_A_GROUP_A_SYMBOL 0x36                                             // Removed Liquidity In A Group A Symbol
+#define LIQUIDITY_ADDED_NON_DISPLAYED_MID_POINT_LIQUIDITY_IN_A_GROUP_A_SYMBOL 0x67                       // Added Non Displayed Mid Point Liquidity In A Group A Symbol
+#define LIQUIDITY_MIDPOINT_EXTENDED_LIFE_ORDER_EXECUTION 0x6E                                            // Midpoint Extended Life Order Execution
+#define LIQUIDITY_MIDP_ORDER_EXECUTED_ON_AWAY_NMS_PROTECTED_MARKET_CENTER 0x76                           // Midp Order Executed On Away Nms Protected Market Center
+#define LIQUIDITY_MIDP_ORDER_EXECUTED_ON_OFF_EXCHANGE_VENUE 0x77                                         // Midp Order Executed On Off Exchange Venue
+#define LIQUIDITY_EXTENDED_TRADING_CLOSE_EXECUTION 0x69                                                  // Extended Trading Close Execution
+#define LIQUIDITY_CONTRA_MIDPOINT_ONLY 0x6F                                                              // Contra Midpoint Only
+#define LIQUIDITY_ADDED_NON_DISPLAYED_LIQUIDITY_VIA_A_RESERVE_ORDER 0x75                                 // Added Non Displayed Liquidity Via A Reserve Order
+#define LIQUIDITY_ADDED_IN_THE_PRE_MARKET 0x32                                                           // Added In The Pre Market
+#define LIQUIDITY_REMOVED_IN_THE_PRE_MARKET 0x33                                                         // Removed In The Pre Market
+#define LIQUIDITY_NON_DISPLAYED_ADDING_LIQUIDITY_IN_THE_PRE_MARKET 0x39                                  // Non Displayed Adding Liquidity In The Pre Market
+
+// Broken Trade Reason: one byte code
+#define BROKEN_TRADE_REASON_ERRONEOUS 0x45    // Erroneous
+#define BROKEN_TRADE_REASON_CONSENT 0x43      // Consent
+#define BROKEN_TRADE_REASON_SUPERVISORY 0x53  // Supervisory
+#define BROKEN_TRADE_REASON_EXTERNAL 0x58     // External
+
+// Reference Price Type: one byte code
+#define REFERENCE_PRICE_TYPE_INTRADAY_INDICATIVE_VALUE 0x49  // Intraday Indicative Value
+
+// Trade Correction Reason: one byte code
+#define TRADE_CORRECTION_REASON_ADJUSTED_TO_NAV 0x4E  // Adjusted To Nav
+
+// ---- Types -------------------------------------------------------------------
+
+// Debug packets are intended to provide human readable text that may aid in debugging problems
+typedef struct _DebugPacket (UINT16 packet_length) where (packet_length >= 1) {
+  UINT8 debug_text[(((UINT32) packet_length) - 1)];
+} DebugPacket;
 
 // The SoupBinTCP server sends a Login Accepted Packet in response to receiving a valid Login Request from the client
-entrypoint typedef struct _LoginAcceptedPacket {
+typedef struct _LoginAcceptedPacket {
   UINT8 accepted_session[10];          // bytes 0 to 9
   UINT8 accepted_sequence_number[20];  // bytes 10 to 29
 } LoginAcceptedPacket;
 
-// ---- Login Rejected Packet: 1 byte -------------------------------------------
-
 // The SoupBinTCP server sends this packet in response to an invalid Login Request Packet from the client
-entrypoint typedef struct _LoginRejectedPacket {
+typedef struct _LoginRejectedPacket {
   UINT8 reject_reason_code;  // byte 0
 } LoginRejectedPacket;
 
-// ---- Sequenced Message Header: 9 bytes ---------------------------------------
-
-// Time Stamp and type carried ahead of every RASH outbound sequenced message
-entrypoint typedef struct _SequencedMessageHeader {
-  UINT8 timestamp[8];            // bytes 0 to 7
-  UINT8 sequenced_message_type;  // byte 8
-} SequencedMessageHeader;
-
-// ---- System Event Message: 1 byte --------------------------------------------
-
 // System Event Messages signal events that affect the entire system.
-entrypoint typedef struct _SystemEventMessage {
+typedef struct _SystemEventMessage {
   UINT8 event_code;  // byte 0
 } SystemEventMessage;
 
-// ---- Accepted Order Message: 147 bytes ---------------------------------------
-
 // An Accepted Order Message acknowledges the receipt of a valid Enter Order Message. The data fields from the Enter Order Message are echoed back; the accepted values may differ from the entered values for some fields.
-entrypoint typedef struct _AcceptedOrderMessage {
+typedef struct _AcceptedOrderMessage {
   UINT8 order_token_client_order_id[14];     // bytes 0 to 13
   UINT8 side;                                // byte 14
   UINT8 shares_order_qty[6];                 // bytes 15 to 20
@@ -82,10 +303,8 @@ entrypoint typedef struct _AcceptedOrderMessage {
   UINT8 cust_terminal_id_sender_sub_id[32];  // bytes 115 to 146
 } AcceptedOrderMessage;
 
-// ---- Accepted Order Message With Cross Functionality: 149 bytes --------------
-
 // Similar to the regular Accepted Order Message, with the additional information provided upon order entry using the Enter Order Message with Cross Functionality.
-entrypoint typedef struct _AcceptedOrderMessageWithCrossFunctionality {
+typedef struct _AcceptedOrderMessageWithCrossFunctionality {
   UINT8 order_token_client_order_id[14];     // bytes 0 to 13
   UINT8 side;                                // byte 14
   UINT8 shares_order_qty[6];                 // bytes 15 to 20
@@ -112,27 +331,21 @@ entrypoint typedef struct _AcceptedOrderMessageWithCrossFunctionality {
   UINT8 cross_type;                          // byte 148
 } AcceptedOrderMessageWithCrossFunctionality;
 
-// ---- Canceled Order Message: 21 bytes ----------------------------------------
-
 // A Canceled Order Message informs you that an order has been reduced or canceled. Canceled shares reflect the number of shares that are out.
-entrypoint typedef struct _CanceledOrderMessage {
+typedef struct _CanceledOrderMessage {
   UINT8 order_token_client_order_id[14];  // bytes 0 to 13
   UINT8 shares[6];                        // bytes 14 to 19
   UINT8 cancel_reason;                    // byte 20
 } CanceledOrderMessage;
 
-// ---- Rejected Order Message: 15 bytes ----------------------------------------
-
 // A Rejected Order Message may be sent in response to an Enter Order Message if the order cannot be accepted at this time. The Token of a rejected order cannot be re-used.
-entrypoint typedef struct _RejectedOrderMessage {
+typedef struct _RejectedOrderMessage {
   UINT8 order_token_client_order_id[14];  // bytes 0 to 13
   UINT8 reject_reason;                    // byte 14
 } RejectedOrderMessage;
 
-// ---- Executed Order Message: 40 bytes ----------------------------------------
-
 // An Executed Order Message informs you that all or part of an order has been executed.
-entrypoint typedef struct _ExecutedOrderMessage {
+typedef struct _ExecutedOrderMessage {
   UINT8 order_token_client_order_id[14];  // bytes 0 to 13
   UINT8 shares[6];                        // bytes 14 to 19
   UINT8 price[10];                        // bytes 20 to 29
@@ -140,19 +353,15 @@ entrypoint typedef struct _ExecutedOrderMessage {
   UINT8 match_number[9];                  // bytes 31 to 39
 } ExecutedOrderMessage;
 
-// ---- Broken Trade Message: 24 bytes ------------------------------------------
-
 // A Broken Trade Message informs you that an execution has been broken. The trade is no longer good and will not clear.
-entrypoint typedef struct _BrokenTradeMessage {
+typedef struct _BrokenTradeMessage {
   UINT8 order_token[14];      // bytes 0 to 13
   UINT8 match_number[9];      // bytes 14 to 22
   UINT8 broken_trade_reason;  // byte 23
 } BrokenTradeMessage;
 
-// ---- Executed With Reference Price Message: 51 bytes -------------------------
-
 // Informs you that all or part of an order has been executed, with the reference price associated with the execution.
-entrypoint typedef struct _ExecutedWithReferencePriceMessage {
+typedef struct _ExecutedWithReferencePriceMessage {
   UINT8 order_token_client_order_id[14];  // bytes 0 to 13
   UINT8 shares[6];                        // bytes 14 to 19
   UINT8 price[10];                        // bytes 20 to 29
@@ -162,10 +371,8 @@ entrypoint typedef struct _ExecutedWithReferencePriceMessage {
   UINT8 reference_price_type;             // byte 50
 } ExecutedWithReferencePriceMessage;
 
-// ---- Trade Correction Message: 41 bytes --------------------------------------
-
 // A Trade Correction Message informs you that there has been a change to an execution.
-entrypoint typedef struct _TradeCorrectionMessage {
+typedef struct _TradeCorrectionMessage {
   UINT8 order_token_client_order_id[14];  // bytes 0 to 13
   UINT8 shares[6];                        // bytes 14 to 19
   UINT8 price[10];                        // bytes 20 to 29
@@ -173,4 +380,54 @@ entrypoint typedef struct _TradeCorrectionMessage {
   UINT8 match_number[9];                  // bytes 31 to 39
   UINT8 trade_correction_reason;          // byte 40
 } TradeCorrectionMessage;
+
+// The sequenced (server to client) message carried by the packet, opaque bytes unless an application source dispatches it
+casetype _SequencedMessage (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x53: SystemEventMessage system_event_message;
+    case 0x41: AcceptedOrderMessage accepted_order_message;
+    case 0x52: AcceptedOrderMessageWithCrossFunctionality accepted_order_message_with_cross_functionality;
+    case 0x43: CanceledOrderMessage canceled_order_message;
+    case 0x4A: RejectedOrderMessage rejected_order_message;
+    case 0x45: ExecutedOrderMessage executed_order_message;
+    case 0x42: BrokenTradeMessage broken_trade_message;
+    case 0x47: ExecutedWithReferencePriceMessage executed_with_reference_price_message;
+    case 0x46: TradeCorrectionMessage trade_correction_message;
+    default: UINT8 unknown[available];
+  }
+} SequencedMessage;
+
+// The Sequenced Data Packets act as an envelope to carry the actual sequenced data messages that are transferred from the server to the client. Each Sequenced Data Packet carries one message from the higher-lever protocol
+typedef struct _SequencedDataPacket (UINT16 packet_length) where (packet_length >= 10) {
+  UINT8 timestamp[8];                                                                                                                                            // bytes 0 to 7
+  UINT8 sequenced_message_type;                                                                                                                                  // byte 8
+  SequencedMessage(sequenced_message_type, (((UINT32) packet_length) - 10)) sequenced_message[:byte-size-single-element-array (((UINT32) packet_length) - 10)];
+} SequencedDataPacket;
+
+// Branch
+casetype _ServerPayload (UINT8 selector, UINT32 length, UINT16 packet_length, UINT32 available) {
+  switch (selector) {
+    case 0x2B: DebugPacket(packet_length) debug_packet;
+    case 0x41: LoginAcceptedPacket login_accepted_packet;
+    case 0x4A: LoginRejectedPacket login_rejected_packet;
+    case 0x53: SequencedDataPacket(packet_length) sequenced_data_packet[:byte-size-single-element-array length];
+    case 0x48: unit server_heartbeat;
+    case 0x5A: unit end_of_session;
+    default: UINT8 unknown[available];
+  }
+} ServerPayload;
+
+// Soup Bin Tcp Packet sent by the server
+typedef struct _ServerSoupBinTcpPacket {
+  UINT16BE packet_length { packet_length >= 1 };                                                                                                                                                                // bytes 0 to 1
+  UINT8 server_packet_type;                                                                                                                                                                                     // byte 2
+  ServerPayload(server_packet_type, (((UINT32) packet_length) - 1), packet_length, ((((UINT32) packet_length) + 2) - 3)) server_payload[:byte-size-single-element-array ((((UINT32) packet_length) + 2) - 3)];
+} ServerSoupBinTcpPacket;
+
+// ---- Packet: ServerPacket ----------------------------------------------------
+
+// Rash Packet sent by the server
+entrypoint typedef struct _ServerPacket (UINT32 available) {
+  ServerSoupBinTcpPacket server_soup_bin_tcp_packet[:byte-size available];
+} ServerPacket;
 

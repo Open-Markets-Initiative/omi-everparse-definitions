@@ -1,5 +1,34 @@
-// National Stock Exchange of India Ltd
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nse NseSlbm Broadcast NnfBcast v2.7
 //
+// Protocol:
+//   Organization: National Stock Exchange of India Ltd
+//   Protocol:
+//   Encoding: Non-Neat Front End Broadcast
+//   Version: 2.7
+//   Date: 11/10/2024
+//   Specification: Proto_SLBM_NNF_PROTOCOL_2.7.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
 // writes a C validator for each record below and proves, of that C, that it reads no byte
 // outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
@@ -7,6 +36,8 @@
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out NseSlbm_Broadcast_v2_7.3d
 //
@@ -17,8 +48,61 @@
 // - a Composite rule
 // - a run of a stated number of entries
 // - the dispatch that chooses a message by its type
-//
-// License: MIT No Attribution
+// - the packet as a whole, which is a Conversion rule, at packet.bcastpackdata.packedpacket.broadcastdata
+
+// ---- Values ------------------------------------------------------------------
+
+// Transaction Code: 2 byte code
+#define TRANSACTION_CODE_GENERAL_MESSAGE_BROADCAST_MESSAGE 0x1965               // General Message Broadcast Message
+#define TRANSACTION_CODE_CHANGE_IN_SYSTEM_STATUS_PARAMETERS_MESSAGE 0x1C26      // Change In System Status Parameters Message
+#define TRANSACTION_CODE_CHANGE_IN_SECURITY_MASTER_MESSAGE 0x1C89               // Change In Security Master Message
+#define TRANSACTION_CODE_CHANGE_PARTICIPANT_STATUS_MESSAGE 0x1C8A               // Change Participant Status Message
+#define TRANSACTION_CODE_CHANGE_OF_SECURITY_STATUS_MESSAGE 0x1C98               // Change Of Security Status Message
+#define TRANSACTION_CODE_CHANGE_OF_SECURITY_STATUS_PREOPEN_MESSAGE 0x1C2A       // Change Of Security Status Preopen Message
+#define TRANSACTION_CODE_TURNOVER_LIMIT_EXCEEDED_MESSAGE 0x2332                 // Turnover Limit Exceeded Message
+#define TRANSACTION_CODE_BROKER_REACTIVATED_MESSAGE 0x2333                      // Broker Reactivated Message
+#define TRANSACTION_CODE_AUCTION_ACTIVITY_MESSAGE 0x19B6                        // Auction Activity Message
+#define TRANSACTION_CODE_CHANGE_OF_AUCTION_STATUS_MESSAGE 0x19B5                // Change Of Auction Status Message
+#define TRANSACTION_CODE_MARKET_OPEN_MESSAGE 0x196F                             // Market Open Message
+#define TRANSACTION_CODE_MARKET_CLOSE_MESSAGE 0x1979                            // Market Close Message
+#define TRANSACTION_CODE_PREOPEN_SHUTDOWN_MESSAGE 0x1983                        // Preopen Shutdown Message
+#define TRANSACTION_CODE_NORMAL_MARKET_PREOPEN_ENDED_MESSAGE 0x19AB             // Normal Market Preopen Ended Message
+#define TRANSACTION_CODE_TICKER_AND_MARKET_INDEX_MESSAGE 0x1C22                 // Ticker And Market Index Message
+#define TRANSACTION_CODE_MARKET_BY_ORDER_MARKET_BY_PRICE_UPDATE_MESSAGE 0x1C20  // Market By Order Market By Price Update Message
+#define TRANSACTION_CODE_ONLY_MARKET_BY_PRICE_UPDATE_MESSAGE 0x1C28             // Only Market By Price Update Message
+#define TRANSACTION_CODE_MARKET_WATCH_UPDATE_MESSAGE 0x1C21                     // Market Watch Update Message
+#define TRANSACTION_CODE_SECURITY_OPEN_MESSAGE 0x177D                           // Security Open Message
+#define TRANSACTION_CODE_BROADCAST_CIRCUIT_CHECK_MESSAGE 0x198D                 // Broadcast Circuit Check Message
+#define TRANSACTION_CODE_MULTIPLE_INDEX_BROADCAST_MESSAGE 0x1C27                // Multiple Index Broadcast Message
+#define TRANSACTION_CODE_BROADCAST_INDUSTRY_INDEX_MESSAGE 0x1C23                // Broadcast Industry Index Message
+#define TRANSACTION_CODE_BROADCAST_BUY_BACK_INFORMATION_MESSAGE 0x1C2B          // Broadcast Buy Back Information Message
+#define TRANSACTION_CODE_MARKET_STATISTICS_REPORT_MESSAGE 0x0729                // Market Statistics Report Message
+#define TRANSACTION_CODE_CONTINGENCY_BROADCAST_MESSAGE 0x14AE                   // Contingency Broadcast Message
+
+// Participant Status: one byte code
+#define PARTICIPANT_STATUS_SUSPENDED 0x53  // Suspended
+#define PARTICIPANT_STATUS_ACTIVE 0x41     // Active
+
+// Delete Flag: one byte code
+#define DELETE_FLAG_DELETED 0x59      // Deleted
+#define DELETE_FLAG_NOT_DELETED 0x4E  // Not Deleted
+
+// Warning Type: 2 byte code
+#define WARNING_TYPE_LIMIT_ABOUT_TO_EXCEED 0x0001  // Limit About To Exceed
+#define WARNING_TYPE_LIMIT_EXCEEDED 0x0002         // Limit Exceeded
+
+// Auction Status: 2 byte code
+#define AUCTION_STATUS_AUCTION_PENDING_APPROVAL 0x0001  // Auction Pending Approval
+#define AUCTION_STATUS_AUCTION_PENDING 0x0002           // Auction Pending
+#define AUCTION_STATUS_OPEN_COMPETITOR_PERIOD 0x0003    // Open Competitor Period
+#define AUCTION_STATUS_OPEN_SOLICITOR_PERIOD 0x0004     // Open Solicitor Period
+#define AUCTION_STATUS_AUCTION_MATCHING 0x0005          // Auction Matching
+#define AUCTION_STATUS_AUCTION_FINISHED 0x0006          // Auction Finished
+#define AUCTION_STATUS_AUCTION_CANCELLED 0x0007         // Auction Cancelled
+
+// Outage Status: 2 byte code
+#define OUTAGE_STATUS_END_OF_OUTAGE 0x0000    // End Of Outage
+#define OUTAGE_STATUS_START_OF_OUTAGE 0x0001  // Start Of Outage
 
 // ---- Bcast Header: 40 bytes --------------------------------------------------
 
@@ -28,7 +112,7 @@ entrypoint typedef struct _BcastHeader {
   UINT8 reserved_2[2];        // bytes 2 to 3
   UINT32BE log_time;          // bytes 4 to 7, signed, read here as unsigned
   UINT8 alpha_char[2];        // bytes 8 to 9
-  UINT16BE transaction_code;  // bytes 10 to 11, signed, read here as unsigned
+  UINT16BE transaction_code;  // bytes 10 to 11, values TRANSACTION_CODE_, signed, read here as unsigned
   UINT16BE error_code;        // bytes 12 to 13, signed, read here as unsigned
   UINT32BE bc_seq_no;         // bytes 14 to 17, signed, read here as unsigned
   UINT8 reserved_18;          // byte 18
@@ -52,9 +136,9 @@ entrypoint typedef struct _SecInfo {
 entrypoint typedef struct _ChangeParticipantStatusMessage {
   UINT8 participant_id[12];               // bytes 0 to 11
   UINT8 participant_name[25];             // bytes 12 to 36
-  UINT8 participant_status;               // byte 37
+  UINT8 participant_status;               // byte 37, values PARTICIPANT_STATUS_
   UINT32BE participant_update_date_time;  // bytes 38 to 41, signed, read here as unsigned
-  UINT8 delete_flag;                      // byte 42
+  UINT8 delete_flag;                      // byte 42, values DELETE_FLAG_
 } ChangeParticipantStatusMessage;
 
 // ---- Turnover Limit Exceeded Message: 37 bytes -------------------------------
@@ -63,7 +147,7 @@ entrypoint typedef struct _ChangeParticipantStatusMessage {
 entrypoint typedef struct _TurnoverLimitExceededMessage {
   UINT8 broker_code[5];          // bytes 0 to 4
   UINT8 counter_broker_code[5];  // bytes 5 to 9
-  UINT16BE warning_type;         // bytes 10 to 11, signed, read here as unsigned
+  UINT16BE warning_type;         // bytes 10 to 11, values WARNING_TYPE_, signed, read here as unsigned
   SecInfo sec_info;              // bytes 12 to 23
   UINT32BE trade_number;         // bytes 24 to 27, signed, read here as unsigned
   UINT32BE trade_price;          // bytes 28 to 31, signed, read here as unsigned
@@ -77,7 +161,7 @@ entrypoint typedef struct _TurnoverLimitExceededMessage {
 entrypoint typedef struct _BrokerReactivatedMessage {
   UINT8 broker_code[5];          // bytes 0 to 4
   UINT8 counter_broker_code[5];  // bytes 5 to 9
-  UINT16BE warning_type;         // bytes 10 to 11, signed, read here as unsigned
+  UINT16BE warning_type;         // bytes 10 to 11, values WARNING_TYPE_, signed, read here as unsigned
   SecInfo sec_info;              // bytes 12 to 23
   UINT32BE trade_number;         // bytes 24 to 27, signed, read here as unsigned
   UINT32BE trade_price;          // bytes 28 to 31, signed, read here as unsigned
@@ -91,7 +175,7 @@ entrypoint typedef struct _BrokerReactivatedMessage {
 entrypoint typedef struct _StAuctionInqInfo {
   UINT32BE token;              // bytes 0 to 3, signed, read here as unsigned
   UINT16BE auction_number;     // bytes 4 to 5, signed, read here as unsigned
-  UINT16BE auction_status;     // bytes 6 to 7, signed, read here as unsigned
+  UINT16BE auction_status;     // bytes 6 to 7, values AUCTION_STATUS_, signed, read here as unsigned
   UINT16BE initiator_type;     // bytes 8 to 9, signed, read here as unsigned
   UINT32BE total_buy_qty;      // bytes 10 to 13, signed, read here as unsigned
   UINT32BE best_buy_price;     // bytes 14 to 17, signed, read here as unsigned
@@ -144,7 +228,7 @@ entrypoint typedef struct _ReportTrailerBody {
 // Sent as BCAST_CONTI_MSG at the start and the end of an outage of one or more streams
 entrypoint typedef struct _ContingencyBroadcastMessage {
   UINT16BE stream_number;   // bytes 0 to 1, signed, read here as unsigned
-  UINT16BE outage_status;   // bytes 2 to 3, signed, read here as unsigned
+  UINT16BE outage_status;   // bytes 2 to 3, values OUTAGE_STATUS_, signed, read here as unsigned
   UINT8 reserved_200[200];  // bytes 4 to 203
 } ContingencyBroadcastMessage;
 

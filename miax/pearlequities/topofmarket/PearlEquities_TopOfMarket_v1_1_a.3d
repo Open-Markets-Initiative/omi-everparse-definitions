@@ -1,5 +1,34 @@
-// Miami International Holdings Top Of Market
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Miax PearlEquities TopOfMarket Mach v1.1.a
 //
+// Protocol:
+//   Organization: Miami International Holdings
+//   Protocol: Top Of Market
+//   Encoding: Mach
+//   Version: 1.1.a
+//   Date: 11/05/2020
+//   Specification: PEARL_Equities_ToM_Feed_v1.1.a.updated.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
 // writes a C validator for each record below and proves, of that C, that it reads no byte
 // outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
@@ -7,14 +36,70 @@
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out PearlEquities_TopOfMarket_v1_1_a.3d
 //
 // What this definition does not state, and the model does:
 // - a length prefix framing what follows
 // - a field of no fixed width
-//
-// License: MIT No Attribution
+// - the packet as a whole, which is a field of no fixed width, at packet.machmessage.payload.applicationmessage.data.lastsalemessage.flags
+
+// ---- Values ------------------------------------------------------------------
+
+// Mach Packet Type: one byte code
+#define MACH_PACKET_TYPE_HEARTBEAT 0x00            // Heartbeat
+#define MACH_PACKET_TYPE_START_OF_SESSION 0x01     // Start Of Session
+#define MACH_PACKET_TYPE_END_OF_SESSION 0x02       // End Of Session
+#define MACH_PACKET_TYPE_APPLICATION_MESSAGE 0x03  // Application Message
+
+// Test Security Indicator: one byte code
+#define TEST_SECURITY_INDICATOR_YES 0x59  // Yes
+#define TEST_SECURITY_INDICATOR_NO 0x4E   // No
+
+// Primary Market Code: one byte code
+#define PRIMARY_MARKET_CODE_NYSE_AMERICAN 0x41             // Nyse American
+#define PRIMARY_MARKET_CODE_NASDAQ_BX 0x42                 // Nasdaq Bx
+#define PRIMARY_MARKET_CODE_NYSE_NATIONAL 0x43             // Nyse National
+#define PRIMARY_MARKET_CODE_MIAX_PEARL_EQUITIES 0x48       // Miax Pearl Equities
+#define PRIMARY_MARKET_CODE_NASDAQ_ISE 0x49                // Nasdaq Ise
+#define PRIMARY_MARKET_CODE_CBOE_EDGA_EXCHANGE 0x4A        // Cboe Edga Exchange
+#define PRIMARY_MARKET_CODE_CBOE_EDGX_EXCHANGE 0x4B        // Cboe Edgx Exchange
+#define PRIMARY_MARKET_CODE_LONG_TERM_STOCK_EXCHANGE 0x4C  // Long Term Stock Exchange
+#define PRIMARY_MARKET_CODE_NYSE_CHICAGO 0x4D              // Nyse Chicago
+#define PRIMARY_MARKET_CODE_NEW_YORK_STOCK_EXCHANGE 0x4E   // New York Stock Exchange
+#define PRIMARY_MARKET_CODE_NYSE_ARCA 0x50                 // Nyse Arca
+#define PRIMARY_MARKET_CODE_NASDAQ 0x51                    // Nasdaq
+#define PRIMARY_MARKET_CODE_MEMBERS_EXCHANGE 0x55          // Members Exchange
+#define PRIMARY_MARKET_CODE_INVESTORS_EXCHANGE 0x56        // Investors Exchange
+#define PRIMARY_MARKET_CODE_CBOE_STOCK_EXCHANGE 0x57       // Cboe Stock Exchange
+#define PRIMARY_MARKET_CODE_NASDAQ_PHLX 0x58               // Nasdaq Phlx
+#define PRIMARY_MARKET_CODE_CBOE_BYX_EXCHANGE 0x59         // Cboe Byx Exchange
+#define PRIMARY_MARKET_CODE_CBOE_BZX_EXCHANGE 0x5A         // Cboe Bzx Exchange
+
+// System Status: one byte code
+#define SYSTEM_STATUS_START_OF_SYSTEM_HOURS 0x53  // Start Of System Hours
+#define SYSTEM_STATUS_END_OF_SYSTEM_HOURS 0x43    // End Of System Hours
+#define SYSTEM_STATUS_START_OF_TEST_SESSION 0x31  // Start Of Test Session
+#define SYSTEM_STATUS_END_OF_TEST_SESSION 0x32    // End Of Test Session
+
+// Trading Status: one byte code
+#define TRADING_STATUS_PRE_OPEN 0x01          // Pre Open
+#define TRADING_STATUS_TRADING 0x02           // Trading
+#define TRADING_STATUS_HALT 0x03              // Halt
+#define TRADING_STATUS_OPERATIONAL_HALT 0x04  // Operational Halt
+#define TRADING_STATUS_CLOSED 0x05            // Closed
+
+// Market State: one byte code
+#define MARKET_STATE_PRE_OPENING 0x01          // Pre Opening
+#define MARKET_STATE_EARLY_TRADING 0x02        // Early Trading
+#define MARKET_STATE_REGULAR_TRADING 0x03      // Regular Trading
+#define MARKET_STATE_AFTER_HOURS_TRADING 0x04  // After Hours Trading
+
+// Short Sale Restriction: one byte code
+#define SHORT_SALE_RESTRICTION_SSR_IN_EFFECT 0x59      // Ssr In Effect
+#define SHORT_SALE_RESTRICTION_SSR_NOT_IN_EFFECT 0x4E  // Ssr Not In Effect
 
 // ---- Mach Packet Header: 12 bytes --------------------------------------------
 
@@ -22,7 +107,7 @@
 entrypoint typedef struct _MachPacketHeader {
   UINT64 sequence_number;     // bytes 0 to 7
   UINT16 mach_packet_length;  // bytes 8 to 9
-  UINT8 mach_packet_type;     // byte 10
+  UINT8 mach_packet_type;     // byte 10, values MACH_PACKET_TYPE_
   UINT8 session_number;       // byte 11
 } MachPacketHeader;
 
@@ -41,12 +126,12 @@ entrypoint typedef struct _SymbolUpdateMessage {
   UINT32 symbol_id;               // bytes 4 to 7
   UINT8 ticker_symbol[11];        // bytes 8 to 18
   UINT8 reserved_1;               // byte 19
-  UINT8 test_security_indicator;  // byte 20
+  UINT8 test_security_indicator;  // byte 20, values TEST_SECURITY_INDICATOR_
   UINT8 second_reserved_1;        // byte 21
   UINT16 lot_size;                // bytes 22 to 23
   UINT8 opening_time[8];          // bytes 24 to 31
   UINT8 closing_time[8];          // bytes 32 to 39
-  UINT8 primary_market_code;      // byte 40
+  UINT8 primary_market_code;      // byte 40, values PRIMARY_MARKET_CODE_
 } SymbolUpdateMessage;
 
 // ---- System State Message: 14 bytes ------------------------------------------
@@ -56,7 +141,7 @@ entrypoint typedef struct _SystemStateMessage {
   UINT32 nanoseconds;     // bytes 0 to 3
   UINT8 to_m_version[8];  // bytes 4 to 11
   UINT8 session_id;       // byte 12
-  UINT8 system_status;    // byte 13
+  UINT8 system_status;    // byte 13, values SYSTEM_STATUS_
 } SystemStateMessage;
 
 // ---- Security Trading Status Notification Message: 11 bytes ------------------
@@ -65,9 +150,9 @@ entrypoint typedef struct _SystemStateMessage {
 entrypoint typedef struct _SecurityTradingStatusNotificationMessage {
   UINT32 nanoseconds;            // bytes 0 to 3
   UINT32 symbol_id;              // bytes 4 to 7
-  UINT8 trading_status;          // byte 8
-  UINT8 market_state;            // byte 9
-  UINT8 short_sale_restriction;  // byte 10
+  UINT8 trading_status;          // byte 8, values TRADING_STATUS_
+  UINT8 market_state;            // byte 9, values MARKET_STATE_
+  UINT8 short_sale_restriction;  // byte 10, values SHORT_SALE_RESTRICTION_
 } SecurityTradingStatusNotificationMessage;
 
 // ---- Compact Top Of Market Best Bid And Offer Message: 16 bytes --------------

@@ -1,63 +1,319 @@
-// Chicago Board Options Exchange Global Indices Feed
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Cboe TitaniumConsolidated Indices Cgif v1.4.13
 //
+// Protocol:
+//   Organization: Chicago Board Options Exchange
+//   Protocol: Global Indices Feed
+//   Encoding: Cgif
+//   Version: 1.4.13
+//   Date: 05/16/2025
+//   Specification: Cboe Titanium Cboe Global Indices Feed Specification _ Cboe.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out Cboe_TitaniumConsolidated_Indices_v1_4_13.3d
-//
-// What this definition does not state, and the model does:
-// - a run counted by a field
-// - a length prefix framing what follows
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 16 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Cgif packet header appearing once at the beginning of each packet
-entrypoint typedef struct _PacketHeader {
-  UINT8 version;               // byte 0
-  UINT16BE length;             // bytes 1 to 2
-  UINT64BE sending_time;       // bytes 3 to 10
-  UINT8 number_of_messages;    // byte 11
-  UINT32BE first_msg_seq_num;  // bytes 12 to 15
-} PacketHeader;
+// Template ID: one byte code
+#define TEMPLATE_I_D_HEARTBEAT_MESSAGE 0x10                // Heartbeat Message
+#define TEMPLATE_I_D_INDEX_VALUE_MESSAGE 0x16              // Index Value Message
+#define TEMPLATE_I_D_CONTRIBUTOR_VALUE_MESSAGE 0x17        // Contributor Value Message
+#define TEMPLATE_I_D_INDEX_SUMMARY_MESSAGE 0x18            // Index Summary Message
+#define TEMPLATE_I_D_INDEX_VALUE_WITH_STATUS_MESSAGE 0x19  // Index Value With Status Message
+#define TEMPLATE_I_D_INDEX_DEFINITION_MESSAGE 0x1A         // Index Definition Message
 
-// ---- Message Header: 8 bytes -------------------------------------------------
+// Message Type: one byte code
+#define MESSAGE_TYPE_MARKET_DATA_INCREMENTAL_REFRESH 0x58  // Market Data Incremental Refresh
+#define MESSAGE_TYPE_INDEX_DEFINITION 0x44                 // Index Definition
+#define MESSAGE_TYPE_HEARTBEAT 0x30                        // Heartbeat
 
-// Cgif Message Header common to all messages. Per spec section Message Header : Length + Template ID + MessageType + MsgSeqNum, 8 bytes total. Template ID drives payload dispatch; MessageType is per-spec FIX-compliant market data type (may be shared across templates); MsgSeqNum is the per-channel monotonic sequence number.
-entrypoint typedef struct _MessageHeader {
-  UINT16BE message_length;  // bytes 0 to 1
-  UINT8 template_i_d;       // byte 2
-  UINT8 message_type;       // byte 3
-  UINT32BE msg_seq_num;     // bytes 4 to 7
-} MessageHeader;
+// Md Entry Type: one byte code
+#define MD_ENTRY_TYPE_BID 0x30          // Bid
+#define MD_ENTRY_TYPE_ASK 0x31          // Ask
+#define MD_ENTRY_TYPE_INDEX_VALUE 0x33  // Index Value
+#define MD_ENTRY_TYPE_CLOSE 0x35        // Close
+#define MD_ENTRY_TYPE_SETTLEMENT 0x36   // Settlement
 
-// ---- Md Entry Px: 5 bytes ----------------------------------------------------
+// Summary Type: one byte code
+#define SUMMARY_TYPE_SOD 0x31  // Sod
+#define SUMMARY_TYPE_EOD 0x32  // Eod
+
+// Index Status: one byte code
+#define INDEX_STATUS_NORMAL 0x4E      // Normal
+#define INDEX_STATUS_INDICATIVE 0x49  // Indicative
+
+// Status: one byte code
+#define STATUS_ACTIVE 0x01    // Active
+#define STATUS_INACTIVE 0x02  // Inactive
+#define STATUS_DELETED 0x03   // Deleted
+
+// ---- Types -------------------------------------------------------------------
+
+// Symbol
+typedef struct _Symbol {
+  UINT8 symbol_length;                           // byte 0, signed, read here as unsigned
+  UINT8 symbol_chars[((UINT32) symbol_length)];
+} Symbol;
 
 // MDEntryPx
-entrypoint typedef struct _MdEntryPx {
+typedef struct _MdEntryPx {
   UINT8 exponent;     // byte 0, signed, read here as unsigned
   UINT32BE mantissa;  // bytes 1 to 4, signed, read here as unsigned
 } MdEntryPx;
 
-// ---- Effective Business Date: 9 bytes ----------------------------------------
+// One entry in a repeating MDEntries group. Repeats NoMDEntries times within the containing message.
+typedef struct _MdEntries {
+  UINT8 md_entry_type;    // byte 0
+  MdEntryPx md_entry_px;  // bytes 1 to 5
+} MdEntries;
+
+// Index Value message containing values associated with a calculated index. May include Index Value, Bid, and Ask MDEntries.
+typedef struct _IndexValueMessage {
+  Symbol symbol;
+  UINT8 no_md_entries;
+  MdEntries md_entries[:byte-size (((UINT32) no_md_entries) * 6)];
+} IndexValueMessage;
+
+// Contributor Value message containing values associated with a given symbol or index, transmitted when received by Cboe.
+typedef struct _ContributorValueMessage {
+  UINT64BE transact_time;                                           // bytes 0 to 7
+  Symbol symbol;
+  UINT8 no_md_entries;
+  MdEntries md_entries[:byte-size (((UINT32) no_md_entries) * 6)];
+} ContributorValueMessage;
 
 // EffectiveBusinessDate
-entrypoint typedef struct _EffectiveBusinessDate {
+typedef struct _EffectiveBusinessDate {
   UINT8 byte_length;                       // byte 0, signed, read here as unsigned
   UINT8 effective_business_date_chars[8];  // bytes 1 to 8
 } EffectiveBusinessDate;
 
-// ---- Date: 11 bytes ----------------------------------------------------------
+// Index Summary message containing values associated with start or end of day. Includes an effective business date for reference.
+typedef struct _IndexSummaryMessage {
+  UINT64BE transact_time;                                           // bytes 0 to 7
+  EffectiveBusinessDate effective_business_date;                    // bytes 8 to 16
+  UINT8 summary_type;                                               // byte 17
+  Symbol symbol;
+  UINT8 no_md_entries;
+  MdEntries md_entries[:byte-size (((UINT32) no_md_entries) * 6)];
+} IndexSummaryMessage;
+
+// Index Value With Status message contains the values associated with a calculated index along with a status describing whether the value is indicative or not. Valid entry types include close and settlement markers.
+typedef struct _IndexValueWithStatusMessage {
+  UINT8 index_status;                                               // byte 0
+  Symbol symbol;
+  UINT8 no_md_entries;
+  MdEntries md_entries[:byte-size (((UINT32) no_md_entries) * 6)];
+} IndexValueWithStatusMessage;
 
 // Date
-entrypoint typedef struct _Date {
+typedef struct _Date {
   UINT8 byte_length;     // byte 0, signed, read here as unsigned
   UINT8 date_chars[10];  // bytes 1 to 10
 } Date;
+
+// One entry in a repeating Channels group. Repeats NoChannels times within the containing message.
+typedef struct _Channels {
+  UINT8 channel_length;                      // byte 0
+  UINT8 channel[((UINT32) channel_length)];
+} Channels;
+
+// One entry in a repeating Channels group. Repeats NoChannels times within the containing message.
+casetype _ChannelsPart1 (Bool present) {
+  switch (present) {
+    case true: Channels block;
+    case false: unit none;
+  }
+} ChannelsPart1;
+
+// One entry in a repeating Channels group. Repeats NoChannels times within the containing message.
+typedef struct _ChannelsBlock2 {
+  Channels first;
+  Channels second;
+} ChannelsBlock2;
+
+// One entry in a repeating Channels group. Repeats NoChannels times within the containing message.
+casetype _ChannelsPart2 (Bool present) {
+  switch (present) {
+    case true: ChannelsBlock2 block;
+    case false: unit none;
+  }
+} ChannelsPart2;
+
+// One entry in a repeating Channels group. Repeats NoChannels times within the containing message.
+typedef struct _ChannelsBlock4 {
+  ChannelsBlock2 first;
+  ChannelsBlock2 second;
+} ChannelsBlock4;
+
+// One entry in a repeating Channels group. Repeats NoChannels times within the containing message.
+casetype _ChannelsPart4 (Bool present) {
+  switch (present) {
+    case true: ChannelsBlock4 block;
+    case false: unit none;
+  }
+} ChannelsPart4;
+
+// One entry in a repeating Channels group. Repeats NoChannels times within the containing message.
+typedef struct _ChannelsBlock8 {
+  ChannelsBlock4 first;
+  ChannelsBlock4 second;
+} ChannelsBlock8;
+
+// One entry in a repeating Channels group. Repeats NoChannels times within the containing message.
+casetype _ChannelsPart8 (Bool present) {
+  switch (present) {
+    case true: ChannelsBlock8 block;
+    case false: unit none;
+  }
+} ChannelsPart8;
+
+// One entry in a repeating Channels group. Repeats NoChannels times within the containing message.
+typedef struct _ChannelsBlock16 {
+  ChannelsBlock8 first;
+  ChannelsBlock8 second;
+} ChannelsBlock16;
+
+// One entry in a repeating Channels group. Repeats NoChannels times within the containing message.
+casetype _ChannelsPart16 (Bool present) {
+  switch (present) {
+    case true: ChannelsBlock16 block;
+    case false: unit none;
+  }
+} ChannelsPart16;
+
+// One entry in a repeating Channels group. Repeats NoChannels times within the containing message.
+typedef struct _ChannelsBlock32 {
+  ChannelsBlock16 first;
+  ChannelsBlock16 second;
+} ChannelsBlock32;
+
+// One entry in a repeating Channels group. Repeats NoChannels times within the containing message.
+casetype _ChannelsPart32 (Bool present) {
+  switch (present) {
+    case true: ChannelsBlock32 block;
+    case false: unit none;
+  }
+} ChannelsPart32;
+
+// One entry in a repeating Channels group. Repeats NoChannels times within the containing message.
+typedef struct _ChannelsBlock64 {
+  ChannelsBlock32 first;
+  ChannelsBlock32 second;
+} ChannelsBlock64;
+
+// One entry in a repeating Channels group. Repeats NoChannels times within the containing message.
+casetype _ChannelsPart64 (Bool present) {
+  switch (present) {
+    case true: ChannelsBlock64 block;
+    case false: unit none;
+  }
+} ChannelsPart64;
+
+// One entry in a repeating Channels group. Repeats NoChannels times within the containing message.
+typedef struct _ChannelsBlock128 {
+  ChannelsBlock64 first;
+  ChannelsBlock64 second;
+} ChannelsBlock128;
+
+// One entry in a repeating Channels group. Repeats NoChannels times within the containing message.
+casetype _ChannelsPart128 (Bool present) {
+  switch (present) {
+    case true: ChannelsBlock128 block;
+    case false: unit none;
+  }
+} ChannelsPart128;
+
+// One entry in a repeating Channels group. Repeats NoChannels times within the containing message.
+typedef struct _ChannelsCounted (UINT32 count) {
+  ChannelsPart128(((count & 128) != 0)) part128;
+  ChannelsPart64(((count & 64) != 0)) part64;
+  ChannelsPart32(((count & 32) != 0)) part32;
+  ChannelsPart16(((count & 16) != 0)) part16;
+  ChannelsPart8(((count & 8) != 0)) part8;
+  ChannelsPart4(((count & 4) != 0)) part4;
+  ChannelsPart2(((count & 2) != 0)) part2;
+  ChannelsPart1(((count & 1) != 0)) part1;
+} ChannelsCounted;
+
+// Index Definition message published for every index within each cycle. Contains index information including current status, channel name, current trading date, data source, and description. Published on the Cboe Global Indices Definition Feed (CGIDF).
+typedef struct _IndexDefinitionMessage {
+  UINT32BE current_record_number;                    // bytes 0 to 3
+  UINT32BE total_number_of_records;                  // bytes 4 to 7
+  Symbol symbol;
+  UINT8 description_length;
+  UINT8 description[((UINT32) description_length)];
+  Date date;
+  UINT8 status;
+  UINT8 agent_classification[2];
+  UINT8 no_channels;
+  ChannelsCounted(((UINT32) no_channels)) channels;
+} IndexDefinitionMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x10: unit heartbeat_message;
+    case 0x16: IndexValueMessage index_value_message;
+    case 0x17: ContributorValueMessage contributor_value_message;
+    case 0x18: IndexSummaryMessage index_summary_message;
+    case 0x19: IndexValueWithStatusMessage index_value_with_status_message;
+    case 0x1A: IndexDefinitionMessage index_definition_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// Cgif Message containing message header and payload
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16BE message_length { message_length >= 8 };                                                                                                                 // bytes 0 to 1
+  UINT8 template_i_d;                                                                                                                                              // byte 2
+  UINT8 message_type;                                                                                                                                              // byte 3
+  UINT32BE msg_seq_num;                                                                                                                                            // bytes 4 to 7
+  Payload(template_i_d, (((UINT32) message_length) - 8)) payload[:byte-size-single-element-array (((UINT32) message_length) - 8)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Cgif Udp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 16) {
+  UINT8 version;                                                                                                                 // byte 0
+  UINT16BE length;                                                                                                               // bytes 1 to 2
+  UINT64BE sending_time;                                                                                                         // bytes 3 to 10
+  UINT8 number_of_messages;                                                                                                      // byte 11
+  UINT32BE first_msg_seq_num;                                                                                                    // bytes 12 to 15
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size (available - 16)];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) number_of_messages); };
+} Packet;
 

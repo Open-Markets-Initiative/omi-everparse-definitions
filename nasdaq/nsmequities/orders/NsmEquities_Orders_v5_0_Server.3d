@@ -1,5 +1,34 @@
-// National Association of Securities Dealers Automated Quotations (Nasdaq) Orders
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nasdaq NsmEquities Orders Ouch v5.0
 //
+// Protocol:
+//   Organization: National Association of Securities Dealers Automated Quotations (Nasdaq)
+//   Protocol: Orders
+//   Encoding: Ouch
+//   Version: 5.0
+//   Date: 4/1/2023
+//   Specification: OUCH5.0.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
 // writes a C validator for each record below and proves, of that C, that it reads no byte
 // outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
@@ -7,6 +36,8 @@
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out NsmEquities_Orders_v5_0_Server.3d
 //
@@ -15,15 +46,32 @@
 // - a length prefix framing what follows
 // - a run counted by a field
 // - a field present only on a condition
-//
-// License: MIT No Attribution
+// - the packet as a whole, which is the packet reads appendage_length, appendage_length_2, appendage_length_3, appendage_length_4, appendage_length_5, appendage_length_6, appendage_length_7, appendage_length_8, appendage_length_9, available from outside itself, at serverpacket
+
+// ---- Values ------------------------------------------------------------------
+
+// Server Packet Type: one byte code
+#define SERVER_PACKET_TYPE_DEBUG_PACKET 0x2B             // Debug Packet
+#define SERVER_PACKET_TYPE_LOGIN_ACCEPTED_PACKET 0x41    // Login Accepted Packet
+#define SERVER_PACKET_TYPE_LOGIN_REJECTED_PACKET 0x4A    // Login Rejected Packet
+#define SERVER_PACKET_TYPE_SEQUENCED_DATA_PACKET 0x53    // Sequenced Data Packet
+#define SERVER_PACKET_TYPE_SERVER_HEARTBEAT_PACKET 0x48  // Server Heartbeat Packet
+#define SERVER_PACKET_TYPE_END_OF_SESSION_PACKET 0x5A    // End Of Session Packet
+
+// Reject Reason Code: one byte code
+#define REJECT_REASON_CODE_NOT_AUTHORIZED 0x41         // Not Authorized
+#define REJECT_REASON_CODE_SESSION_NOT_AVAILABLE 0x53  // Session Not Available
+
+// Event Code: one byte code
+#define EVENT_CODE_START_OF_DAY 0x53  // Start Of Day
+#define EVENT_CODE_END_OF_DAY 0x45    // End Of Day
 
 // ---- Server Packet Header: 3 bytes -------------------------------------------
 
 // Packet header of a packet sent by the server
 entrypoint typedef struct _ServerPacketHeader {
   UINT16BE packet_length;    // bytes 0 to 1
-  UINT8 server_packet_type;  // byte 2
+  UINT8 server_packet_type;  // byte 2, values SERVER_PACKET_TYPE_
 } ServerPacketHeader;
 
 // ---- Login Accepted Packet: 30 bytes -----------------------------------------
@@ -38,7 +86,7 @@ entrypoint typedef struct _LoginAcceptedPacket {
 
 // The SoupBinTCP server sends this packet in response to an invalid Login Request Packet from the client
 entrypoint typedef struct _LoginRejectedPacket {
-  UINT8 reject_reason_code;  // byte 0
+  UINT8 reject_reason_code;  // byte 0, values REJECT_REASON_CODE_
 } LoginRejectedPacket;
 
 // ---- System Event Message: 9 bytes -------------------------------------------
@@ -46,6 +94,6 @@ entrypoint typedef struct _LoginRejectedPacket {
 // System Event Messages signal events that affect the entire NASDAQ system.
 entrypoint typedef struct _SystemEventMessage {
   UINT64BE timestamp;  // bytes 0 to 7
-  UINT8 event_code;    // byte 8
+  UINT8 event_code;    // byte 8, values EVENT_CODE_
 } SystemEventMessage;
 

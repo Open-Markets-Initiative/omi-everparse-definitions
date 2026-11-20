@@ -1,61 +1,1657 @@
-// Gie da Papier w Warto ciowych w Warszawie Warsaw Stock Exchange Full Depth Replay
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Gpw Wse ReplayFullDepth Wats v1.7.6.20
 //
+// Protocol:
+//   Organization: Gie da Papier w Warto ciowych w Warszawie
+//   Protocol: Warsaw Stock Exchange Full Depth Replay
+//   Encoding: Warsaw Automated Trading System
+//   Version: 1.7.6.20
+//   Date: 10/05/2026
+//   Specification: GPW_WATS_3.01_Market_Data_Protocol_v1.7.6.20.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out Wse_ReplayFullDepth_v1_7_6_20_Tcp.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a run of a stated number of entries
-// - a field read in bits
-//
-// License: MIT No Attribution
 
-// ---- Message Header: 42 bytes ------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Every market data message opens with the same 42 byte header
-entrypoint typedef struct _MessageHeader {
-  UINT16 message_length;     // bytes 0 to 1
-  UINT16 message_type;       // bytes 2 to 3
-  UINT16 message_version;    // bytes 4 to 5
-  UINT32 sequence_number;    // bytes 6 to 9
-  UINT64 timestamp;          // bytes 10 to 17
-  UINT64 source_timestamp;   // bytes 18 to 25
-  UINT8 is_encrypted;        // byte 26
-  UINT64 encryption_offset;  // bytes 27 to 34
-  UINT32 encryption_key_id;  // bytes 35 to 38
-  UINT16 session_id;         // bytes 39 to 40
-  UINT8 stream_id;           // byte 41
-} MessageHeader;
+// Message Type: 2 byte code
+#define MESSAGE_TYPE_WEEK_PLAN 0x0021                     // Week Plan
+#define MESSAGE_TYPE_CALENDAR_EXCEPTION 0x0023            // Calendar Exception
+#define MESSAGE_TYPE_TICK_TABLE_ENTRY 0x0020              // Tick Table Entry
+#define MESSAGE_TYPE_COLLAR_TABLE_ENTRY 0x006C            // Collar Table Entry
+#define MESSAGE_TYPE_TRADING_PHASE_SCHEDULE_ENTRY 0x001B  // Trading Phase Schedule Entry
+#define MESSAGE_TYPE_MARKET_STRUCTURE 0x0113              // Market Structure
+#define MESSAGE_TYPE_COLLAR_GROUP 0x012B                  // Collar Group
+#define MESSAGE_TYPE_EXTERNAL_UNDERLYING 0x0326           // External Underlying
+#define MESSAGE_TYPE_INSTRUMENT 0x0117                    // Instrument
+#define MESSAGE_TYPE_ACCRUED_INTEREST_TABLE_ENTRY 0x0024  // Accrued Interest Table Entry
+#define MESSAGE_TYPE_INDEXATION_TABLE_ENTRY 0x0025        // Indexation Table Entry
+#define MESSAGE_TYPE_INDEX_PARAMS 0x01F7                  // Index Params
+#define MESSAGE_TYPE_INDEX_PORTFOLIO_ENTRY 0x01F6         // Index Portfolio Entry
+#define MESSAGE_TYPE_AUCTION_SUMMARY 0x010E               // Auction Summary
+#define MESSAGE_TYPE_AUCTION_UPDATE 0x010C                // Auction Update
+#define MESSAGE_TYPE_PRICE_LEVEL_SNAPSHOT 0x0101          // Price Level Snapshot
+#define MESSAGE_TYPE_TOP_PRICE_LEVEL_UPDATE 0x0100        // Top Price Level Update
+#define MESSAGE_TYPE_TRADE 0x0026                         // Trade
+#define MESSAGE_TYPE_POSITION_REPORT 0x0321               // Position Report
+#define MESSAGE_TYPE_INSTRUMENT_STATUS_CHANGE 0x001A      // Instrument Status Change
+#define MESSAGE_TYPE_ORDER_COLLARS 0x0110                 // Order Collars
+#define MESSAGE_TYPE_TRADE_COLLARS 0x0111                 // Trade Collars
+#define MESSAGE_TYPE_INSTRUMENT_SUMMARY 0x029F            // Instrument Summary
+#define MESSAGE_TYPE_PRODUCT_SUMMARY 0x02A0               // Product Summary
+#define MESSAGE_TYPE_PRICE_UPDATE 0x010F                  // Price Update
+#define MESSAGE_TYPE_NEWS 0x0205                          // News
+#define MESSAGE_TYPE_REAL_TIME_INDEX 0x01F4               // Real Time Index
+#define MESSAGE_TYPE_INDEX_SUMMARY 0x01F5                 // Index Summary
+#define MESSAGE_TYPE_TRADING_SESSION_STATUS 0x0017        // Trading Session Status
+#define MESSAGE_TYPE_HEARTBEAT 0x0001                     // Heartbeat
+#define MESSAGE_TYPE_TEST_EVENT 0x2000                    // Test Event
+#define MESSAGE_TYPE_ORDER_ADD 0x0009                     // Order Add
+#define MESSAGE_TYPE_ORDER_MODIFY 0x000A                  // Order Modify
+#define MESSAGE_TYPE_ORDER_CANCEL 0x000B                  // Order Cancel
+#define MESSAGE_TYPE_ORDER_EXECUTE 0x000C                 // Order Execute
+#define MESSAGE_TYPE_ORDER_BOOK_EVENT 0x019A              // Order Book Event
 
-// ---- Calendar Exception: 9 bytes ---------------------------------------------
+// Calendar Exception Type: one byte code
+#define CALENDAR_EXCEPTION_TYPE_CLOSED 0x01  // Closed
+#define CALENDAR_EXCEPTION_TYPE_OPEN 0x02    // Open
+
+// Collar Mode: one byte code
+#define COLLAR_MODE_TRADE_PRICE_COLLAR 0x01  // Trade Price Collar
+#define COLLAR_MODE_ORDER_PRICE_COLLAR 0x02  // Order Price Collar
+
+// Collar Expression: one byte code
+#define COLLAR_EXPRESSION_PERCENTAGE 0x01      // Percentage
+#define COLLAR_EXPRESSION_ABSOLUTE_VALUE 0x02  // Absolute Value
+
+// Trading Phase Type: one byte code
+#define TRADING_PHASE_TYPE_CONTINUOUS_PRICE_TIME 0x01                // Continuous Price Time
+#define TRADING_PHASE_TYPE_CONTINUOUS_REF_PRICE_TIME 0x02            // Continuous Ref Price Time
+#define TRADING_PHASE_TYPE_CONTINUOUS_LAST_AUCTION_TIME 0x03         // Continuous Last Auction Time
+#define TRADING_PHASE_TYPE_AUCTION_OPENING 0x04                      // Auction Opening
+#define TRADING_PHASE_TYPE_BLOCK_EXACT_MATCHING 0x05                 // Block Exact Matching
+#define TRADING_PHASE_TYPE_NO_TRADING_CLOSED 0x06                    // No Trading Closed
+#define TRADING_PHASE_TYPE_UNCROSSING 0x07                           // Uncrossing
+#define TRADING_PHASE_TYPE_AUCTION_CLOSING 0x08                      // Auction Closing
+#define TRADING_PHASE_TYPE_AUCTION_INTRADAY 0x09                     // Auction Intraday
+#define TRADING_PHASE_TYPE_AUCTION_VOLATILITY_STATIC 0x0A            // Auction Volatility Static
+#define TRADING_PHASE_TYPE_AUCTION_VOLATILITY_DYNAMIC 0x0B           // Auction Volatility Dynamic
+#define TRADING_PHASE_TYPE_AUCTION_EXTENDED_VOLATILITY_STATIC 0x0C   // Auction Extended Volatility Static
+#define TRADING_PHASE_TYPE_AUCTION_EXTENDED_VOLATILITY_DYNAMIC 0x0D  // Auction Extended Volatility Dynamic
+#define TRADING_PHASE_TYPE_NO_TRADING_EARLY_MONITORING 0x0E          // No Trading Early Monitoring
+#define TRADING_PHASE_TYPE_NO_TRADING_LATE_MONITORING 0x0F           // No Trading Late Monitoring
+#define TRADING_PHASE_TYPE_HYBRID 0x10                               // Hybrid
+#define TRADING_PHASE_TYPE_HYBRID_BUY_ONLY 0x11                      // Hybrid Buy Only
+#define TRADING_PHASE_TYPE_HYBRID_PRE_TRADE 0x12                     // Hybrid Pre Trade
+#define TRADING_PHASE_TYPE_UNSUSPENSION_AUCTION 0x13                 // Unsuspension Auction
+#define TRADING_PHASE_TYPE_IPO 0x14                                  // Ipo
+#define TRADING_PHASE_TYPE_TENDER_OFFER 0x15                         // Tender Offer
+#define TRADING_PHASE_TYPE_HYBRID_PRE_TRADE_BUY_ONLY 0x16            // Hybrid Pre Trade Buy Only
+#define TRADING_PHASE_TYPE_DISTRIBUTION 0x17                         // Distribution
+
+// Market Model Type: one byte code
+#define MARKET_MODEL_TYPE_NOT_APPLICABLE 0x01  // Not Applicable
+#define MARKET_MODEL_TYPE_CLOB 0x02            // Clob
+#define MARKET_MODEL_TYPE_BLOCK 0x03           // Block
+#define MARKET_MODEL_TYPE_HYBRID 0x04          // Hybrid
+#define MARKET_MODEL_TYPE_CROSS 0x05           // Cross
+#define MARKET_MODEL_TYPE_IPO 0x06             // Ipo
+#define MARKET_MODEL_TYPE_TENDER_OFFER 0x07    // Tender Offer
+#define MARKET_MODEL_TYPE_REDISTRIBUTION 0x08  // Redistribution
+
+// Product Identification Type: one byte code
+#define PRODUCT_IDENTIFICATION_TYPE_NOT_APPLICABLE 0x01  // Not Applicable
+#define PRODUCT_IDENTIFICATION_TYPE_ISIN 0x02            // Isin
+
+// Nominal Currency: 2 byte code
+#define NOMINAL_CURRENCY_ALL 0x0008  // All
+#define NOMINAL_CURRENCY_DZD 0x000C  // Dzd
+#define NOMINAL_CURRENCY_ARS 0x0020  // Ars
+#define NOMINAL_CURRENCY_AUD 0x0024  // Aud
+#define NOMINAL_CURRENCY_BSD 0x002C  // Bsd
+#define NOMINAL_CURRENCY_BHD 0x0030  // Bhd
+#define NOMINAL_CURRENCY_BDT 0x0032  // Bdt
+#define NOMINAL_CURRENCY_AMD 0x0033  // Amd
+#define NOMINAL_CURRENCY_BBD 0x0034  // Bbd
+#define NOMINAL_CURRENCY_BMD 0x003C  // Bmd
+#define NOMINAL_CURRENCY_BTN 0x0040  // Btn
+#define NOMINAL_CURRENCY_BOB 0x0044  // Bob
+#define NOMINAL_CURRENCY_BWP 0x0048  // Bwp
+#define NOMINAL_CURRENCY_BZD 0x0054  // Bzd
+#define NOMINAL_CURRENCY_SBD 0x005A  // Sbd
+#define NOMINAL_CURRENCY_BND 0x0060  // Bnd
+#define NOMINAL_CURRENCY_MMK 0x0068  // Mmk
+#define NOMINAL_CURRENCY_BIF 0x006C  // Bif
+#define NOMINAL_CURRENCY_KHR 0x0074  // Khr
+#define NOMINAL_CURRENCY_CAD 0x007C  // Cad
+#define NOMINAL_CURRENCY_CVE 0x0084  // Cve
+#define NOMINAL_CURRENCY_KYD 0x0088  // Kyd
+#define NOMINAL_CURRENCY_LKR 0x0090  // Lkr
+#define NOMINAL_CURRENCY_CLP 0x0098  // Clp
+#define NOMINAL_CURRENCY_CNY 0x009C  // Cny
+#define NOMINAL_CURRENCY_COP 0x00AA  // Cop
+#define NOMINAL_CURRENCY_KMF 0x00AE  // Kmf
+#define NOMINAL_CURRENCY_CRC 0x00BC  // Crc
+#define NOMINAL_CURRENCY_HRK 0x00BF  // Hrk
+#define NOMINAL_CURRENCY_CUP 0x00C0  // Cup
+#define NOMINAL_CURRENCY_CZK 0x00CB  // Czk
+#define NOMINAL_CURRENCY_DKK 0x00D0  // Dkk
+#define NOMINAL_CURRENCY_DOP 0x00D6  // Dop
+#define NOMINAL_CURRENCY_SVC 0x00DE  // Svc
+#define NOMINAL_CURRENCY_ETB 0x00E6  // Etb
+#define NOMINAL_CURRENCY_ERN 0x00E8  // Ern
+#define NOMINAL_CURRENCY_FKP 0x00EE  // Fkp
+#define NOMINAL_CURRENCY_FJD 0x00F2  // Fjd
+#define NOMINAL_CURRENCY_DJF 0x0106  // Djf
+#define NOMINAL_CURRENCY_GMD 0x010E  // Gmd
+#define NOMINAL_CURRENCY_GIP 0x0124  // Gip
+#define NOMINAL_CURRENCY_GTQ 0x0140  // Gtq
+#define NOMINAL_CURRENCY_GNF 0x0144  // Gnf
+#define NOMINAL_CURRENCY_GYD 0x0148  // Gyd
+#define NOMINAL_CURRENCY_HTG 0x014C  // Htg
+#define NOMINAL_CURRENCY_HNL 0x0154  // Hnl
+#define NOMINAL_CURRENCY_HKD 0x0158  // Hkd
+#define NOMINAL_CURRENCY_HUF 0x015C  // Huf
+#define NOMINAL_CURRENCY_ISK 0x0160  // Isk
+#define NOMINAL_CURRENCY_INR 0x0164  // Inr
+#define NOMINAL_CURRENCY_IDR 0x0168  // Idr
+#define NOMINAL_CURRENCY_IRR 0x016C  // Irr
+#define NOMINAL_CURRENCY_IQD 0x0170  // Iqd
+#define NOMINAL_CURRENCY_ILS 0x0178  // Ils
+#define NOMINAL_CURRENCY_JMD 0x0184  // Jmd
+#define NOMINAL_CURRENCY_JPY 0x0188  // Jpy
+#define NOMINAL_CURRENCY_KZT 0x018E  // Kzt
+#define NOMINAL_CURRENCY_JOD 0x0190  // Jod
+#define NOMINAL_CURRENCY_KES 0x0194  // Kes
+#define NOMINAL_CURRENCY_KPW 0x0198  // Kpw
+#define NOMINAL_CURRENCY_KRW 0x019A  // Krw
+#define NOMINAL_CURRENCY_KWD 0x019E  // Kwd
+#define NOMINAL_CURRENCY_KGS 0x01A1  // Kgs
+#define NOMINAL_CURRENCY_LAK 0x01A2  // Lak
+#define NOMINAL_CURRENCY_LBP 0x01A6  // Lbp
+#define NOMINAL_CURRENCY_LSL 0x01AA  // Lsl
+#define NOMINAL_CURRENCY_LRD 0x01AE  // Lrd
+#define NOMINAL_CURRENCY_LYD 0x01B2  // Lyd
+#define NOMINAL_CURRENCY_MOP 0x01BE  // Mop
+#define NOMINAL_CURRENCY_MWK 0x01C6  // Mwk
+#define NOMINAL_CURRENCY_MYR 0x01CA  // Myr
+#define NOMINAL_CURRENCY_MVR 0x01CE  // Mvr
+#define NOMINAL_CURRENCY_MUR 0x01E0  // Mur
+#define NOMINAL_CURRENCY_MXN 0x01E4  // Mxn
+#define NOMINAL_CURRENCY_MNT 0x01F0  // Mnt
+#define NOMINAL_CURRENCY_MDL 0x01F2  // Mdl
+#define NOMINAL_CURRENCY_MAD 0x01F8  // Mad
+#define NOMINAL_CURRENCY_OMR 0x0200  // Omr
+#define NOMINAL_CURRENCY_NAD 0x0204  // Nad
+#define NOMINAL_CURRENCY_NPR 0x020C  // Npr
+#define NOMINAL_CURRENCY_ANG 0x0214  // Ang
+#define NOMINAL_CURRENCY_AWG 0x0215  // Awg
+#define NOMINAL_CURRENCY_VUV 0x0224  // Vuv
+#define NOMINAL_CURRENCY_NZD 0x022A  // Nzd
+#define NOMINAL_CURRENCY_NIO 0x022E  // Nio
+#define NOMINAL_CURRENCY_NGN 0x0236  // Ngn
+#define NOMINAL_CURRENCY_NOK 0x0242  // Nok
+#define NOMINAL_CURRENCY_PKR 0x024A  // Pkr
+#define NOMINAL_CURRENCY_PAB 0x024E  // Pab
+#define NOMINAL_CURRENCY_PGK 0x0256  // Pgk
+#define NOMINAL_CURRENCY_PYG 0x0258  // Pyg
+#define NOMINAL_CURRENCY_PEN 0x025C  // Pen
+#define NOMINAL_CURRENCY_PHP 0x0260  // Php
+#define NOMINAL_CURRENCY_QAR 0x027A  // Qar
+#define NOMINAL_CURRENCY_RUB 0x0283  // Rub
+#define NOMINAL_CURRENCY_RWF 0x0286  // Rwf
+#define NOMINAL_CURRENCY_SHP 0x028E  // Shp
+#define NOMINAL_CURRENCY_SAR 0x02AA  // Sar
+#define NOMINAL_CURRENCY_SCR 0x02B2  // Scr
+#define NOMINAL_CURRENCY_SGD 0x02BE  // Sgd
+#define NOMINAL_CURRENCY_VND 0x02C0  // Vnd
+#define NOMINAL_CURRENCY_SOS 0x02C2  // Sos
+#define NOMINAL_CURRENCY_ZAR 0x02C6  // Zar
+#define NOMINAL_CURRENCY_SSP 0x02D8  // Ssp
+#define NOMINAL_CURRENCY_SZL 0x02EC  // Szl
+#define NOMINAL_CURRENCY_SEK 0x02F0  // Sek
+#define NOMINAL_CURRENCY_CHF 0x02F4  // Chf
+#define NOMINAL_CURRENCY_SYP 0x02F8  // Syp
+#define NOMINAL_CURRENCY_THB 0x02FC  // Thb
+#define NOMINAL_CURRENCY_TOP 0x0308  // Top
+#define NOMINAL_CURRENCY_TTD 0x030C  // Ttd
+#define NOMINAL_CURRENCY_AED 0x0310  // Aed
+#define NOMINAL_CURRENCY_TND 0x0314  // Tnd
+#define NOMINAL_CURRENCY_UGX 0x0320  // Ugx
+#define NOMINAL_CURRENCY_MKD 0x0327  // Mkd
+#define NOMINAL_CURRENCY_EGP 0x0332  // Egp
+#define NOMINAL_CURRENCY_GBP 0x033A  // Gbp
+#define NOMINAL_CURRENCY_TZS 0x0342  // Tzs
+#define NOMINAL_CURRENCY_USD 0x0348  // Usd
+#define NOMINAL_CURRENCY_UYU 0x035A  // Uyu
+#define NOMINAL_CURRENCY_UZS 0x035C  // Uzs
+#define NOMINAL_CURRENCY_WST 0x0372  // Wst
+#define NOMINAL_CURRENCY_YER 0x0376  // Yer
+#define NOMINAL_CURRENCY_TWD 0x0385  // Twd
+#define NOMINAL_CURRENCY_SLE 0x039D  // Sle
+#define NOMINAL_CURRENCY_VED 0x039E  // Ved
+#define NOMINAL_CURRENCY_UYW 0x039F  // Uyw
+#define NOMINAL_CURRENCY_VES 0x03A0  // Ves
+#define NOMINAL_CURRENCY_MRU 0x03A1  // Mru
+#define NOMINAL_CURRENCY_STN 0x03A2  // Stn
+#define NOMINAL_CURRENCY_CUC 0x03A3  // Cuc
+#define NOMINAL_CURRENCY_ZWL 0x03A4  // Zwl
+#define NOMINAL_CURRENCY_BYN 0x03A5  // Byn
+#define NOMINAL_CURRENCY_TMT 0x03A6  // Tmt
+#define NOMINAL_CURRENCY_GHS 0x03A8  // Ghs
+#define NOMINAL_CURRENCY_SDG 0x03AA  // Sdg
+#define NOMINAL_CURRENCY_UYI 0x03AC  // Uyi
+#define NOMINAL_CURRENCY_RSD 0x03AD  // Rsd
+#define NOMINAL_CURRENCY_MZN 0x03AF  // Mzn
+#define NOMINAL_CURRENCY_AZN 0x03B0  // Azn
+#define NOMINAL_CURRENCY_RON 0x03B2  // Ron
+#define NOMINAL_CURRENCY_CHE 0x03B3  // Che
+#define NOMINAL_CURRENCY_CHW 0x03B4  // Chw
+#define NOMINAL_CURRENCY_TRY 0x03B5  // Try
+#define NOMINAL_CURRENCY_XAF 0x03B6  // Xaf
+#define NOMINAL_CURRENCY_XCD 0x03B7  // Xcd
+#define NOMINAL_CURRENCY_XOF 0x03B8  // Xof
+#define NOMINAL_CURRENCY_XPF 0x03B9  // Xpf
+#define NOMINAL_CURRENCY_XBA 0x03BB  // Xba
+#define NOMINAL_CURRENCY_XBB 0x03BC  // Xbb
+#define NOMINAL_CURRENCY_XBC 0x03BD  // Xbc
+#define NOMINAL_CURRENCY_XBD 0x03BE  // Xbd
+#define NOMINAL_CURRENCY_XAU 0x03BF  // Xau
+#define NOMINAL_CURRENCY_XDR 0x03C0  // Xdr
+#define NOMINAL_CURRENCY_XAG 0x03C1  // Xag
+#define NOMINAL_CURRENCY_XPT 0x03C2  // Xpt
+#define NOMINAL_CURRENCY_XTS 0x03C3  // Xts
+#define NOMINAL_CURRENCY_XPD 0x03C4  // Xpd
+#define NOMINAL_CURRENCY_XUA 0x03C5  // Xua
+#define NOMINAL_CURRENCY_ZMW 0x03C7  // Zmw
+#define NOMINAL_CURRENCY_SRD 0x03C8  // Srd
+#define NOMINAL_CURRENCY_MGA 0x03C9  // Mga
+#define NOMINAL_CURRENCY_COU 0x03CA  // Cou
+#define NOMINAL_CURRENCY_AFN 0x03CB  // Afn
+#define NOMINAL_CURRENCY_TJS 0x03CC  // Tjs
+#define NOMINAL_CURRENCY_AOA 0x03CD  // Aoa
+#define NOMINAL_CURRENCY_BGN 0x03CF  // Bgn
+#define NOMINAL_CURRENCY_CDF 0x03D0  // Cdf
+#define NOMINAL_CURRENCY_BAM 0x03D1  // Bam
+#define NOMINAL_CURRENCY_EUR 0x03D2  // Eur
+#define NOMINAL_CURRENCY_MXV 0x03D3  // Mxv
+#define NOMINAL_CURRENCY_UAH 0x03D4  // Uah
+#define NOMINAL_CURRENCY_GEL 0x03D5  // Gel
+#define NOMINAL_CURRENCY_BOV 0x03D8  // Bov
+#define NOMINAL_CURRENCY_PLN 0x03D9  // Pln
+#define NOMINAL_CURRENCY_BRL 0x03DA  // Brl
+#define NOMINAL_CURRENCY_CLF 0x03DE  // Clf
+#define NOMINAL_CURRENCY_XSU 0x03E2  // Xsu
+#define NOMINAL_CURRENCY_USN 0x03E5  // Usn
+#define NOMINAL_CURRENCY_XXX 0x03E7  // Xxx
+
+// Trading Currency: 2 byte code
+#define TRADING_CURRENCY_ALL 0x0008  // All
+#define TRADING_CURRENCY_DZD 0x000C  // Dzd
+#define TRADING_CURRENCY_ARS 0x0020  // Ars
+#define TRADING_CURRENCY_AUD 0x0024  // Aud
+#define TRADING_CURRENCY_BSD 0x002C  // Bsd
+#define TRADING_CURRENCY_BHD 0x0030  // Bhd
+#define TRADING_CURRENCY_BDT 0x0032  // Bdt
+#define TRADING_CURRENCY_AMD 0x0033  // Amd
+#define TRADING_CURRENCY_BBD 0x0034  // Bbd
+#define TRADING_CURRENCY_BMD 0x003C  // Bmd
+#define TRADING_CURRENCY_BTN 0x0040  // Btn
+#define TRADING_CURRENCY_BOB 0x0044  // Bob
+#define TRADING_CURRENCY_BWP 0x0048  // Bwp
+#define TRADING_CURRENCY_BZD 0x0054  // Bzd
+#define TRADING_CURRENCY_SBD 0x005A  // Sbd
+#define TRADING_CURRENCY_BND 0x0060  // Bnd
+#define TRADING_CURRENCY_MMK 0x0068  // Mmk
+#define TRADING_CURRENCY_BIF 0x006C  // Bif
+#define TRADING_CURRENCY_KHR 0x0074  // Khr
+#define TRADING_CURRENCY_CAD 0x007C  // Cad
+#define TRADING_CURRENCY_CVE 0x0084  // Cve
+#define TRADING_CURRENCY_KYD 0x0088  // Kyd
+#define TRADING_CURRENCY_LKR 0x0090  // Lkr
+#define TRADING_CURRENCY_CLP 0x0098  // Clp
+#define TRADING_CURRENCY_CNY 0x009C  // Cny
+#define TRADING_CURRENCY_COP 0x00AA  // Cop
+#define TRADING_CURRENCY_KMF 0x00AE  // Kmf
+#define TRADING_CURRENCY_CRC 0x00BC  // Crc
+#define TRADING_CURRENCY_HRK 0x00BF  // Hrk
+#define TRADING_CURRENCY_CUP 0x00C0  // Cup
+#define TRADING_CURRENCY_CZK 0x00CB  // Czk
+#define TRADING_CURRENCY_DKK 0x00D0  // Dkk
+#define TRADING_CURRENCY_DOP 0x00D6  // Dop
+#define TRADING_CURRENCY_SVC 0x00DE  // Svc
+#define TRADING_CURRENCY_ETB 0x00E6  // Etb
+#define TRADING_CURRENCY_ERN 0x00E8  // Ern
+#define TRADING_CURRENCY_FKP 0x00EE  // Fkp
+#define TRADING_CURRENCY_FJD 0x00F2  // Fjd
+#define TRADING_CURRENCY_DJF 0x0106  // Djf
+#define TRADING_CURRENCY_GMD 0x010E  // Gmd
+#define TRADING_CURRENCY_GIP 0x0124  // Gip
+#define TRADING_CURRENCY_GTQ 0x0140  // Gtq
+#define TRADING_CURRENCY_GNF 0x0144  // Gnf
+#define TRADING_CURRENCY_GYD 0x0148  // Gyd
+#define TRADING_CURRENCY_HTG 0x014C  // Htg
+#define TRADING_CURRENCY_HNL 0x0154  // Hnl
+#define TRADING_CURRENCY_HKD 0x0158  // Hkd
+#define TRADING_CURRENCY_HUF 0x015C  // Huf
+#define TRADING_CURRENCY_ISK 0x0160  // Isk
+#define TRADING_CURRENCY_INR 0x0164  // Inr
+#define TRADING_CURRENCY_IDR 0x0168  // Idr
+#define TRADING_CURRENCY_IRR 0x016C  // Irr
+#define TRADING_CURRENCY_IQD 0x0170  // Iqd
+#define TRADING_CURRENCY_ILS 0x0178  // Ils
+#define TRADING_CURRENCY_JMD 0x0184  // Jmd
+#define TRADING_CURRENCY_JPY 0x0188  // Jpy
+#define TRADING_CURRENCY_KZT 0x018E  // Kzt
+#define TRADING_CURRENCY_JOD 0x0190  // Jod
+#define TRADING_CURRENCY_KES 0x0194  // Kes
+#define TRADING_CURRENCY_KPW 0x0198  // Kpw
+#define TRADING_CURRENCY_KRW 0x019A  // Krw
+#define TRADING_CURRENCY_KWD 0x019E  // Kwd
+#define TRADING_CURRENCY_KGS 0x01A1  // Kgs
+#define TRADING_CURRENCY_LAK 0x01A2  // Lak
+#define TRADING_CURRENCY_LBP 0x01A6  // Lbp
+#define TRADING_CURRENCY_LSL 0x01AA  // Lsl
+#define TRADING_CURRENCY_LRD 0x01AE  // Lrd
+#define TRADING_CURRENCY_LYD 0x01B2  // Lyd
+#define TRADING_CURRENCY_MOP 0x01BE  // Mop
+#define TRADING_CURRENCY_MWK 0x01C6  // Mwk
+#define TRADING_CURRENCY_MYR 0x01CA  // Myr
+#define TRADING_CURRENCY_MVR 0x01CE  // Mvr
+#define TRADING_CURRENCY_MUR 0x01E0  // Mur
+#define TRADING_CURRENCY_MXN 0x01E4  // Mxn
+#define TRADING_CURRENCY_MNT 0x01F0  // Mnt
+#define TRADING_CURRENCY_MDL 0x01F2  // Mdl
+#define TRADING_CURRENCY_MAD 0x01F8  // Mad
+#define TRADING_CURRENCY_OMR 0x0200  // Omr
+#define TRADING_CURRENCY_NAD 0x0204  // Nad
+#define TRADING_CURRENCY_NPR 0x020C  // Npr
+#define TRADING_CURRENCY_ANG 0x0214  // Ang
+#define TRADING_CURRENCY_AWG 0x0215  // Awg
+#define TRADING_CURRENCY_VUV 0x0224  // Vuv
+#define TRADING_CURRENCY_NZD 0x022A  // Nzd
+#define TRADING_CURRENCY_NIO 0x022E  // Nio
+#define TRADING_CURRENCY_NGN 0x0236  // Ngn
+#define TRADING_CURRENCY_NOK 0x0242  // Nok
+#define TRADING_CURRENCY_PKR 0x024A  // Pkr
+#define TRADING_CURRENCY_PAB 0x024E  // Pab
+#define TRADING_CURRENCY_PGK 0x0256  // Pgk
+#define TRADING_CURRENCY_PYG 0x0258  // Pyg
+#define TRADING_CURRENCY_PEN 0x025C  // Pen
+#define TRADING_CURRENCY_PHP 0x0260  // Php
+#define TRADING_CURRENCY_QAR 0x027A  // Qar
+#define TRADING_CURRENCY_RUB 0x0283  // Rub
+#define TRADING_CURRENCY_RWF 0x0286  // Rwf
+#define TRADING_CURRENCY_SHP 0x028E  // Shp
+#define TRADING_CURRENCY_SAR 0x02AA  // Sar
+#define TRADING_CURRENCY_SCR 0x02B2  // Scr
+#define TRADING_CURRENCY_SGD 0x02BE  // Sgd
+#define TRADING_CURRENCY_VND 0x02C0  // Vnd
+#define TRADING_CURRENCY_SOS 0x02C2  // Sos
+#define TRADING_CURRENCY_ZAR 0x02C6  // Zar
+#define TRADING_CURRENCY_SSP 0x02D8  // Ssp
+#define TRADING_CURRENCY_SZL 0x02EC  // Szl
+#define TRADING_CURRENCY_SEK 0x02F0  // Sek
+#define TRADING_CURRENCY_CHF 0x02F4  // Chf
+#define TRADING_CURRENCY_SYP 0x02F8  // Syp
+#define TRADING_CURRENCY_THB 0x02FC  // Thb
+#define TRADING_CURRENCY_TOP 0x0308  // Top
+#define TRADING_CURRENCY_TTD 0x030C  // Ttd
+#define TRADING_CURRENCY_AED 0x0310  // Aed
+#define TRADING_CURRENCY_TND 0x0314  // Tnd
+#define TRADING_CURRENCY_UGX 0x0320  // Ugx
+#define TRADING_CURRENCY_MKD 0x0327  // Mkd
+#define TRADING_CURRENCY_EGP 0x0332  // Egp
+#define TRADING_CURRENCY_GBP 0x033A  // Gbp
+#define TRADING_CURRENCY_TZS 0x0342  // Tzs
+#define TRADING_CURRENCY_USD 0x0348  // Usd
+#define TRADING_CURRENCY_UYU 0x035A  // Uyu
+#define TRADING_CURRENCY_UZS 0x035C  // Uzs
+#define TRADING_CURRENCY_WST 0x0372  // Wst
+#define TRADING_CURRENCY_YER 0x0376  // Yer
+#define TRADING_CURRENCY_TWD 0x0385  // Twd
+#define TRADING_CURRENCY_SLE 0x039D  // Sle
+#define TRADING_CURRENCY_VED 0x039E  // Ved
+#define TRADING_CURRENCY_UYW 0x039F  // Uyw
+#define TRADING_CURRENCY_VES 0x03A0  // Ves
+#define TRADING_CURRENCY_MRU 0x03A1  // Mru
+#define TRADING_CURRENCY_STN 0x03A2  // Stn
+#define TRADING_CURRENCY_CUC 0x03A3  // Cuc
+#define TRADING_CURRENCY_ZWL 0x03A4  // Zwl
+#define TRADING_CURRENCY_BYN 0x03A5  // Byn
+#define TRADING_CURRENCY_TMT 0x03A6  // Tmt
+#define TRADING_CURRENCY_GHS 0x03A8  // Ghs
+#define TRADING_CURRENCY_SDG 0x03AA  // Sdg
+#define TRADING_CURRENCY_UYI 0x03AC  // Uyi
+#define TRADING_CURRENCY_RSD 0x03AD  // Rsd
+#define TRADING_CURRENCY_MZN 0x03AF  // Mzn
+#define TRADING_CURRENCY_AZN 0x03B0  // Azn
+#define TRADING_CURRENCY_RON 0x03B2  // Ron
+#define TRADING_CURRENCY_CHE 0x03B3  // Che
+#define TRADING_CURRENCY_CHW 0x03B4  // Chw
+#define TRADING_CURRENCY_TRY 0x03B5  // Try
+#define TRADING_CURRENCY_XAF 0x03B6  // Xaf
+#define TRADING_CURRENCY_XCD 0x03B7  // Xcd
+#define TRADING_CURRENCY_XOF 0x03B8  // Xof
+#define TRADING_CURRENCY_XPF 0x03B9  // Xpf
+#define TRADING_CURRENCY_XBA 0x03BB  // Xba
+#define TRADING_CURRENCY_XBB 0x03BC  // Xbb
+#define TRADING_CURRENCY_XBC 0x03BD  // Xbc
+#define TRADING_CURRENCY_XBD 0x03BE  // Xbd
+#define TRADING_CURRENCY_XAU 0x03BF  // Xau
+#define TRADING_CURRENCY_XDR 0x03C0  // Xdr
+#define TRADING_CURRENCY_XAG 0x03C1  // Xag
+#define TRADING_CURRENCY_XPT 0x03C2  // Xpt
+#define TRADING_CURRENCY_XTS 0x03C3  // Xts
+#define TRADING_CURRENCY_XPD 0x03C4  // Xpd
+#define TRADING_CURRENCY_XUA 0x03C5  // Xua
+#define TRADING_CURRENCY_ZMW 0x03C7  // Zmw
+#define TRADING_CURRENCY_SRD 0x03C8  // Srd
+#define TRADING_CURRENCY_MGA 0x03C9  // Mga
+#define TRADING_CURRENCY_COU 0x03CA  // Cou
+#define TRADING_CURRENCY_AFN 0x03CB  // Afn
+#define TRADING_CURRENCY_TJS 0x03CC  // Tjs
+#define TRADING_CURRENCY_AOA 0x03CD  // Aoa
+#define TRADING_CURRENCY_BGN 0x03CF  // Bgn
+#define TRADING_CURRENCY_CDF 0x03D0  // Cdf
+#define TRADING_CURRENCY_BAM 0x03D1  // Bam
+#define TRADING_CURRENCY_EUR 0x03D2  // Eur
+#define TRADING_CURRENCY_MXV 0x03D3  // Mxv
+#define TRADING_CURRENCY_UAH 0x03D4  // Uah
+#define TRADING_CURRENCY_GEL 0x03D5  // Gel
+#define TRADING_CURRENCY_BOV 0x03D8  // Bov
+#define TRADING_CURRENCY_PLN 0x03D9  // Pln
+#define TRADING_CURRENCY_BRL 0x03DA  // Brl
+#define TRADING_CURRENCY_CLF 0x03DE  // Clf
+#define TRADING_CURRENCY_XSU 0x03E2  // Xsu
+#define TRADING_CURRENCY_USN 0x03E5  // Usn
+#define TRADING_CURRENCY_XXX 0x03E7  // Xxx
+
+// Product Type: one byte code
+#define PRODUCT_TYPE_EQUITY 0x01              // Equity
+#define PRODUCT_TYPE_FIXED_INCOME 0x02        // Fixed Income
+#define PRODUCT_TYPE_DERIVATIVE_FUTURES 0x03  // Derivative Futures
+#define PRODUCT_TYPE_DERIVATIVE_OPTIONS 0x04  // Derivative Options
+#define PRODUCT_TYPE_INDEX 0x05               // Index
+#define PRODUCT_TYPE_CURRENCY 0x06            // Currency
+#define PRODUCT_TYPE_STRUCTURED_PRODUCT 0x07  // Structured Product
+#define PRODUCT_TYPE_TRACKER 0x09             // Tracker
+
+// Product Subtype: one byte code
+#define PRODUCT_SUBTYPE_SHARE 0x01                             // Share
+#define PRODUCT_SUBTYPE_ALLOTMENT_RIGHT 0x02                   // Allotment Right
+#define PRODUCT_SUBTYPE_SUBSCRIPTION_RIGHT 0x03                // Subscription Right
+#define PRODUCT_SUBTYPE_TENDER_OFFER 0x04                      // Tender Offer
+#define PRODUCT_SUBTYPE_ISSUE_RIGHT 0x05                       // Issue Right
+#define PRODUCT_SUBTYPE_SUBSCRIPTION_WARRANT 0x06              // Subscription Warrant
+#define PRODUCT_SUBTYPE_BANK_SECURITIES 0x07                   // Bank Securities
+#define PRODUCT_SUBTYPE_BOND 0x08                              // Bond
+#define PRODUCT_SUBTYPE_TREASURY_BOND 0x09                     // Treasury Bond
+#define PRODUCT_SUBTYPE_AGENCY_BOND 0x0A                       // Agency Bond
+#define PRODUCT_SUBTYPE_MUNICIPAL_BOND 0x0B                    // Municipal Bond
+#define PRODUCT_SUBTYPE_CORPORATE_BANK_BOND 0x0C               // Corporate Bank Bond
+#define PRODUCT_SUBTYPE_CORPORATE_FIRM_BOND 0x0D               // Corporate Firm Bond
+#define PRODUCT_SUBTYPE_CONVERTIBLE_BOND 0x0E                  // Convertible Bond
+#define PRODUCT_SUBTYPE_MORTGAGE_BOND 0x0F                     // Mortgage Bond
+#define PRODUCT_SUBTYPE_MORTGAGE_BACKED_BOND 0x10              // Mortgage Backed Bond
+#define PRODUCT_SUBTYPE_PUBLIC_MORTGAGE_BOND 0x11              // Public Mortgage Bond
+#define PRODUCT_SUBTYPE_BILL 0x12                              // Bill
+#define PRODUCT_SUBTYPE_TREASURY_BILL 0x13                     // Treasury Bill
+#define PRODUCT_SUBTYPE_COMMERCIAL_BILL 0x14                   // Commercial Bill
+#define PRODUCT_SUBTYPE_EXCHANGE_TRADED_FUND 0x15              // Exchange Traded Fund
+#define PRODUCT_SUBTYPE_EXCHANGE_TRADED_NOTE 0x16              // Exchange Traded Note
+#define PRODUCT_SUBTYPE_EXCHANGE_TRADED_COMMODITY 0x17         // Exchange Traded Commodity
+#define PRODUCT_SUBTYPE_INVESTMENT_CERTIFICATE 0x18            // Investment Certificate
+#define PRODUCT_SUBTYPE_INDEX_FUTURES 0x19                     // Index Futures
+#define PRODUCT_SUBTYPE_STOCK_FUTURES 0x1A                     // Stock Futures
+#define PRODUCT_SUBTYPE_CURRENCY_FUTURES 0x1B                  // Currency Futures
+#define PRODUCT_SUBTYPE_BOND_FUTURES 0x1C                      // Bond Futures
+#define PRODUCT_SUBTYPE_INTEREST_RATE_FUTURES 0x1D             // Interest Rate Futures
+#define PRODUCT_SUBTYPE_INDEX_OPTIONS 0x1E                     // Index Options
+#define PRODUCT_SUBTYPE_STOCK_OPTIONS 0x1F                     // Stock Options
+#define PRODUCT_SUBTYPE_OPTION_WARRANTS 0x20                   // Option Warrants
+#define PRODUCT_SUBTYPE_FACTOR_CERTIFICATES 0x21               // Factor Certificates
+#define PRODUCT_SUBTYPE_TURBO_CERTIFICATES 0x22                // Turbo Certificates
+#define PRODUCT_SUBTYPE_CAPITAL_PROTECTION_CERTIFICATES 0x23   // Capital Protection Certificates
+#define PRODUCT_SUBTYPE_BONUS_CERTIFICATES 0x24                // Bonus Certificates
+#define PRODUCT_SUBTYPE_REVERSE_CONVERTIBLE_CERTIFICATES 0x25  // Reverse Convertible Certificates
+#define PRODUCT_SUBTYPE_EXPRESS_CERTIFICATES 0x26              // Express Certificates
+#define PRODUCT_SUBTYPE_DISCOUNT_CERTIFICATES 0x27             // Discount Certificates
+#define PRODUCT_SUBTYPE_INDEX_TRACKER_CERTIFICATES 0x28        // Index Tracker Certificates
+#define PRODUCT_SUBTYPE_OTHER_INVESTMENT_CERTIFICATES 0x29     // Other Investment Certificates
+#define PRODUCT_SUBTYPE_STRUCTURED_NOTES 0x2A                  // Structured Notes
+#define PRODUCT_SUBTYPE_REFERENCE_RATE 0x2B                    // Reference Rate
+#define PRODUCT_SUBTYPE_INTEREST_RATE 0x2C                     // Interest Rate
+#define PRODUCT_SUBTYPE_EXCHANGE_RATE 0x2D                     // Exchange Rate
+#define PRODUCT_SUBTYPE_PRICE_INDEX 0x2E                       // Price Index
+#define PRODUCT_SUBTYPE_TOTAL_RETURN_INDEX 0x2F                // Total Return Index
+#define PRODUCT_SUBTYPE_SECTOR_PRICE_INDEX 0x30                // Sector Price Index
+#define PRODUCT_SUBTYPE_SECTOR_TOTAL_RETURN_INDEX 0x31         // Sector Total Return Index
+#define PRODUCT_SUBTYPE_DIVIDEND_INDEX 0x32                    // Dividend Index
+#define PRODUCT_SUBTYPE_STRATEGY_PRICE_INDEX 0x33              // Strategy Price Index
+#define PRODUCT_SUBTYPE_STRATEGY_TOTAL_RETURN_INDEX 0x34       // Strategy Total Return Index
+#define PRODUCT_SUBTYPE_COMMODITY_INDEX 0x35                   // Commodity Index
+#define PRODUCT_SUBTYPE_BOND_TOTAL_RETURN_INDEX 0x36           // Bond Total Return Index
+#define PRODUCT_SUBTYPE_SUPRANATIONAL_BOND 0x37                // Supranational Bond
+#define PRODUCT_SUBTYPE_WARRANT_WITH_KNOCK_OUT 0x38            // Warrant With Knock Out
+
+// Currency: 2 byte code
+#define CURRENCY_ALL 0x0008  // All
+#define CURRENCY_DZD 0x000C  // Dzd
+#define CURRENCY_ARS 0x0020  // Ars
+#define CURRENCY_AUD 0x0024  // Aud
+#define CURRENCY_BSD 0x002C  // Bsd
+#define CURRENCY_BHD 0x0030  // Bhd
+#define CURRENCY_BDT 0x0032  // Bdt
+#define CURRENCY_AMD 0x0033  // Amd
+#define CURRENCY_BBD 0x0034  // Bbd
+#define CURRENCY_BMD 0x003C  // Bmd
+#define CURRENCY_BTN 0x0040  // Btn
+#define CURRENCY_BOB 0x0044  // Bob
+#define CURRENCY_BWP 0x0048  // Bwp
+#define CURRENCY_BZD 0x0054  // Bzd
+#define CURRENCY_SBD 0x005A  // Sbd
+#define CURRENCY_BND 0x0060  // Bnd
+#define CURRENCY_MMK 0x0068  // Mmk
+#define CURRENCY_BIF 0x006C  // Bif
+#define CURRENCY_KHR 0x0074  // Khr
+#define CURRENCY_CAD 0x007C  // Cad
+#define CURRENCY_CVE 0x0084  // Cve
+#define CURRENCY_KYD 0x0088  // Kyd
+#define CURRENCY_LKR 0x0090  // Lkr
+#define CURRENCY_CLP 0x0098  // Clp
+#define CURRENCY_CNY 0x009C  // Cny
+#define CURRENCY_COP 0x00AA  // Cop
+#define CURRENCY_KMF 0x00AE  // Kmf
+#define CURRENCY_CRC 0x00BC  // Crc
+#define CURRENCY_HRK 0x00BF  // Hrk
+#define CURRENCY_CUP 0x00C0  // Cup
+#define CURRENCY_CZK 0x00CB  // Czk
+#define CURRENCY_DKK 0x00D0  // Dkk
+#define CURRENCY_DOP 0x00D6  // Dop
+#define CURRENCY_SVC 0x00DE  // Svc
+#define CURRENCY_ETB 0x00E6  // Etb
+#define CURRENCY_ERN 0x00E8  // Ern
+#define CURRENCY_FKP 0x00EE  // Fkp
+#define CURRENCY_FJD 0x00F2  // Fjd
+#define CURRENCY_DJF 0x0106  // Djf
+#define CURRENCY_GMD 0x010E  // Gmd
+#define CURRENCY_GIP 0x0124  // Gip
+#define CURRENCY_GTQ 0x0140  // Gtq
+#define CURRENCY_GNF 0x0144  // Gnf
+#define CURRENCY_GYD 0x0148  // Gyd
+#define CURRENCY_HTG 0x014C  // Htg
+#define CURRENCY_HNL 0x0154  // Hnl
+#define CURRENCY_HKD 0x0158  // Hkd
+#define CURRENCY_HUF 0x015C  // Huf
+#define CURRENCY_ISK 0x0160  // Isk
+#define CURRENCY_INR 0x0164  // Inr
+#define CURRENCY_IDR 0x0168  // Idr
+#define CURRENCY_IRR 0x016C  // Irr
+#define CURRENCY_IQD 0x0170  // Iqd
+#define CURRENCY_ILS 0x0178  // Ils
+#define CURRENCY_JMD 0x0184  // Jmd
+#define CURRENCY_JPY 0x0188  // Jpy
+#define CURRENCY_KZT 0x018E  // Kzt
+#define CURRENCY_JOD 0x0190  // Jod
+#define CURRENCY_KES 0x0194  // Kes
+#define CURRENCY_KPW 0x0198  // Kpw
+#define CURRENCY_KRW 0x019A  // Krw
+#define CURRENCY_KWD 0x019E  // Kwd
+#define CURRENCY_KGS 0x01A1  // Kgs
+#define CURRENCY_LAK 0x01A2  // Lak
+#define CURRENCY_LBP 0x01A6  // Lbp
+#define CURRENCY_LSL 0x01AA  // Lsl
+#define CURRENCY_LRD 0x01AE  // Lrd
+#define CURRENCY_LYD 0x01B2  // Lyd
+#define CURRENCY_MOP 0x01BE  // Mop
+#define CURRENCY_MWK 0x01C6  // Mwk
+#define CURRENCY_MYR 0x01CA  // Myr
+#define CURRENCY_MVR 0x01CE  // Mvr
+#define CURRENCY_MUR 0x01E0  // Mur
+#define CURRENCY_MXN 0x01E4  // Mxn
+#define CURRENCY_MNT 0x01F0  // Mnt
+#define CURRENCY_MDL 0x01F2  // Mdl
+#define CURRENCY_MAD 0x01F8  // Mad
+#define CURRENCY_OMR 0x0200  // Omr
+#define CURRENCY_NAD 0x0204  // Nad
+#define CURRENCY_NPR 0x020C  // Npr
+#define CURRENCY_ANG 0x0214  // Ang
+#define CURRENCY_AWG 0x0215  // Awg
+#define CURRENCY_VUV 0x0224  // Vuv
+#define CURRENCY_NZD 0x022A  // Nzd
+#define CURRENCY_NIO 0x022E  // Nio
+#define CURRENCY_NGN 0x0236  // Ngn
+#define CURRENCY_NOK 0x0242  // Nok
+#define CURRENCY_PKR 0x024A  // Pkr
+#define CURRENCY_PAB 0x024E  // Pab
+#define CURRENCY_PGK 0x0256  // Pgk
+#define CURRENCY_PYG 0x0258  // Pyg
+#define CURRENCY_PEN 0x025C  // Pen
+#define CURRENCY_PHP 0x0260  // Php
+#define CURRENCY_QAR 0x027A  // Qar
+#define CURRENCY_RUB 0x0283  // Rub
+#define CURRENCY_RWF 0x0286  // Rwf
+#define CURRENCY_SHP 0x028E  // Shp
+#define CURRENCY_SAR 0x02AA  // Sar
+#define CURRENCY_SCR 0x02B2  // Scr
+#define CURRENCY_SGD 0x02BE  // Sgd
+#define CURRENCY_VND 0x02C0  // Vnd
+#define CURRENCY_SOS 0x02C2  // Sos
+#define CURRENCY_ZAR 0x02C6  // Zar
+#define CURRENCY_SSP 0x02D8  // Ssp
+#define CURRENCY_SZL 0x02EC  // Szl
+#define CURRENCY_SEK 0x02F0  // Sek
+#define CURRENCY_CHF 0x02F4  // Chf
+#define CURRENCY_SYP 0x02F8  // Syp
+#define CURRENCY_THB 0x02FC  // Thb
+#define CURRENCY_TOP 0x0308  // Top
+#define CURRENCY_TTD 0x030C  // Ttd
+#define CURRENCY_AED 0x0310  // Aed
+#define CURRENCY_TND 0x0314  // Tnd
+#define CURRENCY_UGX 0x0320  // Ugx
+#define CURRENCY_MKD 0x0327  // Mkd
+#define CURRENCY_EGP 0x0332  // Egp
+#define CURRENCY_GBP 0x033A  // Gbp
+#define CURRENCY_TZS 0x0342  // Tzs
+#define CURRENCY_USD 0x0348  // Usd
+#define CURRENCY_UYU 0x035A  // Uyu
+#define CURRENCY_UZS 0x035C  // Uzs
+#define CURRENCY_WST 0x0372  // Wst
+#define CURRENCY_YER 0x0376  // Yer
+#define CURRENCY_TWD 0x0385  // Twd
+#define CURRENCY_SLE 0x039D  // Sle
+#define CURRENCY_VED 0x039E  // Ved
+#define CURRENCY_UYW 0x039F  // Uyw
+#define CURRENCY_VES 0x03A0  // Ves
+#define CURRENCY_MRU 0x03A1  // Mru
+#define CURRENCY_STN 0x03A2  // Stn
+#define CURRENCY_CUC 0x03A3  // Cuc
+#define CURRENCY_ZWL 0x03A4  // Zwl
+#define CURRENCY_BYN 0x03A5  // Byn
+#define CURRENCY_TMT 0x03A6  // Tmt
+#define CURRENCY_GHS 0x03A8  // Ghs
+#define CURRENCY_SDG 0x03AA  // Sdg
+#define CURRENCY_UYI 0x03AC  // Uyi
+#define CURRENCY_RSD 0x03AD  // Rsd
+#define CURRENCY_MZN 0x03AF  // Mzn
+#define CURRENCY_AZN 0x03B0  // Azn
+#define CURRENCY_RON 0x03B2  // Ron
+#define CURRENCY_CHE 0x03B3  // Che
+#define CURRENCY_CHW 0x03B4  // Chw
+#define CURRENCY_TRY 0x03B5  // Try
+#define CURRENCY_XAF 0x03B6  // Xaf
+#define CURRENCY_XCD 0x03B7  // Xcd
+#define CURRENCY_XOF 0x03B8  // Xof
+#define CURRENCY_XPF 0x03B9  // Xpf
+#define CURRENCY_XBA 0x03BB  // Xba
+#define CURRENCY_XBB 0x03BC  // Xbb
+#define CURRENCY_XBC 0x03BD  // Xbc
+#define CURRENCY_XBD 0x03BE  // Xbd
+#define CURRENCY_XAU 0x03BF  // Xau
+#define CURRENCY_XDR 0x03C0  // Xdr
+#define CURRENCY_XAG 0x03C1  // Xag
+#define CURRENCY_XPT 0x03C2  // Xpt
+#define CURRENCY_XTS 0x03C3  // Xts
+#define CURRENCY_XPD 0x03C4  // Xpd
+#define CURRENCY_XUA 0x03C5  // Xua
+#define CURRENCY_ZMW 0x03C7  // Zmw
+#define CURRENCY_SRD 0x03C8  // Srd
+#define CURRENCY_MGA 0x03C9  // Mga
+#define CURRENCY_COU 0x03CA  // Cou
+#define CURRENCY_AFN 0x03CB  // Afn
+#define CURRENCY_TJS 0x03CC  // Tjs
+#define CURRENCY_AOA 0x03CD  // Aoa
+#define CURRENCY_BGN 0x03CF  // Bgn
+#define CURRENCY_CDF 0x03D0  // Cdf
+#define CURRENCY_BAM 0x03D1  // Bam
+#define CURRENCY_EUR 0x03D2  // Eur
+#define CURRENCY_MXV 0x03D3  // Mxv
+#define CURRENCY_UAH 0x03D4  // Uah
+#define CURRENCY_GEL 0x03D5  // Gel
+#define CURRENCY_BOV 0x03D8  // Bov
+#define CURRENCY_PLN 0x03D9  // Pln
+#define CURRENCY_BRL 0x03DA  // Brl
+#define CURRENCY_CLF 0x03DE  // Clf
+#define CURRENCY_XSU 0x03E2  // Xsu
+#define CURRENCY_USN 0x03E5  // Usn
+#define CURRENCY_XXX 0x03E7  // Xxx
+
+// Price Expression Type: one byte code
+#define PRICE_EXPRESSION_TYPE_NOT_APPLICABLE 0x03  // Not Applicable
+#define PRICE_EXPRESSION_TYPE_PRICE 0x01           // Price
+#define PRICE_EXPRESSION_TYPE_PERCENTAGE 0x02      // Percentage
+
+// Nominal Value Type: one byte code
+#define NOMINAL_VALUE_TYPE_NOT_APPLICABLE 0x01  // Not Applicable
+#define NOMINAL_VALUE_TYPE_CONSTANT 0x02        // Constant
+
+// Strike Price Currency: 2 byte code
+#define STRIKE_PRICE_CURRENCY_ALL 0x0008  // All
+#define STRIKE_PRICE_CURRENCY_DZD 0x000C  // Dzd
+#define STRIKE_PRICE_CURRENCY_ARS 0x0020  // Ars
+#define STRIKE_PRICE_CURRENCY_AUD 0x0024  // Aud
+#define STRIKE_PRICE_CURRENCY_BSD 0x002C  // Bsd
+#define STRIKE_PRICE_CURRENCY_BHD 0x0030  // Bhd
+#define STRIKE_PRICE_CURRENCY_BDT 0x0032  // Bdt
+#define STRIKE_PRICE_CURRENCY_AMD 0x0033  // Amd
+#define STRIKE_PRICE_CURRENCY_BBD 0x0034  // Bbd
+#define STRIKE_PRICE_CURRENCY_BMD 0x003C  // Bmd
+#define STRIKE_PRICE_CURRENCY_BTN 0x0040  // Btn
+#define STRIKE_PRICE_CURRENCY_BOB 0x0044  // Bob
+#define STRIKE_PRICE_CURRENCY_BWP 0x0048  // Bwp
+#define STRIKE_PRICE_CURRENCY_BZD 0x0054  // Bzd
+#define STRIKE_PRICE_CURRENCY_SBD 0x005A  // Sbd
+#define STRIKE_PRICE_CURRENCY_BND 0x0060  // Bnd
+#define STRIKE_PRICE_CURRENCY_MMK 0x0068  // Mmk
+#define STRIKE_PRICE_CURRENCY_BIF 0x006C  // Bif
+#define STRIKE_PRICE_CURRENCY_KHR 0x0074  // Khr
+#define STRIKE_PRICE_CURRENCY_CAD 0x007C  // Cad
+#define STRIKE_PRICE_CURRENCY_CVE 0x0084  // Cve
+#define STRIKE_PRICE_CURRENCY_KYD 0x0088  // Kyd
+#define STRIKE_PRICE_CURRENCY_LKR 0x0090  // Lkr
+#define STRIKE_PRICE_CURRENCY_CLP 0x0098  // Clp
+#define STRIKE_PRICE_CURRENCY_CNY 0x009C  // Cny
+#define STRIKE_PRICE_CURRENCY_COP 0x00AA  // Cop
+#define STRIKE_PRICE_CURRENCY_KMF 0x00AE  // Kmf
+#define STRIKE_PRICE_CURRENCY_CRC 0x00BC  // Crc
+#define STRIKE_PRICE_CURRENCY_HRK 0x00BF  // Hrk
+#define STRIKE_PRICE_CURRENCY_CUP 0x00C0  // Cup
+#define STRIKE_PRICE_CURRENCY_CZK 0x00CB  // Czk
+#define STRIKE_PRICE_CURRENCY_DKK 0x00D0  // Dkk
+#define STRIKE_PRICE_CURRENCY_DOP 0x00D6  // Dop
+#define STRIKE_PRICE_CURRENCY_SVC 0x00DE  // Svc
+#define STRIKE_PRICE_CURRENCY_ETB 0x00E6  // Etb
+#define STRIKE_PRICE_CURRENCY_ERN 0x00E8  // Ern
+#define STRIKE_PRICE_CURRENCY_FKP 0x00EE  // Fkp
+#define STRIKE_PRICE_CURRENCY_FJD 0x00F2  // Fjd
+#define STRIKE_PRICE_CURRENCY_DJF 0x0106  // Djf
+#define STRIKE_PRICE_CURRENCY_GMD 0x010E  // Gmd
+#define STRIKE_PRICE_CURRENCY_GIP 0x0124  // Gip
+#define STRIKE_PRICE_CURRENCY_GTQ 0x0140  // Gtq
+#define STRIKE_PRICE_CURRENCY_GNF 0x0144  // Gnf
+#define STRIKE_PRICE_CURRENCY_GYD 0x0148  // Gyd
+#define STRIKE_PRICE_CURRENCY_HTG 0x014C  // Htg
+#define STRIKE_PRICE_CURRENCY_HNL 0x0154  // Hnl
+#define STRIKE_PRICE_CURRENCY_HKD 0x0158  // Hkd
+#define STRIKE_PRICE_CURRENCY_HUF 0x015C  // Huf
+#define STRIKE_PRICE_CURRENCY_ISK 0x0160  // Isk
+#define STRIKE_PRICE_CURRENCY_INR 0x0164  // Inr
+#define STRIKE_PRICE_CURRENCY_IDR 0x0168  // Idr
+#define STRIKE_PRICE_CURRENCY_IRR 0x016C  // Irr
+#define STRIKE_PRICE_CURRENCY_IQD 0x0170  // Iqd
+#define STRIKE_PRICE_CURRENCY_ILS 0x0178  // Ils
+#define STRIKE_PRICE_CURRENCY_JMD 0x0184  // Jmd
+#define STRIKE_PRICE_CURRENCY_JPY 0x0188  // Jpy
+#define STRIKE_PRICE_CURRENCY_KZT 0x018E  // Kzt
+#define STRIKE_PRICE_CURRENCY_JOD 0x0190  // Jod
+#define STRIKE_PRICE_CURRENCY_KES 0x0194  // Kes
+#define STRIKE_PRICE_CURRENCY_KPW 0x0198  // Kpw
+#define STRIKE_PRICE_CURRENCY_KRW 0x019A  // Krw
+#define STRIKE_PRICE_CURRENCY_KWD 0x019E  // Kwd
+#define STRIKE_PRICE_CURRENCY_KGS 0x01A1  // Kgs
+#define STRIKE_PRICE_CURRENCY_LAK 0x01A2  // Lak
+#define STRIKE_PRICE_CURRENCY_LBP 0x01A6  // Lbp
+#define STRIKE_PRICE_CURRENCY_LSL 0x01AA  // Lsl
+#define STRIKE_PRICE_CURRENCY_LRD 0x01AE  // Lrd
+#define STRIKE_PRICE_CURRENCY_LYD 0x01B2  // Lyd
+#define STRIKE_PRICE_CURRENCY_MOP 0x01BE  // Mop
+#define STRIKE_PRICE_CURRENCY_MWK 0x01C6  // Mwk
+#define STRIKE_PRICE_CURRENCY_MYR 0x01CA  // Myr
+#define STRIKE_PRICE_CURRENCY_MVR 0x01CE  // Mvr
+#define STRIKE_PRICE_CURRENCY_MUR 0x01E0  // Mur
+#define STRIKE_PRICE_CURRENCY_MXN 0x01E4  // Mxn
+#define STRIKE_PRICE_CURRENCY_MNT 0x01F0  // Mnt
+#define STRIKE_PRICE_CURRENCY_MDL 0x01F2  // Mdl
+#define STRIKE_PRICE_CURRENCY_MAD 0x01F8  // Mad
+#define STRIKE_PRICE_CURRENCY_OMR 0x0200  // Omr
+#define STRIKE_PRICE_CURRENCY_NAD 0x0204  // Nad
+#define STRIKE_PRICE_CURRENCY_NPR 0x020C  // Npr
+#define STRIKE_PRICE_CURRENCY_ANG 0x0214  // Ang
+#define STRIKE_PRICE_CURRENCY_AWG 0x0215  // Awg
+#define STRIKE_PRICE_CURRENCY_VUV 0x0224  // Vuv
+#define STRIKE_PRICE_CURRENCY_NZD 0x022A  // Nzd
+#define STRIKE_PRICE_CURRENCY_NIO 0x022E  // Nio
+#define STRIKE_PRICE_CURRENCY_NGN 0x0236  // Ngn
+#define STRIKE_PRICE_CURRENCY_NOK 0x0242  // Nok
+#define STRIKE_PRICE_CURRENCY_PKR 0x024A  // Pkr
+#define STRIKE_PRICE_CURRENCY_PAB 0x024E  // Pab
+#define STRIKE_PRICE_CURRENCY_PGK 0x0256  // Pgk
+#define STRIKE_PRICE_CURRENCY_PYG 0x0258  // Pyg
+#define STRIKE_PRICE_CURRENCY_PEN 0x025C  // Pen
+#define STRIKE_PRICE_CURRENCY_PHP 0x0260  // Php
+#define STRIKE_PRICE_CURRENCY_QAR 0x027A  // Qar
+#define STRIKE_PRICE_CURRENCY_RUB 0x0283  // Rub
+#define STRIKE_PRICE_CURRENCY_RWF 0x0286  // Rwf
+#define STRIKE_PRICE_CURRENCY_SHP 0x028E  // Shp
+#define STRIKE_PRICE_CURRENCY_SAR 0x02AA  // Sar
+#define STRIKE_PRICE_CURRENCY_SCR 0x02B2  // Scr
+#define STRIKE_PRICE_CURRENCY_SGD 0x02BE  // Sgd
+#define STRIKE_PRICE_CURRENCY_VND 0x02C0  // Vnd
+#define STRIKE_PRICE_CURRENCY_SOS 0x02C2  // Sos
+#define STRIKE_PRICE_CURRENCY_ZAR 0x02C6  // Zar
+#define STRIKE_PRICE_CURRENCY_SSP 0x02D8  // Ssp
+#define STRIKE_PRICE_CURRENCY_SZL 0x02EC  // Szl
+#define STRIKE_PRICE_CURRENCY_SEK 0x02F0  // Sek
+#define STRIKE_PRICE_CURRENCY_CHF 0x02F4  // Chf
+#define STRIKE_PRICE_CURRENCY_SYP 0x02F8  // Syp
+#define STRIKE_PRICE_CURRENCY_THB 0x02FC  // Thb
+#define STRIKE_PRICE_CURRENCY_TOP 0x0308  // Top
+#define STRIKE_PRICE_CURRENCY_TTD 0x030C  // Ttd
+#define STRIKE_PRICE_CURRENCY_AED 0x0310  // Aed
+#define STRIKE_PRICE_CURRENCY_TND 0x0314  // Tnd
+#define STRIKE_PRICE_CURRENCY_UGX 0x0320  // Ugx
+#define STRIKE_PRICE_CURRENCY_MKD 0x0327  // Mkd
+#define STRIKE_PRICE_CURRENCY_EGP 0x0332  // Egp
+#define STRIKE_PRICE_CURRENCY_GBP 0x033A  // Gbp
+#define STRIKE_PRICE_CURRENCY_TZS 0x0342  // Tzs
+#define STRIKE_PRICE_CURRENCY_USD 0x0348  // Usd
+#define STRIKE_PRICE_CURRENCY_UYU 0x035A  // Uyu
+#define STRIKE_PRICE_CURRENCY_UZS 0x035C  // Uzs
+#define STRIKE_PRICE_CURRENCY_WST 0x0372  // Wst
+#define STRIKE_PRICE_CURRENCY_YER 0x0376  // Yer
+#define STRIKE_PRICE_CURRENCY_TWD 0x0385  // Twd
+#define STRIKE_PRICE_CURRENCY_SLE 0x039D  // Sle
+#define STRIKE_PRICE_CURRENCY_VED 0x039E  // Ved
+#define STRIKE_PRICE_CURRENCY_UYW 0x039F  // Uyw
+#define STRIKE_PRICE_CURRENCY_VES 0x03A0  // Ves
+#define STRIKE_PRICE_CURRENCY_MRU 0x03A1  // Mru
+#define STRIKE_PRICE_CURRENCY_STN 0x03A2  // Stn
+#define STRIKE_PRICE_CURRENCY_CUC 0x03A3  // Cuc
+#define STRIKE_PRICE_CURRENCY_ZWL 0x03A4  // Zwl
+#define STRIKE_PRICE_CURRENCY_BYN 0x03A5  // Byn
+#define STRIKE_PRICE_CURRENCY_TMT 0x03A6  // Tmt
+#define STRIKE_PRICE_CURRENCY_GHS 0x03A8  // Ghs
+#define STRIKE_PRICE_CURRENCY_SDG 0x03AA  // Sdg
+#define STRIKE_PRICE_CURRENCY_UYI 0x03AC  // Uyi
+#define STRIKE_PRICE_CURRENCY_RSD 0x03AD  // Rsd
+#define STRIKE_PRICE_CURRENCY_MZN 0x03AF  // Mzn
+#define STRIKE_PRICE_CURRENCY_AZN 0x03B0  // Azn
+#define STRIKE_PRICE_CURRENCY_RON 0x03B2  // Ron
+#define STRIKE_PRICE_CURRENCY_CHE 0x03B3  // Che
+#define STRIKE_PRICE_CURRENCY_CHW 0x03B4  // Chw
+#define STRIKE_PRICE_CURRENCY_TRY 0x03B5  // Try
+#define STRIKE_PRICE_CURRENCY_XAF 0x03B6  // Xaf
+#define STRIKE_PRICE_CURRENCY_XCD 0x03B7  // Xcd
+#define STRIKE_PRICE_CURRENCY_XOF 0x03B8  // Xof
+#define STRIKE_PRICE_CURRENCY_XPF 0x03B9  // Xpf
+#define STRIKE_PRICE_CURRENCY_XBA 0x03BB  // Xba
+#define STRIKE_PRICE_CURRENCY_XBB 0x03BC  // Xbb
+#define STRIKE_PRICE_CURRENCY_XBC 0x03BD  // Xbc
+#define STRIKE_PRICE_CURRENCY_XBD 0x03BE  // Xbd
+#define STRIKE_PRICE_CURRENCY_XAU 0x03BF  // Xau
+#define STRIKE_PRICE_CURRENCY_XDR 0x03C0  // Xdr
+#define STRIKE_PRICE_CURRENCY_XAG 0x03C1  // Xag
+#define STRIKE_PRICE_CURRENCY_XPT 0x03C2  // Xpt
+#define STRIKE_PRICE_CURRENCY_XTS 0x03C3  // Xts
+#define STRIKE_PRICE_CURRENCY_XPD 0x03C4  // Xpd
+#define STRIKE_PRICE_CURRENCY_XUA 0x03C5  // Xua
+#define STRIKE_PRICE_CURRENCY_ZMW 0x03C7  // Zmw
+#define STRIKE_PRICE_CURRENCY_SRD 0x03C8  // Srd
+#define STRIKE_PRICE_CURRENCY_MGA 0x03C9  // Mga
+#define STRIKE_PRICE_CURRENCY_COU 0x03CA  // Cou
+#define STRIKE_PRICE_CURRENCY_AFN 0x03CB  // Afn
+#define STRIKE_PRICE_CURRENCY_TJS 0x03CC  // Tjs
+#define STRIKE_PRICE_CURRENCY_AOA 0x03CD  // Aoa
+#define STRIKE_PRICE_CURRENCY_BGN 0x03CF  // Bgn
+#define STRIKE_PRICE_CURRENCY_CDF 0x03D0  // Cdf
+#define STRIKE_PRICE_CURRENCY_BAM 0x03D1  // Bam
+#define STRIKE_PRICE_CURRENCY_EUR 0x03D2  // Eur
+#define STRIKE_PRICE_CURRENCY_MXV 0x03D3  // Mxv
+#define STRIKE_PRICE_CURRENCY_UAH 0x03D4  // Uah
+#define STRIKE_PRICE_CURRENCY_GEL 0x03D5  // Gel
+#define STRIKE_PRICE_CURRENCY_BOV 0x03D8  // Bov
+#define STRIKE_PRICE_CURRENCY_PLN 0x03D9  // Pln
+#define STRIKE_PRICE_CURRENCY_BRL 0x03DA  // Brl
+#define STRIKE_PRICE_CURRENCY_CLF 0x03DE  // Clf
+#define STRIKE_PRICE_CURRENCY_XSU 0x03E2  // Xsu
+#define STRIKE_PRICE_CURRENCY_USN 0x03E5  // Usn
+#define STRIKE_PRICE_CURRENCY_XXX 0x03E7  // Xxx
+
+// Bond Coupon Type: one byte code
+#define BOND_COUPON_TYPE_NOT_APPLICABLE 0x01  // Not Applicable
+#define BOND_COUPON_TYPE_ZERO 0x02            // Zero
+#define BOND_COUPON_TYPE_FIXED 0x03           // Fixed
+#define BOND_COUPON_TYPE_FLOATING 0x04        // Floating
+#define BOND_COUPON_TYPE_INDEXED 0x05         // Indexed
+
+// Issuer Reg Country: 2 byte code
+#define ISSUER_REG_COUNTRY_AFG 0x0004  // Afg
+#define ISSUER_REG_COUNTRY_ALB 0x0008  // Alb
+#define ISSUER_REG_COUNTRY_ATA 0x000A  // Ata
+#define ISSUER_REG_COUNTRY_DZA 0x000C  // Dza
+#define ISSUER_REG_COUNTRY_ASM 0x0010  // Asm
+#define ISSUER_REG_COUNTRY_AND 0x0014  // And
+#define ISSUER_REG_COUNTRY_AGO 0x0018  // Ago
+#define ISSUER_REG_COUNTRY_ATG 0x001C  // Atg
+#define ISSUER_REG_COUNTRY_AZE 0x001F  // Aze
+#define ISSUER_REG_COUNTRY_ARG 0x0020  // Arg
+#define ISSUER_REG_COUNTRY_AUS 0x0024  // Aus
+#define ISSUER_REG_COUNTRY_AUT 0x0028  // Aut
+#define ISSUER_REG_COUNTRY_BHS 0x002C  // Bhs
+#define ISSUER_REG_COUNTRY_BHR 0x0030  // Bhr
+#define ISSUER_REG_COUNTRY_BGD 0x0032  // Bgd
+#define ISSUER_REG_COUNTRY_ARM 0x0033  // Arm
+#define ISSUER_REG_COUNTRY_BRB 0x0034  // Brb
+#define ISSUER_REG_COUNTRY_BEL 0x0038  // Bel
+#define ISSUER_REG_COUNTRY_BMU 0x003C  // Bmu
+#define ISSUER_REG_COUNTRY_BTN 0x0040  // Btn
+#define ISSUER_REG_COUNTRY_BOL 0x0044  // Bol
+#define ISSUER_REG_COUNTRY_BIH 0x0046  // Bih
+#define ISSUER_REG_COUNTRY_BWA 0x0048  // Bwa
+#define ISSUER_REG_COUNTRY_BVT 0x004A  // Bvt
+#define ISSUER_REG_COUNTRY_BRA 0x004C  // Bra
+#define ISSUER_REG_COUNTRY_BLZ 0x0054  // Blz
+#define ISSUER_REG_COUNTRY_IOT 0x0056  // Iot
+#define ISSUER_REG_COUNTRY_SLB 0x005A  // Slb
+#define ISSUER_REG_COUNTRY_VGB 0x005C  // Vgb
+#define ISSUER_REG_COUNTRY_BRN 0x0060  // Brn
+#define ISSUER_REG_COUNTRY_BGR 0x0064  // Bgr
+#define ISSUER_REG_COUNTRY_MMR 0x0068  // Mmr
+#define ISSUER_REG_COUNTRY_BDI 0x006C  // Bdi
+#define ISSUER_REG_COUNTRY_BLR 0x0070  // Blr
+#define ISSUER_REG_COUNTRY_KHM 0x0074  // Khm
+#define ISSUER_REG_COUNTRY_CMR 0x0078  // Cmr
+#define ISSUER_REG_COUNTRY_CAN 0x007C  // Can
+#define ISSUER_REG_COUNTRY_CPV 0x0084  // Cpv
+#define ISSUER_REG_COUNTRY_CYM 0x0088  // Cym
+#define ISSUER_REG_COUNTRY_CAF 0x008C  // Caf
+#define ISSUER_REG_COUNTRY_LKA 0x0090  // Lka
+#define ISSUER_REG_COUNTRY_TCD 0x0094  // Tcd
+#define ISSUER_REG_COUNTRY_CHL 0x0098  // Chl
+#define ISSUER_REG_COUNTRY_CHN 0x009C  // Chn
+#define ISSUER_REG_COUNTRY_TWN 0x009E  // Twn
+#define ISSUER_REG_COUNTRY_CXR 0x00A2  // Cxr
+#define ISSUER_REG_COUNTRY_CCK 0x00A6  // Cck
+#define ISSUER_REG_COUNTRY_COL 0x00AA  // Col
+#define ISSUER_REG_COUNTRY_COM 0x00AE  // Com
+#define ISSUER_REG_COUNTRY_MYT 0x00AF  // Myt
+#define ISSUER_REG_COUNTRY_COG 0x00B2  // Cog
+#define ISSUER_REG_COUNTRY_COD 0x00B4  // Cod
+#define ISSUER_REG_COUNTRY_COK 0x00B8  // Cok
+#define ISSUER_REG_COUNTRY_CRI 0x00BC  // Cri
+#define ISSUER_REG_COUNTRY_HRV 0x00BF  // Hrv
+#define ISSUER_REG_COUNTRY_CUB 0x00C0  // Cub
+#define ISSUER_REG_COUNTRY_CYP 0x00C4  // Cyp
+#define ISSUER_REG_COUNTRY_CZE 0x00CB  // Cze
+#define ISSUER_REG_COUNTRY_BEN 0x00CC  // Ben
+#define ISSUER_REG_COUNTRY_DNK 0x00D0  // Dnk
+#define ISSUER_REG_COUNTRY_DMA 0x00D4  // Dma
+#define ISSUER_REG_COUNTRY_DOM 0x00D6  // Dom
+#define ISSUER_REG_COUNTRY_ECU 0x00DA  // Ecu
+#define ISSUER_REG_COUNTRY_SLV 0x00DE  // Slv
+#define ISSUER_REG_COUNTRY_GNQ 0x00E2  // Gnq
+#define ISSUER_REG_COUNTRY_ETH 0x00E7  // Eth
+#define ISSUER_REG_COUNTRY_ERI 0x00E8  // Eri
+#define ISSUER_REG_COUNTRY_EST 0x00E9  // Est
+#define ISSUER_REG_COUNTRY_FRO 0x00EA  // Fro
+#define ISSUER_REG_COUNTRY_FLK 0x00EE  // Flk
+#define ISSUER_REG_COUNTRY_SGS 0x00EF  // Sgs
+#define ISSUER_REG_COUNTRY_FJI 0x00F2  // Fji
+#define ISSUER_REG_COUNTRY_FIN 0x00F6  // Fin
+#define ISSUER_REG_COUNTRY_ALA 0x00F8  // Ala
+#define ISSUER_REG_COUNTRY_FRA 0x00FA  // Fra
+#define ISSUER_REG_COUNTRY_GUF 0x00FE  // Guf
+#define ISSUER_REG_COUNTRY_PYF 0x0102  // Pyf
+#define ISSUER_REG_COUNTRY_ATF 0x0104  // Atf
+#define ISSUER_REG_COUNTRY_DJI 0x0106  // Dji
+#define ISSUER_REG_COUNTRY_GAB 0x010A  // Gab
+#define ISSUER_REG_COUNTRY_GEO 0x010C  // Geo
+#define ISSUER_REG_COUNTRY_GMB 0x010E  // Gmb
+#define ISSUER_REG_COUNTRY_PSE 0x0113  // Pse
+#define ISSUER_REG_COUNTRY_DEU 0x0114  // Deu
+#define ISSUER_REG_COUNTRY_GHA 0x0120  // Gha
+#define ISSUER_REG_COUNTRY_GIB 0x0124  // Gib
+#define ISSUER_REG_COUNTRY_KIR 0x0128  // Kir
+#define ISSUER_REG_COUNTRY_GRC 0x012C  // Grc
+#define ISSUER_REG_COUNTRY_GRL 0x0130  // Grl
+#define ISSUER_REG_COUNTRY_GRD 0x0134  // Grd
+#define ISSUER_REG_COUNTRY_GLP 0x0138  // Glp
+#define ISSUER_REG_COUNTRY_GUM 0x013C  // Gum
+#define ISSUER_REG_COUNTRY_GTM 0x0140  // Gtm
+#define ISSUER_REG_COUNTRY_GIN 0x0144  // Gin
+#define ISSUER_REG_COUNTRY_GUY 0x0148  // Guy
+#define ISSUER_REG_COUNTRY_HTI 0x014C  // Hti
+#define ISSUER_REG_COUNTRY_HMD 0x014E  // Hmd
+#define ISSUER_REG_COUNTRY_VAT 0x0150  // Vat
+#define ISSUER_REG_COUNTRY_HND 0x0154  // Hnd
+#define ISSUER_REG_COUNTRY_HKG 0x0158  // Hkg
+#define ISSUER_REG_COUNTRY_HUN 0x015C  // Hun
+#define ISSUER_REG_COUNTRY_ISL 0x0160  // Isl
+#define ISSUER_REG_COUNTRY_IND 0x0164  // Ind
+#define ISSUER_REG_COUNTRY_IDN 0x0168  // Idn
+#define ISSUER_REG_COUNTRY_IRN 0x016C  // Irn
+#define ISSUER_REG_COUNTRY_IRQ 0x0170  // Irq
+#define ISSUER_REG_COUNTRY_IRL 0x0174  // Irl
+#define ISSUER_REG_COUNTRY_ISR 0x0178  // Isr
+#define ISSUER_REG_COUNTRY_ITA 0x017C  // Ita
+#define ISSUER_REG_COUNTRY_CIV 0x0180  // Civ
+#define ISSUER_REG_COUNTRY_JAM 0x0184  // Jam
+#define ISSUER_REG_COUNTRY_JPN 0x0188  // Jpn
+#define ISSUER_REG_COUNTRY_KAZ 0x018E  // Kaz
+#define ISSUER_REG_COUNTRY_JOR 0x0190  // Jor
+#define ISSUER_REG_COUNTRY_KEN 0x0194  // Ken
+#define ISSUER_REG_COUNTRY_PRK 0x0198  // Prk
+#define ISSUER_REG_COUNTRY_KOR 0x019A  // Kor
+#define ISSUER_REG_COUNTRY_KWT 0x019E  // Kwt
+#define ISSUER_REG_COUNTRY_KGZ 0x01A1  // Kgz
+#define ISSUER_REG_COUNTRY_LAO 0x01A2  // Lao
+#define ISSUER_REG_COUNTRY_LBN 0x01A6  // Lbn
+#define ISSUER_REG_COUNTRY_LSO 0x01AA  // Lso
+#define ISSUER_REG_COUNTRY_LVA 0x01AC  // Lva
+#define ISSUER_REG_COUNTRY_LBR 0x01AE  // Lbr
+#define ISSUER_REG_COUNTRY_LBY 0x01B2  // Lby
+#define ISSUER_REG_COUNTRY_LIE 0x01B6  // Lie
+#define ISSUER_REG_COUNTRY_LTU 0x01B8  // Ltu
+#define ISSUER_REG_COUNTRY_LUX 0x01BA  // Lux
+#define ISSUER_REG_COUNTRY_MAC 0x01BE  // Mac
+#define ISSUER_REG_COUNTRY_MDG 0x01C2  // Mdg
+#define ISSUER_REG_COUNTRY_MWI 0x01C6  // Mwi
+#define ISSUER_REG_COUNTRY_MYS 0x01CA  // Mys
+#define ISSUER_REG_COUNTRY_MDV 0x01CE  // Mdv
+#define ISSUER_REG_COUNTRY_MLI 0x01D2  // Mli
+#define ISSUER_REG_COUNTRY_MLT 0x01D6  // Mlt
+#define ISSUER_REG_COUNTRY_MTQ 0x01DA  // Mtq
+#define ISSUER_REG_COUNTRY_MRT 0x01DE  // Mrt
+#define ISSUER_REG_COUNTRY_MUS 0x01E0  // Mus
+#define ISSUER_REG_COUNTRY_MEX 0x01E4  // Mex
+#define ISSUER_REG_COUNTRY_MCO 0x01EC  // Mco
+#define ISSUER_REG_COUNTRY_MNG 0x01F0  // Mng
+#define ISSUER_REG_COUNTRY_MDA 0x01F2  // Mda
+#define ISSUER_REG_COUNTRY_MNE 0x01F3  // Mne
+#define ISSUER_REG_COUNTRY_MSR 0x01F4  // Msr
+#define ISSUER_REG_COUNTRY_MAR 0x01F8  // Mar
+#define ISSUER_REG_COUNTRY_MOZ 0x01FC  // Moz
+#define ISSUER_REG_COUNTRY_OMN 0x0200  // Omn
+#define ISSUER_REG_COUNTRY_NAM 0x0204  // Nam
+#define ISSUER_REG_COUNTRY_NRU 0x0208  // Nru
+#define ISSUER_REG_COUNTRY_NPL 0x020C  // Npl
+#define ISSUER_REG_COUNTRY_NLD 0x0210  // Nld
+#define ISSUER_REG_COUNTRY_CUW 0x0213  // Cuw
+#define ISSUER_REG_COUNTRY_ABW 0x0215  // Abw
+#define ISSUER_REG_COUNTRY_SXM 0x0216  // Sxm
+#define ISSUER_REG_COUNTRY_BES 0x0217  // Bes
+#define ISSUER_REG_COUNTRY_NCL 0x021C  // Ncl
+#define ISSUER_REG_COUNTRY_VUT 0x0224  // Vut
+#define ISSUER_REG_COUNTRY_NZL 0x022A  // Nzl
+#define ISSUER_REG_COUNTRY_NIC 0x022E  // Nic
+#define ISSUER_REG_COUNTRY_NER 0x0232  // Ner
+#define ISSUER_REG_COUNTRY_NGA 0x0236  // Nga
+#define ISSUER_REG_COUNTRY_NIU 0x023A  // Niu
+#define ISSUER_REG_COUNTRY_NFK 0x023E  // Nfk
+#define ISSUER_REG_COUNTRY_NOR 0x0242  // Nor
+#define ISSUER_REG_COUNTRY_MNP 0x0244  // Mnp
+#define ISSUER_REG_COUNTRY_UMI 0x0245  // Umi
+#define ISSUER_REG_COUNTRY_FSM 0x0247  // Fsm
+#define ISSUER_REG_COUNTRY_MHL 0x0248  // Mhl
+#define ISSUER_REG_COUNTRY_PLW 0x0249  // Plw
+#define ISSUER_REG_COUNTRY_PAK 0x024A  // Pak
+#define ISSUER_REG_COUNTRY_PAN 0x024F  // Pan
+#define ISSUER_REG_COUNTRY_PNG 0x0256  // Png
+#define ISSUER_REG_COUNTRY_PRY 0x0258  // Pry
+#define ISSUER_REG_COUNTRY_PER 0x025C  // Per
+#define ISSUER_REG_COUNTRY_PHL 0x0260  // Phl
+#define ISSUER_REG_COUNTRY_PCN 0x0264  // Pcn
+#define ISSUER_REG_COUNTRY_POL 0x0268  // Pol
+#define ISSUER_REG_COUNTRY_PRT 0x026C  // Prt
+#define ISSUER_REG_COUNTRY_GNB 0x0270  // Gnb
+#define ISSUER_REG_COUNTRY_TLS 0x0272  // Tls
+#define ISSUER_REG_COUNTRY_PRI 0x0276  // Pri
+#define ISSUER_REG_COUNTRY_QAT 0x027A  // Qat
+#define ISSUER_REG_COUNTRY_REU 0x027E  // Reu
+#define ISSUER_REG_COUNTRY_ROU 0x0282  // Rou
+#define ISSUER_REG_COUNTRY_RUS 0x0283  // Rus
+#define ISSUER_REG_COUNTRY_RWA 0x0286  // Rwa
+#define ISSUER_REG_COUNTRY_BLM 0x028C  // Blm
+#define ISSUER_REG_COUNTRY_SHN 0x028E  // Shn
+#define ISSUER_REG_COUNTRY_KNA 0x0293  // Kna
+#define ISSUER_REG_COUNTRY_AIA 0x0294  // Aia
+#define ISSUER_REG_COUNTRY_LCA 0x0296  // Lca
+#define ISSUER_REG_COUNTRY_MAF 0x0297  // Maf
+#define ISSUER_REG_COUNTRY_SPM 0x029A  // Spm
+#define ISSUER_REG_COUNTRY_VCT 0x029E  // Vct
+#define ISSUER_REG_COUNTRY_SMR 0x02A2  // Smr
+#define ISSUER_REG_COUNTRY_STP 0x02A6  // Stp
+#define ISSUER_REG_COUNTRY_SAU 0x02AA  // Sau
+#define ISSUER_REG_COUNTRY_SEN 0x02AE  // Sen
+#define ISSUER_REG_COUNTRY_SRB 0x02B0  // Srb
+#define ISSUER_REG_COUNTRY_SYC 0x02B2  // Syc
+#define ISSUER_REG_COUNTRY_SLE 0x02B6  // Sle
+#define ISSUER_REG_COUNTRY_SGP 0x02BE  // Sgp
+#define ISSUER_REG_COUNTRY_SVK 0x02BF  // Svk
+#define ISSUER_REG_COUNTRY_VNM 0x02C0  // Vnm
+#define ISSUER_REG_COUNTRY_SVN 0x02C1  // Svn
+#define ISSUER_REG_COUNTRY_SOM 0x02C2  // Som
+#define ISSUER_REG_COUNTRY_ZAF 0x02C6  // Zaf
+#define ISSUER_REG_COUNTRY_ZWE 0x02CC  // Zwe
+#define ISSUER_REG_COUNTRY_ESP 0x02D4  // Esp
+#define ISSUER_REG_COUNTRY_SSD 0x02D8  // Ssd
+#define ISSUER_REG_COUNTRY_SDN 0x02D9  // Sdn
+#define ISSUER_REG_COUNTRY_ESH 0x02DC  // Esh
+#define ISSUER_REG_COUNTRY_SUR 0x02E4  // Sur
+#define ISSUER_REG_COUNTRY_SJM 0x02E8  // Sjm
+#define ISSUER_REG_COUNTRY_SWZ 0x02EC  // Swz
+#define ISSUER_REG_COUNTRY_SWE 0x02F0  // Swe
+#define ISSUER_REG_COUNTRY_CHE 0x02F4  // Che
+#define ISSUER_REG_COUNTRY_SYR 0x02F8  // Syr
+#define ISSUER_REG_COUNTRY_TJK 0x02FA  // Tjk
+#define ISSUER_REG_COUNTRY_THA 0x02FC  // Tha
+#define ISSUER_REG_COUNTRY_TGO 0x0300  // Tgo
+#define ISSUER_REG_COUNTRY_TKL 0x0304  // Tkl
+#define ISSUER_REG_COUNTRY_TON 0x0308  // Ton
+#define ISSUER_REG_COUNTRY_TTO 0x030C  // Tto
+#define ISSUER_REG_COUNTRY_ARE 0x0310  // Are
+#define ISSUER_REG_COUNTRY_TUN 0x0314  // Tun
+#define ISSUER_REG_COUNTRY_TUR 0x0318  // Tur
+#define ISSUER_REG_COUNTRY_TKM 0x031B  // Tkm
+#define ISSUER_REG_COUNTRY_TCA 0x031C  // Tca
+#define ISSUER_REG_COUNTRY_TUV 0x031E  // Tuv
+#define ISSUER_REG_COUNTRY_UGA 0x0320  // Uga
+#define ISSUER_REG_COUNTRY_UKR 0x0324  // Ukr
+#define ISSUER_REG_COUNTRY_MKD 0x0327  // Mkd
+#define ISSUER_REG_COUNTRY_EGY 0x0332  // Egy
+#define ISSUER_REG_COUNTRY_GBR 0x033A  // Gbr
+#define ISSUER_REG_COUNTRY_GGY 0x033F  // Ggy
+#define ISSUER_REG_COUNTRY_JEY 0x0340  // Jey
+#define ISSUER_REG_COUNTRY_IMN 0x0341  // Imn
+#define ISSUER_REG_COUNTRY_TZA 0x0342  // Tza
+#define ISSUER_REG_COUNTRY_USA 0x0348  // Usa
+#define ISSUER_REG_COUNTRY_VIR 0x0352  // Vir
+#define ISSUER_REG_COUNTRY_BFA 0x0356  // Bfa
+#define ISSUER_REG_COUNTRY_URY 0x035A  // Ury
+#define ISSUER_REG_COUNTRY_UZB 0x035C  // Uzb
+#define ISSUER_REG_COUNTRY_VEN 0x035E  // Ven
+#define ISSUER_REG_COUNTRY_WLF 0x036C  // Wlf
+#define ISSUER_REG_COUNTRY_WSM 0x0372  // Wsm
+#define ISSUER_REG_COUNTRY_YEM 0x0377  // Yem
+#define ISSUER_REG_COUNTRY_ZMB 0x037E  // Zmb
+
+// Us Indicator: one byte code
+#define US_INDICATOR_NOT_APPLICABLE 0x01               // Not Applicable
+#define US_INDICATOR_REGULATION_S 0x02                 // Regulation S
+#define US_INDICATOR_REGULATION_S_PLUS_RULE_144A 0x03  // Regulation S Plus Rule 144a
+
+// Settlement Type: one byte code
+#define SETTLEMENT_TYPE_NOT_APPLICABLE 0x01     // Not Applicable
+#define SETTLEMENT_TYPE_CASH_SETTLEMENT 0x02    // Cash Settlement
+#define SETTLEMENT_TYPE_PHYSICAL_DELIVERY 0x03  // Physical Delivery
+
+// Option Type: one byte code
+#define OPTION_TYPE_NOT_APPLICABLE 0x01  // Not Applicable
+#define OPTION_TYPE_CALL 0x02            // Call
+#define OPTION_TYPE_PUT 0x03             // Put
+
+// Exercise Type: one byte code
+#define EXERCISE_TYPE_AMER 0x01  // Amer
+#define EXERCISE_TYPE_EURO 0x02  // Euro
+#define EXERCISE_TYPE_NA 0x03    // Na
+
+// Status: one byte code
+#define STATUS_ACTIVE 0x01                        // Active
+#define STATUS_INACTIVE 0x02                      // Inactive
+#define STATUS_MARKET_OPERATIONS_SUSPENSION 0x03  // Market Operations Suspension
+#define STATUS_OUTSIDE_COLLARS_STATIC 0x04        // Outside Collars Static
+#define STATUS_OUTSIDE_COLLARS_DYNAMIC 0x05       // Outside Collars Dynamic
+#define STATUS_REGULATORY_SUSPENSION 0x06         // Regulatory Suspension
+#define STATUS_HYBRID_NO_QUOTES 0x08              // Hybrid No Quotes
+#define STATUS_HYBRID_KNOCKOUT 0x09               // Hybrid Knockout
+#define STATUS_HYBRID_KNOCKOUT_BY_ISSUER 0x0A     // Hybrid Knockout By Issuer
+
+// Is Leverage: one byte code
+#define IS_LEVERAGE_NOT_APPLICABLE 0x01  // Not Applicable
+#define IS_LEVERAGE_YES 0x02             // Yes
+#define IS_LEVERAGE_NO 0x03              // No
+
+// Index Publication Schedule: one byte code
+#define INDEX_PUBLICATION_SCHEDULE_CONTINUOUS 0x01  // Continuous
+#define INDEX_PUBLICATION_SCHEDULE_FIXING 0x02      // Fixing
+#define INDEX_PUBLICATION_SCHEDULE_CLOSING 0x03     // Closing
+
+// Index Type: one byte code
+#define INDEX_TYPE_W 0x01  // W
+#define INDEX_TYPE_Z 0x02  // Z
+#define INDEX_TYPE_V 0x03  // V
+#define INDEX_TYPE_M 0x04  // M
+#define INDEX_TYPE_S 0x05  // S
+#define INDEX_TYPE_L 0x06  // L
+
+// Index Underlying Type: one byte code
+#define INDEX_UNDERLYING_TYPE_NOT_APPLICABLE 0x01  // Not Applicable
+#define INDEX_UNDERLYING_TYPE_INDEX 0x02           // Index
+#define INDEX_UNDERLYING_TYPE_REFERENCE_RATE 0x03  // Reference Rate
+
+// Auction Type: one byte code
+#define AUCTION_TYPE_NOT_APPLICABLE 0x01                       // Not Applicable
+#define AUCTION_TYPE_AUCTION_OPENING 0x02                      // Auction Opening
+#define AUCTION_TYPE_AUCTION_CLOSING 0x03                      // Auction Closing
+#define AUCTION_TYPE_AUCTION_INTRADAY 0x04                     // Auction Intraday
+#define AUCTION_TYPE_AUCTION_VOLATILITY_STATIC 0x05            // Auction Volatility Static
+#define AUCTION_TYPE_AUCTION_VOLATILITY_DYNAMIC 0x06           // Auction Volatility Dynamic
+#define AUCTION_TYPE_AUCTION_EXTENDED_VOLATILITY_STATIC 0x07   // Auction Extended Volatility Static
+#define AUCTION_TYPE_AUCTION_EXTENDED_VOLATILITY_DYNAMIC 0x08  // Auction Extended Volatility Dynamic
+#define AUCTION_TYPE_UNSUSPENSION_AUCTION 0x09                 // Unsuspension Auction
+
+// Side: one byte code
+#define SIDE_BUY 0x01   // Buy
+#define SIDE_SELL 0x02  // Sell
+
+// Price Currency: 2 byte code
+#define PRICE_CURRENCY_ALL 0x0008  // All
+#define PRICE_CURRENCY_DZD 0x000C  // Dzd
+#define PRICE_CURRENCY_ARS 0x0020  // Ars
+#define PRICE_CURRENCY_AUD 0x0024  // Aud
+#define PRICE_CURRENCY_BSD 0x002C  // Bsd
+#define PRICE_CURRENCY_BHD 0x0030  // Bhd
+#define PRICE_CURRENCY_BDT 0x0032  // Bdt
+#define PRICE_CURRENCY_AMD 0x0033  // Amd
+#define PRICE_CURRENCY_BBD 0x0034  // Bbd
+#define PRICE_CURRENCY_BMD 0x003C  // Bmd
+#define PRICE_CURRENCY_BTN 0x0040  // Btn
+#define PRICE_CURRENCY_BOB 0x0044  // Bob
+#define PRICE_CURRENCY_BWP 0x0048  // Bwp
+#define PRICE_CURRENCY_BZD 0x0054  // Bzd
+#define PRICE_CURRENCY_SBD 0x005A  // Sbd
+#define PRICE_CURRENCY_BND 0x0060  // Bnd
+#define PRICE_CURRENCY_MMK 0x0068  // Mmk
+#define PRICE_CURRENCY_BIF 0x006C  // Bif
+#define PRICE_CURRENCY_KHR 0x0074  // Khr
+#define PRICE_CURRENCY_CAD 0x007C  // Cad
+#define PRICE_CURRENCY_CVE 0x0084  // Cve
+#define PRICE_CURRENCY_KYD 0x0088  // Kyd
+#define PRICE_CURRENCY_LKR 0x0090  // Lkr
+#define PRICE_CURRENCY_CLP 0x0098  // Clp
+#define PRICE_CURRENCY_CNY 0x009C  // Cny
+#define PRICE_CURRENCY_COP 0x00AA  // Cop
+#define PRICE_CURRENCY_KMF 0x00AE  // Kmf
+#define PRICE_CURRENCY_CRC 0x00BC  // Crc
+#define PRICE_CURRENCY_HRK 0x00BF  // Hrk
+#define PRICE_CURRENCY_CUP 0x00C0  // Cup
+#define PRICE_CURRENCY_CZK 0x00CB  // Czk
+#define PRICE_CURRENCY_DKK 0x00D0  // Dkk
+#define PRICE_CURRENCY_DOP 0x00D6  // Dop
+#define PRICE_CURRENCY_SVC 0x00DE  // Svc
+#define PRICE_CURRENCY_ETB 0x00E6  // Etb
+#define PRICE_CURRENCY_ERN 0x00E8  // Ern
+#define PRICE_CURRENCY_FKP 0x00EE  // Fkp
+#define PRICE_CURRENCY_FJD 0x00F2  // Fjd
+#define PRICE_CURRENCY_DJF 0x0106  // Djf
+#define PRICE_CURRENCY_GMD 0x010E  // Gmd
+#define PRICE_CURRENCY_GIP 0x0124  // Gip
+#define PRICE_CURRENCY_GTQ 0x0140  // Gtq
+#define PRICE_CURRENCY_GNF 0x0144  // Gnf
+#define PRICE_CURRENCY_GYD 0x0148  // Gyd
+#define PRICE_CURRENCY_HTG 0x014C  // Htg
+#define PRICE_CURRENCY_HNL 0x0154  // Hnl
+#define PRICE_CURRENCY_HKD 0x0158  // Hkd
+#define PRICE_CURRENCY_HUF 0x015C  // Huf
+#define PRICE_CURRENCY_ISK 0x0160  // Isk
+#define PRICE_CURRENCY_INR 0x0164  // Inr
+#define PRICE_CURRENCY_IDR 0x0168  // Idr
+#define PRICE_CURRENCY_IRR 0x016C  // Irr
+#define PRICE_CURRENCY_IQD 0x0170  // Iqd
+#define PRICE_CURRENCY_ILS 0x0178  // Ils
+#define PRICE_CURRENCY_JMD 0x0184  // Jmd
+#define PRICE_CURRENCY_JPY 0x0188  // Jpy
+#define PRICE_CURRENCY_KZT 0x018E  // Kzt
+#define PRICE_CURRENCY_JOD 0x0190  // Jod
+#define PRICE_CURRENCY_KES 0x0194  // Kes
+#define PRICE_CURRENCY_KPW 0x0198  // Kpw
+#define PRICE_CURRENCY_KRW 0x019A  // Krw
+#define PRICE_CURRENCY_KWD 0x019E  // Kwd
+#define PRICE_CURRENCY_KGS 0x01A1  // Kgs
+#define PRICE_CURRENCY_LAK 0x01A2  // Lak
+#define PRICE_CURRENCY_LBP 0x01A6  // Lbp
+#define PRICE_CURRENCY_LSL 0x01AA  // Lsl
+#define PRICE_CURRENCY_LRD 0x01AE  // Lrd
+#define PRICE_CURRENCY_LYD 0x01B2  // Lyd
+#define PRICE_CURRENCY_MOP 0x01BE  // Mop
+#define PRICE_CURRENCY_MWK 0x01C6  // Mwk
+#define PRICE_CURRENCY_MYR 0x01CA  // Myr
+#define PRICE_CURRENCY_MVR 0x01CE  // Mvr
+#define PRICE_CURRENCY_MUR 0x01E0  // Mur
+#define PRICE_CURRENCY_MXN 0x01E4  // Mxn
+#define PRICE_CURRENCY_MNT 0x01F0  // Mnt
+#define PRICE_CURRENCY_MDL 0x01F2  // Mdl
+#define PRICE_CURRENCY_MAD 0x01F8  // Mad
+#define PRICE_CURRENCY_OMR 0x0200  // Omr
+#define PRICE_CURRENCY_NAD 0x0204  // Nad
+#define PRICE_CURRENCY_NPR 0x020C  // Npr
+#define PRICE_CURRENCY_ANG 0x0214  // Ang
+#define PRICE_CURRENCY_AWG 0x0215  // Awg
+#define PRICE_CURRENCY_VUV 0x0224  // Vuv
+#define PRICE_CURRENCY_NZD 0x022A  // Nzd
+#define PRICE_CURRENCY_NIO 0x022E  // Nio
+#define PRICE_CURRENCY_NGN 0x0236  // Ngn
+#define PRICE_CURRENCY_NOK 0x0242  // Nok
+#define PRICE_CURRENCY_PKR 0x024A  // Pkr
+#define PRICE_CURRENCY_PAB 0x024E  // Pab
+#define PRICE_CURRENCY_PGK 0x0256  // Pgk
+#define PRICE_CURRENCY_PYG 0x0258  // Pyg
+#define PRICE_CURRENCY_PEN 0x025C  // Pen
+#define PRICE_CURRENCY_PHP 0x0260  // Php
+#define PRICE_CURRENCY_QAR 0x027A  // Qar
+#define PRICE_CURRENCY_RUB 0x0283  // Rub
+#define PRICE_CURRENCY_RWF 0x0286  // Rwf
+#define PRICE_CURRENCY_SHP 0x028E  // Shp
+#define PRICE_CURRENCY_SAR 0x02AA  // Sar
+#define PRICE_CURRENCY_SCR 0x02B2  // Scr
+#define PRICE_CURRENCY_SGD 0x02BE  // Sgd
+#define PRICE_CURRENCY_VND 0x02C0  // Vnd
+#define PRICE_CURRENCY_SOS 0x02C2  // Sos
+#define PRICE_CURRENCY_ZAR 0x02C6  // Zar
+#define PRICE_CURRENCY_SSP 0x02D8  // Ssp
+#define PRICE_CURRENCY_SZL 0x02EC  // Szl
+#define PRICE_CURRENCY_SEK 0x02F0  // Sek
+#define PRICE_CURRENCY_CHF 0x02F4  // Chf
+#define PRICE_CURRENCY_SYP 0x02F8  // Syp
+#define PRICE_CURRENCY_THB 0x02FC  // Thb
+#define PRICE_CURRENCY_TOP 0x0308  // Top
+#define PRICE_CURRENCY_TTD 0x030C  // Ttd
+#define PRICE_CURRENCY_AED 0x0310  // Aed
+#define PRICE_CURRENCY_TND 0x0314  // Tnd
+#define PRICE_CURRENCY_UGX 0x0320  // Ugx
+#define PRICE_CURRENCY_MKD 0x0327  // Mkd
+#define PRICE_CURRENCY_EGP 0x0332  // Egp
+#define PRICE_CURRENCY_GBP 0x033A  // Gbp
+#define PRICE_CURRENCY_TZS 0x0342  // Tzs
+#define PRICE_CURRENCY_USD 0x0348  // Usd
+#define PRICE_CURRENCY_UYU 0x035A  // Uyu
+#define PRICE_CURRENCY_UZS 0x035C  // Uzs
+#define PRICE_CURRENCY_WST 0x0372  // Wst
+#define PRICE_CURRENCY_YER 0x0376  // Yer
+#define PRICE_CURRENCY_TWD 0x0385  // Twd
+#define PRICE_CURRENCY_SLE 0x039D  // Sle
+#define PRICE_CURRENCY_VED 0x039E  // Ved
+#define PRICE_CURRENCY_UYW 0x039F  // Uyw
+#define PRICE_CURRENCY_VES 0x03A0  // Ves
+#define PRICE_CURRENCY_MRU 0x03A1  // Mru
+#define PRICE_CURRENCY_STN 0x03A2  // Stn
+#define PRICE_CURRENCY_CUC 0x03A3  // Cuc
+#define PRICE_CURRENCY_ZWL 0x03A4  // Zwl
+#define PRICE_CURRENCY_BYN 0x03A5  // Byn
+#define PRICE_CURRENCY_TMT 0x03A6  // Tmt
+#define PRICE_CURRENCY_GHS 0x03A8  // Ghs
+#define PRICE_CURRENCY_SDG 0x03AA  // Sdg
+#define PRICE_CURRENCY_UYI 0x03AC  // Uyi
+#define PRICE_CURRENCY_RSD 0x03AD  // Rsd
+#define PRICE_CURRENCY_MZN 0x03AF  // Mzn
+#define PRICE_CURRENCY_AZN 0x03B0  // Azn
+#define PRICE_CURRENCY_RON 0x03B2  // Ron
+#define PRICE_CURRENCY_CHE 0x03B3  // Che
+#define PRICE_CURRENCY_CHW 0x03B4  // Chw
+#define PRICE_CURRENCY_TRY 0x03B5  // Try
+#define PRICE_CURRENCY_XAF 0x03B6  // Xaf
+#define PRICE_CURRENCY_XCD 0x03B7  // Xcd
+#define PRICE_CURRENCY_XOF 0x03B8  // Xof
+#define PRICE_CURRENCY_XPF 0x03B9  // Xpf
+#define PRICE_CURRENCY_XBA 0x03BB  // Xba
+#define PRICE_CURRENCY_XBB 0x03BC  // Xbb
+#define PRICE_CURRENCY_XBC 0x03BD  // Xbc
+#define PRICE_CURRENCY_XBD 0x03BE  // Xbd
+#define PRICE_CURRENCY_XAU 0x03BF  // Xau
+#define PRICE_CURRENCY_XDR 0x03C0  // Xdr
+#define PRICE_CURRENCY_XAG 0x03C1  // Xag
+#define PRICE_CURRENCY_XPT 0x03C2  // Xpt
+#define PRICE_CURRENCY_XTS 0x03C3  // Xts
+#define PRICE_CURRENCY_XPD 0x03C4  // Xpd
+#define PRICE_CURRENCY_XUA 0x03C5  // Xua
+#define PRICE_CURRENCY_ZMW 0x03C7  // Zmw
+#define PRICE_CURRENCY_SRD 0x03C8  // Srd
+#define PRICE_CURRENCY_MGA 0x03C9  // Mga
+#define PRICE_CURRENCY_COU 0x03CA  // Cou
+#define PRICE_CURRENCY_AFN 0x03CB  // Afn
+#define PRICE_CURRENCY_TJS 0x03CC  // Tjs
+#define PRICE_CURRENCY_AOA 0x03CD  // Aoa
+#define PRICE_CURRENCY_BGN 0x03CF  // Bgn
+#define PRICE_CURRENCY_CDF 0x03D0  // Cdf
+#define PRICE_CURRENCY_BAM 0x03D1  // Bam
+#define PRICE_CURRENCY_EUR 0x03D2  // Eur
+#define PRICE_CURRENCY_MXV 0x03D3  // Mxv
+#define PRICE_CURRENCY_UAH 0x03D4  // Uah
+#define PRICE_CURRENCY_GEL 0x03D5  // Gel
+#define PRICE_CURRENCY_BOV 0x03D8  // Bov
+#define PRICE_CURRENCY_PLN 0x03D9  // Pln
+#define PRICE_CURRENCY_BRL 0x03DA  // Brl
+#define PRICE_CURRENCY_CLF 0x03DE  // Clf
+#define PRICE_CURRENCY_XSU 0x03E2  // Xsu
+#define PRICE_CURRENCY_USN 0x03E5  // Usn
+#define PRICE_CURRENCY_XXX 0x03E7  // Xxx
+
+// Price Notation: one byte code
+#define PRICE_NOTATION_NOT_APPLICABLE 0x03  // Not Applicable
+#define PRICE_NOTATION_PRICE 0x01           // Price
+#define PRICE_NOTATION_PERCENTAGE 0x02      // Percentage
+
+// Mmt Market Mechanism: one byte code
+#define MMT_MARKET_MECHANISM_CENTRAL_LIMIT_ORDER_BOOK 0x01  // Central Limit Order Book
+#define MMT_MARKET_MECHANISM_QUOTE_DRIVEN_MARKET 0x02       // Quote Driven Market
+#define MMT_MARKET_MECHANISM_DARK_ORDER_BOOK 0x03           // Dark Order Book
+#define MMT_MARKET_MECHANISM_OFF_BOOK 0x04                  // Off Book
+#define MMT_MARKET_MECHANISM_PERIODIC_AUCTION 0x05          // Periodic Auction
+#define MMT_MARKET_MECHANISM_REQUEST_FOR_QUOTES 0x06        // Request For Quotes
+#define MMT_MARKET_MECHANISM_OTHER 0x07                     // Other
+
+// Mmt Trading Mode: one byte code
+#define MMT_TRADING_MODE_UNDEFINED_AUCTION 0x01                        // Undefined Auction
+#define MMT_TRADING_MODE_SCHEDULED_OPENING_AUCTION 0x02                // Scheduled Opening Auction
+#define MMT_TRADING_MODE_SCHEDULED_CLOSING_AUCTION 0x03                // Scheduled Closing Auction
+#define MMT_TRADING_MODE_SCHEDULED_INTRADAY_AUCTION 0x04               // Scheduled Intraday Auction
+#define MMT_TRADING_MODE_UNSCHEDULED_AUCTION 0x05                      // Unscheduled Auction
+#define MMT_TRADING_MODE_CONTINUOUS_TRADING 0x06                       // Continuous Trading
+#define MMT_TRADING_MODE_AT_MARKET_CLOSE_TRADING 0x07                  // At Market Close Trading
+#define MMT_TRADING_MODE_OUT_OF_MAIN_SESSION_TRADING 0x08              // Out Of Main Session Trading
+#define MMT_TRADING_MODE_TRADE_REPORTING_ON_EXCHANGE 0x09              // Trade Reporting On Exchange
+#define MMT_TRADING_MODE_TRADE_REPORTING_OFF_EXCHANGE 0x0A             // Trade Reporting Off Exchange
+#define MMT_TRADING_MODE_TRADE_REPORTING_SYSTEMATIC_INTERNALISER 0x0B  // Trade Reporting Systematic Internaliser
+
+// Mmt Transaction Category: one byte code
+#define MMT_TRANSACTION_CATEGORY_DARK_TRADE 0x01                    // Dark Trade
+#define MMT_TRANSACTION_CATEGORY_TRADE_PRICE_IMPROVEMENT 0x02       // Trade Price Improvement
+#define MMT_TRANSACTION_CATEGORY_PACKAGE_TRADE 0x03                 // Package Trade
+#define MMT_TRANSACTION_CATEGORY_EXCHANGE_FOR_PHYSICALS_TRADE 0x04  // Exchange For Physicals Trade
+#define MMT_TRANSACTION_CATEGORY_NONE 0x05                          // None
+
+// Mmt Negotiation Indicator: one byte code
+#define MMT_NEGOTIATION_INDICATOR_NEGOTIATED_TRADE 0x01                                    // Negotiated Trade
+#define MMT_NEGOTIATION_INDICATOR_NEGOTIATED_TRADE_LIQUID_FINANCIAL_INSTRUMENTS 0x02       // Negotiated Trade Liquid Financial Instruments
+#define MMT_NEGOTIATION_INDICATOR_NEGOTIATED_TRADE_ILLIQUID_FINANCIAL_INSTRUMENTS 0x03     // Negotiated Trade Illiquid Financial Instruments
+#define MMT_NEGOTIATION_INDICATOR_NEGOTIATED_TRADE_OTHER 0x04                              // Negotiated Trade Other
+#define MMT_NEGOTIATION_INDICATOR_NO_NEGOTIATED_TRADE 0x05                                 // No Negotiated Trade
+#define MMT_NEGOTIATION_INDICATOR_PRE_TRADE_TRANSPARENCY_WAIVER_ILLIQUID_INSTRUMENT 0x06   // Pre Trade Transparency Waiver Illiquid Instrument
+#define MMT_NEGOTIATION_INDICATOR_PRE_TRADE_TRANSPARENCY_WAIVER_STANDARD_MARKET_SIZE 0x07  // Pre Trade Transparency Waiver Standard Market Size
+#define MMT_NEGOTIATION_INDICATOR_PRE_TRADE_TRANSPARENCY_WAIVERS_ILQD_AND_SIZE 0x08        // Pre Trade Transparency Waivers Ilqd And Size
+
+// Mmt Agency Cross Trade Indicator: one byte code
+#define MMT_AGENCY_CROSS_TRADE_INDICATOR_AGENCY_CROSS_TRADE 0x01     // Agency Cross Trade
+#define MMT_AGENCY_CROSS_TRADE_INDICATOR_NO_AGENCY_CROSS_TRADE 0x02  // No Agency Cross Trade
+
+// Mmt Modification Indicator: one byte code
+#define MMT_MODIFICATION_INDICATOR_TRADE_CANCELLATION 0x01  // Trade Cancellation
+#define MMT_MODIFICATION_INDICATOR_TRADE_AMENDMENT 0x02     // Trade Amendment
+#define MMT_MODIFICATION_INDICATOR_NEW_TRADE 0x03           // New Trade
+
+// Mmt Benchmark Reference Price Indicator: one byte code
+#define MMT_BENCHMARK_REFERENCE_PRICE_INDICATOR_BENCHMARK_TRADE 0x01                       // Benchmark Trade
+#define MMT_BENCHMARK_REFERENCE_PRICE_INDICATOR_REFERENCE_PRICE_TRADE 0x02                 // Reference Price Trade
+#define MMT_BENCHMARK_REFERENCE_PRICE_INDICATOR_NO_BENCHMARKOR_REFERENCE_PRICE_TRADE 0x03  // No Benchmarkor Reference Price Trade
+
+// Mmt Special Dividend Indicator: one byte code
+#define MMT_SPECIAL_DIVIDEND_INDICATOR_SPECIAL_DIVIDEND_TRADE 0x01     // Special Dividend Trade
+#define MMT_SPECIAL_DIVIDEND_INDICATOR_NO_SPECIAL_DIVIDEND_TRADE 0x02  // No Special Dividend Trade
+
+// Mmt Off Book Automated Indicator: one byte code
+#define MMT_OFF_BOOK_AUTOMATED_INDICATOR_UNSPECIFIED_OR_NOT_APPLY 0x01  // Unspecified Or Not Apply
+#define MMT_OFF_BOOK_AUTOMATED_INDICATOR_OFF_BOOK_NON_AUTOMATED 0x02    // Off Book Non Automated
+#define MMT_OFF_BOOK_AUTOMATED_INDICATOR_OFF_BOOK_AUTOMATED 0x03        // Off Book Automated
+
+// Mmt Ordinary Trade Indicator: one byte code
+#define MMT_ORDINARY_TRADE_INDICATOR_PLAIN_VANILLA_TRADE 0x01                        // Plain Vanilla Trade
+#define MMT_ORDINARY_TRADE_INDICATOR_NON_PRICE_FORMING_TRADE 0x02                    // Non Price Forming Trade
+#define MMT_ORDINARY_TRADE_INDICATOR_TRADE_NOT_CONTRIBUTING_TO_PRICE_DISCOVERY 0x03  // Trade Not Contributing To Price Discovery
+#define MMT_ORDINARY_TRADE_INDICATOR_PRICE_PENDING 0x04                              // Price Pending
+
+// Mmt Algorithmic Indicator: one byte code
+#define MMT_ALGORITHMIC_INDICATOR_ALGORITHMIC_TRADE 0x01     // Algorithmic Trade
+#define MMT_ALGORITHMIC_INDICATOR_NO_ALGORITHMIC_TRADE 0x02  // No Algorithmic Trade
+
+// Mmt Post Trade Deferral Reason: one byte code
+#define MMT_POST_TRADE_DEFERRAL_REASON_IMMEDIATE_PUBLICATION 0x01                          // Immediate Publication
+#define MMT_POST_TRADE_DEFERRAL_REASON_NON_IMMEDIATE_PUBLICATION 0x02                      // Non Immediate Publication
+#define MMT_POST_TRADE_DEFERRAL_REASON_NON_IMMEDIATE_PUBLICATION_LARGE_IN_SCALE 0x03       // Non Immediate Publication Large In Scale
+#define MMT_POST_TRADE_DEFERRAL_REASON_NON_IMMEDIATE_PUBLICATION_ILLIQUID_INSTRUMENT 0x04  // Non Immediate Publication Illiquid Instrument
+#define MMT_POST_TRADE_DEFERRAL_REASON_NON_IMMEDIATE_PUBLICATION_SIZE_SPECIFIC 0x05        // Non Immediate Publication Size Specific
+#define MMT_POST_TRADE_DEFERRAL_REASON_NON_IMMEDIATE_PUBLICATION_ILQD_AND_SIZE 0x06        // Non Immediate Publication Ilqd And Size
+#define MMT_POST_TRADE_DEFERRAL_REASON_NON_IMMEDIATE_PUBLICATION_ILQD_AND_LRGS 0x07        // Non Immediate Publication Ilqd And Lrgs
+
+// Mmt Post Trade Deferral Type: one byte code
+#define MMT_POST_TRADE_DEFERRAL_TYPE_LIMITED_DETAILS_TRADE 0x01             // Limited Details Trade
+#define MMT_POST_TRADE_DEFERRAL_TYPE_DAILY_AGGREGATED_TRADE 0x02            // Daily Aggregated Trade
+#define MMT_POST_TRADE_DEFERRAL_TYPE_VOLUME_OMISSION_TRADE 0x03             // Volume Omission Trade
+#define MMT_POST_TRADE_DEFERRAL_TYPE_FOUR_WEEKS_AGGREGATION_TRADE 0x04      // Four Weeks Aggregation Trade
+#define MMT_POST_TRADE_DEFERRAL_TYPE_INDEFINITE_AGGREGATION_TRADE 0x05      // Indefinite Aggregation Trade
+#define MMT_POST_TRADE_DEFERRAL_TYPE_VOLUME_OMISSION_TRADE_AGGREGATED 0x06  // Volume Omission Trade Aggregated
+#define MMT_POST_TRADE_DEFERRAL_TYPE_NOT_APPLICABLE 0x07                    // Not Applicable
+
+// Pos Type: one byte code
+#define POS_TYPE_SOD 0x01  // Sod
+#define POS_TYPE_ITD 0x02  // Itd
+#define POS_TYPE_FIN 0x03  // Fin
+
+// Collar Type: one byte code
+#define COLLAR_TYPE_STATIC 0x01   // Static
+#define COLLAR_TYPE_DYNAMIC 0x02  // Dynamic
+
+// Closing Price Type: one byte code
+#define CLOSING_PRICE_TYPE_INITIAL_PRICE 0x01           // Initial Price
+#define CLOSING_PRICE_TYPE_LTP 0x02                     // Ltp
+#define CLOSING_PRICE_TYPE_LAST_ACP 0x03                // Last Acp
+#define CLOSING_PRICE_TYPE_FAIR_VALUE 0x04              // Fair Value
+#define CLOSING_PRICE_TYPE_DAILY_SETTLEMENT_PRICE 0x05  // Daily Settlement Price
+#define CLOSING_PRICE_TYPE_FINAL_SETTLEMENT_PRICE 0x06  // Final Settlement Price
+
+// Adjusted Closing Price Reason: one byte code
+#define ADJUSTED_CLOSING_PRICE_REASON_NOT_APPLICABLE 0x01    // Not Applicable
+#define ADJUSTED_CLOSING_PRICE_REASON_DIVIDEND 0x02          // Dividend
+#define ADJUSTED_CLOSING_PRICE_REASON_ISSUE_RIGHT 0x03       // Issue Right
+#define ADJUSTED_CLOSING_PRICE_REASON_SPLIT 0x04             // Split
+#define ADJUSTED_CLOSING_PRICE_REASON_REVERSE_SPLIT 0x05     // Reverse Split
+#define ADJUSTED_CLOSING_PRICE_REASON_BONUS 0x06             // Bonus
+#define ADJUSTED_CLOSING_PRICE_REASON_SPIN_OFF 0x07          // Spin Off
+#define ADJUSTED_CLOSING_PRICE_REASON_TICK_SIZE_CHANGE 0x08  // Tick Size Change
+#define ADJUSTED_CLOSING_PRICE_REASON_ORDER_PURGE 0x09       // Order Purge
+#define ADJUSTED_CLOSING_PRICE_REASON_OTHER_REASON 0x0A      // Other Reason
+
+// Marker Price Change: one byte code
+#define MARKER_PRICE_CHANGE_INCREASE 0x01        // Increase
+#define MARKER_PRICE_CHANGE_DECREASE 0x02        // Decrease
+#define MARKER_PRICE_CHANGE_NO_CHANGE 0x03       // No Change
+#define MARKER_PRICE_CHANGE_NOT_APPLICABLE 0x04  // Not Applicable
+
+// Quotation System: one byte code
+#define QUOTATION_SYSTEM_NA 0x01                          // Na
+#define QUOTATION_SYSTEM_SINGLE_PRICE_SINGLE_FIXING 0x02  // Single Price Single Fixing
+#define QUOTATION_SYSTEM_CONTINUOUS_TRADING 0x03          // Continuous Trading
+#define QUOTATION_SYSTEM_SINGLE_PRICE_TWO_FIXINGS 0x04    // Single Price Two Fixings
+
+// Price Update Type: one byte code
+#define PRICE_UPDATE_TYPE_REFERENCE_PRICE 0x01               // Reference Price
+#define PRICE_UPDATE_TYPE_REFERENCE_INDEX_PRICE 0x02         // Reference Index Price
+#define PRICE_UPDATE_TYPE_REFERENCE_FIXING_INDEX_PRICE 0x03  // Reference Fixing Index Price
+#define PRICE_UPDATE_TYPE_MID_PRICE 0x04                     // Mid Price
+#define PRICE_UPDATE_TYPE_FIXING_PRICE 0x05                  // Fixing Price
+#define PRICE_UPDATE_TYPE_FIXING_YTM 0x06                    // Fixing Ytm
+
+// Index Level Code: one byte code
+#define INDEX_LEVEL_CODE_PREVIOUS_CLOSING_VALUE 0x01            // Previous Closing Value
+#define INDEX_LEVEL_CODE_THEORETICAL_VALUE_BEFORE_OPENING 0x02  // Theoretical Value Before Opening
+#define INDEX_LEVEL_CODE_VALUE_BEFORE_OPENING 0x03              // Value Before Opening
+#define INDEX_LEVEL_CODE_OPENING_VALUE 0x04                     // Opening Value
+#define INDEX_LEVEL_CODE_CURRENT_VALUE 0x05                     // Current Value
+#define INDEX_LEVEL_CODE_PRE_CLOSING_VALUE 0x06                 // Pre Closing Value
+#define INDEX_LEVEL_CODE_CLOSING_VALUE 0x07                     // Closing Value
+#define INDEX_LEVEL_CODE_VALUE_WITHOUT_OPENING 0x08             // Value Without Opening
+
+// Trading Session Event: one byte code
+#define TRADING_SESSION_EVENT_NA 0x01                                 // Na
+#define TRADING_SESSION_EVENT_START_OF_TECHNICAL_SESSION 0x02         // Start Of Technical Session
+#define TRADING_SESSION_EVENT_END_OF_TECHNICAL_SESSION 0x03           // End Of Technical Session
+#define TRADING_SESSION_EVENT_INITIAL_REFERENCE_DATA_START 0x04       // Initial Reference Data Start
+#define TRADING_SESSION_EVENT_INITIAL_REFERENCE_DATA_END 0x05         // Initial Reference Data End
+#define TRADING_SESSION_EVENT_PREVIOUS_DAY_RESTATE_START 0x06         // Previous Day Restate Start
+#define TRADING_SESSION_EVENT_PREVIOUS_DAY_RESTATE_END 0x07           // Previous Day Restate End
+#define TRADING_SESSION_EVENT_NEXT_SESSION_REFERENCE_DATA_START 0x08  // Next Session Reference Data Start
+#define TRADING_SESSION_EVENT_NEXT_SESSION_REFERENCE_DATA_END 0x09    // Next Session Reference Data End
+#define TRADING_SESSION_EVENT_START_OF_TRADING_SESSION_MIC 0x0C       // Start Of Trading Session Mic
+#define TRADING_SESSION_EVENT_END_OF_TRADING_SESSION_MIC 0x0D         // End Of Trading Session Mic
+
+// Event Type: one byte code
+#define EVENT_TYPE_FLUSH 0x01           // Flush
+#define EVENT_TYPE_SCENARIO_START 0x02  // Scenario Start
+#define EVENT_TYPE_SCENARIO_END 0x03    // Scenario End
+
+// Priority Flag: one byte code
+#define PRIORITY_FLAG_LOST 0x01      // Lost
+#define PRIORITY_FLAG_RETAINED 0x02  // Retained
+
+// Order Book Event Type: one byte code
+#define ORDER_BOOK_EVENT_TYPE_CLEAR 0x01         // Clear
+#define ORDER_BOOK_EVENT_TYPE_RESEND_START 0x02  // Resend Start
+#define ORDER_BOOK_EVENT_TYPE_RESEND_END 0x03    // Resend End
+
+// ---- Types -------------------------------------------------------------------
+
+// Trading week plan
+typedef struct _WeekPlan {
+  UINT32 calendar_id;  // bytes 0 to 3
+  UINT8 weekdays[7];   // bytes 4 to 10
+} WeekPlan;
 
 // Upcoming calendar day exception
-entrypoint typedef struct _CalendarException {
+typedef struct _CalendarException {
   UINT32 calendar_id;              // bytes 0 to 3
   UINT32 calendar_exception_date;  // bytes 4 to 7
   UINT8 calendar_exception_type;   // byte 8
 } CalendarException;
 
-// ---- Tick Table Entry: 20 bytes ----------------------------------------------
-
 // Tick size definition
-entrypoint typedef struct _TickTableEntry {
+typedef struct _TickTableEntry {
   UINT64 tick_size;      // bytes 0 to 7, signed, read here as unsigned
   UINT64 lower_bound;    // bytes 8 to 15, signed, read here as unsigned
   UINT32 tick_table_id;  // bytes 16 to 19
 } TickTableEntry;
 
-// ---- Collar Table Entry: 54 bytes --------------------------------------------
-
 // Collar table definition
-entrypoint typedef struct _CollarTableEntry {
+typedef struct _CollarTableEntry {
   UINT32 collar_table_id;     // bytes 0 to 3
   UINT8 collar_mode;          // byte 4
   UINT8 collar_expression;    // byte 5
@@ -67,10 +1663,8 @@ entrypoint typedef struct _CollarTableEntry {
   UINT64 collar_lower_ask;    // bytes 46 to 53, signed, read here as unsigned
 } CollarTableEntry;
 
-// ---- Trading Phase Schedule Entry: 40 bytes ----------------------------------
-
 // Trading phase definition
-entrypoint typedef struct _TradingPhaseScheduleEntry {
+typedef struct _TradingPhaseScheduleEntry {
   UINT32 trading_schedule_id;                       // bytes 0 to 3
   UINT32 trading_phase_id;                          // bytes 4 to 7
   UINT8 trading_phase_settlement_cycle;             // byte 8
@@ -85,10 +1679,8 @@ entrypoint typedef struct _TradingPhaseScheduleEntry {
   UINT32 clat_id;                                   // bytes 36 to 39
 } TradingPhaseScheduleEntry;
 
-// ---- Market Structure: 63 bytes ----------------------------------------------
-
 // Messages defining the Trading Venue s market structure
-entrypoint typedef struct _MarketStructure {
+typedef struct _MarketStructure {
   UINT32 id;                // bytes 0 to 3
   UINT32 parent_id;         // bytes 4 to 7
   UINT8 mic[4];             // bytes 8 to 11
@@ -96,10 +1688,8 @@ entrypoint typedef struct _MarketStructure {
   UINT8 market_model_type;  // byte 62
 } MarketStructure;
 
-// ---- Collar Group: 20 bytes --------------------------------------------------
-
 // Message defining a collar group
-entrypoint typedef struct _CollarGroup {
+typedef struct _CollarGroup {
   UINT32 id;                             // bytes 0 to 3
   UINT32 order_static_collar_table_id;   // bytes 4 to 7
   UINT32 order_dynamic_collar_table_id;  // bytes 8 to 11
@@ -107,10 +1697,8 @@ entrypoint typedef struct _CollarGroup {
   UINT32 trade_dynamic_collar_table_id;  // bytes 16 to 19
 } CollarGroup;
 
-// ---- External Underlying: 113 bytes ------------------------------------------
-
 // The message contains a list of underlyings not traded in WATS. It concerns underlyings for derivatives and structured products
-entrypoint typedef struct _ExternalUnderlying {
+typedef struct _ExternalUnderlying {
   UINT32 external_underlying_id;      // bytes 0 to 3
   UINT8 product_identification[30];   // bytes 4 to 33
   UINT8 product_identification_type;  // byte 34
@@ -121,10 +1709,8 @@ entrypoint typedef struct _ExternalUnderlying {
   UINT16 trading_currency;            // bytes 111 to 112
 } ExternalUnderlying;
 
-// ---- Instrument: 699 bytes ---------------------------------------------------
-
 // Definition of a financial instrument
-entrypoint typedef struct _Instrument {
+typedef struct _Instrument {
   UINT32 instrument_id;                 // bytes 0 to 3
   UINT8 product_type;                   // byte 4
   UINT8 product_subtype;                // byte 5
@@ -188,62 +1774,88 @@ entrypoint typedef struct _Instrument {
   UINT32 external_underlying_id;        // bytes 695 to 698
 } Instrument;
 
-// ---- Accrued Interest Table Entry: 16 bytes ----------------------------------
-
 // Message describing an accrued interest table entry
-entrypoint typedef struct _AccruedInterestTableEntry {
+typedef struct _AccruedInterestTableEntry {
   UINT32 product_id;                          // bytes 0 to 3
   UINT32 accrued_interest_table_entry_date;   // bytes 4 to 7
   UINT64 accrued_interest_table_entry_value;  // bytes 8 to 15, signed, read here as unsigned
 } AccruedInterestTableEntry;
 
-// ---- Indexation Table Entry: 16 bytes ----------------------------------------
-
 // Message describing an indexation table entry
-entrypoint typedef struct _IndexationTableEntry {
+typedef struct _IndexationTableEntry {
   UINT32 product_id;                    // bytes 0 to 3
   UINT32 indexation_table_entry_date;   // bytes 4 to 7
   UINT64 indexation_table_entry_value;  // bytes 8 to 15, signed, read here as unsigned
 } IndexationTableEntry;
 
-// ---- Product Identification Public Product Identification: 31 bytes ----------
-
 // PublicProductIdentification
-entrypoint typedef struct _ProductIdentificationPublicProductIdentification {
+typedef struct _ProductIdentificationPublicProductIdentification {
   UINT8 product_identification[30];   // bytes 0 to 29
   UINT8 product_identification_type;  // byte 30
 } ProductIdentificationPublicProductIdentification;
 
-// ---- Index Underlying: 32 bytes ----------------------------------------------
-
 // IndexUnderlying
-entrypoint typedef struct _IndexUnderlying {
+typedef struct _IndexUnderlying {
   ProductIdentificationPublicProductIdentification product_identification_public_product_identification;  // bytes 0 to 30
   UINT8 index_underlying_type;                                                                            // byte 31
 } IndexUnderlying;
 
-// ---- Public Product Identification: 31 bytes ---------------------------------
+// IndexUnderlying Array
+typedef struct _Items {
+  IndexUnderlying index_underlying;  // bytes 0 to 31
+} Items;
 
-// PublicProductIdentification
-entrypoint typedef struct _PublicProductIdentification {
-  UINT8 product_identification[30];   // bytes 0 to 29
-  UINT8 product_identification_type;  // byte 30
-} PublicProductIdentification;
+// IndexUnderlyings
+typedef struct _IndexUnderlyings {
+  UINT8 count;                 // byte 0
+  Items items[:byte-size 96];  // bytes 1 to 96
+} IndexUnderlyings;
 
-// ---- Auction Summary: 21 bytes -----------------------------------------------
+// The metadata message for the given index
+typedef struct _IndexParams {
+  UINT32 instrument_id;                               // bytes 0 to 3
+  UINT64 index_base_value;                            // bytes 4 to 11, signed, read here as unsigned
+  UINT64 index_base_capitalisation;                   // bytes 12 to 19, signed, read here as unsigned
+  UINT32 index_base_date;                             // bytes 20 to 23
+  UINT64 correction_coefficient;                      // bytes 24 to 31, signed, read here as unsigned
+  UINT16 num_of_components;                           // bytes 32 to 33
+  UINT8 index_publication_schedule;                   // byte 34
+  UINT8 index_type;                                   // byte 35
+  UINT8 has_days_since_last_publication : 1;          // byte 36
+  UINT8 has_number_of_dividends : 1;                  // byte 36
+  UINT8 reserved_27_index_params_presence_flags : 6;  // byte 36
+  UINT8 days_since_last_publication;                  // byte 37
+  UINT16 number_of_dividends;                         // bytes 38 to 39
+  IndexUnderlyings index_underlyings;                 // bytes 40 to 136
+  UINT16 publication_order;                           // bytes 137 to 138
+  UINT16 currency;                                    // bytes 139 to 140
+  UINT32 date_validity;                               // bytes 141 to 144
+} IndexParams;
+
+// The message contains information about a product providing the index portfolio
+typedef struct _IndexPortfolioEntry {
+  UINT32 id;                                                                       // bytes 0 to 3
+  UINT32 index_id;                                                                 // bytes 4 to 7
+  UINT8 has_instrument_id : 1;                                                     // byte 8
+  UINT8 reserved_17_index_portfolio_entry_presence_flags : 7;                      // byte 8
+  UINT32 instrument_id;                                                            // bytes 9 to 12
+  ProductIdentificationPublicProductIdentification public_product_identification;  // bytes 13 to 43
+  UINT8 mic[4];                                                                    // bytes 44 to 47
+  UINT16 currency;                                                                 // bytes 48 to 49
+  UINT64 instrument_packet;                                                        // bytes 50 to 57
+  UINT8 suspended;                                                                 // byte 58
+} IndexPortfolioEntry;
 
 // Auction summary, including auction price and quantity
-entrypoint typedef struct _AuctionSummary {
+typedef struct _AuctionSummary {
   UINT32 instrument_id;  // bytes 0 to 3
   UINT64 price;          // bytes 4 to 11, signed, read here as unsigned
   UINT64 quantity;       // bytes 12 to 19
   UINT8 auction_type;    // byte 20
 } AuctionSummary;
 
-// ---- Auction Update: 68 bytes ------------------------------------------------
-
 // Updates IMP/IMV and BBO during an auction
-entrypoint typedef struct _AuctionUpdate {
+typedef struct _AuctionUpdate {
   UINT32 instrument_id;               // bytes 0 to 3
   UINT64 indicative_matching_price;   // bytes 4 to 11, signed, read here as unsigned
   UINT64 indicative_matching_volume;  // bytes 12 to 19
@@ -255,10 +1867,8 @@ entrypoint typedef struct _AuctionUpdate {
   UINT64 best_buy_level_quantity;     // bytes 60 to 67
 } AuctionUpdate;
 
-// ---- Price Level: 31 bytes ---------------------------------------------------
-
 // PriceLevel
-entrypoint typedef struct _PriceLevel {
+typedef struct _PriceLevel {
   UINT8 is_encrypted;        // byte 0
   UINT64 encryption_offset;  // bytes 1 to 8
   UINT32 encryption_key_id;  // bytes 9 to 12
@@ -267,10 +1877,23 @@ entrypoint typedef struct _PriceLevel {
   UINT16 order_count;        // bytes 29 to 30
 } PriceLevel;
 
-// ---- Top Price Level Update: 23 bytes ----------------------------------------
+// PriceLevel table
+typedef struct _Buy {
+  PriceLevel price_level;  // bytes 0 to 30
+} Buy;
+
+// BBO price levels and volumes
+typedef struct _PriceLevelSnapshot {
+  UINT32 instrument_id;       // bytes 0 to 3
+  UINT8 max_depth;            // byte 4
+  UINT8 mm_buy_quote_level;   // byte 5
+  UINT8 mm_sell_quote_level;  // byte 6
+  Buy buy[:byte-size 155];    // bytes 7 to 161
+  Buy sell[:byte-size 155];   // bytes 162 to 316
+} PriceLevelSnapshot;
 
 // BBO Level 1
-entrypoint typedef struct _TopPriceLevelUpdate {
+typedef struct _TopPriceLevelUpdate {
   UINT32 instrument_id;  // bytes 0 to 3
   UINT64 price;          // bytes 4 to 11, signed, read here as unsigned
   UINT64 quantity;       // bytes 12 to 19
@@ -278,62 +1901,56 @@ entrypoint typedef struct _TopPriceLevelUpdate {
   UINT16 order_count;    // bytes 21 to 22
 } TopPriceLevelUpdate;
 
-// ---- Trade: 178 bytes --------------------------------------------------------
-
 // Enriched trade report
-entrypoint typedef struct _Trade {
-  UINT32 instrument_id;                                       // bytes 0 to 3
-  UINT64 trade_settlement_value;                              // bytes 4 to 11, signed, read here as unsigned
-  UINT32 settlement_date;                                     // bytes 12 to 15
-  UINT64 trading_timestamp;                                   // bytes 16 to 23
-  PublicProductIdentification public_product_identification;  // bytes 24 to 54
-  UINT64 price;                                               // bytes 55 to 62, signed, read here as unsigned
-  UINT16 price_currency;                                      // bytes 63 to 64
-  UINT8 price_notation;                                       // byte 65
-  UINT64 quantity;                                            // bytes 66 to 73
-  UINT64 trade_nominal_value;                                 // bytes 74 to 81, signed, read here as unsigned
-  UINT16 nominal_currency;                                    // bytes 82 to 83
-  UINT8 mic[4];                                               // bytes 84 to 87
-  UINT64 publication_timestamp;                               // bytes 88 to 95
-  UINT32 trade_id;                                            // bytes 96 to 99
-  UINT8 trade_to_be_cleared;                                  // byte 100
-  UINT64 pct_change;                                          // bytes 101 to 108, signed, read here as unsigned
-  UINT64 vwap;                                                // bytes 109 to 116, signed, read here as unsigned
-  UINT64 no_trades;                                           // bytes 117 to 124
-  UINT64 total_volume;                                        // bytes 125 to 132
-  UINT64 total_value;                                         // bytes 133 to 140, signed, read here as unsigned
-  UINT64 opening_price;                                       // bytes 141 to 148, signed, read here as unsigned
-  UINT64 max_price;                                           // bytes 149 to 156, signed, read here as unsigned
-  UINT64 min_price;                                           // bytes 157 to 164, signed, read here as unsigned
-  UINT8 mmt_market_mechanism;                                 // byte 165
-  UINT8 mmt_trading_mode;                                     // byte 166
-  UINT8 mmt_transaction_category;                             // byte 167
-  UINT8 mmt_negotiation_indicator;                            // byte 168
-  UINT8 mmt_agency_cross_trade_indicator;                     // byte 169
-  UINT8 mmt_modification_indicator;                           // byte 170
-  UINT8 mmt_benchmark_reference_price_indicator;              // byte 171
-  UINT8 mmt_special_dividend_indicator;                       // byte 172
-  UINT8 mmt_off_book_automated_indicator;                     // byte 173
-  UINT8 mmt_ordinary_trade_indicator;                         // byte 174
-  UINT8 mmt_algorithmic_indicator;                            // byte 175
-  UINT8 mmt_post_trade_deferral_reason;                       // byte 176
-  UINT8 mmt_post_trade_deferral_type;                         // byte 177
+typedef struct _Trade {
+  UINT32 instrument_id;                                                            // bytes 0 to 3
+  UINT64 trade_settlement_value;                                                   // bytes 4 to 11, signed, read here as unsigned
+  UINT32 settlement_date;                                                          // bytes 12 to 15
+  UINT64 trading_timestamp;                                                        // bytes 16 to 23
+  ProductIdentificationPublicProductIdentification public_product_identification;  // bytes 24 to 54
+  UINT64 price;                                                                    // bytes 55 to 62, signed, read here as unsigned
+  UINT16 price_currency;                                                           // bytes 63 to 64
+  UINT8 price_notation;                                                            // byte 65
+  UINT64 quantity;                                                                 // bytes 66 to 73
+  UINT64 trade_nominal_value;                                                      // bytes 74 to 81, signed, read here as unsigned
+  UINT16 nominal_currency;                                                         // bytes 82 to 83
+  UINT8 mic[4];                                                                    // bytes 84 to 87
+  UINT64 publication_timestamp;                                                    // bytes 88 to 95
+  UINT32 trade_id;                                                                 // bytes 96 to 99
+  UINT8 trade_to_be_cleared;                                                       // byte 100
+  UINT64 pct_change;                                                               // bytes 101 to 108, signed, read here as unsigned
+  UINT64 vwap;                                                                     // bytes 109 to 116, signed, read here as unsigned
+  UINT64 no_trades;                                                                // bytes 117 to 124
+  UINT64 total_volume;                                                             // bytes 125 to 132
+  UINT64 total_value;                                                              // bytes 133 to 140, signed, read here as unsigned
+  UINT64 opening_price;                                                            // bytes 141 to 148, signed, read here as unsigned
+  UINT64 max_price;                                                                // bytes 149 to 156, signed, read here as unsigned
+  UINT64 min_price;                                                                // bytes 157 to 164, signed, read here as unsigned
+  UINT8 mmt_market_mechanism;                                                      // byte 165
+  UINT8 mmt_trading_mode;                                                          // byte 166
+  UINT8 mmt_transaction_category;                                                  // byte 167
+  UINT8 mmt_negotiation_indicator;                                                 // byte 168
+  UINT8 mmt_agency_cross_trade_indicator;                                          // byte 169
+  UINT8 mmt_modification_indicator;                                                // byte 170
+  UINT8 mmt_benchmark_reference_price_indicator;                                   // byte 171
+  UINT8 mmt_special_dividend_indicator;                                            // byte 172
+  UINT8 mmt_off_book_automated_indicator;                                          // byte 173
+  UINT8 mmt_ordinary_trade_indicator;                                              // byte 174
+  UINT8 mmt_algorithmic_indicator;                                                 // byte 175
+  UINT8 mmt_post_trade_deferral_reason;                                            // byte 176
+  UINT8 mmt_post_trade_deferral_type;                                              // byte 177
 } Trade;
 
-// ---- Position Report: 40 bytes -----------------------------------------------
-
 // Report of open positions
-entrypoint typedef struct _PositionReport {
-  PublicProductIdentification public_product_identification;  // bytes 0 to 30
-  UINT8 pos_type;                                             // byte 31
-  UINT32 open_positions;                                      // bytes 32 to 35
-  UINT32 trade_id;                                            // bytes 36 to 39
+typedef struct _PositionReport {
+  ProductIdentificationPublicProductIdentification public_product_identification;  // bytes 0 to 30
+  UINT8 pos_type;                                                                  // byte 31
+  UINT32 open_positions;                                                           // bytes 32 to 35
+  UINT32 trade_id;                                                                 // bytes 36 to 39
 } PositionReport;
 
-// ---- Instrument Status Change: 11 bytes --------------------------------------
-
 // Start of a new trading phase
-entrypoint typedef struct _InstrumentStatusChange {
+typedef struct _InstrumentStatusChange {
   UINT32 instrument_id;      // bytes 0 to 3
   UINT32 trading_phase_id;   // bytes 4 to 7
   UINT8 trading_phase_type;  // byte 8
@@ -341,10 +1958,8 @@ entrypoint typedef struct _InstrumentStatusChange {
   UINT8 stressed_market;     // byte 10
 } InstrumentStatusChange;
 
-// ---- Order Collars: 45 bytes -------------------------------------------------
-
 // New order price collars
-entrypoint typedef struct _OrderCollars {
+typedef struct _OrderCollars {
   UINT32 instrument_id;  // bytes 0 to 3
   UINT8 collar_type;     // byte 4
   UINT64 price;          // bytes 5 to 12, signed, read here as unsigned
@@ -354,10 +1969,8 @@ entrypoint typedef struct _OrderCollars {
   UINT64 upper_ask;      // bytes 37 to 44, signed, read here as unsigned
 } OrderCollars;
 
-// ---- Trade Collars: 29 bytes -------------------------------------------------
-
 // New trade price collars
-entrypoint typedef struct _TradeCollars {
+typedef struct _TradeCollars {
   UINT32 instrument_id;  // bytes 0 to 3
   UINT8 collar_type;     // byte 4
   UINT64 price;          // bytes 5 to 12, signed, read here as unsigned
@@ -365,10 +1978,8 @@ entrypoint typedef struct _TradeCollars {
   UINT64 upper;          // bytes 21 to 28, signed, read here as unsigned
 } TradeCollars;
 
-// ---- Instrument Summary: 95 bytes --------------------------------------------
-
 // Provides brief instrument summary
-entrypoint typedef struct _InstrumentSummary {
+typedef struct _InstrumentSummary {
   UINT32 instrument_id;                 // bytes 0 to 3
   UINT64 last_traded_price;             // bytes 4 to 11, signed, read here as unsigned
   UINT64 closing_price;                 // bytes 12 to 19, signed, read here as unsigned
@@ -386,10 +1997,8 @@ entrypoint typedef struct _InstrumentSummary {
   UINT8 is_correction;                  // byte 94
 } InstrumentSummary;
 
-// ---- Clob Instrument: 119 bytes ----------------------------------------------
-
 // SingleInstrumentSummary
-entrypoint typedef struct _ClobInstrument {
+typedef struct _ClobInstrument {
   UINT32 instrument_id;                 // bytes 0 to 3
   UINT8 market_model_type;              // byte 4
   UINT64 last_traded_price;             // bytes 5 to 12, signed, read here as unsigned
@@ -411,124 +2020,61 @@ entrypoint typedef struct _ClobInstrument {
   UINT32 last_trade_date;               // bytes 115 to 118
 } ClobInstrument;
 
-// ---- Cross Instrument: 119 bytes ---------------------------------------------
-
-// SingleInstrumentSummary
-entrypoint typedef struct _CrossInstrument {
-  UINT32 instrument_id;                 // bytes 0 to 3
-  UINT8 market_model_type;              // byte 4
-  UINT64 last_traded_price;             // bytes 5 to 12, signed, read here as unsigned
-  UINT64 closing_price;                 // bytes 13 to 20, signed, read here as unsigned
-  UINT8 closing_price_type;             // byte 21
-  UINT64 adjusted_closing_price;        // bytes 22 to 29, signed, read here as unsigned
-  UINT8 adjusted_closing_price_reason;  // byte 30
-  UINT64 pct_change;                    // bytes 31 to 38, signed, read here as unsigned
-  UINT64 vwap;                          // bytes 39 to 46, signed, read here as unsigned
-  UINT64 no_trades;                     // bytes 47 to 54
-  UINT64 total_volume;                  // bytes 55 to 62
-  UINT64 total_value;                   // bytes 63 to 70, signed, read here as unsigned
-  UINT64 opening_price;                 // bytes 71 to 78, signed, read here as unsigned
-  UINT64 max_price;                     // bytes 79 to 86, signed, read here as unsigned
-  UINT64 min_price;                     // bytes 87 to 94, signed, read here as unsigned
-  UINT64 settlement_price;              // bytes 95 to 102, signed, read here as unsigned
-  UINT64 settlement_value;              // bytes 103 to 110, signed, read here as unsigned
-  UINT32 end_trading_date;              // bytes 111 to 114
-  UINT32 last_trade_date;               // bytes 115 to 118
-} CrossInstrument;
-
-// ---- Block Instrument: 119 bytes ---------------------------------------------
-
-// SingleInstrumentSummary
-entrypoint typedef struct _BlockInstrument {
-  UINT32 instrument_id;                 // bytes 0 to 3
-  UINT8 market_model_type;              // byte 4
-  UINT64 last_traded_price;             // bytes 5 to 12, signed, read here as unsigned
-  UINT64 closing_price;                 // bytes 13 to 20, signed, read here as unsigned
-  UINT8 closing_price_type;             // byte 21
-  UINT64 adjusted_closing_price;        // bytes 22 to 29, signed, read here as unsigned
-  UINT8 adjusted_closing_price_reason;  // byte 30
-  UINT64 pct_change;                    // bytes 31 to 38, signed, read here as unsigned
-  UINT64 vwap;                          // bytes 39 to 46, signed, read here as unsigned
-  UINT64 no_trades;                     // bytes 47 to 54
-  UINT64 total_volume;                  // bytes 55 to 62
-  UINT64 total_value;                   // bytes 63 to 70, signed, read here as unsigned
-  UINT64 opening_price;                 // bytes 71 to 78, signed, read here as unsigned
-  UINT64 max_price;                     // bytes 79 to 86, signed, read here as unsigned
-  UINT64 min_price;                     // bytes 87 to 94, signed, read here as unsigned
-  UINT64 settlement_price;              // bytes 95 to 102, signed, read here as unsigned
-  UINT64 settlement_value;              // bytes 103 to 110, signed, read here as unsigned
-  UINT32 end_trading_date;              // bytes 111 to 114
-  UINT32 last_trade_date;               // bytes 115 to 118
-} BlockInstrument;
-
-// ---- Hybrid Instrument: 119 bytes --------------------------------------------
-
-// SingleInstrumentSummary
-entrypoint typedef struct _HybridInstrument {
-  UINT32 instrument_id;                 // bytes 0 to 3
-  UINT8 market_model_type;              // byte 4
-  UINT64 last_traded_price;             // bytes 5 to 12, signed, read here as unsigned
-  UINT64 closing_price;                 // bytes 13 to 20, signed, read here as unsigned
-  UINT8 closing_price_type;             // byte 21
-  UINT64 adjusted_closing_price;        // bytes 22 to 29, signed, read here as unsigned
-  UINT8 adjusted_closing_price_reason;  // byte 30
-  UINT64 pct_change;                    // bytes 31 to 38, signed, read here as unsigned
-  UINT64 vwap;                          // bytes 39 to 46, signed, read here as unsigned
-  UINT64 no_trades;                     // bytes 47 to 54
-  UINT64 total_volume;                  // bytes 55 to 62
-  UINT64 total_value;                   // bytes 63 to 70, signed, read here as unsigned
-  UINT64 opening_price;                 // bytes 71 to 78, signed, read here as unsigned
-  UINT64 max_price;                     // bytes 79 to 86, signed, read here as unsigned
-  UINT64 min_price;                     // bytes 87 to 94, signed, read here as unsigned
-  UINT64 settlement_price;              // bytes 95 to 102, signed, read here as unsigned
-  UINT64 settlement_value;              // bytes 103 to 110, signed, read here as unsigned
-  UINT32 end_trading_date;              // bytes 111 to 114
-  UINT32 last_trade_date;               // bytes 115 to 118
-} HybridInstrument;
-
-// ---- Product Summary: 629 bytes ----------------------------------------------
-
 // Session day product summary
-entrypoint typedef struct _ProductSummary {
-  ClobInstrument clob_instrument;      // bytes 0 to 118
-  CrossInstrument cross_instrument;    // bytes 119 to 237
-  BlockInstrument block_instrument;    // bytes 238 to 356
-  HybridInstrument hybrid_instrument;  // bytes 357 to 475
-  UINT8 product_identification_type;   // byte 476
-  UINT8 product_identification[30];    // bytes 477 to 506
-  UINT32 product_id;                   // bytes 507 to 510
-  UINT8 mic[4];                        // bytes 511 to 514
-  UINT64 accumulated_interest;         // bytes 515 to 522, signed, read here as unsigned
-  UINT64 interest_rate;                // bytes 523 to 530, signed, read here as unsigned
-  UINT16 currency;                     // bytes 531 to 532
-  UINT32 session_date;                 // bytes 533 to 536
-  UINT64 trading_value_currency;       // bytes 537 to 544, signed, read here as unsigned
-  UINT8 status;                        // byte 545
-  UINT16 sector;                       // bytes 546 to 547
-  UINT8 market;                        // byte 548
-  UINT8 marker_price_change;           // byte 549
-  UINT8 lower_liquidity;               // byte 550
-  UINT64 product_summary_multiplier;   // bytes 551 to 558, signed, read here as unsigned
-  UINT64 dividend_rate;                // bytes 559 to 566, signed, read here as unsigned
-  UINT64 delta;                        // bytes 567 to 574, signed, read here as unsigned
-  UINT64 gamma;                        // bytes 575 to 582, signed, read here as unsigned
-  UINT64 rho;                          // bytes 583 to 590, signed, read here as unsigned
-  UINT64 theta;                        // bytes 591 to 598, signed, read here as unsigned
-  UINT64 vega;                         // bytes 599 to 606, signed, read here as unsigned
-  UINT64 volatility;                   // bytes 607 to 614, signed, read here as unsigned
-  UINT64 options_strike_price;         // bytes 615 to 622, signed, read here as unsigned
-  UINT8 dividend;                      // byte 623
-  UINT8 subscription_right;            // byte 624
-  UINT8 interim_dividend_right;        // byte 625
-  UINT8 split;                         // byte 626
-  UINT8 quotation_system;              // byte 627
-  UINT8 liquidity_support_pge;         // byte 628
+typedef struct _ProductSummary {
+  ClobInstrument clob_instrument;     // bytes 0 to 118
+  ClobInstrument cross_instrument;    // bytes 119 to 237
+  ClobInstrument block_instrument;    // bytes 238 to 356
+  ClobInstrument hybrid_instrument;   // bytes 357 to 475
+  UINT8 product_identification_type;  // byte 476
+  UINT8 product_identification[30];   // bytes 477 to 506
+  UINT32 product_id;                  // bytes 507 to 510
+  UINT8 mic[4];                       // bytes 511 to 514
+  UINT64 accumulated_interest;        // bytes 515 to 522, signed, read here as unsigned
+  UINT64 interest_rate;               // bytes 523 to 530, signed, read here as unsigned
+  UINT16 currency;                    // bytes 531 to 532
+  UINT32 session_date;                // bytes 533 to 536
+  UINT64 trading_value_currency;      // bytes 537 to 544, signed, read here as unsigned
+  UINT8 status;                       // byte 545
+  UINT16 sector;                      // bytes 546 to 547
+  UINT8 market;                       // byte 548
+  UINT8 marker_price_change;          // byte 549
+  UINT8 lower_liquidity;              // byte 550
+  UINT64 product_summary_multiplier;  // bytes 551 to 558, signed, read here as unsigned
+  UINT64 dividend_rate;               // bytes 559 to 566, signed, read here as unsigned
+  UINT64 delta;                       // bytes 567 to 574, signed, read here as unsigned
+  UINT64 gamma;                       // bytes 575 to 582, signed, read here as unsigned
+  UINT64 rho;                         // bytes 583 to 590, signed, read here as unsigned
+  UINT64 theta;                       // bytes 591 to 598, signed, read here as unsigned
+  UINT64 vega;                        // bytes 599 to 606, signed, read here as unsigned
+  UINT64 volatility;                  // bytes 607 to 614, signed, read here as unsigned
+  UINT64 options_strike_price;        // bytes 615 to 622, signed, read here as unsigned
+  UINT8 dividend;                     // byte 623
+  UINT8 subscription_right;           // byte 624
+  UINT8 interim_dividend_right;       // byte 625
+  UINT8 split;                        // byte 626
+  UINT8 quotation_system;             // byte 627
+  UINT8 liquidity_support_pge;        // byte 628
 } ProductSummary;
 
-// ---- News: 890 bytes ---------------------------------------------------------
+// Message indicating a price or YTM update
+typedef struct _PriceUpdate {
+  UINT32 instrument_id;                     // bytes 0 to 3
+  UINT8 price_update_type;                  // byte 4
+  UINT16 value_price_ytm_presence : 1;      // bytes 5 to 6
+  UINT16 value_bid_price_ytm_presence : 1;  // bytes 5 to 6
+  UINT16 value_ask_price_ytm_presence : 1;  // bytes 5 to 6
+  UINT16 ytm_no_calc : 1;                   // bytes 5 to 6
+  UINT16 ytm_bid_no_calc : 1;               // bytes 5 to 6
+  UINT16 ytm_ask_no_calc : 1;               // bytes 5 to 6
+  UINT16 reserved_615 : 10;                 // bytes 5 to 6
+  UINT64 value;                             // bytes 7 to 14, signed, read here as unsigned
+  UINT64 value_bid;                         // bytes 15 to 22, signed, read here as unsigned
+  UINT64 value_ask;                         // bytes 23 to 30, signed, read here as unsigned
+} PriceUpdate;
 
 // News message
-entrypoint typedef struct _News {
+typedef struct _News {
   UINT32 market_structure_id;  // bytes 0 to 3
   UINT32 news_id;              // bytes 4 to 7
   UINT8 title[80];             // bytes 8 to 87
@@ -537,28 +2083,61 @@ entrypoint typedef struct _News {
   UINT8 text[800];             // bytes 90 to 889
 } News;
 
-// ---- Trading Session Status: 13 bytes ----------------------------------------
+// Message providing real-time index values for instruments
+typedef struct _RealTimeIndex {
+  UINT32 instrument_id;                      // bytes 0 to 3
+  UINT8 index_level_code;                    // byte 4
+  UINT16 num_of_active_instruments;          // bytes 5 to 6
+  UINT64 ind_index_opening_portfolio;        // bytes 7 to 14, signed, read here as unsigned
+  UINT64 index_value;                        // bytes 15 to 22, signed, read here as unsigned
+  UINT64 pct_change_index_val_prev_session;  // bytes 23 to 30, signed, read here as unsigned
+  UINT64 session_low;                        // bytes 31 to 38, signed, read here as unsigned
+  UINT64 session_high;                       // bytes 39 to 46, signed, read here as unsigned
+  UINT8 has_trading_value : 1;               // byte 47
+  UINT8 has_index_value_bid : 1;             // byte 47
+  UINT8 has_index_value_ask : 1;             // byte 47
+  UINT8 has_mid_spread_index : 1;            // byte 47
+  UINT8 has_difference_central_spread : 1;   // byte 47
+  UINT8 reserved_57 : 3;                     // byte 47
+  UINT64 trading_value;                      // bytes 48 to 55, signed, read here as unsigned
+  UINT64 index_value_bid;                    // bytes 56 to 63, signed, read here as unsigned
+  UINT64 index_value_ask;                    // bytes 64 to 71, signed, read here as unsigned
+  UINT64 mid_spread_index;                   // bytes 72 to 79, signed, read here as unsigned
+  UINT64 difference_central_spread;          // bytes 80 to 87, signed, read here as unsigned
+} RealTimeIndex;
+
+// The index summary message provides a summary of the data calculated in a stock index for a given day
+typedef struct _IndexSummary {
+  UINT32 instrument_id;                                // bytes 0 to 3
+  UINT64 opening_index_value;                          // bytes 4 to 11, signed, read here as unsigned
+  UINT64 session_low;                                  // bytes 12 to 19, signed, read here as unsigned
+  UINT64 session_high;                                 // bytes 20 to 27, signed, read here as unsigned
+  UINT64 closing_index_value;                          // bytes 28 to 35, signed, read here as unsigned
+  UINT8 has_session_avg : 1;                           // byte 36
+  UINT8 reserved_17_index_summary_presence_flags : 7;  // byte 36
+  UINT64 session_avg;                                  // bytes 37 to 44, signed, read here as unsigned
+  UINT64 pct_change_index_val_prev_session;            // bytes 45 to 52, signed, read here as unsigned
+  UINT64 pct_change_index_val_prev_year;               // bytes 53 to 60, signed, read here as unsigned
+  UINT64 closing_capitalisation_portfolio;             // bytes 61 to 68, signed, read here as unsigned
+  UINT64 ind_index_opening_portfolio;                  // bytes 69 to 76, signed, read here as unsigned
+} IndexSummary;
 
 // The Trading Session Status provides information on the status of a market and on a trading day events
-entrypoint typedef struct _TradingSessionStatus {
+typedef struct _TradingSessionStatus {
   UINT8 market_id[4];           // bytes 0 to 3
   UINT32 market_structure_id;   // bytes 4 to 7
   UINT8 trading_session_event;  // byte 8
   UINT32 date;                  // bytes 9 to 12
 } TradingSessionStatus;
 
-// ---- Test Event: 201 bytes ---------------------------------------------------
-
 // Test event
-entrypoint typedef struct _TestEvent {
+typedef struct _TestEvent {
   UINT8 scenario_name[200];  // bytes 0 to 199
   UINT8 event_type;          // byte 200
 } TestEvent;
 
-// ---- Order Add: 30 bytes -----------------------------------------------------
-
 // New (limit) order added to order book
-entrypoint typedef struct _OrderAdd {
+typedef struct _OrderAdd {
   UINT64 public_order_id;  // bytes 0 to 7
   UINT32 instrument_id;    // bytes 8 to 11
   UINT8 side;              // byte 12
@@ -567,10 +2146,8 @@ entrypoint typedef struct _OrderAdd {
   UINT8 mm_quote;          // byte 29
 } OrderAdd;
 
-// ---- Order Modify: 30 bytes --------------------------------------------------
-
 // Order modified
-entrypoint typedef struct _OrderModify {
+typedef struct _OrderModify {
   UINT32 instrument_id;    // bytes 0 to 3
   UINT64 public_order_id;  // bytes 4 to 11
   UINT64 price;            // bytes 12 to 19, signed, read here as unsigned
@@ -579,19 +2156,15 @@ entrypoint typedef struct _OrderModify {
   UINT8 side;              // byte 29
 } OrderModify;
 
-// ---- Order Cancel: 13 bytes --------------------------------------------------
-
 // Order deleted
-entrypoint typedef struct _OrderCancel {
+typedef struct _OrderCancel {
   UINT32 instrument_id;    // bytes 0 to 3
   UINT64 public_order_id;  // bytes 4 to 11
   UINT8 side;              // byte 12
 } OrderCancel;
 
-// ---- Order Execute: 41 bytes -------------------------------------------------
-
 // Execution report
-entrypoint typedef struct _OrderExecute {
+typedef struct _OrderExecute {
   UINT64 quantity;            // bytes 0 to 7
   UINT32 instrument_id;       // bytes 8 to 11
   UINT64 public_order_id;     // bytes 12 to 19
@@ -601,11 +2174,74 @@ entrypoint typedef struct _OrderExecute {
   UINT8 side;                 // byte 40
 } OrderExecute;
 
-// ---- Order Book Event: 5 bytes -----------------------------------------------
-
 // Order book event for given instrument
-entrypoint typedef struct _OrderBookEvent {
+typedef struct _OrderBookEvent {
   UINT32 instrument_id;         // bytes 0 to 3
   UINT8 order_book_event_type;  // byte 4
 } OrderBookEvent;
+
+// Branch
+casetype _Payload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x0021: WeekPlan week_plan;
+    case 0x0023: CalendarException calendar_exception;
+    case 0x0020: TickTableEntry tick_table_entry;
+    case 0x006C: CollarTableEntry collar_table_entry;
+    case 0x001B: TradingPhaseScheduleEntry trading_phase_schedule_entry;
+    case 0x0113: MarketStructure market_structure;
+    case 0x012B: CollarGroup collar_group;
+    case 0x0326: ExternalUnderlying external_underlying;
+    case 0x0117: Instrument instrument;
+    case 0x0024: AccruedInterestTableEntry accrued_interest_table_entry;
+    case 0x0025: IndexationTableEntry indexation_table_entry;
+    case 0x01F7: IndexParams index_params;
+    case 0x01F6: IndexPortfolioEntry index_portfolio_entry;
+    case 0x010E: AuctionSummary auction_summary;
+    case 0x010C: AuctionUpdate auction_update;
+    case 0x0101: PriceLevelSnapshot price_level_snapshot;
+    case 0x0100: TopPriceLevelUpdate top_price_level_update;
+    case 0x0026: Trade trade;
+    case 0x0321: PositionReport position_report;
+    case 0x001A: InstrumentStatusChange instrument_status_change;
+    case 0x0110: OrderCollars order_collars;
+    case 0x0111: TradeCollars trade_collars;
+    case 0x029F: InstrumentSummary instrument_summary;
+    case 0x02A0: ProductSummary product_summary;
+    case 0x010F: PriceUpdate price_update;
+    case 0x0205: News news;
+    case 0x01F4: RealTimeIndex real_time_index;
+    case 0x01F5: IndexSummary index_summary;
+    case 0x0017: TradingSessionStatus trading_session_status;
+    case 0x0001: unit heartbeat;
+    case 0x2000: TestEvent test_event;
+    case 0x0009: OrderAdd order_add;
+    case 0x000A: OrderModify order_modify;
+    case 0x000B: OrderCancel order_cancel;
+    case 0x000C: OrderExecute order_execute;
+    case 0x019A: OrderBookEvent order_book_event;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+typedef struct _Message {
+  UINT16 message_length { message_length >= 42 };                                                                                     // bytes 0 to 1
+  UINT16 message_type;                                                                                                                // bytes 2 to 3
+  UINT16 message_version;                                                                                                             // bytes 4 to 5
+  UINT32 sequence_number;                                                                                                             // bytes 6 to 9
+  UINT64 timestamp;                                                                                                                   // bytes 10 to 17
+  UINT64 source_timestamp;                                                                                                            // bytes 18 to 25
+  UINT8 is_encrypted;                                                                                                                 // byte 26
+  UINT64 encryption_offset;                                                                                                           // bytes 27 to 34
+  UINT32 encryption_key_id;                                                                                                           // bytes 35 to 38
+  UINT16 session_id;                                                                                                                  // bytes 39 to 40
+  UINT8 stream_id;                                                                                                                    // byte 41
+  Payload(message_type, (((UINT32) message_length) - 42)) payload[:byte-size-single-element-array (((UINT32) message_length) - 42)];
+} Message;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Gpw Wats Snapshot and Replay Packet
+entrypoint typedef struct _Packet (UINT32 available) {
+  Message message[:byte-size available];
+} Packet;
 

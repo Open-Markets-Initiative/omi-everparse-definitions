@@ -1,54 +1,121 @@
-// Aquis Exchange Snapshot
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Aquis Snapshot Amd v1.2.3
 //
+// Protocol:
+//   Organization: Aquis Exchange
+//   Protocol: Snapshot
+//   Encoding: Aquis Market Data Protocol
+//   Version: 1.2.3
+//   Date: 4/23/2024
+//   Specification: Aquis Stock Exchange Multicast Market Data Specification v1.2.3.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out AquisStockExchange_Snapshot_v1_2_3.3d
-//
-// What this definition does not state, and the model does:
-// - a run counted by a field
-// - a field read in bits
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 1 byte ---------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Aquis udp packet header
-entrypoint typedef struct _PacketHeader {
-  UINT8 message_count;  // byte 0
-} PacketHeader;
+// Msg Type: one byte code
+#define MSG_TYPE_SNAPSHOT_START_MESSAGE 0x0A  // Snapshot Start Message
+#define MSG_TYPE_BOOK_STATUS_MESSAGE 0x0B     // Book Status Message
+#define MSG_TYPE_BOOK_ENTRY_MESSAGE 0x0C      // Book Entry Message
 
-// ---- Message Header: 6 bytes -------------------------------------------------
+// Trading Status: one byte code
+#define TRADING_STATUS_ACTIVE 0x01     // Active
+#define TRADING_STATUS_HALTED 0x02     // Halted
+#define TRADING_STATUS_SUSPENDED 0x03  // Suspended
 
-// Aquis market data message header
-entrypoint typedef struct _MessageHeader {
-  UINT8 msg_type;    // byte 0
-  UINT8 msg_length;  // byte 1
-  UINT32 seq_no;     // bytes 2 to 5
-} MessageHeader;
+// Side: one byte code
+#define SIDE_BUY_ORDER 0x01   // Buy Order
+#define SIDE_SELL_ORDER 0x02  // Sell Order
 
-// ---- Snapshot Start Message: 14 bytes ----------------------------------------
+// ---- Types -------------------------------------------------------------------
 
 // A Snapshot Start message is published as the first message in a snapshot to identify the sequence number in the continuous stream that this snapshot relates to. It also states the number of securities being reported in this snapshot. This message is only applicable to continuous trading.
-entrypoint typedef struct _SnapshotStartMessage {
+typedef struct _SnapshotStartMessage {
   UINT32 stream_seq_no;   // bytes 0 to 3
   UINT16 security_count;  // bytes 4 to 5
   UINT64 timestamp;       // bytes 6 to 13
 } SnapshotStartMessage;
 
-// ---- Book Entry Message: 19 bytes --------------------------------------------
+// A Book Status message is published to report the trading and market status of each security and the number of open orders on the order book for the security at the time of the snapshot. This message is only applicable to continuous trading.
+typedef struct _BookStatusMessage {
+  UINT16 security_id;        // bytes 0 to 1
+  UINT8 trading_status;      // byte 2
+  UINT8 trading : 1;         // byte 3
+  UINT8 unused_2 : 2;        // byte 3
+  UINT8 pre_open_close : 1;  // byte 3
+  UINT8 unused_4 : 4;        // byte 3
+  UINT16 entries;            // bytes 4 to 5
+  UINT32 closing_buy_qty;    // bytes 6 to 9
+  UINT32 closing_sell_qty;   // bytes 10 to 13
+  UINT64 indicative_price;   // bytes 14 to 21
+} BookStatusMessage;
 
 // An appropriate number of Book Entry messages is published after each Book Status message to provide details of each order and allow the book to be built. This message is only applicable to continuous trading.
-entrypoint typedef struct _BookEntryMessage {
+typedef struct _BookEntryMessage {
   UINT16 security_id;  // bytes 0 to 1
   UINT8 side;          // byte 2
   UINT32 quantity;     // bytes 3 to 6
   UINT64 price;        // bytes 7 to 14
   UINT32 order_ref;    // bytes 15 to 18
 } BookEntryMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x0A: SnapshotStartMessage snapshot_start_message;
+    case 0x0B: BookStatusMessage book_status_message;
+    case 0x0C: BookEntryMessage book_entry_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// Aquis Amd Message
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT8 msg_type;                                                                                                                                                  // byte 0
+  UINT8 msg_length { msg_length >= 6 };                                                                                                                            // byte 1
+  UINT32 seq_no;                                                                                                                                                   // bytes 2 to 5
+  Payload(msg_type, (((UINT32) msg_length) - 6)) payload[:byte-size-single-element-array (((UINT32) msg_length) - 6)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Aquis Udp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 1) {
+  UINT8 message_count;                                                                                                      // byte 0
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size (available - 1)];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} Packet;
 

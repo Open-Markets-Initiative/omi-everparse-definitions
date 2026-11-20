@@ -1,50 +1,82 @@
-// The London Metal Exchange LMEsource ReferencePrices Refresh
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Lme LmeSelect ReferencePricesSnapshot LmeSource v4.18
 //
+// Protocol:
+//   Organization: The London Metal Exchange
+//   Protocol: LMEsource ReferencePrices Refresh
+//   Encoding: LMEsource
+//   Version: 4.18
+//   Date: 08/18/2026
+//   Specification: lmesource-client-interface-specification-v4-18.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out LmeSelect_ReferencePricesSnapshot_v4_18.3d
-//
-// What this definition does not state, and the model does:
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 16 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// LMEsource packet header, giving the packet size, the number of messages it carries, the sequence number of the first of them and the time the packet was sent
-entrypoint typedef struct _PacketHeader {
-  UINT16 pkt_size;   // bytes 0 to 1
-  UINT8 msg_count;   // byte 2
-  UINT8 filler;      // byte 3
-  UINT32 seq_num;    // bytes 4 to 7
-  UINT64 send_time;  // bytes 8 to 15
-} PacketHeader;
+// Msg Type: 2 byte code
+#define MSG_TYPE_SEQUENCE_RESET_MESSAGE 0x0064                 // Sequence Reset Message
+#define MSG_TYPE_REFERENCE_PRICE_MESSAGE 0x0191                // Reference Price Message
+#define MSG_TYPE_REFERENCE_FORWARD_CURVE_PRICE_MESSAGE 0x0192  // Reference Forward Curve Price Message
+#define MSG_TYPE_REFERENCE_FX_RATE_MESSAGE 0x0193              // Reference Fx Rate Message
+#define MSG_TYPE_REFERENCE_VOLATILITY_PRICE_MESSAGE 0x0194     // Reference Volatility Price Message
+#define MSG_TYPE_REFRESH_COMPLETE_MESSAGE 0x00CB               // Refresh Complete Message
 
-// ---- Message Header: 4 bytes -------------------------------------------------
+// Reference Price Category: one byte code
+#define REFERENCE_PRICE_CATEGORY_INSTRUMENT 0x49  // Instrument
+#define REFERENCE_PRICE_CATEGORY_PRODUCT 0x50     // Product
 
-// LMEsource message header, giving the size of the message and its type
-entrypoint typedef struct _MessageHeader {
-  UINT16 msg_size;  // bytes 0 to 1
-  UINT16 msg_type;  // bytes 2 to 3
-} MessageHeader;
+// Fx Rate Category: one byte code
+#define FX_RATE_CATEGORY_EXCHANGE 0x45  // Exchange
+#define FX_RATE_CATEGORY_CLOSING 0x43   // Closing
 
-// ---- Sequence Reset Message: 4 bytes -----------------------------------------
+// Surface Domain: one byte code
+#define SURFACE_DOMAIN_STRIKE 0x53  // Strike
+#define SURFACE_DOMAIN_DELTA 0x44   // Delta
+
+// Atm: one byte code
+#define ATM_DELTA_POINT 0x00  // Delta Point
+#define ATM_ATM_STRIKE 0x01   // Atm Strike
+
+// ---- Types -------------------------------------------------------------------
 
 // Sent on each multicast channel at start of day, and intraday in case of a disaster recovery. The client must ignore the sequence number of the Sequence Reset message itself and set the next expected sequence number to NewSeqNo, clear all cached data for all instruments and subscribe to the refresh channels to receive the current state of the market.
-entrypoint typedef struct _SequenceResetMessage {
+typedef struct _SequenceResetMessage {
   UINT32 new_seq_no;  // bytes 0 to 3
 } SequenceResetMessage;
 
-// ---- Reference Price Message: 94 bytes ---------------------------------------
-
 // Reference prices are published for instruments with an InstrumentID for the Official, Settlement, Closing and Index price types. Instruments are published in the Instrument Definition message.
-entrypoint typedef struct _ReferencePriceMessage {
+typedef struct _ReferencePriceMessage {
   UINT64 time_of_event;            // bytes 0 to 7
   UINT8 reference_price_category;  // byte 8
   UINT8 reference_price_type[32];  // bytes 9 to 40
@@ -58,10 +90,29 @@ entrypoint typedef struct _ReferencePriceMessage {
   UINT64 ask;                      // bytes 86 to 93, signed, read here as unsigned
 } ReferencePriceMessage;
 
-// ---- Reference Fx Rate Message: 25 bytes -------------------------------------
+// One forward curve reference price and the prompt date or dates it relates to. The specification's length formula names the repeat NumPrices, a field no table of this message declares; RecordCount is the count it gives, as the number of reference prices in this message
+typedef struct _CurvePrices {
+  UINT64 price;                  // bytes 0 to 7, signed, read here as unsigned
+  UINT32 prompt_date_1;          // bytes 8 to 11
+  UINT8 prompt_date_label_1[6];  // bytes 12 to 17
+  UINT32 prompt_date_2;          // bytes 18 to 21
+  UINT8 prompt_date_label_2[6];  // bytes 22 to 27
+} CurvePrices;
+
+// Indicative and closing prices for Carries and indicative prices for the Aluminium Premiums.
+typedef struct _ReferenceForwardCurvePriceMessage {
+  UINT64 time_of_event;                                                 // bytes 0 to 7
+  UINT32 business_date;                                                 // bytes 8 to 11
+  UINT8 product_code[2];                                                // bytes 12 to 13
+  UINT8 price_status[12];                                               // bytes 14 to 25
+  UINT8 currency_code[3];                                               // bytes 26 to 28
+  UINT16 remaining_records;                                             // bytes 29 to 30
+  UINT16 record_count;                                                  // bytes 31 to 32
+  CurvePrices curve_prices[:byte-size (((UINT32) record_count) * 28)];
+} ReferenceForwardCurvePriceMessage;
 
 // Exchange FX rates are published for the Cash prompt. Daily and Monthly Moving Average Exchange FX rates are published each day, with the Monthly Average Exchange FX rate published on the last business day of the month. MonthlyMovingAverage and MonthlyAverage are published only for the Exchange category.
-entrypoint typedef struct _ReferenceFxRateMessage {
+typedef struct _ReferenceFxRateMessage {
   UINT8 fx_rate_category;         // byte 0
   UINT8 fx_rate_type[2];          // bytes 1 to 2
   UINT32 business_date;           // bytes 3 to 6
@@ -71,10 +122,66 @@ entrypoint typedef struct _ReferenceFxRateMessage {
   UINT64 conversion_rate;         // bytes 17 to 24, signed, read here as unsigned
 } ReferenceFxRateMessage;
 
-// ---- Refresh Complete Message: 4 bytes ---------------------------------------
+// One point of the reference volatility curve. The specification's length formula names the repeat NumVolatilityRecords, a field no table of this message declares; RecordCount is the count it gives, as the number of reference volatility points in this message
+typedef struct _VolatilityPoints {
+  UINT8 surface_domain;    // byte 0
+  UINT64 delta;            // bytes 1 to 8, signed, read here as unsigned
+  UINT64 strike_price;     // bytes 9 to 16, signed, read here as unsigned
+  UINT8 atm;               // byte 17
+  UINT64 call_volatility;  // bytes 18 to 25, signed, read here as unsigned
+  UINT64 put_volatility;   // bytes 26 to 33, signed, read here as unsigned
+  UINT64 call_premium;     // bytes 34 to 41, signed, read here as unsigned
+  UINT64 put_premium;      // bytes 42 to 49, signed, read here as unsigned
+} VolatilityPoints;
+
+// Provides raw strikes. LME volatilities are quoted in Delta space, and the strikes for which LME provide volatilities correspond to plus or minus 5, 10 and 25, the 50 delta, the at the money strike and the tradable strikes for the instrument. The calculated Call Premium and Put Premium are provided for each volatility and strike price for both Traded Options and TAPOs.
+typedef struct _ReferenceVolatilityPriceMessage {
+  UINT64 time_of_event;                                                           // bytes 0 to 7
+  UINT32 business_date;                                                           // bytes 8 to 11
+  UINT8 contract_code[12];                                                        // bytes 12 to 23
+  UINT32 expiry_date;                                                             // bytes 24 to 27
+  UINT16 remaining_records;                                                       // bytes 28 to 29
+  UINT16 record_count;                                                            // bytes 30 to 31
+  VolatilityPoints volatility_points[:byte-size (((UINT32) record_count) * 50)];
+} ReferenceVolatilityPriceMessage;
 
 // Published to mark the end of a refresh cycle.
-entrypoint typedef struct _RefreshCompleteMessage {
+typedef struct _RefreshCompleteMessage {
   UINT32 last_seq_num;  // bytes 0 to 3
 } RefreshCompleteMessage;
+
+// Branch
+casetype _Payload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x0064: SequenceResetMessage sequence_reset_message;
+    case 0x0191: ReferencePriceMessage reference_price_message;
+    case 0x0192: ReferenceForwardCurvePriceMessage reference_forward_curve_price_message;
+    case 0x0193: ReferenceFxRateMessage reference_fx_rate_message;
+    case 0x0194: ReferenceVolatilityPriceMessage reference_volatility_price_message;
+    case 0x00CB: RefreshCompleteMessage refresh_complete_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// LMEsource application messages carried by this packet; a message is never fragmented across packets
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16 msg_size { msg_size >= 4 };                                                                                                                               // bytes 0 to 1
+  UINT16 msg_type;                                                                                                                                                 // bytes 2 to 3
+  Payload(msg_type, (((UINT32) msg_size) - 4)) payload[:byte-size-single-element-array (((UINT32) msg_size) - 4)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// LMEsource multicast packet, a packet header followed by Msg Count complete messages
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 16) {
+  UINT16 pkt_size;                                                                                                      // bytes 0 to 1
+  UINT8 msg_count;                                                                                                      // byte 2
+  UINT8 filler;                                                                                                         // byte 3
+  UINT32 seq_num;                                                                                                       // bytes 4 to 7
+  UINT64 send_time;                                                                                                     // bytes 8 to 15
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size (available - 16)];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) msg_count); };
+} Packet;
 

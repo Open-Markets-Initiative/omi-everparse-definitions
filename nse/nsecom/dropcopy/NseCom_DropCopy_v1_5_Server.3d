@@ -1,50 +1,83 @@
-// National Stock Exchange of India Ltd Drop Copy
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nse NseCom DropCopy NnfDirect v1.5
 //
+// Protocol:
+//   Organization: National Stock Exchange of India Ltd
+//   Protocol: Drop Copy
+//   Encoding: Non-Neat Front End Direct Interface
+//   Version: 1.5
+//   Date: 6/1/2024
+//   Specification: DC_COM_Normal_DROPCOPY_PROTOCOL_1.5.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ServerPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out NseCom_DropCopy_v1_5_Server.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a Composite rule
-// - a field read in bits
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 22 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Direct interface twenty two byte packet header
-entrypoint typedef struct _PacketHeader {
-  UINT16BE packet_length;           // bytes 0 to 1
-  UINT32BE packet_sequence_number;  // bytes 2 to 5
-  UINT8 checksum[16];               // bytes 6 to 21
-} PacketHeader;
+// Transaction Code: 2 byte code
+#define TRANSACTION_CODE_SIGNON_IN_MESSAGE 0x08FC              // Signon In Message
+#define TRANSACTION_CODE_SIGN_ON_OUT_MESSAGE 0x08FD            // Sign On Out Message
+#define TRANSACTION_CODE_HEARTBEAT_MESSAGE 0x5BD2              // Heartbeat Message
+#define TRANSACTION_CODE_DC_DOWNLOAD_REQUEST_MESSAGE 0x1F40    // Dc Download Request Message
+#define TRANSACTION_CODE_TRADE_CONFIRMATION_MESSAGE 0x08AE     // Trade Confirmation Message
+#define TRANSACTION_CODE_TRADE_CANCEL_CONFIRM_MESSAGE 0x08EA   // Trade Cancel Confirm Message
+#define TRANSACTION_CODE_TRADE_CANCEL_REJECT_MESSAGE 0x08EE    // Trade Cancel Reject Message
+#define TRANSACTION_CODE_TRADE_MODIFY_CONFIRM_MESSAGE 0x08EF   // Trade Modify Confirm Message
+#define TRANSACTION_CODE_TRADE_MODIFY_REJECT_MESSAGE 0x08F0    // Trade Modify Reject Message
+#define TRANSACTION_CODE_GIVEUP_APP_CONFIRM_TM_MESSAGE 0x119A  // Giveup App Confirm Tm Message
+#define TRANSACTION_CODE_GIVEUP_REJ_CONFIRM_TM_MESSAGE 0x119B  // Giveup Rej Confirm Tm Message
 
-// ---- Message Header: 40 bytes ------------------------------------------------
+// Buy Sell: 2 byte code
+#define BUY_SELL_BUY_ORDER 0x0001   // Buy Order
+#define BUY_SELL_SELL_ORDER 0x0002  // Sell Order
 
-// MESSAGE_HEADER
-entrypoint typedef struct _MessageHeader {
-  UINT16BE transaction_code;  // bytes 0 to 1, signed, read here as unsigned
-  UINT32BE log_time;          // bytes 2 to 5, signed, read here as unsigned
-  UINT8 alpha_char[2];        // bytes 6 to 7
-  UINT32BE trader_id;         // bytes 8 to 11, signed, read here as unsigned
-  UINT16BE error_code;        // bytes 12 to 13, signed, read here as unsigned
-  UINT64BE header_timestamp;  // bytes 14 to 21, signed, read here as unsigned
-  UINT8 time_stamp_1[8];      // bytes 22 to 29
-  UINT8 time_stamp_2[8];      // bytes 30 to 37
-  UINT16BE message_length;    // bytes 38 to 39, signed, read here as unsigned
-} MessageHeader;
+// Open Close: one byte code
+#define OPEN_CLOSE_OPEN 0x4F   // Open
+#define OPEN_CLOSE_CLOSE 0x43  // Close
 
-// ---- Sign On Out Message: 238 bytes ------------------------------------------
+// Book Type: 2 byte code
+#define BOOK_TYPE_REGULAR_LOT_ORDER 0x0001          // Regular Lot Order
+#define BOOK_TYPE_SPECIAL_TERMS_ORDER 0x0002        // Special Terms Order
+#define BOOK_TYPE_STOP_LOSS_MIT_ORDER 0x0003        // Stop Loss Mit Order
+#define BOOK_TYPE_NEGOTIATED_ORDER_NOT_USED 0x0004  // Negotiated Order Not Used
+#define BOOK_TYPE_ODD_LOT_ORDER_NOT_USED 0x0005     // Odd Lot Order Not Used
+#define BOOK_TYPE_SPOT_ORDER_NOT_USED 0x0006        // Spot Order Not Used
+#define BOOK_TYPE_AUCTION_ORDER_NOT_USED 0x0007     // Auction Order Not Used
+
+// ---- Types -------------------------------------------------------------------
 
 // Confirms the logon. Alpha Char carries the number of streams the drop copy feed is sent from, one download request being needed per stream. On an error the same transaction code carries the Error Response layout instead, distinguished only by a non zero Error Code
-entrypoint typedef struct _SignOnOutMessage {
+typedef struct _SignOnOutMessage {
   UINT32BE user_id;              // bytes 0 to 3, signed, read here as unsigned
   UINT8 reserved_8[8];           // bytes 4 to 11
   UINT8 password[8];             // bytes 12 to 19
@@ -57,10 +90,8 @@ entrypoint typedef struct _SignOnOutMessage {
   UINT8 third_reserved_16[16];   // bytes 222 to 237
 } SignOnOutMessage;
 
-// ---- Contract Desc: 28 bytes -------------------------------------------------
-
 // CONTRACT_DESC
-entrypoint typedef struct _ContractDesc {
+typedef struct _ContractDesc {
   UINT8 instrument_name[6];  // bytes 0 to 5
   UINT8 symbol[10];          // bytes 6 to 15
   UINT32BE expiry_date;      // bytes 16 to 19, signed, read here as unsigned
@@ -68,4 +99,407 @@ entrypoint typedef struct _ContractDesc {
   UINT8 option_type[2];      // bytes 24 to 25
   UINT16BE ca_level;         // bytes 26 to 27, signed, read here as unsigned
 } ContractDesc;
+
+// Confirms a trade
+typedef struct _TradeConfirmationMessage {
+  UINT8 response_order_number[8];                // bytes 0 to 7
+  UINT8 broker_id[5];                            // bytes 8 to 12
+  UINT8 reserved_1;                              // byte 13
+  UINT32BE trader_num;                           // bytes 14 to 17, signed, read here as unsigned
+  UINT8 account_num[10];                         // bytes 18 to 27
+  UINT16BE buy_sell;                             // bytes 28 to 29, signed, read here as unsigned
+  UINT32BE original_vol;                         // bytes 30 to 33, signed, read here as unsigned
+  UINT32BE disclosed_vol;                        // bytes 34 to 37, signed, read here as unsigned
+  UINT32BE remaining_vol;                        // bytes 38 to 41, signed, read here as unsigned
+  UINT32BE disclosed_vol_remaining;              // bytes 42 to 45, signed, read here as unsigned
+  UINT32BE price;                                // bytes 46 to 49, signed, read here as unsigned
+  UINT16BE ato : 1;                              // bytes 50 to 51
+  UINT16BE market : 1;                           // bytes 50 to 51
+  UINT16BE sl : 1;                               // bytes 50 to 51
+  UINT16BE mit : 1;                              // bytes 50 to 51
+  UINT16BE day : 1;                              // bytes 50 to 51
+  UINT16BE gtc : 1;                              // bytes 50 to 51
+  UINT16BE ioc : 1;                              // bytes 50 to 51
+  UINT16BE aon : 1;                              // bytes 50 to 51
+  UINT16BE mf : 1;                               // bytes 50 to 51
+  UINT16BE matched_ind : 1;                      // bytes 50 to 51
+  UINT16BE traded : 1;                           // bytes 50 to 51
+  UINT16BE modified : 1;                         // bytes 50 to 51
+  UINT16BE frozen : 1;                           // bytes 50 to 51
+  UINT16BE reserved_13 : 3;                      // bytes 50 to 51
+  UINT32BE gtd;                                  // bytes 52 to 55, signed, read here as unsigned
+  UINT32BE fill_number;                          // bytes 56 to 59, signed, read here as unsigned
+  UINT32BE fill_qty;                             // bytes 60 to 63, signed, read here as unsigned
+  UINT32BE fill_price;                           // bytes 64 to 67, signed, read here as unsigned
+  UINT32BE vol_filled_today;                     // bytes 68 to 71, signed, read here as unsigned
+  UINT8 activity_type[2];                        // bytes 72 to 73
+  UINT32BE activity_time;                        // bytes 74 to 77, signed, read here as unsigned
+  UINT8 op_order_number[8];                      // bytes 78 to 85
+  UINT8 op_broker_id[5];                         // bytes 86 to 90
+  UINT8 second_reserved_1;                       // byte 91
+  UINT32BE token;                                // bytes 92 to 95, signed, read here as unsigned
+  ContractDesc contract_desc;                    // bytes 96 to 123
+  UINT8 open_close;                              // byte 124
+  UINT8 old_open_close;                          // byte 125
+  UINT8 trade_book_type;                         // byte 126
+  UINT8 third_reserved_1;                        // byte 127
+  UINT32BE new_volume;                           // bytes 128 to 131, signed, read here as unsigned
+  UINT8 old_account_number[10];                  // bytes 132 to 141
+  UINT8 participant[12];                         // bytes 142 to 153
+  UINT8 old_participant[12];                     // bytes 154 to 165
+  UINT8 additional_order_flags_reserved_1 : 1;   // byte 166
+  UINT8 col : 1;                                 // byte 166
+  UINT8 additional_order_flags_reserved_38 : 6;  // byte 166
+  UINT8 fourth_reserved_1;                       // byte 167
+  UINT8 give_up_trade;                           // byte 168
+  UINT8 fifth_reserved_1;                        // byte 169
+  UINT8 pan[10];                                 // bytes 170 to 179
+  UINT8 old_pan[10];                             // bytes 180 to 189
+  UINT32BE algo_id;                              // bytes 190 to 193, signed, read here as unsigned
+  UINT8 reserved_2[2];                           // bytes 194 to 195
+  UINT64BE last_activity_reference;              // bytes 196 to 203, signed, read here as unsigned
+  UINT8 nnf_field[8];                            // bytes 204 to 211
+  UINT8 reserved_44[44];                         // bytes 212 to 255
+} TradeConfirmationMessage;
+
+// Confirms the cancellation of a trade
+typedef struct _TradeCancelConfirmMessage {
+  UINT8 response_order_number[8];                // bytes 0 to 7
+  UINT8 broker_id[5];                            // bytes 8 to 12
+  UINT8 reserved_1;                              // byte 13
+  UINT32BE trader_num;                           // bytes 14 to 17, signed, read here as unsigned
+  UINT8 account_num[10];                         // bytes 18 to 27
+  UINT16BE buy_sell;                             // bytes 28 to 29, signed, read here as unsigned
+  UINT32BE original_vol;                         // bytes 30 to 33, signed, read here as unsigned
+  UINT32BE disclosed_vol;                        // bytes 34 to 37, signed, read here as unsigned
+  UINT32BE remaining_vol;                        // bytes 38 to 41, signed, read here as unsigned
+  UINT32BE disclosed_vol_remaining;              // bytes 42 to 45, signed, read here as unsigned
+  UINT32BE price;                                // bytes 46 to 49, signed, read here as unsigned
+  UINT16BE ato : 1;                              // bytes 50 to 51
+  UINT16BE market : 1;                           // bytes 50 to 51
+  UINT16BE sl : 1;                               // bytes 50 to 51
+  UINT16BE mit : 1;                              // bytes 50 to 51
+  UINT16BE day : 1;                              // bytes 50 to 51
+  UINT16BE gtc : 1;                              // bytes 50 to 51
+  UINT16BE ioc : 1;                              // bytes 50 to 51
+  UINT16BE aon : 1;                              // bytes 50 to 51
+  UINT16BE mf : 1;                               // bytes 50 to 51
+  UINT16BE matched_ind : 1;                      // bytes 50 to 51
+  UINT16BE traded : 1;                           // bytes 50 to 51
+  UINT16BE modified : 1;                         // bytes 50 to 51
+  UINT16BE frozen : 1;                           // bytes 50 to 51
+  UINT16BE reserved_13 : 3;                      // bytes 50 to 51
+  UINT32BE gtd;                                  // bytes 52 to 55, signed, read here as unsigned
+  UINT32BE fill_number;                          // bytes 56 to 59, signed, read here as unsigned
+  UINT32BE fill_qty;                             // bytes 60 to 63, signed, read here as unsigned
+  UINT32BE fill_price;                           // bytes 64 to 67, signed, read here as unsigned
+  UINT32BE vol_filled_today;                     // bytes 68 to 71, signed, read here as unsigned
+  UINT8 activity_type[2];                        // bytes 72 to 73
+  UINT32BE activity_time;                        // bytes 74 to 77, signed, read here as unsigned
+  UINT8 op_order_number[8];                      // bytes 78 to 85
+  UINT8 op_broker_id[5];                         // bytes 86 to 90
+  UINT8 second_reserved_1;                       // byte 91
+  UINT32BE token;                                // bytes 92 to 95, signed, read here as unsigned
+  ContractDesc contract_desc;                    // bytes 96 to 123
+  UINT8 open_close;                              // byte 124
+  UINT8 old_open_close;                          // byte 125
+  UINT8 trade_book_type;                         // byte 126
+  UINT8 third_reserved_1;                        // byte 127
+  UINT32BE new_volume;                           // bytes 128 to 131, signed, read here as unsigned
+  UINT8 old_account_number[10];                  // bytes 132 to 141
+  UINT8 participant[12];                         // bytes 142 to 153
+  UINT8 old_participant[12];                     // bytes 154 to 165
+  UINT8 additional_order_flags_reserved_1 : 1;   // byte 166
+  UINT8 col : 1;                                 // byte 166
+  UINT8 additional_order_flags_reserved_38 : 6;  // byte 166
+  UINT8 fourth_reserved_1;                       // byte 167
+  UINT8 give_up_trade;                           // byte 168
+  UINT8 fifth_reserved_1;                        // byte 169
+  UINT8 pan[10];                                 // bytes 170 to 179
+  UINT8 old_pan[10];                             // bytes 180 to 189
+  UINT32BE algo_id;                              // bytes 190 to 193, signed, read here as unsigned
+  UINT8 reserved_2[2];                           // bytes 194 to 195
+  UINT64BE last_activity_reference;              // bytes 196 to 203, signed, read here as unsigned
+  UINT8 nnf_field[8];                            // bytes 204 to 211
+  UINT8 reserved_44[44];                         // bytes 212 to 255
+} TradeCancelConfirmMessage;
+
+// Rejects a trade cancellation
+typedef struct _TradeCancelRejectMessage {
+  UINT8 response_order_number[8];                // bytes 0 to 7
+  UINT8 broker_id[5];                            // bytes 8 to 12
+  UINT8 reserved_1;                              // byte 13
+  UINT32BE trader_num;                           // bytes 14 to 17, signed, read here as unsigned
+  UINT8 account_num[10];                         // bytes 18 to 27
+  UINT16BE buy_sell;                             // bytes 28 to 29, signed, read here as unsigned
+  UINT32BE original_vol;                         // bytes 30 to 33, signed, read here as unsigned
+  UINT32BE disclosed_vol;                        // bytes 34 to 37, signed, read here as unsigned
+  UINT32BE remaining_vol;                        // bytes 38 to 41, signed, read here as unsigned
+  UINT32BE disclosed_vol_remaining;              // bytes 42 to 45, signed, read here as unsigned
+  UINT32BE price;                                // bytes 46 to 49, signed, read here as unsigned
+  UINT16BE ato : 1;                              // bytes 50 to 51
+  UINT16BE market : 1;                           // bytes 50 to 51
+  UINT16BE sl : 1;                               // bytes 50 to 51
+  UINT16BE mit : 1;                              // bytes 50 to 51
+  UINT16BE day : 1;                              // bytes 50 to 51
+  UINT16BE gtc : 1;                              // bytes 50 to 51
+  UINT16BE ioc : 1;                              // bytes 50 to 51
+  UINT16BE aon : 1;                              // bytes 50 to 51
+  UINT16BE mf : 1;                               // bytes 50 to 51
+  UINT16BE matched_ind : 1;                      // bytes 50 to 51
+  UINT16BE traded : 1;                           // bytes 50 to 51
+  UINT16BE modified : 1;                         // bytes 50 to 51
+  UINT16BE frozen : 1;                           // bytes 50 to 51
+  UINT16BE reserved_13 : 3;                      // bytes 50 to 51
+  UINT32BE gtd;                                  // bytes 52 to 55, signed, read here as unsigned
+  UINT32BE fill_number;                          // bytes 56 to 59, signed, read here as unsigned
+  UINT32BE fill_qty;                             // bytes 60 to 63, signed, read here as unsigned
+  UINT32BE fill_price;                           // bytes 64 to 67, signed, read here as unsigned
+  UINT32BE vol_filled_today;                     // bytes 68 to 71, signed, read here as unsigned
+  UINT8 activity_type[2];                        // bytes 72 to 73
+  UINT32BE activity_time;                        // bytes 74 to 77, signed, read here as unsigned
+  UINT8 op_order_number[8];                      // bytes 78 to 85
+  UINT8 op_broker_id[5];                         // bytes 86 to 90
+  UINT8 second_reserved_1;                       // byte 91
+  UINT32BE token;                                // bytes 92 to 95, signed, read here as unsigned
+  ContractDesc contract_desc;                    // bytes 96 to 123
+  UINT8 open_close;                              // byte 124
+  UINT8 old_open_close;                          // byte 125
+  UINT8 trade_book_type;                         // byte 126
+  UINT8 third_reserved_1;                        // byte 127
+  UINT32BE new_volume;                           // bytes 128 to 131, signed, read here as unsigned
+  UINT8 old_account_number[10];                  // bytes 132 to 141
+  UINT8 participant[12];                         // bytes 142 to 153
+  UINT8 old_participant[12];                     // bytes 154 to 165
+  UINT8 additional_order_flags_reserved_1 : 1;   // byte 166
+  UINT8 col : 1;                                 // byte 166
+  UINT8 additional_order_flags_reserved_38 : 6;  // byte 166
+  UINT8 fourth_reserved_1;                       // byte 167
+  UINT8 give_up_trade;                           // byte 168
+  UINT8 fifth_reserved_1;                        // byte 169
+  UINT8 pan[10];                                 // bytes 170 to 179
+  UINT8 old_pan[10];                             // bytes 180 to 189
+  UINT32BE algo_id;                              // bytes 190 to 193, signed, read here as unsigned
+  UINT8 reserved_2[2];                           // bytes 194 to 195
+  UINT64BE last_activity_reference;              // bytes 196 to 203, signed, read here as unsigned
+  UINT8 nnf_field[8];                            // bytes 204 to 211
+  UINT8 reserved_44[44];                         // bytes 212 to 255
+} TradeCancelRejectMessage;
+
+// Confirms the modification of a trade
+typedef struct _TradeModifyConfirmMessage {
+  UINT8 response_order_number[8];                // bytes 0 to 7
+  UINT8 broker_id[5];                            // bytes 8 to 12
+  UINT8 reserved_1;                              // byte 13
+  UINT32BE trader_num;                           // bytes 14 to 17, signed, read here as unsigned
+  UINT8 account_num[10];                         // bytes 18 to 27
+  UINT16BE buy_sell;                             // bytes 28 to 29, signed, read here as unsigned
+  UINT32BE original_vol;                         // bytes 30 to 33, signed, read here as unsigned
+  UINT32BE disclosed_vol;                        // bytes 34 to 37, signed, read here as unsigned
+  UINT32BE remaining_vol;                        // bytes 38 to 41, signed, read here as unsigned
+  UINT32BE disclosed_vol_remaining;              // bytes 42 to 45, signed, read here as unsigned
+  UINT32BE price;                                // bytes 46 to 49, signed, read here as unsigned
+  UINT16BE ato : 1;                              // bytes 50 to 51
+  UINT16BE market : 1;                           // bytes 50 to 51
+  UINT16BE sl : 1;                               // bytes 50 to 51
+  UINT16BE mit : 1;                              // bytes 50 to 51
+  UINT16BE day : 1;                              // bytes 50 to 51
+  UINT16BE gtc : 1;                              // bytes 50 to 51
+  UINT16BE ioc : 1;                              // bytes 50 to 51
+  UINT16BE aon : 1;                              // bytes 50 to 51
+  UINT16BE mf : 1;                               // bytes 50 to 51
+  UINT16BE matched_ind : 1;                      // bytes 50 to 51
+  UINT16BE traded : 1;                           // bytes 50 to 51
+  UINT16BE modified : 1;                         // bytes 50 to 51
+  UINT16BE frozen : 1;                           // bytes 50 to 51
+  UINT16BE reserved_13 : 3;                      // bytes 50 to 51
+  UINT32BE gtd;                                  // bytes 52 to 55, signed, read here as unsigned
+  UINT32BE fill_number;                          // bytes 56 to 59, signed, read here as unsigned
+  UINT32BE fill_qty;                             // bytes 60 to 63, signed, read here as unsigned
+  UINT32BE fill_price;                           // bytes 64 to 67, signed, read here as unsigned
+  UINT32BE vol_filled_today;                     // bytes 68 to 71, signed, read here as unsigned
+  UINT8 activity_type[2];                        // bytes 72 to 73
+  UINT32BE activity_time;                        // bytes 74 to 77, signed, read here as unsigned
+  UINT8 op_order_number[8];                      // bytes 78 to 85
+  UINT8 op_broker_id[5];                         // bytes 86 to 90
+  UINT8 second_reserved_1;                       // byte 91
+  UINT32BE token;                                // bytes 92 to 95, signed, read here as unsigned
+  ContractDesc contract_desc;                    // bytes 96 to 123
+  UINT8 open_close;                              // byte 124
+  UINT8 old_open_close;                          // byte 125
+  UINT8 trade_book_type;                         // byte 126
+  UINT8 third_reserved_1;                        // byte 127
+  UINT32BE new_volume;                           // bytes 128 to 131, signed, read here as unsigned
+  UINT8 old_account_number[10];                  // bytes 132 to 141
+  UINT8 participant[12];                         // bytes 142 to 153
+  UINT8 old_participant[12];                     // bytes 154 to 165
+  UINT8 additional_order_flags_reserved_1 : 1;   // byte 166
+  UINT8 col : 1;                                 // byte 166
+  UINT8 additional_order_flags_reserved_38 : 6;  // byte 166
+  UINT8 fourth_reserved_1;                       // byte 167
+  UINT8 give_up_trade;                           // byte 168
+  UINT8 fifth_reserved_1;                        // byte 169
+  UINT8 pan[10];                                 // bytes 170 to 179
+  UINT8 old_pan[10];                             // bytes 180 to 189
+  UINT32BE algo_id;                              // bytes 190 to 193, signed, read here as unsigned
+  UINT8 reserved_2[2];                           // bytes 194 to 195
+  UINT64BE last_activity_reference;              // bytes 196 to 203, signed, read here as unsigned
+  UINT8 nnf_field[8];                            // bytes 204 to 211
+  UINT8 reserved_44[44];                         // bytes 212 to 255
+} TradeModifyConfirmMessage;
+
+// Rejects a trade modification
+typedef struct _TradeModifyRejectMessage {
+  UINT8 response_order_number[8];                // bytes 0 to 7
+  UINT8 broker_id[5];                            // bytes 8 to 12
+  UINT8 reserved_1;                              // byte 13
+  UINT32BE trader_num;                           // bytes 14 to 17, signed, read here as unsigned
+  UINT8 account_num[10];                         // bytes 18 to 27
+  UINT16BE buy_sell;                             // bytes 28 to 29, signed, read here as unsigned
+  UINT32BE original_vol;                         // bytes 30 to 33, signed, read here as unsigned
+  UINT32BE disclosed_vol;                        // bytes 34 to 37, signed, read here as unsigned
+  UINT32BE remaining_vol;                        // bytes 38 to 41, signed, read here as unsigned
+  UINT32BE disclosed_vol_remaining;              // bytes 42 to 45, signed, read here as unsigned
+  UINT32BE price;                                // bytes 46 to 49, signed, read here as unsigned
+  UINT16BE ato : 1;                              // bytes 50 to 51
+  UINT16BE market : 1;                           // bytes 50 to 51
+  UINT16BE sl : 1;                               // bytes 50 to 51
+  UINT16BE mit : 1;                              // bytes 50 to 51
+  UINT16BE day : 1;                              // bytes 50 to 51
+  UINT16BE gtc : 1;                              // bytes 50 to 51
+  UINT16BE ioc : 1;                              // bytes 50 to 51
+  UINT16BE aon : 1;                              // bytes 50 to 51
+  UINT16BE mf : 1;                               // bytes 50 to 51
+  UINT16BE matched_ind : 1;                      // bytes 50 to 51
+  UINT16BE traded : 1;                           // bytes 50 to 51
+  UINT16BE modified : 1;                         // bytes 50 to 51
+  UINT16BE frozen : 1;                           // bytes 50 to 51
+  UINT16BE reserved_13 : 3;                      // bytes 50 to 51
+  UINT32BE gtd;                                  // bytes 52 to 55, signed, read here as unsigned
+  UINT32BE fill_number;                          // bytes 56 to 59, signed, read here as unsigned
+  UINT32BE fill_qty;                             // bytes 60 to 63, signed, read here as unsigned
+  UINT32BE fill_price;                           // bytes 64 to 67, signed, read here as unsigned
+  UINT32BE vol_filled_today;                     // bytes 68 to 71, signed, read here as unsigned
+  UINT8 activity_type[2];                        // bytes 72 to 73
+  UINT32BE activity_time;                        // bytes 74 to 77, signed, read here as unsigned
+  UINT8 op_order_number[8];                      // bytes 78 to 85
+  UINT8 op_broker_id[5];                         // bytes 86 to 90
+  UINT8 second_reserved_1;                       // byte 91
+  UINT32BE token;                                // bytes 92 to 95, signed, read here as unsigned
+  ContractDesc contract_desc;                    // bytes 96 to 123
+  UINT8 open_close;                              // byte 124
+  UINT8 old_open_close;                          // byte 125
+  UINT8 trade_book_type;                         // byte 126
+  UINT8 third_reserved_1;                        // byte 127
+  UINT32BE new_volume;                           // bytes 128 to 131, signed, read here as unsigned
+  UINT8 old_account_number[10];                  // bytes 132 to 141
+  UINT8 participant[12];                         // bytes 142 to 153
+  UINT8 old_participant[12];                     // bytes 154 to 165
+  UINT8 additional_order_flags_reserved_1 : 1;   // byte 166
+  UINT8 col : 1;                                 // byte 166
+  UINT8 additional_order_flags_reserved_38 : 6;  // byte 166
+  UINT8 fourth_reserved_1;                       // byte 167
+  UINT8 give_up_trade;                           // byte 168
+  UINT8 fifth_reserved_1;                        // byte 169
+  UINT8 pan[10];                                 // bytes 170 to 179
+  UINT8 old_pan[10];                             // bytes 180 to 189
+  UINT32BE algo_id;                              // bytes 190 to 193, signed, read here as unsigned
+  UINT8 reserved_2[2];                           // bytes 194 to 195
+  UINT64BE last_activity_reference;              // bytes 196 to 203, signed, read here as unsigned
+  UINT8 nnf_field[8];                            // bytes 204 to 211
+  UINT8 reserved_44[44];                         // bytes 212 to 255
+} TradeModifyRejectMessage;
+
+// Approves a give up
+typedef struct _GiveupAppConfirmTmMessage {
+  UINT16BE reason_code;              // bytes 0 to 1, signed, read here as unsigned
+  UINT8 order_number[8];             // bytes 2 to 9
+  UINT32BE fill_number;              // bytes 10 to 13, signed, read here as unsigned
+  UINT8 instrument_name[6];          // bytes 14 to 19
+  UINT8 symbol[10];                  // bytes 20 to 29
+  UINT32BE expiry_date;              // bytes 30 to 33, signed, read here as unsigned
+  UINT32BE strike_price;             // bytes 34 to 37, signed, read here as unsigned
+  UINT8 option_type[2];              // bytes 38 to 39
+  UINT16BE ca_level;                 // bytes 40 to 41, signed, read here as unsigned
+  UINT32BE fill_volume;              // bytes 42 to 45, signed, read here as unsigned
+  UINT32BE fill_price;               // bytes 46 to 49, signed, read here as unsigned
+  UINT8 broker_id[5];                // bytes 50 to 54
+  UINT8 filler;                      // byte 55
+  UINT16BE buy_sell;                 // bytes 56 to 57, signed, read here as unsigned
+  UINT16BE book_type;                // bytes 58 to 59, signed, read here as unsigned
+  UINT32BE last_modified_date_time;  // bytes 60 to 63, signed, read here as unsigned
+  UINT8 initiated_by_control;        // byte 64
+  UINT8 open_close;                  // byte 65
+  UINT8 reserved_1;                  // byte 66
+  UINT8 participant[12];             // bytes 67 to 78
+  UINT8 giveup_flag;                 // byte 79
+  UINT8 deleted;                     // byte 80
+  UINT8 second_reserved_1;           // byte 81
+} GiveupAppConfirmTmMessage;
+
+// Rejects a give up
+typedef struct _GiveupRejConfirmTmMessage {
+  UINT16BE reason_code;              // bytes 0 to 1, signed, read here as unsigned
+  UINT8 order_number[8];             // bytes 2 to 9
+  UINT32BE fill_number;              // bytes 10 to 13, signed, read here as unsigned
+  UINT8 instrument_name[6];          // bytes 14 to 19
+  UINT8 symbol[10];                  // bytes 20 to 29
+  UINT32BE expiry_date;              // bytes 30 to 33, signed, read here as unsigned
+  UINT32BE strike_price;             // bytes 34 to 37, signed, read here as unsigned
+  UINT8 option_type[2];              // bytes 38 to 39
+  UINT16BE ca_level;                 // bytes 40 to 41, signed, read here as unsigned
+  UINT32BE fill_volume;              // bytes 42 to 45, signed, read here as unsigned
+  UINT32BE fill_price;               // bytes 46 to 49, signed, read here as unsigned
+  UINT8 broker_id[5];                // bytes 50 to 54
+  UINT8 filler;                      // byte 55
+  UINT16BE buy_sell;                 // bytes 56 to 57, signed, read here as unsigned
+  UINT16BE book_type;                // bytes 58 to 59, signed, read here as unsigned
+  UINT32BE last_modified_date_time;  // bytes 60 to 63, signed, read here as unsigned
+  UINT8 initiated_by_control;        // byte 64
+  UINT8 open_close;                  // byte 65
+  UINT8 reserved_1;                  // byte 66
+  UINT8 participant[12];             // bytes 67 to 78
+  UINT8 giveup_flag;                 // byte 79
+  UINT8 deleted;                     // byte 80
+  UINT8 second_reserved_1;           // byte 81
+} GiveupRejConfirmTmMessage;
+
+// Branch
+casetype _ServerMessagePayload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x08FD: SignOnOutMessage sign_on_out_message;
+    case 0x08AE: TradeConfirmationMessage trade_confirmation_message;
+    case 0x08EA: TradeCancelConfirmMessage trade_cancel_confirm_message;
+    case 0x08EE: TradeCancelRejectMessage trade_cancel_reject_message;
+    case 0x08EF: TradeModifyConfirmMessage trade_modify_confirm_message;
+    case 0x08F0: TradeModifyRejectMessage trade_modify_reject_message;
+    case 0x119A: GiveupAppConfirmTmMessage giveup_app_confirm_tm_message;
+    case 0x119B: GiveupRejConfirmTmMessage giveup_rej_confirm_tm_message;
+    default: UINT8 unknown[available];
+  }
+} ServerMessagePayload;
+
+// One framed interactive message sent by the exchange
+typedef struct _ServerDirectPacket {
+  UINT16BE packet_length { packet_length >= 62 };                                                                                                                   // bytes 0 to 1
+  UINT32BE packet_sequence_number;                                                                                                                                  // bytes 2 to 5
+  UINT8 checksum[16];                                                                                                                                               // bytes 6 to 21
+  UINT16BE transaction_code;                                                                                                                                        // bytes 22 to 23, signed, read here as unsigned
+  UINT32BE log_time;                                                                                                                                                // bytes 24 to 27, signed, read here as unsigned
+  UINT8 alpha_char[2];                                                                                                                                              // bytes 28 to 29
+  UINT32BE trader_id;                                                                                                                                               // bytes 30 to 33, signed, read here as unsigned
+  UINT16BE error_code;                                                                                                                                              // bytes 34 to 35, signed, read here as unsigned
+  UINT64BE header_timestamp;                                                                                                                                        // bytes 36 to 43, signed, read here as unsigned
+  UINT8 time_stamp_1[8];                                                                                                                                            // bytes 44 to 51
+  UINT8 time_stamp_2[8];                                                                                                                                            // bytes 52 to 59
+  UINT16BE message_length;                                                                                                                                          // bytes 60 to 61, signed, read here as unsigned
+  ServerMessagePayload(transaction_code, (((UINT32) packet_length) - 62)) server_message_payload[:byte-size-single-element-array (((UINT32) packet_length) - 62)];
+} ServerDirectPacket;
+
+// ---- Packet: ServerPacket ----------------------------------------------------
+
+// Nnf direct interface Tcp block of one or more packets sent by the exchange
+entrypoint typedef struct _ServerPacket (UINT32 available) {
+  ServerDirectPacket server_direct_packet[:byte-size available];
+} ServerPacket;
 

@@ -1,35 +1,144 @@
-// Miami International Holdings Top Of Market
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Miax OnyxFutures TopOfMarket Mach v1.3.a
 //
+// Protocol:
+//   Organization: Miami International Holdings
+//   Protocol: Top Of Market
+//   Encoding: Mach
+//   Version: 1.3.a
+//   Date: 7/31/2026
+//   Specification: ONYX_ToM_Feed_v1.3a.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out OnyxFutures_TopOfMarket_v1_3_a.3d
-//
-// What this definition does not state, and the model does:
-// - a length prefix framing what follows
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Mach Packet Header: 12 bytes --------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Mach packet header (12 bytes)
-entrypoint typedef struct _MachPacketHeader {
-  UINT64 sequence_number;  // bytes 0 to 7
-  UINT16 packet_length;    // bytes 8 to 9
-  UINT8 packet_type;       // byte 10
-  UINT8 session_number;    // byte 11
-} MachPacketHeader;
+// Packet Type: one byte code
+#define PACKET_TYPE_HEARTBEAT 0x00            // Heartbeat
+#define PACKET_TYPE_START_OF_SESSION 0x01     // Start Of Session
+#define PACKET_TYPE_END_OF_SESSION 0x02       // End Of Session
+#define PACKET_TYPE_APPLICATION_MESSAGE 0x03  // Application Message
 
-// ---- Simple Instrument Definition Message: 138 bytes -------------------------
+// Message Type: one byte code
+#define MESSAGE_TYPE_SIMPLE_INSTRUMENT_DEFINITION_MESSAGE 0x01              // Simple Instrument Definition Message
+#define MESSAGE_TYPE_COMPLEX_INSTRUMENT_DEFINITION_MESSAGE 0x11             // Complex Instrument Definition Message
+#define MESSAGE_TYPE_COMPLEX_INSTRUMENT_DEFINITION_DEPRECATED_MESSAGE 0x02  // Complex Instrument Definition Deprecated Message
+#define MESSAGE_TYPE_SYSTEM_STATE_MESSAGE 0x03                              // System State Message
+#define MESSAGE_TYPE_INSTRUMENT_TRADING_STATUS_NOTIFICATION_MESSAGE 0x04    // Instrument Trading Status Notification Message
+#define MESSAGE_TYPE_BEST_BID_AND_OFFER_MESSAGE 0x0F                        // Best Bid And Offer Message
+#define MESSAGE_TYPE_LAST_SALE_MESSAGE 0x10                                 // Last Sale Message
+#define MESSAGE_TYPE_TRADE_CANCEL_MESSAGE 0x0E                              // Trade Cancel Message
+
+// Underlying Asset Type: one byte code
+#define UNDERLYING_ASSET_TYPE_EQUITY_INDEX 0x45           // Equity Index
+#define UNDERLYING_ASSET_TYPE_COMMODITY_AGRICULTURE 0x41  // Commodity Agriculture
+#define UNDERLYING_ASSET_TYPE_FUTURES_CONTRACT 0x46       // Futures Contract
+#define UNDERLYING_ASSET_TYPE_NOT_APPLICABLE 0x4E         // Not Applicable
+
+// Instrument Id Source: one byte code
+#define INSTRUMENT_ID_SOURCE_EXCHANGE 0x45  // Exchange
+
+// Instrument Type: one byte code
+#define INSTRUMENT_TYPE_FUTURES 0x46                          // Futures
+#define INSTRUMENT_TYPE_OPTIONS_ON_FUTURES 0x4F               // Options On Futures
+#define INSTRUMENT_TYPE_TRADE_AT_SETTLEMENT_TAS 0x54          // Trade At Settlement Tas
+#define INSTRUMENT_TYPE_BASIS_TRADE_AT_INDEX_CLOSE_BTIC 0x42  // Basis Trade At Index Close Btic
+
+// Instrument Listing Status: one byte code
+#define INSTRUMENT_LISTING_STATUS_ACTIVE 0x41    // Active
+#define INSTRUMENT_LISTING_STATUS_INACTIVE 0x49  // Inactive
+
+// Currency: one byte code
+#define CURRENCY_USD 0x55  // Usd
+
+// Settlement Currency: one byte code
+#define SETTLEMENT_CURRENCY_USD 0x55  // Usd
+
+// Match Algorithm: one byte code
+#define MATCH_ALGORITHM_PRICE_TIME 0x50  // Price Time
+
+// Settlement Price Type Calc Method: one byte code
+#define SETTLEMENT_PRICE_TYPE_CALC_METHOD_ACTUAL 0x41       // Actual
+#define SETTLEMENT_PRICE_TYPE_CALC_METHOD_THEORETICAL 0x54  // Theoretical
+
+// Trading Collar Variation Type: one byte code
+#define TRADING_COLLAR_VARIATION_TYPE_PRODUCT_DOLLAR_COLLAR_VALUE 0x44      // Product Dollar Collar Value
+#define TRADING_COLLAR_VARIATION_TYPE_PRODUCT_COLLAR_PERCENTAGE_VALUE 0x50  // Product Collar Percentage Value
+#define TRADING_COLLAR_VARIATION_TYPE_NOT_APPLICABLE 0x4E                   // Not Applicable
+
+// Option Strike Currency: one byte code
+#define OPTION_STRIKE_CURRENCY_US_DOLLAR 0x55                               // Us Dollar
+#define OPTION_STRIKE_CURRENCY_NA_WHEN_INSTRUMENT_TYPE_NOT_EQUAL_TO_O 0x4E  // Na When Instrument Type Not Equal To O
+
+// Option Type: one byte code
+#define OPTION_TYPE_CALL_OPTIONS 0x43                            // Call Options
+#define OPTION_TYPE_PUT_OPTIONS 0x50                             // Put Options
+#define OPTION_TYPE_NA_WHEN_INSTRUMENT_TYPE_NOT_EQUAL_TO_O 0x4E  // Na When Instrument Type Not Equal To O
+
+// Option Expiration Type: one byte code
+#define OPTION_EXPIRATION_TYPE_AMERICAN_STYLE_OPTIONS 0x41                  // American Style Options
+#define OPTION_EXPIRATION_TYPE_EUROPEAN_STYLE_OPTIONS 0x45                  // European Style Options
+#define OPTION_EXPIRATION_TYPE_NA_WHEN_INSTRUMENT_TYPE_NOT_EQUAL_TO_O 0x4E  // Na When Instrument Type Not Equal To O
+
+// Spread Type: one byte code
+#define SPREAD_TYPE_STANDARD_CALENDAR_SPREAD 0x53  // Standard Calendar Spread
+#define SPREAD_TYPE_EQUITY_CALENDAR_SPREAD 0x45    // Equity Calendar Spread
+#define SPREAD_TYPE_BUTTERFLY_SPREAD 0x42          // Butterfly Spread
+#define SPREAD_TYPE_CROSS_PRODUCT_SPREAD 0x43      // Cross Product Spread
+
+// Listing Status: one byte code
+#define LISTING_STATUS_ACTIVE 0x41    // Active
+#define LISTING_STATUS_INACTIVE 0x49  // Inactive
+
+// System Status: one byte code
+#define SYSTEM_STATUS_START_OF_SYSTEM_HOURS 0x53                    // Start Of System Hours
+#define SYSTEM_STATUS_END_OF_SYSTEM_HOURS 0x43                      // End Of System Hours
+#define SYSTEM_STATUS_START_OF_TEST_SESSION_SENT_BEFORE_TESTS 0x31  // Start Of Test Session Sent Before Tests
+#define SYSTEM_STATUS_END_OF_TEST_SESSION 0x32                      // End Of Test Session
+
+// Trade Type: one byte code
+#define TRADE_TYPE_OUTRIGHT_TRADE_BETWEEN_TWO_SIMPLE_ORDERS 0x4F     // Outright Trade Between Two Simple Orders
+#define TRADE_TYPE_STRATEGY_MATCH_NET_LEVEL_TRADE 0x53               // Strategy Match Net Level Trade
+#define TRADE_TYPE_STRATEGY_MATCH_COMPONENT_LEG_TRADE 0x4D           // Strategy Match Component Leg Trade
+#define TRADE_TYPE_COMPLEX_LEGGING_DERIVED_NET_LEVEL_TRADE 0x43      // Complex Legging Derived Net Level Trade
+#define TRADE_TYPE_COMPLEX_LEGGING_DERIVED_COMPONENT_LEG_TRADE 0x4C  // Complex Legging Derived Component Leg Trade
+#define TRADE_TYPE_ADJUSTED_LATE_MANUAL_TRADE 0x41                   // Adjusted Late Manual Trade
+
+// ---- Types -------------------------------------------------------------------
 
 // Simple Instrument Definition
-entrypoint typedef struct _SimpleInstrumentDefinitionMessage {
+typedef struct _SimpleInstrumentDefinitionMessage {
   UINT64 timestamp;                            // bytes 0 to 7
   UINT32 instrument_id;                        // bytes 8 to 11
   UINT8 underlying_asset_type;                 // byte 12
@@ -72,30 +181,97 @@ entrypoint typedef struct _SimpleInstrumentDefinitionMessage {
   UINT32 underlying_future_instrument_id;      // bytes 134 to 137
 } SimpleInstrumentDefinitionMessage;
 
-// ---- System State Message: 18 bytes ------------------------------------------
+// Complex Strategy Number of Legs
+typedef struct _InstrumentLeg {
+  UINT32 instrument_id;       // bytes 0 to 3
+  UINT32 leg_ratio_and_side;  // bytes 4 to 7, signed, read here as unsigned
+  UINT16 maturity_date;       // bytes 8 to 9
+  UINT8 reserved_32[32];      // bytes 10 to 41
+} InstrumentLeg;
+
+// Complex Instrument Definition
+typedef struct _ComplexInstrumentDefinitionMessage {
+  UINT64 timestamp;                                                           // bytes 0 to 7
+  UINT32 instrument_id_formerly_known_as_strategy_id;                         // bytes 8 to 11
+  UINT8 underlying_asset_type;                                                // byte 12
+  UINT8 underlying_asset_alphanumeric_9[9];                                   // bytes 13 to 21
+  UINT8 product_group_code_alphanumeric_13[13];                               // bytes 22 to 34
+  UINT8 spread_type;                                                          // byte 35
+  UINT8 exchange[4];                                                          // bytes 36 to 39
+  UINT8 instrument_id_source;                                                 // byte 40
+  UINT8 instrument_type;                                                      // byte 41
+  UINT8 currency;                                                             // byte 42
+  UINT8 settlement_currency;                                                  // byte 43
+  UINT8 match_algorithm;                                                      // byte 44
+  UINT32 minimum_size;                                                        // bytes 45 to 48
+  UINT32 maximum_size;                                                        // bytes 49 to 52
+  UINT64 tick;                                                                // bytes 53 to 60, signed, read here as unsigned
+  UINT8 unit_of_measure[5];                                                   // bytes 61 to 65
+  UINT32 unit_of_measure_quantity;                                            // bytes 66 to 69
+  UINT64 settlement_price;                                                    // bytes 70 to 77, signed, read here as unsigned
+  UINT8 settlement_price_type_calc_method;                                    // byte 78
+  UINT8 trading_collar_variation_type;                                        // byte 79
+  UINT64 trading_collar_variation;                                            // bytes 80 to 87, signed, read here as unsigned
+  UINT8 listing_status;                                                       // byte 88
+  UINT16 first_trade_date;                                                    // bytes 89 to 90
+  UINT8 reserved_64[64];                                                      // bytes 91 to 154
+  UINT8 number_of_legs;                                                       // byte 155
+  InstrumentLeg instrument_leg[:byte-size (((UINT32) number_of_legs) * 42)];
+} ComplexInstrumentDefinitionMessage;
+
+// Complex Strategy Number of Legs
+typedef struct _DeprecatedInstrumentLeg {
+  UINT32 instrument_id;       // bytes 0 to 3
+  UINT32 leg_ratio_and_side;  // bytes 4 to 7, signed, read here as unsigned
+  UINT8 reserved_4[4];        // bytes 8 to 11
+  UINT16 maturity_date;       // bytes 12 to 13
+  UINT8 reserved_6[6];        // bytes 14 to 19
+} DeprecatedInstrumentLeg;
+
+// Complex Instrument Definition (deprecated)
+typedef struct _ComplexInstrumentDefinitionDeprecatedMessage {
+  UINT64 timestamp;                                                                                // bytes 0 to 7
+  UINT32 instrument_id_formerly_known_as_strategy_id;                                              // bytes 8 to 11
+  UINT8 underlying_asset_type;                                                                     // byte 12
+  UINT8 underlying_asset_alphanumeric_4[4];                                                        // bytes 13 to 16
+  UINT8 product_group_code_alphanumeric_6[6];                                                      // bytes 17 to 22
+  UINT8 spread_type;                                                                               // byte 23
+  UINT8 exchange[4];                                                                               // bytes 24 to 27
+  UINT8 instrument_id_source;                                                                      // byte 28
+  UINT8 instrument_type;                                                                           // byte 29
+  UINT8 currency;                                                                                  // byte 30
+  UINT8 settlement_currency;                                                                       // byte 31
+  UINT8 match_algorithm;                                                                           // byte 32
+  UINT32 minimum_size;                                                                             // bytes 33 to 36
+  UINT32 maximum_size;                                                                             // bytes 37 to 40
+  UINT64 tick;                                                                                     // bytes 41 to 48, signed, read here as unsigned
+  UINT8 unit_of_measure[5];                                                                        // bytes 49 to 53
+  UINT32 unit_of_measure_quantity;                                                                 // bytes 54 to 57
+  UINT8 trading_collar_variation_type;                                                             // byte 58
+  UINT64 trading_collar_variation;                                                                 // bytes 59 to 66, signed, read here as unsigned
+  UINT8 reserved_16[16];                                                                           // bytes 67 to 82
+  UINT8 number_of_legs;                                                                            // byte 83
+  DeprecatedInstrumentLeg deprecated_instrument_leg[:byte-size (((UINT32) number_of_legs) * 20)];
+} ComplexInstrumentDefinitionDeprecatedMessage;
 
 // System State
-entrypoint typedef struct _SystemStateMessage {
+typedef struct _SystemStateMessage {
   UINT64 timestamp;       // bytes 0 to 7
   UINT8 to_m_version[8];  // bytes 8 to 15
   UINT8 session_id;       // byte 16
   UINT8 system_status;    // byte 17
 } SystemStateMessage;
 
-// ---- Instrument Trading Status Notification Message: 14 bytes ----------------
-
 // Instrument Trading Status Notification
-entrypoint typedef struct _InstrumentTradingStatusNotificationMessage {
+typedef struct _InstrumentTradingStatusNotificationMessage {
   UINT64 timestamp;      // bytes 0 to 7
   UINT32 instrument_id;  // bytes 8 to 11
   UINT8 trading_status;  // byte 12
   UINT8 market_state;    // byte 13
 } InstrumentTradingStatusNotificationMessage;
 
-// ---- Best Bid And Offer Message: 36 bytes ------------------------------------
-
 // Top of Market (Best Bid and Offer) Message
-entrypoint typedef struct _BestBidAndOfferMessage {
+typedef struct _BestBidAndOfferMessage {
   UINT64 timestamp;      // bytes 0 to 7
   UINT32 instrument_id;  // bytes 8 to 11
   UINT64 mbb_price;      // bytes 12 to 19, signed, read here as unsigned
@@ -104,10 +280,8 @@ entrypoint typedef struct _BestBidAndOfferMessage {
   UINT32 mbo_size;       // bytes 32 to 35
 } BestBidAndOfferMessage;
 
-// ---- Last Sale Message: 45 bytes ---------------------------------------------
-
 // Last Sale (Trade) Message
-entrypoint typedef struct _LastSaleMessage {
+typedef struct _LastSaleMessage {
   UINT64 timestamp;         // bytes 0 to 7
   UINT16 trade_date;        // bytes 8 to 9
   UINT32 instrument_id;     // bytes 10 to 13
@@ -120,10 +294,8 @@ entrypoint typedef struct _LastSaleMessage {
   UINT8 instrument_type;    // byte 44
 } LastSaleMessage;
 
-// ---- Trade Cancel Message: 36 bytes ------------------------------------------
-
 // Trade Cancel Message
-entrypoint typedef struct _TradeCancelMessage {
+typedef struct _TradeCancelMessage {
   UINT64 timestamp;         // bytes 0 to 7
   UINT16 trade_date;        // bytes 8 to 9
   UINT32 instrument_id;     // bytes 10 to 13
@@ -133,4 +305,49 @@ entrypoint typedef struct _TradeCancelMessage {
   UINT32 size;              // bytes 31 to 34
   UINT8 instrument_type;    // byte 35
 } TradeCancelMessage;
+
+// Branch
+casetype _Data (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x01: SimpleInstrumentDefinitionMessage simple_instrument_definition_message;
+    case 0x11: ComplexInstrumentDefinitionMessage complex_instrument_definition_message;
+    case 0x02: ComplexInstrumentDefinitionDeprecatedMessage complex_instrument_definition_deprecated_message;
+    case 0x03: SystemStateMessage system_state_message;
+    case 0x04: InstrumentTradingStatusNotificationMessage instrument_trading_status_notification_message;
+    case 0x0F: BestBidAndOfferMessage best_bid_and_offer_message;
+    case 0x10: LastSaleMessage last_sale_message;
+    case 0x0E: TradeCancelMessage trade_cancel_message;
+    default: UINT8 unknown[available];
+  }
+} Data;
+
+typedef struct _ApplicationMessage (UINT32 available) where (available >= 1) {
+  UINT8 message_type;                                                                         // byte 0
+  Data(message_type, (available - 1)) data[:byte-size-single-element-array (available - 1)];
+} ApplicationMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 length, UINT32 available) {
+  switch (selector) {
+    case 0x03: ApplicationMessage(length) application_message[:byte-size-single-element-array length];
+    case 0x00: unit heartbeat;
+    case 0x01: unit start_of_session;
+    case 0x02: unit end_of_session;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+typedef struct _MachMessage {
+  UINT64 sequence_number;                                                                                                                                           // bytes 0 to 7
+  UINT16 packet_length { packet_length >= 12 };                                                                                                                     // bytes 8 to 9
+  UINT8 packet_type;                                                                                                                                                // byte 10
+  UINT8 session_number;                                                                                                                                             // byte 11
+  Payload(packet_type, (((UINT32) packet_length) - 12), (((UINT32) packet_length) - 12)) payload[:byte-size-single-element-array (((UINT32) packet_length) - 12)];
+} MachMessage;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+entrypoint typedef struct _Packet (UINT32 available) {
+  MachMessage mach_message[:byte-size available];
+} Packet;
 

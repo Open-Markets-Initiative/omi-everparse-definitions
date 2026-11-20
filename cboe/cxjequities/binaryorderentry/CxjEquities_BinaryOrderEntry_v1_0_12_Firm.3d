@@ -1,37 +1,135 @@
-// Chicago Board Options Exchange Binary Order Entry
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Cboe CxjEquities BinaryOrderEntry Boe3 v1.0.12
 //
+// Protocol:
+//   Organization: Chicago Board Options Exchange
+//   Protocol: Binary Order Entry
+//   Encoding: Binary Order Entry 3
+//   Version: 1.0.12
+//   Date: 06/09/2025
+//   Specification: CXJ Equities BOEv3 Specification.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, FirmPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out CxjEquities_BinaryOrderEntry_v1_0_12_Firm.3d
-//
-// What this definition does not state, and the model does:
-// - a Reassemble rule
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Firm Message Header: 12 bytes -------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Message header of a packet sent by the firm
-entrypoint typedef struct _FirmMessageHeader {
-  UINT16 start_of_message;   // bytes 0 to 1
-  UINT16 message_length;     // bytes 2 to 3
-  UINT16 firm_message_type;  // bytes 4 to 5
-  UINT8 matching_unit;       // byte 6
-  UINT8 reserved_field;      // byte 7
-  UINT32 sequence_number;    // bytes 8 to 11
-} FirmMessageHeader;
+// Firm Message Type: 2 byte code
+#define FIRM_MESSAGE_TYPE_LOGIN_REQUEST_MESSAGE 0x0001         // Login Request Message
+#define FIRM_MESSAGE_TYPE_LOGOUT_REQUEST_MESSAGE 0x0002        // Logout Request Message
+#define FIRM_MESSAGE_TYPE_CLIENT_HEARTBEAT_MESSAGE 0x0003      // Client Heartbeat Message
+#define FIRM_MESSAGE_TYPE_NEW_ORDER_JP_EQUITIES_V_1 0x1389     // New Order Jp Equities V 1
+#define FIRM_MESSAGE_TYPE_MODIFY_ORDER_JP_EQUITIES_V_1 0x138A  // Modify Order Jp Equities V 1
+#define FIRM_MESSAGE_TYPE_CANCEL_ORDER_JP_EQUITIES_V_1 0x138B  // Cancel Order Jp Equities V 1
+#define FIRM_MESSAGE_TYPE_PURGE_ORDERS_JP_EQUITIES_V_1 0x138C  // Purge Orders Jp Equities V 1
 
-// ---- New Order Jp Equities V 1: 87 bytes -------------------------------------
+// Replay Unspecified Unit: one byte code
+#define REPLAY_UNSPECIFIED_UNIT_FAIL_IF_UNIT_NOT_SPECIFIED 0x46             // Fail If Unit Not Specified
+#define REPLAY_UNSPECIFIED_UNIT_REPLAY_ANY_UNSPECIFIED_UNIT_FROM_ZERO 0x52  // Replay Any Unspecified Unit From Zero
+#define REPLAY_UNSPECIFIED_UNIT_SKIP_REPLAY_OF_UNSPECIFIED_UNITS 0x53       // Skip Replay Of Unspecified Units
+
+// Ord Type: one byte code
+#define ORD_TYPE_LIMIT 0x32  // Limit
+
+// Capacity: one byte code
+#define CAPACITY_AGENCY 0x41     // Agency
+#define CAPACITY_PRINCIPAL 0x50  // Principal
+
+// Side: one byte code
+#define SIDE_BUY 0x31                // Buy
+#define SIDE_SELL 0x32               // Sell
+#define SIDE_SELL_SHORT 0x35         // Sell Short
+#define SIDE_SELL_SHORT_EXEMPT 0x36  // Sell Short Exempt
+
+// Time In Force: one byte code
+#define TIME_IN_FORCE_DAY_DEFAULT 0x30  // Day Default
+#define TIME_IN_FORCE_IOC 0x33          // Ioc
+#define TIME_IN_FORCE_FOK 0x34          // Fok
+#define TIME_IN_FORCE_GTD 0x36          // Gtd
+
+// Cash Margin: one byte code
+#define CASH_MARGIN_CASH 0x31          // Cash
+#define CASH_MARGIN_MARGIN_OPEN 0x32   // Margin Open
+#define CASH_MARGIN_MARGIN_CLOSE 0x33  // Margin Close
+
+// No Trade Feat: one byte code
+#define NO_TRADE_FEAT_NO_SELF_TRADE_PROTECTION 0x55                       // No Self Trade Protection
+#define NO_TRADE_FEAT_CANCEL_NEWEST 0x4E                                  // Cancel Newest
+#define NO_TRADE_FEAT_CANCEL_OLDEST 0x4F                                  // Cancel Oldest
+#define NO_TRADE_FEAT_CANCEL_BOTH 0x42                                    // Cancel Both
+#define NO_TRADE_FEAT_CANCEL_SMALLEST 0x53                                // Cancel Smallest
+#define NO_TRADE_FEAT_DECREMENT_LARGER_CANCEL_SMALLER 0x44                // Decrement Larger Cancel Smaller
+#define NO_TRADE_FEAT_SAME_AS_D_ABOVE_BUT_ONLY_DECREMENT_LEAVES_QTY 0x64  // Same As D Above But Only Decrement Leaves Qty
+
+// Posting Instruction: one byte code
+#define POSTING_INSTRUCTION_POST_ONLY_NEVER_TAKE_LIQUIDITY 0x50  // Post Only Never Take Liquidity
+
+// Order Classification: one byte code
+#define ORDER_CLASSIFICATION_NON_LOW_LATENCY_TRADING_AUTO 0x31    // Non Low Latency Trading Auto
+#define ORDER_CLASSIFICATION_NON_LOW_LATENCY_TRADING_MANUAL 0x32  // Non Low Latency Trading Manual
+#define ORDER_CLASSIFICATION_MARKET_MAKING_STRATEGY 0x33          // Market Making Strategy
+#define ORDER_CLASSIFICATION_ARBITRAGE_STRATEGY 0x34              // Arbitrage Strategy
+#define ORDER_CLASSIFICATION_DIRECTIONAL_STRATEGY 0x35            // Directional Strategy
+#define ORDER_CLASSIFICATION_OTHER_STRATEGY 0x36                  // Other Strategy
+
+// Margin Transaction Type: one byte code
+#define MARGIN_TRANSACTION_TYPE_NEGOTIABLE 0x31    // Negotiable
+#define MARGIN_TRANSACTION_TYPE_STANDARDIZED 0x32  // Standardized
+
+// Cancel Orig On Reject: one byte code
+#define CANCEL_ORIG_ON_REJECT_CANCEL_ORIGINAL_ORDER_IF_MODIFICATION_FAILS 0x59  // Cancel Original Order If Modification Fails
+#define CANCEL_ORIG_ON_REJECT_LEAVE_ORIGINAL_ORDER_ALONE 0x4E                   // Leave Original Order Alone
+
+// ---- Types -------------------------------------------------------------------
+
+// Unit Sequence
+typedef struct _UnitSequence {
+  UINT8 unit_number;       // byte 0
+  UINT32 sequence_number;  // bytes 1 to 4
+} UnitSequence;
+
+// A Login Request message must be sent as the first message upon connection
+typedef struct _LoginRequestMessage {
+  UINT8 session_id[4];                                                      // bytes 0 to 3
+  UINT8 session_sub_id[4];                                                  // bytes 4 to 7
+  UINT8 password[10];                                                       // bytes 8 to 17
+  UINT8 replay_unspecified_unit;                                            // byte 18
+  UINT8 number_of_units;                                                    // byte 19
+  UnitSequence unit_sequence[:byte-size (((UINT32) number_of_units) * 5)];
+} LoginRequestMessage;
 
 // Submission of a new order to Cboe Japan
-entrypoint typedef struct _NewOrderJpEquitiesV1 {
+typedef struct _NewOrderJpEquitiesV1 {
   UINT8 account[10];              // bytes 0 to 9
   UINT8 trading_firm[4];          // bytes 10 to 13
   UINT8 cl_ord_id[20];            // bytes 14 to 33
@@ -53,10 +151,8 @@ entrypoint typedef struct _NewOrderJpEquitiesV1 {
   UINT8 company_id[4];            // bytes 83 to 86
 } NewOrderJpEquitiesV1;
 
-// ---- Modify Order Jp Equities V 1: 57 bytes ----------------------------------
-
 // Request to modify an order. Only Price and OrderQty may be adjusted
-entrypoint typedef struct _ModifyOrderJpEquitiesV1 {
+typedef struct _ModifyOrderJpEquitiesV1 {
   UINT8 trading_firm[4];        // bytes 0 to 3
   UINT8 cl_ord_id[20];          // bytes 4 to 23
   UINT32 order_qty;             // bytes 24 to 27
@@ -65,11 +161,46 @@ entrypoint typedef struct _ModifyOrderJpEquitiesV1 {
   UINT8 cancel_orig_on_reject;  // byte 56
 } ModifyOrderJpEquitiesV1;
 
-// ---- Cancel Order Jp Equities V 1: 24 bytes ----------------------------------
-
 // Request to cancel a single order
-entrypoint typedef struct _CancelOrderJpEquitiesV1 {
+typedef struct _CancelOrderJpEquitiesV1 {
   UINT8 trading_firm[4];     // bytes 0 to 3
   UINT8 orig_cl_ord_id[20];  // bytes 4 to 23
 } CancelOrderJpEquitiesV1;
+
+// Request to cancel a group of orders across all of the participant's sessions
+typedef struct _PurgeOrdersJpEquitiesV1 {
+  UINT8 trading_firm[4];                                                // bytes 0 to 3
+  UINT8 mass_cancel_inst[16];                                           // bytes 4 to 19
+  UINT8 mass_cancel_id[20];                                             // bytes 20 to 39
+  UINT8 symbol[8];                                                      // bytes 40 to 47
+  UINT8 risk_group_id_cnt;                                              // byte 48
+  UINT16 risk_group_id[:byte-size (((UINT32) risk_group_id_cnt) * 2)];
+} PurgeOrdersJpEquitiesV1;
+
+// Branch
+casetype _FirmMessage (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x0001: LoginRequestMessage login_request_message;
+    case 0x0002: unit logout_request;
+    case 0x0003: unit client_heartbeat;
+    case 0x1389: NewOrderJpEquitiesV1 new_order_jp_equities_v_1;
+    case 0x138A: ModifyOrderJpEquitiesV1 modify_order_jp_equities_v_1;
+    case 0x138B: CancelOrderJpEquitiesV1 cancel_order_jp_equities_v_1;
+    case 0x138C: PurgeOrdersJpEquitiesV1 purge_orders_jp_equities_v_1;
+    default: UINT8 unknown[available];
+  }
+} FirmMessage;
+
+// ---- Packet: FirmPacket ------------------------------------------------------
+
+// Binary Order Entry Tcp Packet sent by the firm
+entrypoint typedef struct _FirmPacket (UINT32 available) where (available >= 12) {
+  UINT16 start_of_message;                                                                                          // bytes 0 to 1
+  UINT16 message_length;                                                                                            // bytes 2 to 3
+  UINT16 firm_message_type;                                                                                         // bytes 4 to 5
+  UINT8 matching_unit;                                                                                              // byte 6
+  UINT8 reserved_field;                                                                                             // byte 7
+  UINT32 sequence_number;                                                                                           // bytes 8 to 11
+  FirmMessage(firm_message_type, (available - 12)) firm_message[:byte-size-single-element-array (available - 12)];
+} FirmPacket;
 

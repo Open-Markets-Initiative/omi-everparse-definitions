@@ -1,52 +1,90 @@
-// New York Stock Exchange Integrated Feed Request
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nyse NyseEquities IntegratedFeedRequest Pillar v2.5.g
 //
+// Protocol:
+//   Organization: New York Stock Exchange
+//   Protocol: Integrated Feed Request
+//   Encoding: Pillar
+//   Version: 2.5.g
+//   Date: 10/23/2025
+//   Specification: NYSE_Pillar_Integrated_Feed_Client_Specification.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ServerPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out NyseEquities_IntegratedFeedRequest_v2_5_g_Server.3d
-//
-// What this definition does not state, and the model does:
-// - a Reassemble rule
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Send Time: 8 bytes ------------------------------------------------------
+// ---- Values ------------------------------------------------------------------
+
+// Delivery Flag: one byte code
+#define DELIVERY_FLAG_HEARTBEAT 0x01                        // Heartbeat
+#define DELIVERY_FLAG_PILLAR_FAILOVER 0x0A                  // Pillar Failover
+#define DELIVERY_FLAG_ORIGINAL_MESSAGE 0x0B                 // Original Message
+#define DELIVERY_FLAG_SEQUENCE_NUMBER_RESET_MESSAGE 0x0C    // Sequence Number Reset Message
+#define DELIVERY_FLAG_ONE_RETRANSMISSION_PACKET 0x0D        // One Retransmission Packet
+#define DELIVERY_FLAG_RETRANSMISSION_SEQUENCE_MESSAGE 0x0F  // Retransmission Sequence Message
+#define DELIVERY_FLAG_ONE_REFRESH_PACKET 0x11               // One Refresh Packet
+#define DELIVERY_FLAG_REFRESH_SEQUENCE_START 0x12           // Refresh Sequence Start
+#define DELIVERY_FLAG_REFRESH_SEQUENCE_MESSAGE 0x13         // Refresh Sequence Message
+#define DELIVERY_FLAG_REFRESH_SEQUENCE_END 0x14             // Refresh Sequence End
+#define DELIVERY_FLAG_MESSAGE_UNAVAILABLE 0x15              // Message Unavailable
+
+// Message Type: 2 byte code
+#define MESSAGE_TYPE_RETRANSMISSION_REQUEST_MESSAGE 0x000A        // Retransmission Request Message
+#define MESSAGE_TYPE_REQUEST_RESPONSE_MESSAGE 0x000B              // Request Response Message
+#define MESSAGE_TYPE_HEARTBEAT_RESPONSE_MESSAGE 0x000C            // Heartbeat Response Message
+#define MESSAGE_TYPE_SYMBOL_INDEX_MAPPING_REQUEST_MESSAGE 0x000D  // Symbol Index Mapping Request Message
+#define MESSAGE_TYPE_REFRESH_REQUEST_MESSAGE 0x000F               // Refresh Request Message
+
+// Status: one byte code
+#define STATUS_MESSAGE_WAS_ACCEPTED 0x30                                                              // Message Was Accepted
+#define STATUS_REJECTED_DUE_TO_AN_INVALID_SOURCE_ID 0x31                                              // Rejected Due To An Invalid Source Id
+#define STATUS_REJECTED_DUE_TO_MAXIMUM_SEQUENCE_RANGE_SEE_THRESHOLD_LIMITS 0x33                       // Rejected Due To Maximum Sequence Range See Threshold Limits
+#define STATUS_REJECTED_DUE_TO_MAXIMUM_REQUEST_IN_A_DAY 0x34                                          // Rejected Due To Maximum Request In A Day
+#define STATUS_REJECTED_DUE_TO_MAXIMUM_NUMBER_OF_REFRESH_REQUESTS_IN_A_DAY 0x35                       // Rejected Due To Maximum Number Of Refresh Requests In A Day
+#define STATUS_REJECTED_REQUEST_MESSAGE_SEQ_NUM_TTL_TIME_TO_LIVE_IS_TOO_OLD_USE_REFRESH__dkpgxt 0x36  // Rejected Request Message Seq Num Ttl Time To Live Is Too Old Use Refresh To Recover Current State If Necessary
+#define STATUS_REJECTED_DUE_TO_AN_INVALID_CHANNEL_ID 0x37                                             // Rejected Due To An Invalid Channel Id
+#define STATUS_REJECTED_DUE_TO_AN_INVALID_PRODUCT_ID 0x38                                             // Rejected Due To An Invalid Product Id
+#define STATUS_REJECTED_DUE_TO_1_INVALID_MSG_TYPE_OR_2_MISMATCH_BETWEEN_MSG_TYPE_AND_MSG_SIZE 0x39    // Rejected Due To 1 Invalid Msg Type Or 2 Mismatch Between Msg Type And Msg Size
+
+// ---- Types -------------------------------------------------------------------
 
 // The time when this packet was sent on the request channel
-entrypoint typedef struct _SendTime {
+typedef struct _SendTime {
   UINT32 seconds;      // bytes 0 to 3
   UINT32 nanoseconds;  // bytes 4 to 7
 } SendTime;
 
-// ---- Packet Header: 16 bytes -------------------------------------------------
-
-// Pillar common client tcp packet header
-entrypoint typedef struct _PacketHeader {
-  UINT16 pkt_size;      // bytes 0 to 1
-  UINT8 delivery_flag;  // byte 2
-  UINT8 number_msgs;    // byte 3
-  UINT32 seq_num;       // bytes 4 to 7
-  SendTime send_time;   // bytes 8 to 15
-} PacketHeader;
-
-// ---- Message Header: 4 bytes -------------------------------------------------
-
-// Pillar message header
-entrypoint typedef struct _MessageHeader {
-  UINT16 message_size;  // bytes 0 to 1
-  UINT16 message_type;  // bytes 2 to 3
-} MessageHeader;
-
-// ---- Request Response Message: 25 bytes --------------------------------------
-
 // This message will be sent immediately via TCP/IP in response to the client's request for retransmission, refresh or Symbol Mapping messages.
-entrypoint typedef struct _RequestResponseMessage {
+typedef struct _RequestResponseMessage {
   UINT32 request_seq_num;  // bytes 0 to 3
   UINT32 begin_seq_num;    // bytes 4 to 7
   UINT32 end_seq_num;      // bytes 8 to 11
@@ -55,4 +93,34 @@ entrypoint typedef struct _RequestResponseMessage {
   UINT8 channel_id;        // byte 23
   UINT8 status;            // byte 24
 } RequestResponseMessage;
+
+// Branch
+casetype _ServerPayload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x000B: RequestResponseMessage request_response_message;
+    default: UINT8 unknown[available];
+  }
+} ServerPayload;
+
+// Pillar message sent by the Request Server
+typedef struct _ServerMessage (mutable UINT32 * tally) {
+  UINT16 message_size { message_size >= 4 };                                                                                                                       // bytes 0 to 1
+  UINT16 message_type;                                                                                                                                             // bytes 2 to 3
+  ServerPayload(message_type, (((UINT32) message_size) - 4)) server_payload[:byte-size-single-element-array (((UINT32) message_size) - 4)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} ServerMessage;
+
+// ---- Packet: ServerPacket ----------------------------------------------------
+
+// Pillar common client tcp packet sent by the Request Server
+entrypoint typedef struct _ServerPacket (UINT32 available, mutable UINT32 * tally) where (available >= 16) {
+  UINT16 pkt_size;                                                                                                               // bytes 0 to 1
+  UINT8 delivery_flag;                                                                                                           // byte 2
+  UINT8 number_msgs;                                                                                                             // byte 3
+  UINT32 seq_num;                                                                                                                // bytes 4 to 7
+  SendTime send_time;                                                                                                            // bytes 8 to 15
+  unit server_message_tally_start {:on-success *tally = 0; return true; };
+  ServerMessage(tally) server_message[:byte-size (available - 16)];
+  unit server_message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) number_msgs); };
+} ServerPacket;
 

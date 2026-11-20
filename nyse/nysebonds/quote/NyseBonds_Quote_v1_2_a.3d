@@ -1,53 +1,108 @@
-// New York Stock Exchange Quote
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nyse NyseBonds Quote Pdp v1.2.a
 //
+// Protocol:
+//   Organization: New York Stock Exchange
+//   Protocol: Quote
+//   Encoding: Pdp
+//   Version: 1.2.a
+//   Date: 03/12/2015
+//   Specification: NYSE_Bonds_Quote_Client_Spec.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out NyseBonds_Quote_v1_2_a.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-//
-// License: MIT No Attribution
 
-// ---- Message Header: 16 bytes ------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Nyse Pdp common message header
-entrypoint typedef struct _MessageHeader {
-  UINT16BE msg_size;       // bytes 0 to 1
-  UINT16BE msg_type;       // bytes 2 to 3
-  UINT32BE msg_seq_num;    // bytes 4 to 7
-  UINT32BE send_time;      // bytes 8 to 11
-  UINT8 product_id;        // byte 12
-  UINT8 retrans_flag;      // byte 13
-  UINT8 num_body_entries;  // byte 14
-  UINT8 filler;            // byte 15
-} MessageHeader;
+// Msg Type: 2 byte code
+#define MSG_TYPE_SEQUENCE_NUMBER_RESET_MESSAGE 0x0001  // Sequence Number Reset Message
+#define MSG_TYPE_HEARTBEAT_MESSAGE 0x0002              // Heartbeat Message
+#define MSG_TYPE_MESSAGE_UNAVAILABLE_MESSAGE 0x0005    // Message Unavailable Message
+#define MSG_TYPE_REFRESH_QUOTE_MESSAGE 0x0017          // Refresh Quote Message
+#define MSG_TYPE_SYMBOL_INDEX_MAPPING_MESSAGE 0x001A   // Symbol Index Mapping Message
+#define MSG_TYPE_QUOTE_MESSAGE 0x008D                  // Quote Message
 
-// ---- Sequence Number Reset Message: 4 bytes ----------------------------------
+// Exchange Id: one byte code
+#define EXCHANGE_ID_NYSE 0x4E       // Nyse
+#define EXCHANGE_ID_NYSE_ARCA 0x50  // Nyse Arca
+
+// Security Type: one byte code
+#define SECURITY_TYPE_FIXED_INCOME_BONDS 0x46  // Fixed Income Bonds
+
+// Quote Condition: one byte code
+#define QUOTE_CONDITION_SLOW_ON_ASK_SIDE 0x41                                    // Slow On Ask Side
+#define QUOTE_CONDITION_SLOW_ON_BID_SIDE 0x42                                    // Slow On Bid Side
+#define QUOTE_CONDITION_CLOSING 0x43                                             // Closing
+#define QUOTE_CONDITION_SLOW_ON_THE_BID_DUE_TO_AN_LRP_OR_GAP_QUOTE 0x45          // Slow On The Bid Due To An Lrp Or Gap Quote
+#define QUOTE_CONDITION_SLOW_ON_THE_ASK_DUE_TO_AN_LRP_OR_GAP_QUOTE 0x46          // Slow On The Ask Due To An Lrp Or Gap Quote
+#define QUOTE_CONDITION_SLOW_ON_BOTH_ASK_AND_BID 0x48                            // Slow On Both Ask And Bid
+#define QUOTE_CONDITION_NON_FIRM_QUOTE 0x4E                                      // Non Firm Quote
+#define QUOTE_CONDITION_OPENING_QUOTE 0x4F                                       // Opening Quote
+#define QUOTE_CONDITION_REGULAR_QUOTE 0x52                                       // Regular Quote
+#define QUOTE_CONDITION_SLOW_ON_THE_BID_AND_ASK_DUE_TO_AN_LRP_OR_GAP_QUOTE 0x55  // Slow On The Bid And Ask Due To An Lrp Or Gap Quote
+#define QUOTE_CONDITION_SLOW_ON_THE_BID_AND_ASK_DUE_TO_A_SET_SLOW_LIST 0x57      // Slow On The Bid And Ask Due To A Set Slow List
+
+// Flat Pricing: one byte code
+#define FLAT_PRICING_FLAT_PRICING_IS_IN_EFFECT 0x46  // Flat Pricing Is In Effect
+
+// Trading Action: one byte code
+#define TRADING_ACTION_CALLED 0x01                                            // Called
+#define TRADING_ACTION_DELISTED 0x02                                          // Delisted
+#define TRADING_ACTION_EX_INTEREST 0x03                                       // Ex Interest
+#define TRADING_ACTION_MISSED_AN_INTEREST_PAYMENT 0x04                        // Missed An Interest Payment
+#define TRADING_ACTION_BANKRUPT 0x05                                          // Bankrupt
+#define TRADING_ACTION_LATE_FILING 0x06                                       // Late Filing
+#define TRADING_ACTION_BELOW_LISTING_STANDARDS 0x07                           // Below Listing Standards
+#define TRADING_ACTION_LATE_FILING_AND_BELOW_LISTING_STANDARDS 0x08           // Late Filing And Below Listing Standards
+#define TRADING_ACTION_BANKRUPT_AND_LATE_FILING 0x09                          // Bankrupt And Late Filing
+#define TRADING_ACTION_BANKRUPT_AND_BELOW_LISTING_STANDARDS 0x0A              // Bankrupt And Below Listing Standards
+#define TRADING_ACTION_BANKRUPT_BELOW_LISTING_STANDARDS_AND_LATE_FILING 0x0B  // Bankrupt Below Listing Standards And Late Filing
+
+// ---- Types -------------------------------------------------------------------
 
 // Sent to reset the sequence number at start of day and in response to failures. The message carries its own valid sequence number in the header.
-entrypoint typedef struct _SequenceNumberResetMessage {
+typedef struct _SequenceNumberResetMessage {
   UINT32BE next_seq_number;  // bytes 0 to 3
 } SequenceNumberResetMessage;
 
-// ---- Message Unavailable Message: 8 bytes ------------------------------------
-
 // Sent when the requested messages cannot be retransmitted.
-entrypoint typedef struct _MessageUnavailableMessage {
+typedef struct _MessageUnavailableMessage {
   UINT32BE begin_seq_num;  // bytes 0 to 3
   UINT32BE end_seq_num;    // bytes 4 to 7
 } MessageUnavailableMessage;
 
-// ---- Refresh Quote Message: 72 bytes -----------------------------------------
-
 // Sent in response to a Refresh Quote Request, and automatically when there are intraday symbol additions. The same body as a Quote message with the symbol and Cusip appended.
-entrypoint typedef struct _RefreshQuoteMessage {
+typedef struct _RefreshQuoteMessage {
   UINT32BE symbol_index;         // bytes 0 to 3
   UINT32BE source_time;          // bytes 4 to 7
   UINT32BE quote_link_id;        // bytes 8 to 11
@@ -66,20 +121,16 @@ entrypoint typedef struct _RefreshQuoteMessage {
   UINT8 cusip[14];               // bytes 58 to 71
 } RefreshQuoteMessage;
 
-// ---- Symbol Index Mapping Message: 44 bytes ----------------------------------
-
 // Maps a symbol index to its bond symbol and Cusip.
-entrypoint typedef struct _SymbolIndexMappingMessage {
+typedef struct _SymbolIndexMappingMessage {
   UINT32BE symbol_index;    // bytes 0 to 3
   UINT8 symbol[22];         // bytes 4 to 25
   UINT8 cusip[14];          // bytes 26 to 39
   UINT8 filler_ascii_4[4];  // bytes 40 to 43
 } SymbolIndexMappingMessage;
 
-// ---- Quote Message: 36 bytes -------------------------------------------------
-
 // The L1 top of book quote for a bond.
-entrypoint typedef struct _QuoteMessage {
+typedef struct _QuoteMessage {
   UINT32BE symbol_index;         // bytes 0 to 3
   UINT32BE source_time;          // bytes 4 to 7
   UINT32BE quote_link_id;        // bytes 8 to 11
@@ -95,4 +146,37 @@ entrypoint typedef struct _QuoteMessage {
   UINT8 trading_action;          // byte 33
   UINT8 filler_ascii_2[2];       // bytes 34 to 35
 } QuoteMessage;
+
+// Branch
+casetype _Payload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x0001: SequenceNumberResetMessage sequence_number_reset_message;
+    case 0x0002: unit heartbeat_message;
+    case 0x0005: MessageUnavailableMessage message_unavailable_message;
+    case 0x0017: RefreshQuoteMessage refresh_quote_message;
+    case 0x001A: SymbolIndexMappingMessage symbol_index_mapping_message;
+    case 0x008D: QuoteMessage quote_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// Nyse Pdp message
+typedef struct _Message {
+  UINT16BE msg_size { msg_size >= 14 };                                                                               // bytes 0 to 1
+  UINT16BE msg_type;                                                                                                  // bytes 2 to 3
+  UINT32BE msg_seq_num;                                                                                               // bytes 4 to 7
+  UINT32BE send_time;                                                                                                 // bytes 8 to 11
+  UINT8 product_id;                                                                                                   // byte 12
+  UINT8 retrans_flag;                                                                                                 // byte 13
+  UINT8 num_body_entries;                                                                                             // byte 14
+  UINT8 filler;                                                                                                       // byte 15
+  Payload(msg_type, (((UINT32) msg_size) - 14)) payload[:byte-size-single-element-array (((UINT32) msg_size) - 14)];
+} Message;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Nyse Pdp udp packet
+entrypoint typedef struct _Packet (UINT32 available) {
+  Message message[:byte-size available];
+} Packet;
 

@@ -1,50 +1,92 @@
-// The London Metal Exchange LMEsource Level3 Refresh
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Lme LmeSelect Level3Snapshot LmeSource v4.18
 //
+// Protocol:
+//   Organization: The London Metal Exchange
+//   Protocol: LMEsource Level3 Refresh
+//   Encoding: LMEsource
+//   Version: 4.18
+//   Date: 08/18/2026
+//   Specification: lmesource-client-interface-specification-v4-18.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out LmeSelect_Level3Snapshot_v4_18.3d
-//
-// What this definition does not state, and the model does:
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 16 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// LMEsource packet header, giving the packet size, the number of messages it carries, the sequence number of the first of them and the time the packet was sent
-entrypoint typedef struct _PacketHeader {
-  UINT16 pkt_size;   // bytes 0 to 1
-  UINT8 msg_count;   // byte 2
-  UINT8 filler;      // byte 3
-  UINT32 seq_num;    // bytes 4 to 7
-  UINT64 send_time;  // bytes 8 to 15
-} PacketHeader;
+// Msg Type: 2 byte code
+#define MSG_TYPE_SEQUENCE_RESET_MESSAGE 0x0064            // Sequence Reset Message
+#define MSG_TYPE_MARKET_STATE_CONTRACT_MESSAGE 0x0137     // Market State Contract Message
+#define MSG_TYPE_MARKET_STATE_INSTRUMENT_MESSAGE 0x0138   // Market State Instrument Message
+#define MSG_TYPE_INDICATIVE_OPENING_PRICE_MESSAGE 0x0140  // Indicative Opening Price Message
+#define MSG_TYPE_QUOTE_REQUEST_MESSAGE 0x0149             // Quote Request Message
+#define MSG_TYPE_ORDER_ADD_MESSAGE 0x0143                 // Order Add Message
+#define MSG_TYPE_REFRESH_COMPLETE_MESSAGE 0x00CB          // Refresh Complete Message
 
-// ---- Message Header: 4 bytes -------------------------------------------------
+// Trading State: one byte code
+#define TRADING_STATE_PRE_OPEN 0x01        // Pre Open
+#define TRADING_STATE_OPEN 0x02            // Open
+#define TRADING_STATE_POST_TRADE 0x03      // Post Trade
+#define TRADING_STATE_CLOSE 0x04           // Close
+#define TRADING_STATE_TECHNICAL_HALT 0x06  // Technical Halt
 
-// LMEsource message header, giving the size of the message and its type
-entrypoint typedef struct _MessageHeader {
-  UINT16 msg_size;  // bytes 0 to 1
-  UINT16 msg_type;  // bytes 2 to 3
-} MessageHeader;
+// Trading State Condition: one byte code
+#define TRADING_STATE_CONDITION_PAUSE 0x50   // Pause
+#define TRADING_STATE_CONDITION_HALT 0x48    // Halt
+#define TRADING_STATE_CONDITION_ACTIVE 0x20  // Active
 
-// ---- Sequence Reset Message: 4 bytes -----------------------------------------
+// Timetable Control Type: one byte code
+#define TIMETABLE_CONTROL_TYPE_AUTOMATIC_THE_DEFAULT_TRADING_SCHEDULE 0x41  // Automatic The Default Trading Schedule
+#define TIMETABLE_CONTROL_TYPE_MANUAL_A_TEMPORARY_TRADING_SCHEDULE 0x4D     // Manual A Temporary Trading Schedule
+
+// Quote Request Type: one byte code
+#define QUOTE_REQUEST_TYPE_MANUAL_A_SINGLE_QUOTE_REQUEST 0x01   // Manual A Single Quote Request
+#define QUOTE_REQUEST_TYPE_AUTO_A_STREAMING_QUOTE_REQUEST 0x02  // Auto A Streaming Quote Request
+
+// Buy Sell: one byte code
+#define BUY_SELL_BUY 0x42              // Buy
+#define BUY_SELL_SELL 0x53             // Sell
+#define BUY_SELL_TWO_SIDED_QUOTE 0x20  // Two Sided Quote
+
+// ---- Types -------------------------------------------------------------------
 
 // Sent on each multicast channel at start of day, and intraday in case of a disaster recovery. The client must ignore the sequence number of the Sequence Reset message itself and set the next expected sequence number to NewSeqNo, clear all cached data for all instruments and subscribe to the refresh channels to receive the current state of the market.
-entrypoint typedef struct _SequenceResetMessage {
+typedef struct _SequenceResetMessage {
   UINT32 new_seq_no;  // bytes 0 to 3
 } SequenceResetMessage;
 
-// ---- Market State Contract Message: 42 bytes ---------------------------------
-
 // Indicates the trading state of instruments at the contract level, for example Copper Futures or Aluminium Options. The ContractCode field is common across the Market State - Contract, Outright Definition and Strategy Definition messages and links the contract state to individual tradable instruments.
-entrypoint typedef struct _MarketStateContractMessage {
+typedef struct _MarketStateContractMessage {
   UINT8 trading_venue[2];         // bytes 0 to 1
   UINT64 time_of_event;           // bytes 2 to 9
   UINT8 contract_code[12];        // bytes 10 to 21
@@ -55,10 +97,8 @@ entrypoint typedef struct _MarketStateContractMessage {
   UINT8 filler_string_2[2];       // bytes 40 to 41
 } MarketStateContractMessage;
 
-// ---- Market State Instrument Message: 40 bytes -------------------------------
-
 // Indicates the trading state of an individual tradable instrument. Sent when the instrument state differs from that at contract level, for example when TOM goes into Post Trade before the contract.
-entrypoint typedef struct _MarketStateInstrumentMessage {
+typedef struct _MarketStateInstrumentMessage {
   UINT8 trading_venue[2];         // bytes 0 to 1
   UINT64 time_of_event;           // bytes 2 to 9
   UINT64 tradable_instrument_id;  // bytes 10 to 17
@@ -70,10 +110,8 @@ entrypoint typedef struct _MarketStateInstrumentMessage {
   UINT8 filler_string_3[3];       // bytes 37 to 39
 } MarketStateInstrumentMessage;
 
-// ---- Indicative Opening Price Message: 40 bytes ------------------------------
-
 // Carries the price at which a tradable instrument would open, computed by the uncrossing algorithm during Pre-Open. If there are no crossed prices no IOP is calculated or disseminated; where the book is not crossed but has both a bid and an offer, a mid price is calculated and published instead. At the transition from Pre-Open to Open an IOP message is published for every tradable instrument with both prices null and the volume zero, to indicate the prices are no longer valid.
-entrypoint typedef struct _IndicativeOpeningPriceMessage {
+typedef struct _IndicativeOpeningPriceMessage {
   UINT8 trading_venue[2];               // bytes 0 to 1
   UINT64 time_of_event;                 // bytes 2 to 9
   UINT64 tradable_instrument_id;        // bytes 10 to 17
@@ -83,10 +121,8 @@ entrypoint typedef struct _IndicativeOpeningPriceMessage {
   UINT8 filler_string_2[2];             // bytes 38 to 39
 } IndicativeOpeningPriceMessage;
 
-// ---- Quote Request Message: 26 bytes -----------------------------------------
-
 // Generated when a request for quote is accepted by the Matching Engine.
-entrypoint typedef struct _QuoteRequestMessage {
+typedef struct _QuoteRequestMessage {
   UINT8 trading_venue[2];         // bytes 0 to 1
   UINT64 time_of_event;           // bytes 2 to 9
   UINT64 tradable_instrument_id;  // bytes 10 to 17
@@ -96,10 +132,8 @@ entrypoint typedef struct _QuoteRequestMessage {
   UINT8 filler_string_2[2];       // bytes 24 to 25
 } QuoteRequestMessage;
 
-// ---- Order Add Message: 68 bytes ---------------------------------------------
-
 // Generated when an order is placed in the order book. An incoming, aggressing order that matches against one or more resting orders is not published as an Order Add unless it has residual volume after matching. For orders submitted during Pre-Open and reloaded GTC and GTD orders the TimeOfEvent reflects the uncrossing event time at market open.
-entrypoint typedef struct _OrderAddMessage {
+typedef struct _OrderAddMessage {
   UINT8 trading_venue[2];         // bytes 0 to 1
   UINT64 time_of_event;           // bytes 2 to 9
   UINT64 t_1;                     // bytes 10 to 17
@@ -114,10 +148,44 @@ entrypoint typedef struct _OrderAddMessage {
   UINT8 filler_string_1;          // byte 67
 } OrderAddMessage;
 
-// ---- Refresh Complete Message: 4 bytes ---------------------------------------
-
 // Published to mark the end of a refresh cycle.
-entrypoint typedef struct _RefreshCompleteMessage {
+typedef struct _RefreshCompleteMessage {
   UINT32 last_seq_num;  // bytes 0 to 3
 } RefreshCompleteMessage;
+
+// Branch
+casetype _Payload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x0064: SequenceResetMessage sequence_reset_message;
+    case 0x0137: MarketStateContractMessage market_state_contract_message;
+    case 0x0138: MarketStateInstrumentMessage market_state_instrument_message;
+    case 0x0140: IndicativeOpeningPriceMessage indicative_opening_price_message;
+    case 0x0149: QuoteRequestMessage quote_request_message;
+    case 0x0143: OrderAddMessage order_add_message;
+    case 0x00CB: RefreshCompleteMessage refresh_complete_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// LMEsource application messages carried by this packet; a message is never fragmented across packets
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16 msg_size { msg_size >= 4 };                                                                                                                               // bytes 0 to 1
+  UINT16 msg_type;                                                                                                                                                 // bytes 2 to 3
+  Payload(msg_type, (((UINT32) msg_size) - 4)) payload[:byte-size-single-element-array (((UINT32) msg_size) - 4)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// LMEsource multicast packet, a packet header followed by Msg Count complete messages
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 16) {
+  UINT16 pkt_size;                                                                                                      // bytes 0 to 1
+  UINT8 msg_count;                                                                                                      // byte 2
+  UINT8 filler;                                                                                                         // byte 3
+  UINT32 seq_num;                                                                                                       // bytes 4 to 7
+  UINT64 send_time;                                                                                                     // bytes 8 to 15
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size (available - 16)];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) msg_count); };
+} Packet;
 

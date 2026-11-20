@@ -1,34 +1,306 @@
-// Miami International Holdings Express Interface
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Miax MiaxOptions ExpressInterface Mei v1.3.c
 //
+// Protocol:
+//   Organization: Miami International Holdings
+//   Protocol: Express Interface
+//   Encoding: Miax Express Interface
+//   Version: 1.3.c
+//   Date: 03/19/2013
+//   Specification: MIAX_Express_Interface_MEI_v1_3c.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out MiaxOptions_ExpressInterface_v1_3_c.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a length prefix framing what follows
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Sesm Packet Header: 3 bytes ---------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// SesM packet header
-entrypoint typedef struct _SesmPacketHeader {
-  UINT16 sesm_packet_length;  // bytes 0 to 1
-  UINT8 sesm_packet_type;     // byte 2
-} SesmPacketHeader;
+// Sesm Packet Type: one byte code
+#define SESM_PACKET_TYPE_SEQUENCED_DATA_PACKET 0x53     // Sequenced Data Packet
+#define SESM_PACKET_TYPE_UNSEQUENCED_DATA_PACKET 0x55   // Unsequenced Data Packet
+#define SESM_PACKET_TYPE_LOGIN_REQUEST 0x4C             // Login Request
+#define SESM_PACKET_TYPE_LOGIN_RESPONSE 0x52            // Login Response
+#define SESM_PACKET_TYPE_SYNCHRONIZATION_COMPLETE 0x43  // Synchronization Complete
+#define SESM_PACKET_TYPE_RETRANSMISSION_REQUEST 0x41    // Retransmission Request
+#define SESM_PACKET_TYPE_LOGOUT_REQUEST 0x58            // Logout Request
+#define SESM_PACKET_TYPE_GOODBYE_PACKET 0x47            // Goodbye Packet
+#define SESM_PACKET_TYPE_END_OF_SESSION 0x45            // End Of Session
+#define SESM_PACKET_TYPE_SERVER_HEARTBEAT 0x30          // Server Heartbeat
+#define SESM_PACKET_TYPE_CLIENT_HEARTBEAT 0x31          // Client Heartbeat
+#define SESM_PACKET_TYPE_TEST_PACKET 0x54               // Test Packet
 
-// ---- Series Update: 76 bytes -------------------------------------------------
+// Sequenced Message Type: 2 byte code
+#define SEQUENCED_MESSAGE_TYPE_SERIES_UPDATE 0x5355                         // Series Update
+#define SEQUENCED_MESSAGE_TYPE_VALID_QUOTE_WIDTH_FOR_OPENING 0x5157         // Valid Quote Width For Opening
+#define SEQUENCED_MESSAGE_TYPE_ENHANCED_QUOTE_E_QUOTE_RESPONSE 0x4552       // Enhanced Quote E Quote Response
+#define SEQUENCED_MESSAGE_TYPE_SYSTEM_STATE_NOTIFICATION 0x534E             // System State Notification
+#define SEQUENCED_MESSAGE_TYPE_TRADING_STATUS_NOTIFICATION 0x544E           // Trading Status Notification
+#define SEQUENCED_MESSAGE_TYPE_QUOTE_WIDTH_RELIEF_NOTIFICATION 0x514E       // Quote Width Relief Notification
+#define SEQUENCED_MESSAGE_TYPE_ARM_PROTECTION_SETTINGS_NOTIFICATION 0x414E  // Arm Protection Settings Notification
+#define SEQUENCED_MESSAGE_TYPE_CANCEL_NOTIFICATION 0x584E                   // Cancel Notification
+#define SEQUENCED_MESSAGE_TYPE_EXECUTION_NOTIFICATION 0x454E                // Execution Notification
+
+// Call Or Put: one byte code
+#define CALL_OR_PUT_CALL 0x43  // Call
+#define CALL_OR_PUT_PUT 0x50   // Put
+
+// Restricted Option: one byte code
+#define RESTRICTED_OPTION_MIAX_WILL_ACCEPT_POSITION_CLOSING_ORDERS_ONLY 0x59  // Miax Will Accept Position Closing Orders Only
+#define RESTRICTED_OPTION_MIAX_WILL_ACCEPT_OPEN_AND_CLOSE_POSITIONS 0x4E      // Miax Will Accept Open And Close Positions
+
+// Long Term Option: one byte code
+#define LONG_TERM_OPTION_FAR_MONTH_EXPIRATION_AS_DEFINED_BY_MIAX_RULES 0x59   // Far Month Expiration As Defined By Miax Rules
+#define LONG_TERM_OPTION_NEAR_MONTH_EXPIRATION_AS_DEFINED_BY_MIAX_RULES 0x4E  // Near Month Expiration As Defined By Miax Rules
+
+// Active On Miax: one byte code
+#define ACTIVE_ON_MIAX_ACTIVE_TRADABLE_ON_MIAX 0x41        // Active Tradable On Miax
+#define ACTIVE_ON_MIAX_INACTIVE_NOT_TRADABLE_ON_MIAX 0x49  // Inactive Not Tradable On Miax
+
+// Miax Bbo Posting Increment Indicator: one byte code
+#define MIAX_BBO_POSTING_INCREMENT_INDICATOR_PENNY 0x50         // Penny
+#define MIAX_BBO_POSTING_INCREMENT_INDICATOR_PENNY_NICKEL 0x4E  // Penny Nickel
+#define MIAX_BBO_POSTING_INCREMENT_INDICATOR_NICKEL_DIME 0x44   // Nickel Dime
+
+// Quote Acceptance Increment Indicator: one byte code
+#define QUOTE_ACCEPTANCE_INCREMENT_INDICATOR_PENNY 0x50         // Penny
+#define QUOTE_ACCEPTANCE_INCREMENT_INDICATOR_PENNY_NICKEL 0x4E  // Penny Nickel
+#define QUOTE_ACCEPTANCE_INCREMENT_INDICATOR_NICKEL_DIME 0x44   // Nickel Dime
+
+// Opening Underlying Market Code: one byte code
+#define OPENING_UNDERLYING_MARKET_CODE_NYSE_AMEX 0x41                                       // Nyse Amex
+#define OPENING_UNDERLYING_MARKET_CODE_NASDAQ_OMX_BX 0x42                                   // Nasdaq Omx Bx
+#define OPENING_UNDERLYING_MARKET_CODE_NATIONAL_STOCK_EXCHANGE 0x43                         // National Stock Exchange
+#define OPENING_UNDERLYING_MARKET_CODE_FINRA_ADF 0x44                                       // Finra Adf
+#define OPENING_UNDERLYING_MARKET_CODE_MARKET_INDEPENDENT_ANY_MARKET_THAT_OPENS_FIRST 0x45  // Market Independent Any Market That Opens First
+#define OPENING_UNDERLYING_MARKET_CODE_INTERNATIONAL_SECURITIES_EXCHANGE 0x49               // International Securities Exchange
+#define OPENING_UNDERLYING_MARKET_CODE_EDGA_EXCHANGE_INC 0x4A                               // Edga Exchange Inc
+#define OPENING_UNDERLYING_MARKET_CODE_EDGX_EXCHANGE_INC 0x4B                               // Edgx Exchange Inc
+#define OPENING_UNDERLYING_MARKET_CODE_CHICAGO_STOCK_EXCHANGE 0x4D                          // Chicago Stock Exchange
+#define OPENING_UNDERLYING_MARKET_CODE_NYSE_EURONEXT 0x4E                                   // Nyse Euronext
+#define OPENING_UNDERLYING_MARKET_CODE_NYSE_ARCA_EXCHANGE 0x50                              // Nyse Arca Exchange
+#define OPENING_UNDERLYING_MARKET_CODE_NASDAQ_OMX_VIA_UTP_FEED 0x51                         // Nasdaq Omx Via Utp Feed
+#define OPENING_UNDERLYING_MARKET_CODE_NASDAQ_OMX_VIA_CTA_FEED 0x54                         // Nasdaq Omx Via Cta Feed
+#define OPENING_UNDERLYING_MARKET_CODE_CHICAGO_BOARD_OPTIONS_EXCHANGE 0x57                  // Chicago Board Options Exchange
+#define OPENING_UNDERLYING_MARKET_CODE_NASDAQ_OMX_PHLX 0x58                                 // Nasdaq Omx Phlx
+#define OPENING_UNDERLYING_MARKET_CODE_BATS_Y_EXCHANGE_INC 0x59                             // Bats Y Exchange Inc
+#define OPENING_UNDERLYING_MARKET_CODE_BATS_EXCHANGE_INC 0x5A                               // Bats Exchange Inc
+
+// Mpv Class: one byte code
+#define MPV_CLASS_PENNY 0x50         // Penny
+#define MPV_CLASS_PENNY_NICKEL 0x4E  // Penny Nickel
+#define MPV_CLASS_NICKEL_DIME 0x44   // Nickel Dime
+
+// E Quote Request Status: one byte code
+#define E_QUOTE_REQUEST_STATUS_REQUEST_ACCEPTED_SUCCESSFULLY 0x20                                                // Request Accepted Successfully
+#define E_QUOTE_REQUEST_STATUS_INVALID_PRODUCT_ID 0x49                                                           // Invalid Product Id
+#define E_QUOTE_REQUEST_STATUS_NO_EVENT_WITH_SUCH_EVENT_ID 0x41                                                  // No Event With Such Event Id
+#define E_QUOTE_REQUEST_STATUS_INVALID_E_QUOTE_ACTION 0x42                                                       // Invalid E Quote Action
+#define E_QUOTE_REQUEST_STATUS_INVALID_SIZE 0x56                                                                 // Invalid Size
+#define E_QUOTE_REQUEST_STATUS_E_QUOTE_SIZE_MINIMUM_REQUIRED_SIZE 0x4D                                           // E Quote Size Minimum Required Size
+#define E_QUOTE_REQUEST_STATUS_INVALID_PRICE 0x50                                                                // Invalid Price
+#define E_QUOTE_REQUEST_STATUS_INVALID_E_QUOTE_TYPE 0x54                                                         // Invalid E Quote Type
+#define E_QUOTE_REQUEST_STATUS_INVALID_SIDE 0x53                                                                 // Invalid Side
+#define E_QUOTE_REQUEST_STATUS_E_QUOTE_NOT_PERMITTED_FOR_THIS_PRICE 0x31                                         // E Quote Not Permitted For This Price
+#define E_QUOTE_REQUEST_STATUS_E_QUOTE_NOT_PERMITTED_FOR_THIS_SIDE 0x32                                          // E Quote Not Permitted For This Side
+#define E_QUOTE_REQUEST_STATUS_E_QUOTE_REPRESENTED_BY_TARGET_MESSAGE_ID_WAS_NOT_FOUND 0x33                       // E Quote Represented By Target Message Id Was Not Found
+#define E_QUOTE_REQUEST_STATUS_CLIENT_MESSAGE_ID_NOT_UNIQUE 0x34                                                 // Client Message Id Not Unique
+#define E_QUOTE_REQUEST_STATUS_UNKNOWN_MPID 0x55                                                                 // Unknown Mpid
+#define E_QUOTE_REQUEST_STATUS_REJECTED_DUE_TO_QUOTE_PROTECTION 0x35                                             // Rejected Due To Quote Protection
+#define E_QUOTE_REQUEST_STATUS_NOT_PERMITTED 0x58                                                                // Not Permitted
+#define E_QUOTE_REQUEST_STATUS_TEST_E_QUOTE_SUCCESSFULLY_ACCEPTED_PRIOR_TO_LQW_BUT_NOT_PLACED_ON_MIAX_BOOK 0x4B  // Test E Quote Successfully Accepted Prior To Lqw But Not Placed On Miax Book
+#define E_QUOTE_REQUEST_STATUS_MIAX_CLOSED_FOR_TRADING_OF_THIS_PRODUCT_REQUEST_CANNOT_BE_COMPLETED 0x43          // Miax Closed For Trading Of This Product Request Cannot Be Completed
+#define E_QUOTE_REQUEST_STATUS_UNDEFINED_ERROR 0x5A                                                              // Undefined Error
+
+// System Status: one byte code
+#define SYSTEM_STATUS_FIRM_INTERFACE_START_UP_TIME_READY_TO_ACCEPT_APPLICATION_MESSAGES 0x53  // Firm Interface Start Up Time Ready To Accept Application Messages
+#define SYSTEM_STATUS_LQW_READY_TO_ACCEPT_OFFICIAL_QUOTES 0x50                                // Lqw Ready To Accept Official Quotes
+#define SYSTEM_STATUS_END_OF_SYSTEM_HOURS 0x43                                                // End Of System Hours
+#define SYSTEM_STATUS_PRE_LQW_NOT_READY_TO_ACCEPT_OFFICIAL_QUOTES 0x4C                        // Pre Lqw Not Ready To Accept Official Quotes
+#define SYSTEM_STATUS_SYSTEM_CURRENTLY_NOT_ACCEPTING_MESSAGES 0x58                            // System Currently Not Accepting Messages
+#define SYSTEM_STATUS_START_OF_TEST_SESSION_SENT_BEFORE_TESTS 0x31                            // Start Of Test Session Sent Before Tests
+#define SYSTEM_STATUS_END_OF_TEST_SESSION 0x32                                                // End Of Test Session
+
+// Trading Status: one byte code
+#define TRADING_STATUS_HALTED 0x48   // Halted
+#define TRADING_STATUS_CLOSING 0x43  // Closing
+#define TRADING_STATUS_RESUME 0x52   // Resume
+
+// Action: one byte code
+#define ACTION_SET_ADD_OR_UPDATE_ARM_SETTINGS 0x53  // Set Add Or Update Arm Settings
+#define ACTION_DELETE_ARM_SETTINGS 0x44             // Delete Arm Settings
+
+// Source: one byte code
+#define SOURCE_CHANGES_CARRIED_OUT_BY_THE_FIRM_VIA_MEI 0x54                                           // Changes Carried Out By The Firm Via Mei
+#define SOURCE_CHANGES_CARRIED_OUT_BY_THE_EXCHANGE_GLOBAL_DEFAULT_CHANGES_OR_FIRM_REQUES_qzy8g6 0x45  // Changes Carried Out By The Exchange Global Default Changes Or Firm Requested Settings Applied Manually
+
+// Liquidity Type: one byte code
+#define LIQUIDITY_TYPE_QUOTE 0x51    // Quote
+#define LIQUIDITY_TYPE_E_QUOTE 0x45  // E Quote
+
+// Quotee Quote Side: one byte code
+#define QUOTEE_QUOTE_SIDE_BID 0x42  // Bid
+#define QUOTEE_QUOTE_SIDE_ASK 0x41  // Ask
+
+// Cancel Reason: one byte code
+#define CANCEL_REASON_EXCHANGE_INITIATED_CANCEL 0x45                                            // Exchange Initiated Cancel
+#define CANCEL_REASON_FIRM_INITIATED_CANCEL 0x55                                                // Firm Initiated Cancel
+#define CANCEL_REASON_CANCELED_DUE_TO_INACTIVATION_OF_OPTION 0x49                               // Canceled Due To Inactivation Of Option
+#define CANCEL_REASON_CANCELED_DUE_TO_ARM_PROTECTION 0x52                                       // Canceled Due To Arm Protection
+#define CANCEL_REASON_CANCEL_FOR_UNEXECUTED_PART_OF_E_QUOTE 0x53                                // Cancel For Unexecuted Part Of E Quote
+#define CANCEL_REASON_CANCEL_FOR_QUOTE_UNUSED_IN_OPENING_REOPENING_OR_CLOSING 0x57              // Cancel For Quote Unused In Opening Reopening Or Closing
+#define CANCEL_REASON_CANCEL_OF_RESTING_QUOTE_CROSSED_BY_OPPOSITE_SIDE_QUOTE_OF_SAME_MPID 0x43  // Cancel Of Resting Quote Crossed By Opposite Side Quote Of Same Mpid
+#define CANCEL_REASON_CANCELED_DUE_TO_DELETION_OF_MPID 0x4D                                     // Canceled Due To Deletion Of Mpid
+#define CANCEL_REASON_CANCELED_DUE_TO_DELETION_OF_MPID_UNDERLYING_PERMISSION 0x50               // Canceled Due To Deletion Of Mpid Underlying Permission
+#define CANCEL_REASON_CANCELED_DUE_TO_TRADING_HALT 0x54                                         // Canceled Due To Trading Halt
+
+// Trade Status: one byte code
+#define TRADE_STATUS_NEW_EXECUTION 0x45  // New Execution
+
+// Side: one byte code
+#define SIDE_BID 0x42   // Bid
+#define SIDE_ASK 0x41   // Ask
+#define SIDE_SOLD 0x53  // Sold
+
+// Unsequenced Message Type: 2 byte code
+#define UNSEQUENCED_MESSAGE_TYPE_ARM_SETTINGS_UPDATE_REQUEST 0x4153            // Arm Settings Update Request
+#define UNSEQUENCED_MESSAGE_TYPE_ARM_SETTINGS_UPDATE_RESPONSE 0x4141           // Arm Settings Update Response
+#define UNSEQUENCED_MESSAGE_TYPE_BULK_QUOTE_MESSAGE 0x514D                     // Bulk Quote Message
+#define UNSEQUENCED_MESSAGE_TYPE_BULK_QUOTE_RESPONSE 0x5152                    // Bulk Quote Response
+#define UNSEQUENCED_MESSAGE_TYPE_ENHANCED_QUOTE_E_QUOTE_MESSAGE 0x4551         // Enhanced Quote E Quote Message
+#define UNSEQUENCED_MESSAGE_TYPE_MASS_QUOTE_CANCEL_REQUEST 0x5851              // Mass Quote Cancel Request
+#define UNSEQUENCED_MESSAGE_TYPE_MASS_QUOTE_CANCEL_RESPONSE 0x5852             // Mass Quote Cancel Response
+#define UNSEQUENCED_MESSAGE_TYPE_QUOTE_PROTECTION_RESET_REQUEST 0x5058         // Quote Protection Reset Request
+#define UNSEQUENCED_MESSAGE_TYPE_QUOTE_PROTECTION_RESET_RESPONSE 0x5052        // Quote Protection Reset Response
+#define UNSEQUENCED_MESSAGE_TYPE_QUOTE_PROTECTION_TRIGGER_NOTIFICATION 0x5150  // Quote Protection Trigger Notification
+#define UNSEQUENCED_MESSAGE_TYPE_LIQUIDITY_SEEKING_EVENT_NOTIFICATION 0x4C4E   // Liquidity Seeking Event Notification
+#define UNSEQUENCED_MESSAGE_TYPE_CANCEL_NOTIFICATION 0x584E                    // Cancel Notification
+
+// Arm Settings Update Status: one byte code
+#define ARM_SETTINGS_UPDATE_STATUS_SETTINGS_APPLIED_SUCCESSFULLY 0x20            // Settings Applied Successfully
+#define ARM_SETTINGS_UPDATE_STATUS_INVALID_ACTION 0x41                           // Invalid Action
+#define ARM_SETTINGS_UPDATE_STATUS_INVALID_ALLOWABLE_ENGAGEMENT_PERCENTAGE 0x50  // Invalid Allowable Engagement Percentage
+#define ARM_SETTINGS_UPDATE_STATUS_INVALID_COUNTING_PERIOD 0x44                  // Invalid Counting Period
+#define ARM_SETTINGS_UPDATE_STATUS_UNKNOWN_MPID 0x4D                             // Unknown Mpid
+#define ARM_SETTINGS_UPDATE_STATUS_INVALID_UNDERLYING 0x55                       // Invalid Underlying
+#define ARM_SETTINGS_UPDATE_STATUS_NOT_PERMITTED 0x58                            // Not Permitted
+#define ARM_SETTINGS_UPDATE_STATUS_NO_SUCH_ARM_SETTINGS 0x4E                     // No Such Arm Settings
+#define ARM_SETTINGS_UPDATE_STATUS_UNDEFINED_ERROR 0x5A                          // Undefined Error
+
+// Bulk Quote Status: one byte code
+#define BULK_QUOTE_STATUS_BULK_QUOTE_BLOCK_IS_VALID 0x20  // Bulk Quote Block Is Valid
+#define BULK_QUOTE_STATUS_INVALID_BULK_QUOTE_BLOCK 0x52   // Invalid Bulk Quote Block
+#define BULK_QUOTE_STATUS_UNDEFINED_ERROR 0x5A            // Undefined Error
+
+// Quote Status: one byte code
+#define QUOTE_STATUS_QUOTE_SUCCESSFULLY_ACCEPTED 0x20                                                // Quote Successfully Accepted
+#define QUOTE_STATUS_TEST_QUOTE_SUCCESSFULLY_ACCEPTED_PRIOR_TO_LQW_BUT_NOT_PLACED_ON_MIAX_BOOK 0x54  // Test Quote Successfully Accepted Prior To Lqw But Not Placed On Miax Book
+#define QUOTE_STATUS_MIAX_CLOSED_FOR_TRADING_OF_THIS_PRODUCT_REQUEST_CANNOT_BE_COMPLETED 0x43        // Miax Closed For Trading Of This Product Request Cannot Be Completed
+#define QUOTE_STATUS_INVALID_PRODUCT_ID 0x4F                                                         // Invalid Product Id
+#define QUOTE_STATUS_INVALID_PRICE 0x50                                                              // Invalid Price
+#define QUOTE_STATUS_INVALID_SIZE 0x51                                                               // Invalid Size
+#define QUOTE_STATUS_INVALID_SIDE 0x53                                                               // Invalid Side
+#define QUOTE_STATUS_UNKNOWN_MPID 0x55                                                               // Unknown Mpid
+#define QUOTE_STATUS_NOT_PERMITTED 0x58                                                              // Not Permitted
+#define QUOTE_STATUS_QUOTE_SIZE_MINIMUM_REQUIRED_SIZE 0x4D                                           // Quote Size Minimum Required Size
+#define QUOTE_STATUS_REJECTED_DUE_TO_QUOTE_PROTECTION 0x52                                           // Rejected Due To Quote Protection
+#define QUOTE_STATUS_UNDEFINED_ERROR 0x5A                                                            // Undefined Error
+
+// E Quote Action: one byte code
+#define E_QUOTE_ACTION_NEW_E_QUOTE 0x4E      // New E Quote
+#define E_QUOTE_ACTION_CANCEL_E_QUOTE 0x43   // Cancel E Quote
+#define E_QUOTE_ACTION_REPLACE_E_QUOTE 0x52  // Replace E Quote
+
+// E Quote Type: one byte code
+#define E_QUOTE_TYPE_OPG 0x4F  // Opg
+#define E_QUOTE_TYPE_AOC 0x41  // Aoc
+#define E_QUOTE_TYPE_IOC 0x49  // Ioc
+#define E_QUOTE_TYPE_FOK 0x46  // Fok
+#define E_QUOTE_TYPE_ISO 0x53  // Iso
+
+// Mass Quote Cancel Status: one byte code
+#define MASS_QUOTE_CANCEL_STATUS_CANCEL_SUCCESSFUL 0x20                                   // Cancel Successful
+#define MASS_QUOTE_CANCEL_STATUS_INVALID_UNDERLYING 0x55                                  // Invalid Underlying
+#define MASS_QUOTE_CANCEL_STATUS_MASS_QUOTE_CANCEL_STILL_IN_PROGRESS 0x49                 // Mass Quote Cancel Still In Progress
+#define MASS_QUOTE_CANCEL_STATUS_HALT_TRIGGERED_CLEANUP_OF_QUOTES_STILL_IN_PROGRESS 0x48  // Halt Triggered Cleanup Of Quotes Still In Progress
+#define MASS_QUOTE_CANCEL_STATUS_ALL_QUOTE_HAVE_ALREADY_BEEN_CANCELED 0x4E                // All Quote Have Already Been Canceled
+#define MASS_QUOTE_CANCEL_STATUS_NOT_PERMITTED 0x58                                       // Not Permitted
+#define MASS_QUOTE_CANCEL_STATUS_UNKNOWN_MPID 0x4D                                        // Unknown Mpid
+#define MASS_QUOTE_CANCEL_STATUS_MIAX_CLOSED_REQUEST_CANNOT_BE_COMPLETED 0x43             // Miax Closed Request Cannot Be Completed
+#define MASS_QUOTE_CANCEL_STATUS_UNDEFINED_ERROR 0x5A                                     // Undefined Error
+
+// Quote Protection Reset Status: one byte code
+#define QUOTE_PROTECTION_RESET_STATUS_QUOTE_PROTECTION_RESET_SUCCESSFUL 0x20                   // Quote Protection Reset Successful
+#define QUOTE_PROTECTION_RESET_STATUS_INVALID_UNDERLYING 0x55                                  // Invalid Underlying
+#define QUOTE_PROTECTION_RESET_STATUS_MASS_QUOTE_CANCEL_STILL_IN_PROGRESS 0x49                 // Mass Quote Cancel Still In Progress
+#define QUOTE_PROTECTION_RESET_STATUS_HALT_TRIGGERED_CLEANUP_OF_QUOTES_STILL_IN_PROGRESS 0x48  // Halt Triggered Cleanup Of Quotes Still In Progress
+#define QUOTE_PROTECTION_RESET_STATUS_UNKNOWN_MPID 0x4D                                        // Unknown Mpid
+#define QUOTE_PROTECTION_RESET_STATUS_NOT_PERMITTED 0x58                                       // Not Permitted
+#define QUOTE_PROTECTION_RESET_STATUS_MIAX_CLOSED_REQUEST_CANNOT_BE_COMPLETED 0x43             // Miax Closed Request Cannot Be Completed
+#define QUOTE_PROTECTION_RESET_STATUS_UNDEFINED_ERROR 0x5A                                     // Undefined Error
+
+// Trigger Reason: one byte code
+#define TRIGGER_REASON_EXCHANGE_INITIATED_MASS_QUOTE_CANCEL 0x45  // Exchange Initiated Mass Quote Cancel
+#define TRIGGER_REASON_FIRM_INITIATED_MASS_QUOTE_CANCEL 0x55      // Firm Initiated Mass Quote Cancel
+#define TRIGGER_REASON_ARM_TRIGGERED_PROTECTION 0x52              // Arm Triggered Protection
+#define TRIGGER_REASON_TRADING_HALT 0x54                          // Trading Halt
+
+// Imbalance Side: one byte code
+#define IMBALANCE_SIDE_BID 0x42  // Bid
+#define IMBALANCE_SIDE_ASK 0x41  // Ask
+
+// Login Status: one byte code
+#define LOGIN_STATUS_LOGIN_SUCCESSFUL 0x20                                   // Login Successful
+#define LOGIN_STATUS_REJECTED 0x58                                           // Rejected
+#define LOGIN_STATUS_REQUESTED_SESSION_IS_NOT_AVAILABLE 0x53                 // Requested Session Is Not Available
+#define LOGIN_STATUS_INVALID_START_SEQUENCE_NUMBER_REQUESTED 0x4E            // Invalid Start Sequence Number Requested
+#define LOGIN_STATUS_INCOMPATIBLE_SESSION_PROTOCOL_VERSION 0x49              // Incompatible Session Protocol Version
+#define LOGIN_STATUS_INCOMPATIBLE_APPLICATION_PROTOCOL_VERSION 0x41          // Incompatible Application Protocol Version
+#define LOGIN_STATUS_REQUEST_REJECTED_BECAUSE_CLIENT_ALREADY_LOGGED_IN 0x4C  // Request Rejected Because Client Already Logged In
+
+// Logout Reason: one byte code
+#define LOGOUT_REASON_GRACEFUL_LOGOUT 0x20                     // Graceful Logout
+#define LOGOUT_REASON_BAD_SESM_PACKET 0x42                     // Bad Sesm Packet
+#define LOGOUT_REASON_TIMED_OUT_WAITING_FOR_LOGIN_PACKET 0x4C  // Timed Out Waiting For Login Packet
+#define LOGOUT_REASON_APPLICATION_TERMINATING_CONNECTION 0x41  // Application Terminating Connection
+
+// Goodbye Reason: one byte code
+#define GOODBYE_REASON_BAD_SESM_PACKET 0x42                     // Bad Sesm Packet
+#define GOODBYE_REASON_TIMED_OUT_WAITING_FOR_LOGIN_PACKET 0x4C  // Timed Out Waiting For Login Packet
+#define GOODBYE_REASON_APPLICATION_TERMINATING_CONNECTION 0x41  // Application Terminating Connection
+
+// ---- Types -------------------------------------------------------------------
 
 // This is the message format that will be used to disseminate all Option series traded on MIAX for the current session on the cloud associated for this connection.
-entrypoint typedef struct _SeriesUpdate {
+typedef struct _SeriesUpdate {
   UINT64 product_add_update_time;              // bytes 0 to 7
   UINT32 product_id;                           // bytes 8 to 11
   UINT8 underlying_symbol[11];                 // bytes 12 to 22
@@ -48,10 +320,8 @@ entrypoint typedef struct _SeriesUpdate {
   UINT8 reserved_8[8];                         // bytes 68 to 75
 } SeriesUpdate;
 
-// ---- Valid Quote Width For Opening: 21 bytes ---------------------------------
-
 // This message format will be used to convey to the firms the Valid Quote Width settings applicable to the Opening process of MIAX Options market. Each message describes a row of the Valid Quote Width table with a low end of the applicable price range and corresponding maximum quote width. The high end of the applicable price range is up to, but not including the next row's low end applicable price range if provided or infinity for the last row. If the table has to be reloaded, all rows will be resent. Refer to Appendix C for an example.
-entrypoint typedef struct _ValidQuoteWidthForOpening {
+typedef struct _ValidQuoteWidthForOpening {
   UINT64 notification_time;            // bytes 0 to 7
   UINT8 mpv_class;                     // byte 8
   UINT32 low_end_of_applicable_range;  // bytes 9 to 12
@@ -59,49 +329,39 @@ entrypoint typedef struct _ValidQuoteWidthForOpening {
   UINT32 long_term_option_multiplier;  // bytes 17 to 20
 } ValidQuoteWidthForOpening;
 
-// ---- Enhanced Quote E Quote Response: 17 bytes -------------------------------
-
 // This message indicates if the eQuote was accepted or rejected. Note that this message does not report executions. For executions, please refer to the Execution notification. For the unexecuted part that gets canceled, please refer to the Cancel notification.
-entrypoint typedef struct _EnhancedQuoteEQuoteResponse {
+typedef struct _EnhancedQuoteEQuoteResponse {
   UINT32 client_message_id;      // bytes 0 to 3
   UINT8 mpid[4];                 // bytes 4 to 7
   UINT64 e_quote_id;             // bytes 8 to 15
   UINT8 e_quote_request_status;  // byte 16
 } EnhancedQuoteEQuoteResponse;
 
-// ---- System State Notification: 18 bytes -------------------------------------
-
 // This message format is used to notify the firms of the state changes of the system. This is an exchange-wide notification and not a symbol or member based notification.
-entrypoint typedef struct _SystemStateNotification {
+typedef struct _SystemStateNotification {
   UINT64 notification_time;  // bytes 0 to 7
   UINT8 mei_version[8];      // bytes 8 to 15
   UINT8 session_id;          // byte 16
   UINT8 system_status;       // byte 17
 } SystemStateNotification;
 
-// ---- Trading Status Notification: 21 bytes -----------------------------------
-
 // This message format will be used to notify the firms of changes to the trading status of an option or trigger of market-wide circuit breakers on the MIAX Options market.
-entrypoint typedef struct _TradingStatusNotification {
+typedef struct _TradingStatusNotification {
   UINT64 notification_time;    // bytes 0 to 7
   UINT32 product_id;           // bytes 8 to 11
   UINT8 trading_status;        // byte 12
   UINT64 expected_event_time;  // bytes 13 to 20
 } TradingStatusNotification;
 
-// ---- Quote Width Relief Notification: 23 bytes -------------------------------
-
 // This message format will be used to notify the firms if and when MIAX grants relief to the valid quote width parameters for Opening as specified in the rules and regulatory circulars of MIAX Options market.
-entrypoint typedef struct _QuoteWidthReliefNotification {
+typedef struct _QuoteWidthReliefNotification {
   UINT64 notification_time;     // bytes 0 to 7
   UINT8 underlying_symbol[11];  // bytes 8 to 18
   UINT32 relief_multiplier;     // bytes 19 to 22
 } QuoteWidthReliefNotification;
 
-// ---- Arm Protection Settings Notification: 31 bytes --------------------------
-
 // This message format will be used to notify firms of their ARM settings. All the ARM settings will be published upon system initialization and each subsequent change will also be published.
-entrypoint typedef struct _ArmProtectionSettingsNotification {
+typedef struct _ArmProtectionSettingsNotification {
   UINT64 notification_time;                // bytes 0 to 7
   UINT8 mpid[4];                           // bytes 8 to 11
   UINT8 underlying_symbol[11];             // bytes 12 to 22
@@ -111,10 +371,8 @@ entrypoint typedef struct _ArmProtectionSettingsNotification {
   UINT8 source;                            // byte 30
 } ArmProtectionSettingsNotification;
 
-// ---- Cancel Notification: 36 bytes -------------------------------------------
-
 // This is the message format that will be used to notify firms about system generated or firm requested quote and eQuote cancels.
-entrypoint typedef struct _CancelNotification {
+typedef struct _CancelNotification {
   UINT64 notification_time;       // bytes 0 to 7
   UINT8 mpid[4];                  // bytes 8 to 11
   UINT32 product_id;              // bytes 12 to 15
@@ -127,10 +385,8 @@ entrypoint typedef struct _CancelNotification {
   UINT8 cancel_reason;            // byte 35
 } CancelNotification;
 
-// ---- Execution Notification: 49 bytes ----------------------------------------
-
 // This message format will be used to notify the firms of executions of their quotes and eQuotes.
-entrypoint typedef struct _ExecutionNotification {
+typedef struct _ExecutionNotification {
   UINT64 notification_time;  // bytes 0 to 7
   UINT8 mpid[4];             // bytes 8 to 11
   UINT32 product_id;         // bytes 12 to 15
@@ -147,10 +403,31 @@ entrypoint typedef struct _ExecutionNotification {
   UINT32 last_size;          // bytes 45 to 48
 } ExecutionNotification;
 
-// ---- Arm Settings Update Request: 26 bytes -----------------------------------
+// Branch
+casetype _SequencedMessage (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x5355: SeriesUpdate series_update;
+    case 0x5157: ValidQuoteWidthForOpening valid_quote_width_for_opening;
+    case 0x4552: EnhancedQuoteEQuoteResponse enhanced_quote_e_quote_response;
+    case 0x534E: SystemStateNotification system_state_notification;
+    case 0x544E: TradingStatusNotification trading_status_notification;
+    case 0x514E: QuoteWidthReliefNotification quote_width_relief_notification;
+    case 0x414E: ArmProtectionSettingsNotification arm_protection_settings_notification;
+    case 0x584E: CancelNotification cancel_notification;
+    case 0x454E: ExecutionNotification execution_notification;
+    default: UINT8 unknown[available];
+  }
+} SequencedMessage;
+
+// The Server application can choose to use Sequenced data packets to send all messages that must be recoverable by the client in case of a connection loss
+typedef struct _SequencedDataPacket (UINT32 available) where (available >= 10) {
+  UINT64 sequence_number;                                                                                                          // bytes 0 to 7
+  UINT16BE sequenced_message_type;                                                                                                 // bytes 8 to 9
+  SequencedMessage(sequenced_message_type, (available - 10)) sequenced_message[:byte-size-single-element-array (available - 10)];
+} SequencedDataPacket;
 
 // Firms can use this message format to set up their ARM protection settings for each session. Changes to these settings can be made throughout the day.
-entrypoint typedef struct _ArmSettingsUpdateRequest {
+typedef struct _ArmSettingsUpdateRequest {
   UINT32 client_message_id;                // bytes 0 to 3
   UINT8 mpid[4];                           // bytes 4 to 7
   UINT8 action;                            // byte 8
@@ -159,20 +436,49 @@ entrypoint typedef struct _ArmSettingsUpdateRequest {
   UINT16 counting_period;                  // bytes 24 to 25
 } ArmSettingsUpdateRequest;
 
-// ---- Arm Settings Update Response: 20 bytes ----------------------------------
-
 // MIAX uses this format to respond to the firm with a status of their ARM protection settings request.
-entrypoint typedef struct _ArmSettingsUpdateResponse {
+typedef struct _ArmSettingsUpdateResponse {
   UINT32 client_message_id;          // bytes 0 to 3
   UINT8 mpid[4];                     // bytes 4 to 7
   UINT8 underlying_symbol[11];       // bytes 8 to 18
   UINT8 arm_settings_update_status;  // byte 19
 } ArmSettingsUpdateResponse;
 
-// ---- Enhanced Quote E Quote Message: 31 bytes --------------------------------
+// 1 to 50 single-side quotes
+typedef struct _SingleSideQuote {
+  UINT32 product_id;  // bytes 0 to 3
+  UINT32 price;       // bytes 4 to 7
+  UINT32 size;        // bytes 8 to 11
+  UINT8 side;         // byte 12
+} SingleSideQuote;
+
+// Firms can use this message format to send up to 50 single sided quotes. Single sided quotes enables the firms to prioritize the update of more important quotes and sides ahead of other quotes.
+typedef struct _BulkQuoteMessage {
+  UINT32 client_message_id;                                                     // bytes 0 to 3
+  UINT8 mpid[4];                                                                // bytes 4 to 7
+  UINT8 quote_count;                                                            // byte 8
+  SingleSideQuote single_side_quote[:byte-size (((UINT32) quote_count) * 13)];
+} BulkQuoteMessage;
+
+// 1 to 50 single-side quote responses
+typedef struct _SingleSideQuoteResponse {
+  UINT8 quote_status;             // byte 0
+  UINT64 engine_sequence_number;  // bytes 1 to 8
+} SingleSideQuoteResponse;
+
+// This message format will be used to inform the firm of the status of quotes sent in the bulk quote request.
+typedef struct _BulkQuoteResponse {
+  UINT32 client_message_id;                                                                             // bytes 0 to 3
+  UINT8 mpid[4];                                                                                        // bytes 4 to 7
+  UINT8 bulk_quote_status;                                                                              // byte 8
+  UINT8 quote_count;                                                                                    // byte 9
+  UINT8 invalid_quote_count;                                                                            // byte 10
+  UINT64 quote_ack_time;                                                                                // bytes 11 to 18
+  SingleSideQuoteResponse single_side_quote_response[:byte-size (((UINT32) invalid_quote_count) * 9)];
+} BulkQuoteResponse;
 
 // This is the format for an eQuote message that can be sent either to match with orders and quotes on the MIAX book or when responding to a liquidity seeking event.
-entrypoint typedef struct _EnhancedQuoteEQuoteMessage {
+typedef struct _EnhancedQuoteEQuoteMessage {
   UINT32 client_message_id;  // bytes 0 to 3
   UINT8 mpid[4];             // bytes 4 to 7
   UINT32 product_id;         // bytes 8 to 11
@@ -185,56 +491,44 @@ entrypoint typedef struct _EnhancedQuoteEQuoteMessage {
   UINT8 side;                // byte 30
 } EnhancedQuoteEQuoteMessage;
 
-// ---- Mass Quote Cancel Request: 19 bytes -------------------------------------
-
 // Firms can use this message format to request the cancelation of all quotes and eQuotes for an MPID, or all quotes and eQuotes for an MPID for all series for an underlying
-entrypoint typedef struct _MassQuoteCancelRequest {
+typedef struct _MassQuoteCancelRequest {
   UINT32 client_message_id;     // bytes 0 to 3
   UINT8 mpid[4];                // bytes 4 to 7
   UINT8 underlying_symbol[11];  // bytes 8 to 18
 } MassQuoteCancelRequest;
 
-// ---- Mass Quote Cancel Response: 9 bytes -------------------------------------
-
 // This message format will be used to inform the firm about the status of their previous mass quote cancel request.
-entrypoint typedef struct _MassQuoteCancelResponse {
+typedef struct _MassQuoteCancelResponse {
   UINT32 client_message_id;        // bytes 0 to 3
   UINT8 mpid[4];                   // bytes 4 to 7
   UINT8 mass_quote_cancel_status;  // byte 8
 } MassQuoteCancelResponse;
 
-// ---- Quote Protection Reset Request: 19 bytes --------------------------------
-
 // Following a quote protection being engaged for a given MPID and underlying, firms must use this message format to reset their Quote Protection in order to start quoting for any option of the specified underlying.
-entrypoint typedef struct _QuoteProtectionResetRequest {
+typedef struct _QuoteProtectionResetRequest {
   UINT32 client_message_id;     // bytes 0 to 3
   UINT8 mpid[4];                // bytes 4 to 7
   UINT8 underlying_symbol[11];  // bytes 8 to 18
 } QuoteProtectionResetRequest;
 
-// ---- Quote Protection Reset Response: 9 bytes --------------------------------
-
 // This message format is used to inform the firms of the status of their Quote Protection Reset request.
-entrypoint typedef struct _QuoteProtectionResetResponse {
+typedef struct _QuoteProtectionResetResponse {
   UINT32 client_message_id;             // bytes 0 to 3
   UINT8 mpid[4];                        // bytes 4 to 7
   UINT8 quote_protection_reset_status;  // byte 8
 } QuoteProtectionResetResponse;
 
-// ---- Quote Protection Trigger Notification: 24 bytes -------------------------
-
 // This message format will be used to notify firms when an MPID is placed under quote protection. Quote protection can be triggered due to any one of the reasons listed in the message below.
-entrypoint typedef struct _QuoteProtectionTriggerNotification {
+typedef struct _QuoteProtectionTriggerNotification {
   UINT64 notification_time;     // bytes 0 to 7
   UINT8 mpid[4];                // bytes 8 to 11
   UINT8 underlying_symbol[11];  // bytes 12 to 22
   UINT8 trigger_reason;         // byte 23
 } QuoteProtectionTriggerNotification;
 
-// ---- Liquidity Seeking Event Notification: 50 bytes --------------------------
-
 // This message format will be used to notify firms of opening imbalances and auction initiation.
-entrypoint typedef struct _LiquiditySeekingEventNotification {
+typedef struct _LiquiditySeekingEventNotification {
   UINT64 notification_time;  // bytes 0 to 7
   UINT32 product_id;         // bytes 8 to 11
   UINT8 event_type;          // byte 12
@@ -248,10 +542,33 @@ entrypoint typedef struct _LiquiditySeekingEventNotification {
   UINT8 reserved_12[12];     // bytes 38 to 49
 } LiquiditySeekingEventNotification;
 
-// ---- Login Request: 35 bytes -------------------------------------------------
+// Branch
+casetype _UnsequencedMessage (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x4153: ArmSettingsUpdateRequest arm_settings_update_request;
+    case 0x4141: ArmSettingsUpdateResponse arm_settings_update_response;
+    case 0x514D: BulkQuoteMessage bulk_quote_message;
+    case 0x5152: BulkQuoteResponse bulk_quote_response;
+    case 0x4551: EnhancedQuoteEQuoteMessage enhanced_quote_e_quote_message;
+    case 0x5851: MassQuoteCancelRequest mass_quote_cancel_request;
+    case 0x5852: MassQuoteCancelResponse mass_quote_cancel_response;
+    case 0x5058: QuoteProtectionResetRequest quote_protection_reset_request;
+    case 0x5052: QuoteProtectionResetResponse quote_protection_reset_response;
+    case 0x5150: QuoteProtectionTriggerNotification quote_protection_trigger_notification;
+    case 0x4C4E: LiquiditySeekingEventNotification liquidity_seeking_event_notification;
+    case 0x584E: CancelNotification cancel_notification;
+    default: UINT8 unknown[available];
+  }
+} UnsequencedMessage;
+
+// Each unsequenced data packet carries one unsequenced message from the higher-level protocol
+typedef struct _UnsequencedDataPacket (UINT32 available) where (available >= 2) {
+  UINT16BE unsequenced_message_type;                                                                                                   // bytes 0 to 1
+  UnsequencedMessage(unsequenced_message_type, (available - 2)) unsequenced_message[:byte-size-single-element-array (available - 2)];
+} UnsequencedDataPacket;
 
 // The SesM client uses this packet to allow the server to authenticate the client and to convey to the server the last sequenced packet that the client received
-entrypoint typedef struct _LoginRequest {
+typedef struct _LoginRequest {
   UINT8 sesm_version[5];             // bytes 0 to 4
   UINT8 username[5];                 // bytes 5 to 9
   UINT8 computer_id[8];              // bytes 10 to 17
@@ -260,20 +577,66 @@ entrypoint typedef struct _LoginRequest {
   UINT64 requested_sequence_number;  // bytes 27 to 34
 } LoginRequest;
 
-// ---- Login Response: 10 bytes ------------------------------------------------
-
 // The SesM server sends a Login response packet in response to a Login request packet from the client
-entrypoint typedef struct _LoginResponse {
+typedef struct _LoginResponse {
   UINT8 login_status;              // byte 0
   UINT8 session_id;                // byte 1
   UINT64 highest_sequence_number;  // bytes 2 to 9
 } LoginResponse;
 
-// ---- Retransmission Request: 16 bytes ----------------------------------------
-
 // The SesM client uses this packet to request the server to retransmit a range of packets
-entrypoint typedef struct _RetransmissionRequest {
+typedef struct _RetransmissionRequest {
   UINT64 start_sequence_number;  // bytes 0 to 7
   UINT64 end_sequence_number;    // bytes 8 to 15
 } RetransmissionRequest;
+
+// The client may send a Logout request packet to request the connection be terminated
+typedef struct _LogoutRequest (UINT16 sesm_packet_length) where (sesm_packet_length >= 2) {
+  UINT8 logout_reason;                                     // byte 0
+  UINT8 logout_text[(((UINT32) sesm_packet_length) - 2)];
+} LogoutRequest;
+
+// The server may send a GoodBye packet to inform the client a reason for termination of the connection just before it terminates the connection
+typedef struct _GoodbyePacket (UINT16 sesm_packet_length) where (sesm_packet_length >= 2) {
+  UINT8 goodbye_reason;                                    // byte 0
+  UINT8 logout_text[(((UINT32) sesm_packet_length) - 2)];
+} GoodbyePacket;
+
+// A Test packet can be sent by either side of a SesM connection at anytime; Test packets are intended to provide human readable text that may aid in debugging problems
+typedef struct _TestPacket (UINT16 sesm_packet_length) where (sesm_packet_length >= 1) {
+  UINT8 test_text[(((UINT32) sesm_packet_length) - 1)];
+} TestPacket;
+
+// Branch
+casetype _SesmPayload (UINT8 selector, UINT32 length, UINT32 length_2, UINT16 sesm_packet_length, UINT32 available) {
+  switch (selector) {
+    case 0x53: SequencedDataPacket(length) sequenced_data_packet[:byte-size-single-element-array length];
+    case 0x55: UnsequencedDataPacket(length_2) unsequenced_data_packet[:byte-size-single-element-array length_2];
+    case 0x4C: LoginRequest login_request;
+    case 0x52: LoginResponse login_response;
+    case 0x43: unit synchronization_complete;
+    case 0x41: RetransmissionRequest retransmission_request;
+    case 0x58: LogoutRequest(sesm_packet_length) logout_request;
+    case 0x47: GoodbyePacket(sesm_packet_length) goodbye_packet;
+    case 0x45: unit end_of_session;
+    case 0x30: unit server_heartbeat;
+    case 0x31: unit client_heartbeat;
+    case 0x54: TestPacket(sesm_packet_length) test_packet;
+    default: UINT8 unknown[available];
+  }
+} SesmPayload;
+
+// SesM Tcp Packet
+typedef struct _SesmTcpPacket {
+  UINT16 sesm_packet_length { sesm_packet_length >= 1 };                                                                                                                                                                                                           // bytes 0 to 1
+  UINT8 sesm_packet_type;                                                                                                                                                                                                                                          // byte 2
+  SesmPayload(sesm_packet_type, (((UINT32) sesm_packet_length) - 1), (((UINT32) sesm_packet_length) - 1), sesm_packet_length, ((((UINT32) sesm_packet_length) + 2) - 3)) sesm_payload[:byte-size-single-element-array ((((UINT32) sesm_packet_length) + 2) - 3)];
+} SesmTcpPacket;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// SesM Packet
+entrypoint typedef struct _Packet (UINT32 available) {
+  SesmTcpPacket sesm_tcp_packet[:byte-size available];
+} Packet;
 

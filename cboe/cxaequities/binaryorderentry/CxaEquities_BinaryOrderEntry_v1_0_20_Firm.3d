@@ -1,37 +1,156 @@
-// Chicago Board Options Exchange Binary Order Entry
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Cboe CxaEquities BinaryOrderEntry Boe3 v1.0.20
 //
+// Protocol:
+//   Organization: Chicago Board Options Exchange
+//   Protocol: Binary Order Entry
+//   Encoding: Binary Order Entry 3
+//   Version: 1.0.20
+//   Date: 05/22/2026
+//   Specification: CXA Equities BOEv3 Specification.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, FirmPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out CxaEquities_BinaryOrderEntry_v1_0_20_Firm.3d
-//
-// What this definition does not state, and the model does:
-// - a Reassemble rule
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Firm Message Header: 12 bytes -------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Message header of a packet sent by the firm
-entrypoint typedef struct _FirmMessageHeader {
-  UINT16 start_of_message;   // bytes 0 to 1
-  UINT16 message_length;     // bytes 2 to 3
-  UINT16 firm_message_type;  // bytes 4 to 5
-  UINT8 matching_unit;       // byte 6
-  UINT8 reserved_field;      // byte 7
-  UINT32 sequence_number;    // bytes 8 to 11
-} FirmMessageHeader;
+// Firm Message Type: 2 byte code
+#define FIRM_MESSAGE_TYPE_LOGIN_REQUEST_MESSAGE 0x0001         // Login Request Message
+#define FIRM_MESSAGE_TYPE_LOGOUT_REQUEST_MESSAGE 0x0002        // Logout Request Message
+#define FIRM_MESSAGE_TYPE_CLIENT_HEARTBEAT_MESSAGE 0x0003      // Client Heartbeat Message
+#define FIRM_MESSAGE_TYPE_NEW_ORDER_AU_EQUITIES_V_1 0x0BB9     // New Order Au Equities V 1
+#define FIRM_MESSAGE_TYPE_NEW_ORDER_AU_EQUITIES_V_2 0x0BBD     // New Order Au Equities V 2
+#define FIRM_MESSAGE_TYPE_MODIFY_ORDER_AU_EQUITIES_V_1 0x0BBA  // Modify Order Au Equities V 1
+#define FIRM_MESSAGE_TYPE_MODIFY_ORDER_AU_EQUITIES_V_2 0x0BBE  // Modify Order Au Equities V 2
+#define FIRM_MESSAGE_TYPE_CANCEL_ORDER_AU_EQUITIES_V_1 0x0BBB  // Cancel Order Au Equities V 1
+#define FIRM_MESSAGE_TYPE_PURGE_ORDERS_AU_EQUITIES_V_1 0x0BBC  // Purge Orders Au Equities V 1
 
-// ---- New Order Au Equities V 1: 160 bytes ------------------------------------
+// Replay Unspecified Unit: one byte code
+#define REPLAY_UNSPECIFIED_UNIT_FAIL_IF_UNIT_NOT_SPECIFIED 0x46             // Fail If Unit Not Specified
+#define REPLAY_UNSPECIFIED_UNIT_REPLAY_ANY_UNSPECIFIED_UNIT_FROM_ZERO 0x52  // Replay Any Unspecified Unit From Zero
+#define REPLAY_UNSPECIFIED_UNIT_SKIP_REPLAY_OF_UNSPECIFIED_UNITS 0x53       // Skip Replay Of Unspecified Units
+
+// Exec Inst: one byte code
+#define EXEC_INST_MARKET_PEG 0x50      // Market Peg
+#define EXEC_INST_PRIMARY_PEG 0x52     // Primary Peg
+#define EXEC_INST_MIDPOINT 0x4D        // Midpoint
+#define EXEC_INST_BEST_X_ORDER 0x6A    // Best X Order
+#define EXEC_INST_MARKET_X_ORDER 0x6B  // Market X Order
+
+// Ord Type: one byte code
+#define ORD_TYPE_LIMIT 0x32                // Limit
+#define ORD_TYPE_MARKET_ON_CLOSE_MOC 0x35  // Market On Close Moc
+#define ORD_TYPE_PEGGED 0x50               // Pegged
+
+// Capacity: one byte code
+#define CAPACITY_AGENCY 0x41     // Agency
+#define CAPACITY_PRINCIPAL 0x50  // Principal
+#define CAPACITY_MIXED 0x58      // Mixed
+
+// Side: one byte code
+#define SIDE_BUY 0x31         // Buy
+#define SIDE_SELL 0x32        // Sell
+#define SIDE_SELL_SHORT 0x35  // Sell Short
+
+// Time In Force: one byte code
+#define TIME_IN_FORCE_DAY_DEFAULT 0x30           // Day Default
+#define TIME_IN_FORCE_GTC_GOOD_TILL_CANCEL 0x31  // Gtc Good Till Cancel
+#define TIME_IN_FORCE_IOC 0x33                   // Ioc
+#define TIME_IN_FORCE_FOK 0x34                   // Fok
+#define TIME_IN_FORCE_GTD 0x36                   // Gtd
+
+// Undisclosed: one byte code
+#define UNDISCLOSED_TRUE 0x59   // True
+#define UNDISCLOSED_FALSE 0x4E  // False
+
+// No Trade Feat: one byte code
+#define NO_TRADE_FEAT_NO_SELF_TRADE_PROTECTION 0x55                       // No Self Trade Protection
+#define NO_TRADE_FEAT_CANCEL_NEWEST 0x4E                                  // Cancel Newest
+#define NO_TRADE_FEAT_CANCEL_OLDEST 0x4F                                  // Cancel Oldest
+#define NO_TRADE_FEAT_CANCEL_BOTH 0x42                                    // Cancel Both
+#define NO_TRADE_FEAT_CANCEL_SMALLEST 0x53                                // Cancel Smallest
+#define NO_TRADE_FEAT_DECREMENT_LARGER_CANCEL_SMALLER 0x44                // Decrement Larger Cancel Smaller
+#define NO_TRADE_FEAT_SAME_AS_D_ABOVE_BUT_ONLY_DECREMENT_LEAVES_QTY 0x64  // Same As D Above But Only Decrement Leaves Qty
+#define NO_TRADE_FEAT_BOOKING_PURPOSE_TRADE 0x58                          // Booking Purpose Trade
+
+// Meqse: one byte code
+#define MEQSE_TRUE 0x59   // True
+#define MEQSE_FALSE 0x4E  // False
+
+// Directed Wholesale Indicator: one byte code
+#define DIRECTED_WHOLESALE_INDICATOR_TRUE 0x59   // True
+#define DIRECTED_WHOLESALE_INDICATOR_FALSE 0x4E  // False
+
+// Remove Crossing From Clearing: one byte code
+#define REMOVE_CROSSING_FROM_CLEARING_TRUE 0x59   // True
+#define REMOVE_CROSSING_FROM_CLEARING_FALSE 0x4E  // False
+
+// Broker Preferencing: one byte code
+#define BROKER_PREFERENCING_MATCH_WITH_OTHER_ORDERS_USING_BROKER_PREFERENCING_WHEN_POSSIBLE 0x59  // Match With Other Orders Using Broker Preferencing When Possible
+#define BROKER_PREFERENCING_DO_NOT_APPLY_BROKER_PREFERENCING 0x4E                                 // Do Not Apply Broker Preferencing
+
+// Routing Inst: one byte code
+#define ROUTING_INST_POST_ONLY_NEVER_TAKE_LIQUIDITY 0x50  // Post Only Never Take Liquidity
+#define ROUTING_INST_FOCUSED_NEARPOINT 0x46               // Focused Nearpoint
+
+// Display Indicator: one byte code
+#define DISPLAY_INDICATOR_POST_ONLY_ORDERS_WHICH_WOULD_LOCK_THE_NBBO_ON_ENTRY_ARE_ALLOWED_TO_DO_SO 0x56   // Post Only Orders Which Would Lock The Nbbo On Entry Are Allowed To Do So
+#define DISPLAY_INDICATOR_CANCEL_BACK_A_POST_ONLY_ORDER_ON_ENTRY_IF_IT_WERE_TO_CREATE_A_LOCKED_NBBO 0x52  // Cancel Back A Post Only Order On Entry If It Were To Create A Locked Nbbo
+
+// Cancel Orig On Reject: one byte code
+#define CANCEL_ORIG_ON_REJECT_CANCEL_ORIGINAL_ORDER_IF_MODIFICATION_FAILS 0x59  // Cancel Original Order If Modification Fails
+#define CANCEL_ORIG_ON_REJECT_LEAVE_ORIGINAL_ORDER_ALONE 0x4E                   // Leave Original Order Alone
+
+// ---- Types -------------------------------------------------------------------
+
+// Unit Sequence
+typedef struct _UnitSequence {
+  UINT8 unit_number;       // byte 0
+  UINT32 sequence_number;  // bytes 1 to 4
+} UnitSequence;
+
+// A Login Request message must be sent as the first message upon connection
+typedef struct _LoginRequestMessage {
+  UINT8 session_id[4];                                                      // bytes 0 to 3
+  UINT8 session_sub_id[4];                                                  // bytes 4 to 7
+  UINT8 password[10];                                                       // bytes 8 to 17
+  UINT8 replay_unspecified_unit;                                            // byte 18
+  UINT8 number_of_units;                                                    // byte 19
+  UnitSequence unit_sequence[:byte-size (((UINT32) number_of_units) * 5)];
+} LoginRequestMessage;
 
 // Submission of a new order to Cboe Australia
-entrypoint typedef struct _NewOrderAuEquitiesV1 {
+typedef struct _NewOrderAuEquitiesV1 {
   UINT8 account[10];                    // bytes 0 to 9
   UINT16 trading_participant_id;        // bytes 10 to 11
   UINT8 cl_ord_id[20];                  // bytes 12 to 31
@@ -64,10 +183,8 @@ entrypoint typedef struct _NewOrderAuEquitiesV1 {
   UINT8 broker_preferencing;            // byte 159
 } NewOrderAuEquitiesV1;
 
-// ---- New Order Au Equities V 2: 166 bytes ------------------------------------
-
 // Submission of a new order to Cboe Australia, with Post Only and multi-day order fields
-entrypoint typedef struct _NewOrderAuEquitiesV2 {
+typedef struct _NewOrderAuEquitiesV2 {
   UINT8 account[10];                    // bytes 0 to 9
   UINT16 trading_participant_id;        // bytes 10 to 11
   UINT8 cl_ord_id[20];                  // bytes 12 to 31
@@ -103,10 +220,8 @@ entrypoint typedef struct _NewOrderAuEquitiesV2 {
   UINT32 expire_date;                   // bytes 162 to 165
 } NewOrderAuEquitiesV2;
 
-// ---- Modify Order Au Equities V 1: 76 bytes ----------------------------------
-
 // Request to modify an order
-entrypoint typedef struct _ModifyOrderAuEquitiesV1 {
+typedef struct _ModifyOrderAuEquitiesV1 {
   UINT16 trading_participant_id;  // bytes 0 to 1
   UINT8 cl_ord_id[20];            // bytes 2 to 21
   UINT8 exec_inst;                // byte 22
@@ -121,10 +236,8 @@ entrypoint typedef struct _ModifyOrderAuEquitiesV1 {
   UINT8 cancel_orig_on_reject;    // byte 75
 } ModifyOrderAuEquitiesV1;
 
-// ---- Modify Order Au Equities V 2: 80 bytes ----------------------------------
-
 // Request to modify an order, with ExpireDate for multi-day orders
-entrypoint typedef struct _ModifyOrderAuEquitiesV2 {
+typedef struct _ModifyOrderAuEquitiesV2 {
   UINT16 trading_participant_id;  // bytes 0 to 1
   UINT8 cl_ord_id[20];            // bytes 2 to 21
   UINT8 exec_inst;                // byte 22
@@ -140,11 +253,49 @@ entrypoint typedef struct _ModifyOrderAuEquitiesV2 {
   UINT32 expire_date;             // bytes 76 to 79
 } ModifyOrderAuEquitiesV2;
 
-// ---- Cancel Order Au Equities V 1: 22 bytes ----------------------------------
-
 // Request to cancel a single order
-entrypoint typedef struct _CancelOrderAuEquitiesV1 {
+typedef struct _CancelOrderAuEquitiesV1 {
   UINT16 trading_participant_id;  // bytes 0 to 1
   UINT8 orig_cl_ord_id[20];       // bytes 2 to 21
 } CancelOrderAuEquitiesV1;
+
+// Request to cancel a group of orders across all of the participant's sessions
+typedef struct _PurgeOrdersAuEquitiesV1 {
+  UINT16 trading_participant_id;                                        // bytes 0 to 1
+  UINT8 mass_cancel_inst[16];                                           // bytes 2 to 17
+  UINT8 mass_cancel_id[20];                                             // bytes 18 to 37
+  UINT8 symbol[6];                                                      // bytes 38 to 43
+  UINT8 target_matching_unit;                                           // byte 44
+  UINT8 risk_group_id_cnt;                                              // byte 45
+  UINT16 risk_group_id[:byte-size (((UINT32) risk_group_id_cnt) * 2)];
+} PurgeOrdersAuEquitiesV1;
+
+// Branch
+casetype _FirmMessage (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x0001: LoginRequestMessage login_request_message;
+    case 0x0002: unit logout_request;
+    case 0x0003: unit client_heartbeat;
+    case 0x0BB9: NewOrderAuEquitiesV1 new_order_au_equities_v_1;
+    case 0x0BBD: NewOrderAuEquitiesV2 new_order_au_equities_v_2;
+    case 0x0BBA: ModifyOrderAuEquitiesV1 modify_order_au_equities_v_1;
+    case 0x0BBE: ModifyOrderAuEquitiesV2 modify_order_au_equities_v_2;
+    case 0x0BBB: CancelOrderAuEquitiesV1 cancel_order_au_equities_v_1;
+    case 0x0BBC: PurgeOrdersAuEquitiesV1 purge_orders_au_equities_v_1;
+    default: UINT8 unknown[available];
+  }
+} FirmMessage;
+
+// ---- Packet: FirmPacket ------------------------------------------------------
+
+// Binary Order Entry Tcp Packet sent by the firm
+entrypoint typedef struct _FirmPacket (UINT32 available) where (available >= 12) {
+  UINT16 start_of_message;                                                                                          // bytes 0 to 1
+  UINT16 message_length;                                                                                            // bytes 2 to 3
+  UINT16 firm_message_type;                                                                                         // bytes 4 to 5
+  UINT8 matching_unit;                                                                                              // byte 6
+  UINT8 reserved_field;                                                                                             // byte 7
+  UINT32 sequence_number;                                                                                           // bytes 8 to 11
+  FirmMessage(firm_message_type, (available - 12)) firm_message[:byte-size-single-element-array (available - 12)];
+} FirmPacket;
 

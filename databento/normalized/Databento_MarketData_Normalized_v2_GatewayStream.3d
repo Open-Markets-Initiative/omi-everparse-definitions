@@ -1,5 +1,34 @@
-// Databento Normalized
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Databento Normalized Dbn v2
 //
+// Protocol:
+//   Organization: Databento
+//   Protocol: Normalized
+//   Encoding: Databento Binary Encoding
+//   Version: 2
+//   Date: 10/4/2026
+//   Specification: databento-binary-encoding.html
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
 // writes a C validator for each record below and proves, of that C, that it reads no byte
 // outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
@@ -7,6 +36,8 @@
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out Databento_MarketData_Normalized_v2_GatewayStream.3d
 //
@@ -16,15 +47,254 @@
 // - a run filling what frames it
 // - a field read in bits
 // - a run of a stated number of entries
-//
-// License: MIT No Attribution
+// - the packet as a whole, which is a field read inside a framed, counted or optional group and used outside it, at gatewaystream.metadata.tsout
+
+// ---- Values ------------------------------------------------------------------
+
+// Rtype: one byte code
+#define RTYPE_MARKET_BY_PRICE_0 0x00               // Market By Price 0
+#define RTYPE_MARKET_BY_PRICE_1 0x01               // Market By Price 1
+#define RTYPE_MARKET_BY_PRICE_10 0x0A              // Market By Price 10
+#define RTYPE_OHLCV_DEPRECATED 0x11                // Ohlcv Deprecated
+#define RTYPE_STATUS 0x12                          // Status
+#define RTYPE_INSTRUMENT_DEFINITION 0x13           // Instrument Definition
+#define RTYPE_IMBALANCE 0x14                       // Imbalance
+#define RTYPE_ERROR 0x15                           // Error
+#define RTYPE_SYMBOL_MAPPING 0x16                  // Symbol Mapping
+#define RTYPE_SYSTEM 0x17                          // System
+#define RTYPE_STATISTICS 0x18                      // Statistics
+#define RTYPE_OHLCV_1_SECOND 0x20                  // Ohlcv 1 Second
+#define RTYPE_OHLCV_1_MINUTE 0x21                  // Ohlcv 1 Minute
+#define RTYPE_OHLCV_1_HOUR 0x22                    // Ohlcv 1 Hour
+#define RTYPE_OHLCV_1_DAY 0x23                     // Ohlcv 1 Day
+#define RTYPE_OHLCV_END_OF_DAY 0x24                // Ohlcv End Of Day
+#define RTYPE_MARKET_BY_ORDER 0xA0                 // Market By Order
+#define RTYPE_CONSOLIDATED_MARKET_BY_PRICE_1 0xB1  // Consolidated Market By Price 1
+#define RTYPE_CONSOLIDATED_BBO_1_SECOND 0xC0       // Consolidated Bbo 1 Second
+#define RTYPE_CONSOLIDATED_BBO_1_MINUTE 0xC1       // Consolidated Bbo 1 Minute
+#define RTYPE_TRADE_WITH_CONSOLIDATED_BBO 0xC2     // Trade With Consolidated Bbo
+#define RTYPE_BBO_1_SECOND 0xC3                    // Bbo 1 Second
+#define RTYPE_BBO_1_MINUTE 0xC4                    // Bbo 1 Minute
+
+// Status Action: 2 byte code
+#define STATUS_ACTION_NONE 0x0000                       // None
+#define STATUS_ACTION_PRE_OPEN 0x0001                   // Pre Open
+#define STATUS_ACTION_PRE_CROSS 0x0002                  // Pre Cross
+#define STATUS_ACTION_QUOTING 0x0003                    // Quoting
+#define STATUS_ACTION_CROSS 0x0004                      // Cross
+#define STATUS_ACTION_ROTATION 0x0005                   // Rotation
+#define STATUS_ACTION_NEW_PRICE_INDICATION 0x0006       // New Price Indication
+#define STATUS_ACTION_TRADING 0x0007                    // Trading
+#define STATUS_ACTION_HALT 0x0008                       // Halt
+#define STATUS_ACTION_PAUSE 0x0009                      // Pause
+#define STATUS_ACTION_SUSPEND 0x000A                    // Suspend
+#define STATUS_ACTION_PRE_CLOSE 0x000B                  // Pre Close
+#define STATUS_ACTION_CLOSE 0x000C                      // Close
+#define STATUS_ACTION_POST_CLOSE 0x000D                 // Post Close
+#define STATUS_ACTION_SSR_CHANGE 0x000E                 // Ssr Change
+#define STATUS_ACTION_NOT_AVAILABLE_FOR_TRADING 0x000F  // Not Available For Trading
+
+// Status Reason: 2 byte code
+#define STATUS_REASON_NONE 0x0000                              // None
+#define STATUS_REASON_SCHEDULED 0x0001                         // Scheduled
+#define STATUS_REASON_SURVEILLANCE_INTERVENTION 0x0002         // Surveillance Intervention
+#define STATUS_REASON_MARKET_EVENT 0x0003                      // Market Event
+#define STATUS_REASON_INSTRUMENT_ACTIVATION 0x0004             // Instrument Activation
+#define STATUS_REASON_INSTRUMENT_EXPIRATION 0x0005             // Instrument Expiration
+#define STATUS_REASON_RECOVERY_IN_PROCESS 0x0006               // Recovery In Process
+#define STATUS_REASON_REGULATORY 0x000A                        // Regulatory
+#define STATUS_REASON_ADMINISTRATIVE 0x000B                    // Administrative
+#define STATUS_REASON_NON_COMPLIANCE 0x000C                    // Non Compliance
+#define STATUS_REASON_FILINGS_NOT_CURRENT 0x000D               // Filings Not Current
+#define STATUS_REASON_SEC_TRADING_SUSPENSION 0x000E            // Sec Trading Suspension
+#define STATUS_REASON_NEW_ISSUE 0x000F                         // New Issue
+#define STATUS_REASON_ISSUE_AVAILABLE 0x0010                   // Issue Available
+#define STATUS_REASON_ISSUES_REVIEWED 0x0011                   // Issues Reviewed
+#define STATUS_REASON_FILING_REQS_SATISFIED 0x0012             // Filing Reqs Satisfied
+#define STATUS_REASON_NEWS_PENDING 0x001E                      // News Pending
+#define STATUS_REASON_NEWS_RELEASED 0x001F                     // News Released
+#define STATUS_REASON_NEWS_AND_RESUMPTION_TIMES 0x0020         // News And Resumption Times
+#define STATUS_REASON_NEWS_NOT_FORTHCOMING 0x0021              // News Not Forthcoming
+#define STATUS_REASON_ORDER_IMBALANCE 0x0028                   // Order Imbalance
+#define STATUS_REASON_LULD_PAUSE 0x0032                        // Luld Pause
+#define STATUS_REASON_OPERATIONAL 0x003C                       // Operational
+#define STATUS_REASON_ADDITIONAL_INFORMATION_REQUESTED 0x0046  // Additional Information Requested
+#define STATUS_REASON_MERGER_EFFECTIVE 0x0050                  // Merger Effective
+#define STATUS_REASON_ETF 0x005A                               // Etf
+#define STATUS_REASON_CORPORATE_ACTION 0x0064                  // Corporate Action
+#define STATUS_REASON_NEW_SECURITY_OFFERING 0x006E             // New Security Offering
+#define STATUS_REASON_MARKET_WIDE_HALT_LEVEL1 0x0078           // Market Wide Halt Level1
+#define STATUS_REASON_MARKET_WIDE_HALT_LEVEL2 0x0079           // Market Wide Halt Level2
+#define STATUS_REASON_MARKET_WIDE_HALT_LEVEL3 0x007A           // Market Wide Halt Level3
+#define STATUS_REASON_MARKET_WIDE_HALT_CARRYOVER 0x007B        // Market Wide Halt Carryover
+#define STATUS_REASON_MARKET_WIDE_HALT_RESUMPTION 0x007C       // Market Wide Halt Resumption
+#define STATUS_REASON_QUOTATION_NOT_AVAILABLE 0x0082           // Quotation Not Available
+
+// Trading Event: 2 byte code
+#define TRADING_EVENT_NONE 0x0000                    // None
+#define TRADING_EVENT_NO_CANCEL 0x0001               // No Cancel
+#define TRADING_EVENT_CHANGE_TRADING_SESSION 0x0002  // Change Trading Session
+#define TRADING_EVENT_IMPLIED_MATCHING_ON 0x0003     // Implied Matching On
+#define TRADING_EVENT_IMPLIED_MATCHING_OFF 0x0004    // Implied Matching Off
+
+// Is Trading: one byte code
+#define IS_TRADING_NOT_AVAILABLE 0x7E  // Not Available
+#define IS_TRADING_NO 0x4E             // No
+#define IS_TRADING_YES 0x59            // Yes
+
+// Is Quoting: one byte code
+#define IS_QUOTING_NOT_AVAILABLE 0x7E  // Not Available
+#define IS_QUOTING_NO 0x4E             // No
+#define IS_QUOTING_YES 0x59            // Yes
+
+// Is Short Sell Restricted: one byte code
+#define IS_SHORT_SELL_RESTRICTED_NOT_AVAILABLE 0x7E  // Not Available
+#define IS_SHORT_SELL_RESTRICTED_NO 0x4E             // No
+#define IS_SHORT_SELL_RESTRICTED_YES 0x59            // Yes
+
+// Instrument Class: one byte code
+#define INSTRUMENT_CLASS_BOND 0x42            // Bond
+#define INSTRUMENT_CLASS_CALL 0x43            // Call
+#define INSTRUMENT_CLASS_FUTURE 0x46          // Future
+#define INSTRUMENT_CLASS_INDEX 0x49           // Index
+#define INSTRUMENT_CLASS_STOCK 0x4B           // Stock
+#define INSTRUMENT_CLASS_MIXED_SPREAD 0x4D    // Mixed Spread
+#define INSTRUMENT_CLASS_PUT 0x50             // Put
+#define INSTRUMENT_CLASS_FUTURE_SPREAD 0x53   // Future Spread
+#define INSTRUMENT_CLASS_OPTION_SPREAD 0x54   // Option Spread
+#define INSTRUMENT_CLASS_FX_SPOT 0x58         // Fx Spot
+#define INSTRUMENT_CLASS_COMMODITY_SPOT 0x59  // Commodity Spot
+
+// Match Algorithm: one byte code
+#define MATCH_ALGORITHM_UNDEFINED 0x20                     // Undefined
+#define MATCH_ALGORITHM_ALLOCATION 0x41                    // Allocation
+#define MATCH_ALGORITHM_PRO_RATA 0x43                      // Pro Rata
+#define MATCH_ALGORITHM_FIFO 0x46                          // Fifo
+#define MATCH_ALGORITHM_CONFIGURABLE 0x4B                  // Configurable
+#define MATCH_ALGORITHM_THRESHOLD_PRO_RATA 0x4F            // Threshold Pro Rata
+#define MATCH_ALGORITHM_TIME_PRO_RATA 0x50                 // Time Pro Rata
+#define MATCH_ALGORITHM_THRESHOLD_PRO_RATA_LMM 0x51        // Threshold Pro Rata Lmm
+#define MATCH_ALGORITHM_FIFO_TOP_LMM 0x53                  // Fifo Top Lmm
+#define MATCH_ALGORITHM_FIFO_LMM 0x54                      // Fifo Lmm
+#define MATCH_ALGORITHM_INSTITUTIONAL_PRIORITIZATION 0x56  // Institutional Prioritization
+#define MATCH_ALGORITHM_EURODOLLAR_FUTURES 0x59            // Eurodollar Futures
+
+// Security Update Action: one byte code
+#define SECURITY_UPDATE_ACTION_ADD 0x41      // Add
+#define SECURITY_UPDATE_ACTION_DELETE 0x44   // Delete
+#define SECURITY_UPDATE_ACTION_MODIFY 0x4D   // Modify
+#define SECURITY_UPDATE_ACTION_INVALID 0x7E  // Invalid
+
+// User Defined Instrument: one byte code
+#define USER_DEFINED_INSTRUMENT_NO 0x4E   // No
+#define USER_DEFINED_INSTRUMENT_YES 0x59  // Yes
+
+// Side: one byte code
+#define SIDE_ASK 0x41   // Ask
+#define SIDE_BID 0x42   // Bid
+#define SIDE_NONE 0x4E  // None
+
+// Unpaired Side: one byte code
+#define UNPAIRED_SIDE_ASK 0x41   // Ask
+#define UNPAIRED_SIDE_BID 0x42   // Bid
+#define UNPAIRED_SIDE_NONE 0x4E  // None
+
+// Error Code: one byte code
+#define ERROR_CODE_AUTH_FAILED 0x01                         // Auth Failed
+#define ERROR_CODE_API_KEY_DEACTIVATED 0x02                 // Api Key Deactivated
+#define ERROR_CODE_CONNECTION_LIMIT_EXCEEDED 0x03           // Connection Limit Exceeded
+#define ERROR_CODE_SYMBOL_RESOLUTION_FAILED 0x04            // Symbol Resolution Failed
+#define ERROR_CODE_INVALID_SUBSCRIPTION 0x05                // Invalid Subscription
+#define ERROR_CODE_INTERNAL_ERROR 0x06                      // Internal Error
+#define ERROR_CODE_SKIPPED_RECORDS_AFTER_SLOW_READING 0x07  // Skipped Records After Slow Reading
+#define ERROR_CODE_REPLAY_DATA_AGED_OUT 0x08                // Replay Data Aged Out
+#define ERROR_CODE_UNSET 0xFF                               // Unset
+
+// Stype In: one byte code
+#define STYPE_IN_INSTRUMENT_ID 0x00    // Instrument Id
+#define STYPE_IN_RAW_SYMBOL 0x01       // Raw Symbol
+#define STYPE_IN_SMART 0x02            // Smart
+#define STYPE_IN_CONTINUOUS 0x03       // Continuous
+#define STYPE_IN_PARENT 0x04           // Parent
+#define STYPE_IN_NASDAQ_SYMBOL 0x05    // Nasdaq Symbol
+#define STYPE_IN_CMS_SYMBOL 0x06       // Cms Symbol
+#define STYPE_IN_ISIN 0x07             // Isin
+#define STYPE_IN_US_CODE 0x08          // Us Code
+#define STYPE_IN_BBG_COMP_ID 0x09      // Bbg Comp Id
+#define STYPE_IN_BBG_COMP_TICKER 0x0A  // Bbg Comp Ticker
+#define STYPE_IN_FIGI 0x0B             // Figi
+#define STYPE_IN_FIGI_TICKER 0x0C      // Figi Ticker
+#define STYPE_IN_LISTING_ID 0x0D       // Listing Id
+#define STYPE_IN_ISSUER_ID 0x0E        // Issuer Id
+#define STYPE_IN_SECURITY_ID 0x0F      // Security Id
+
+// Stype Out: one byte code
+#define STYPE_OUT_INSTRUMENT_ID 0x00    // Instrument Id
+#define STYPE_OUT_RAW_SYMBOL 0x01       // Raw Symbol
+#define STYPE_OUT_SMART 0x02            // Smart
+#define STYPE_OUT_CONTINUOUS 0x03       // Continuous
+#define STYPE_OUT_PARENT 0x04           // Parent
+#define STYPE_OUT_NASDAQ_SYMBOL 0x05    // Nasdaq Symbol
+#define STYPE_OUT_CMS_SYMBOL 0x06       // Cms Symbol
+#define STYPE_OUT_ISIN 0x07             // Isin
+#define STYPE_OUT_US_CODE 0x08          // Us Code
+#define STYPE_OUT_BBG_COMP_ID 0x09      // Bbg Comp Id
+#define STYPE_OUT_BBG_COMP_TICKER 0x0A  // Bbg Comp Ticker
+#define STYPE_OUT_FIGI 0x0B             // Figi
+#define STYPE_OUT_FIGI_TICKER 0x0C      // Figi Ticker
+#define STYPE_OUT_LISTING_ID 0x0D       // Listing Id
+#define STYPE_OUT_ISSUER_ID 0x0E        // Issuer Id
+#define STYPE_OUT_SECURITY_ID 0x0F      // Security Id
+
+// System Code: one byte code
+#define SYSTEM_CODE_HEARTBEAT 0x00            // Heartbeat
+#define SYSTEM_CODE_SUBSCRIPTION_ACK 0x01     // Subscription Ack
+#define SYSTEM_CODE_SLOW_READER_WARNING 0x02  // Slow Reader Warning
+#define SYSTEM_CODE_REPLAY_COMPLETED 0x03     // Replay Completed
+#define SYSTEM_CODE_END_OF_INTERVAL 0x04      // End Of Interval
+#define SYSTEM_CODE_UNSUBSCRIBE_ACK 0x05      // Unsubscribe Ack
+#define SYSTEM_CODE_UNSET 0xFF                // Unset
+
+// Stat Type: 2 byte code
+#define STAT_TYPE_OPENING_PRICE 0x0001                   // Opening Price
+#define STAT_TYPE_INDICATIVE_OPENING_PRICE 0x0002        // Indicative Opening Price
+#define STAT_TYPE_SETTLEMENT_PRICE 0x0003                // Settlement Price
+#define STAT_TYPE_TRADING_SESSION_LOW_PRICE 0x0004       // Trading Session Low Price
+#define STAT_TYPE_TRADING_SESSION_HIGH_PRICE 0x0005      // Trading Session High Price
+#define STAT_TYPE_CLEARED_VOLUME 0x0006                  // Cleared Volume
+#define STAT_TYPE_LOWEST_OFFER 0x0007                    // Lowest Offer
+#define STAT_TYPE_HIGHEST_BID 0x0008                     // Highest Bid
+#define STAT_TYPE_OPEN_INTEREST 0x0009                   // Open Interest
+#define STAT_TYPE_FIXING_PRICE 0x000A                    // Fixing Price
+#define STAT_TYPE_CLOSE_PRICE 0x000B                     // Close Price
+#define STAT_TYPE_NET_CHANGE 0x000C                      // Net Change
+#define STAT_TYPE_VWAP 0x000D                            // Vwap
+#define STAT_TYPE_VOLATILITY 0x000E                      // Volatility
+#define STAT_TYPE_DELTA 0x000F                           // Delta
+#define STAT_TYPE_UNCROSSING_PRICE 0x0010                // Uncrossing Price
+#define STAT_TYPE_UPPER_PRICE_LIMIT 0x0011               // Upper Price Limit
+#define STAT_TYPE_LOWER_PRICE_LIMIT 0x0012               // Lower Price Limit
+#define STAT_TYPE_BLOCK_VOLUME 0x0013                    // Block Volume
+#define STAT_TYPE_INDICATIVE_CLOSE_PRICE 0x0014          // Indicative Close Price
+#define STAT_TYPE_MWCB_LEVEL1 0x0015                     // Mwcb Level1
+#define STAT_TYPE_MWCB_LEVEL2 0x0016                     // Mwcb Level2
+#define STAT_TYPE_MWCB_LEVEL3 0x0017                     // Mwcb Level3
+#define STAT_TYPE_AUCTION_COLLAR_REFERENCE_PRICE 0x0018  // Auction Collar Reference Price
+#define STAT_TYPE_AUCTION_COLLAR_UPPER_PRICE 0x0019      // Auction Collar Upper Price
+#define STAT_TYPE_AUCTION_COLLAR_LOWER_PRICE 0x001A      // Auction Collar Lower Price
+#define STAT_TYPE_VENUE_SPECIFIC_VOLUME1 0x2711          // Venue Specific Volume1
+#define STAT_TYPE_VENUE_SPECIFIC_PRICE1 0x2712           // Venue Specific Price1
+
+// Update Action: one byte code
+#define UPDATE_ACTION_NEW 0x01     // New
+#define UPDATE_ACTION_DELETE 0x02  // Delete
 
 // ---- Record Header: 16 bytes -------------------------------------------------
 
 // DBN common header of every record
 entrypoint typedef struct _RecordHeader {
   UINT8 record_length;   // byte 0
-  UINT8 rtype;           // byte 1
+  UINT8 rtype;           // byte 1, values RTYPE_
   UINT16 publisher_id;   // bytes 2 to 3
   UINT32 instrument_id;  // bytes 4 to 7
   UINT64 ts_event;       // bytes 8 to 15
@@ -58,12 +328,12 @@ entrypoint typedef struct _OhlcvMsg {
 // A trading status update message; the record of the status schema
 entrypoint typedef struct _StatusMsg {
   UINT64 ts_recv;                  // bytes 0 to 7
-  UINT16 status_action;            // bytes 8 to 9
-  UINT16 status_reason;            // bytes 10 to 11
-  UINT16 trading_event;            // bytes 12 to 13
-  UINT8 is_trading;                // byte 14
-  UINT8 is_quoting;                // byte 15
-  UINT8 is_short_sell_restricted;  // byte 16
+  UINT16 status_action;            // bytes 8 to 9, values STATUS_ACTION_
+  UINT16 status_reason;            // bytes 10 to 11, values STATUS_REASON_
+  UINT16 trading_event;            // bytes 12 to 13, values TRADING_EVENT_
+  UINT8 is_trading;                // byte 14, values IS_TRADING_
+  UINT8 is_quoting;                // byte 15, values IS_QUOTING_
+  UINT8 is_short_sell_restricted;  // byte 16, values IS_SHORT_SELL_RESTRICTED_
   UINT8 reserved_7[7];             // bytes 17 to 23
 } StatusMsg;
 
@@ -115,19 +385,19 @@ entrypoint typedef struct _InstrumentDefMsg {
   UINT8 unit_of_measure[31];          // bytes 302 to 332
   UINT8 underlying[21];               // bytes 333 to 353
   UINT8 strike_price_currency[4];     // bytes 354 to 357
-  UINT8 instrument_class;             // byte 358
-  UINT8 match_algorithm;              // byte 359
+  UINT8 instrument_class;             // byte 358, values INSTRUMENT_CLASS_
+  UINT8 match_algorithm;              // byte 359, values MATCH_ALGORITHM_
   UINT8 md_security_trading_status;   // byte 360
   UINT8 main_fraction;                // byte 361
   UINT8 price_display_format;         // byte 362
   UINT8 settl_price_type;             // byte 363
   UINT8 sub_fraction;                 // byte 364
   UINT8 underlying_product;           // byte 365
-  UINT8 security_update_action;       // byte 366
+  UINT8 security_update_action;       // byte 366, values SECURITY_UPDATE_ACTION_
   UINT8 maturity_month;               // byte 367
   UINT8 maturity_day;                 // byte 368
   UINT8 maturity_week;                // byte 369
-  UINT8 user_defined_instrument;      // byte 370
+  UINT8 user_defined_instrument;      // byte 370, values USER_DEFINED_INSTRUMENT_
   UINT8 contract_multiplier_unit;     // byte 371, signed, read here as unsigned
   UINT8 flow_schedule_type;           // byte 372, signed, read here as unsigned
   UINT8 tick_rule;                    // byte 373
@@ -152,11 +422,11 @@ entrypoint typedef struct _ImbalanceMsg {
   UINT32 market_imbalance_qty;     // bytes 80 to 83
   UINT32 unpaired_qty;             // bytes 84 to 87
   UINT8 auction_type;              // byte 88
-  UINT8 side;                      // byte 89
+  UINT8 side;                      // byte 89, values SIDE_
   UINT8 auction_status;            // byte 90
   UINT8 freeze_status;             // byte 91
   UINT8 num_extensions;            // byte 92
-  UINT8 unpaired_side;             // byte 93
+  UINT8 unpaired_side;             // byte 93, values UNPAIRED_SIDE_
   UINT8 significant_imbalance;     // byte 94
   UINT8 reserved_1;                // byte 95
 } ImbalanceMsg;
@@ -166,7 +436,7 @@ entrypoint typedef struct _ImbalanceMsg {
 // An error message from the Databento Live Subscription Gateway (LSG)
 entrypoint typedef struct _ErrorMsg {
   UINT8 err[302];    // bytes 0 to 301
-  UINT8 error_code;  // byte 302
+  UINT8 error_code;  // byte 302, values ERROR_CODE_
   UINT8 is_last;     // byte 303
 } ErrorMsg;
 
@@ -174,9 +444,9 @@ entrypoint typedef struct _ErrorMsg {
 
 // A symbol mapping message, which maps a symbol of one SType to another
 entrypoint typedef struct _SymbolMappingMsg {
-  UINT8 stype_in;              // byte 0
+  UINT8 stype_in;              // byte 0, values STYPE_IN_
   UINT8 stype_in_symbol[71];   // bytes 1 to 71
-  UINT8 stype_out;             // byte 72
+  UINT8 stype_out;             // byte 72, values STYPE_OUT_
   UINT8 stype_out_symbol[71];  // bytes 73 to 143
   UINT64 start_ts;             // bytes 144 to 151
   UINT64 end_ts;               // bytes 152 to 159
@@ -187,7 +457,7 @@ entrypoint typedef struct _SymbolMappingMsg {
 // A non-error message from the Databento Live Subscription Gateway (LSG); also used for heartbeating
 entrypoint typedef struct _SystemMsg {
   UINT8 msg[303];     // bytes 0 to 302
-  UINT8 system_code;  // byte 303
+  UINT8 system_code;  // byte 303, values SYSTEM_CODE_
 } SystemMsg;
 
 // ---- Stat Msg: 48 bytes ------------------------------------------------------
@@ -200,9 +470,9 @@ entrypoint typedef struct _StatMsg {
   UINT32 quantity;      // bytes 24 to 27, signed, read here as unsigned
   UINT32 sequence;      // bytes 28 to 31
   UINT32 ts_in_delta;   // bytes 32 to 35, signed, read here as unsigned
-  UINT16 stat_type;     // bytes 36 to 37
+  UINT16 stat_type;     // bytes 36 to 37, values STAT_TYPE_
   UINT16 channel;       // bytes 38 to 39
-  UINT8 update_action;  // byte 40
+  UINT8 update_action;  // byte 40, values UPDATE_ACTION_
   UINT8 stat_flags;     // byte 41
   UINT8 reserved_6[6];  // bytes 42 to 47
 } StatMsg;

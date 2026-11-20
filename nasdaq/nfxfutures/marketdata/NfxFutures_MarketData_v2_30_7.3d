@@ -1,47 +1,92 @@
-// National Association of Securities Dealers Automated Quotations (Nasdaq) Genium INET Auxiliary Market Data
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nasdaq NfxFutures MarketData GeniumAmd v2.30.7
 //
+// Protocol:
+//   Organization: National Association of Securities Dealers Automated Quotations (Nasdaq)
+//   Protocol: Genium INET Auxiliary Market Data
+//   Encoding: Genium INET Auxiliary Market Data
+//   Version: 2.30.7
+//   Date: 11/17/2017
+//   Specification: Nasdaq AMD Market Data (2017-11).pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out NfxFutures_MarketData_v2_30_7.3d
-//
-// What this definition does not state, and the model does:
-// - the dispatch that chooses a message by its type
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 20 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Itch Mold Udp 64 Packet Header
-entrypoint typedef struct _PacketHeader {
-  UINT8 session[10];         // bytes 0 to 9
-  UINT64BE sequence_number;  // bytes 10 to 17
-  UINT16BE message_count;    // bytes 18 to 19
-} PacketHeader;
+// Financial Product: one byte code
+#define FINANCIAL_PRODUCT_NOT_APPLICABLE 0x00               // Not Applicable
+#define FINANCIAL_PRODUCT_OPTION 0x01                       // Option
+#define FINANCIAL_PRODUCT_FORWARD 0x02                      // Forward
+#define FINANCIAL_PRODUCT_FUTURE 0x03                       // Future
+#define FINANCIAL_PRODUCT_FRA 0x04                          // Fra
+#define FINANCIAL_PRODUCT_CASH 0x05                         // Cash
+#define FINANCIAL_PRODUCT_PAYMENT 0x06                      // Payment
+#define FINANCIAL_PRODUCT_EXCHANGE_RATE 0x07                // Exchange Rate
+#define FINANCIAL_PRODUCT_INTEREST_RATE_SWAP 0x08           // Interest Rate Swap
+#define FINANCIAL_PRODUCT_REPO 0x09                         // Repo
+#define FINANCIAL_PRODUCT_SYNTHETIC_BOX_LEG_REFERENCE 0x0A  // Synthetic Box Leg Reference
+#define FINANCIAL_PRODUCT_STANDARD_COMBINATION 0x0B         // Standard Combination
+#define FINANCIAL_PRODUCT_GUARANTEE 0x0C                    // Guarantee
+#define FINANCIAL_PRODUCT_OTC_GENERAL 0x0D                  // Otc General
+#define FINANCIAL_PRODUCT_EQUITY_WARRANT 0x0E               // Equity Warrant
+#define FINANCIAL_PRODUCT_SECURITY_LENDING 0x0F             // Security Lending
 
-// ---- Message Header: 3 bytes -------------------------------------------------
+// Put Or Call: one byte code
+#define PUT_OR_CALL_CALL 0x01  // Call
+#define PUT_OR_CALL_PUT 0x02   // Put
 
-// Mold Udp 64 Message Header
-entrypoint typedef struct _MessageHeader {
-  UINT16BE message_length;  // bytes 0 to 1
-  UINT8 message_type;       // byte 2
-} MessageHeader;
+// Strategy Subtype: one byte code
+#define STRATEGY_SUBTYPE_NOT_APPLICABLE 0x00  // Not Applicable
+#define STRATEGY_SUBTYPE_COVERED_OPTION 0x01  // Covered Option
 
-// ---- Seconds Message: 4 bytes ------------------------------------------------
+// Leg Side: one byte code
+#define LEG_SIDE_AS_DEFINED 0x42  // As Defined
+#define LEG_SIDE_OPPOSITE 0x43    // Opposite
 
-entrypoint typedef struct _SecondsMessage {
+// Trade Type: 2 byte code
+#define TRADE_TYPE_BLOCK_TRADE 0x0001            // Block Trade
+#define TRADE_TYPE_EXCHANGE_FOR_PHYSICAL 0x0002  // Exchange For Physical
+#define TRADE_TYPE_EXCHANGE_FOR_RISK 0x000B      // Exchange For Risk
+#define TRADE_TYPE_EXCHANGE_FOR_OPTIONS 0x000E   // Exchange For Options
+
+// ---- Types -------------------------------------------------------------------
+
+typedef struct _SecondsMessage {
   UINT32BE second;  // bytes 0 to 3
 } SecondsMessage;
 
-// ---- Order Book Directory: 135 bytes -----------------------------------------
-
-entrypoint typedef struct _OrderBookDirectory {
+typedef struct _OrderBookDirectory {
   UINT32BE timestamp_nanoseconds;                // bytes 0 to 3
   UINT32BE order_book_id;                        // bytes 4 to 7
   UINT8 symbol[32];                              // bytes 8 to 39
@@ -66,10 +111,8 @@ entrypoint typedef struct _OrderBookDirectory {
   UINT32BE minimum_quantity_and_multiple;        // bytes 131 to 134
 } OrderBookDirectory;
 
-// ---- Combination Order Book Leg: 29 bytes ------------------------------------
-
 // Combination Order book Directory Message
-entrypoint typedef struct _CombinationOrderBookLeg {
+typedef struct _CombinationOrderBookLeg {
   UINT32BE timestamp_nanoseconds;      // bytes 0 to 3
   UINT32BE combination_order_book_id;  // bytes 4 to 7
   UINT32BE leg_order_book_id;          // bytes 8 to 11
@@ -80,10 +123,8 @@ entrypoint typedef struct _CombinationOrderBookLeg {
   UINT32BE leg_quantity_future;        // bytes 25 to 28
 } CombinationOrderBookLeg;
 
-// ---- Tick Size Table Entry: 24 bytes -----------------------------------------
-
 // L - Tick Size Message.
-entrypoint typedef struct _TickSizeTableEntry {
+typedef struct _TickSizeTableEntry {
   UINT32BE timestamp_nanoseconds;  // bytes 0 to 3
   UINT32BE order_book_id;          // bytes 4 to 7
   UINT64BE tick_size;              // bytes 8 to 15, signed, read here as unsigned
@@ -91,24 +132,18 @@ entrypoint typedef struct _TickSizeTableEntry {
   UINT32BE price_to;               // bytes 20 to 23, signed, read here as unsigned
 } TickSizeTableEntry;
 
-// ---- System Event Message: 5 bytes -------------------------------------------
-
-entrypoint typedef struct _SystemEventMessage {
+typedef struct _SystemEventMessage {
   UINT32BE timestamp_nanoseconds;  // bytes 0 to 3
   UINT8 event_code;                // byte 4
 } SystemEventMessage;
 
-// ---- Order Book State Message: 28 bytes --------------------------------------
-
-entrypoint typedef struct _OrderBookStateMessage {
+typedef struct _OrderBookStateMessage {
   UINT32BE timestamp_nanoseconds;  // bytes 0 to 3
   UINT32BE order_book_id;          // bytes 4 to 7
   UINT8 state_name[20];            // bytes 8 to 27
 } OrderBookStateMessage;
 
-// ---- Reported Trade: 72 bytes ------------------------------------------------
-
-entrypoint typedef struct _ReportedTrade {
+typedef struct _ReportedTrade {
   UINT32BE timestamp_nanoseconds;        // bytes 0 to 3
   UINT32BE order_book_id;                // bytes 4 to 7
   UINT64BE traded_quantity;              // bytes 8 to 15
@@ -123,27 +158,72 @@ entrypoint typedef struct _ReportedTrade {
   UINT8 second_reserved[7];              // bytes 65 to 71
 } ReportedTrade;
 
-// ---- Broken Trade Message: 12 bytes ------------------------------------------
-
-entrypoint typedef struct _BrokenTradeMessage {
+typedef struct _BrokenTradeMessage {
   UINT32BE timestamp_nanoseconds;  // bytes 0 to 3
   UINT64BE match_id;               // bytes 4 to 11
 } BrokenTradeMessage;
 
-// ---- Open Interest Message: 16 bytes -----------------------------------------
-
-entrypoint typedef struct _OpenInterestMessage {
+typedef struct _OpenInterestMessage {
   UINT32BE timestamp_nanoseconds;  // bytes 0 to 3
   UINT32BE order_book_id;          // bytes 4 to 7
   UINT64BE open_interest;          // bytes 8 to 15
 } OpenInterestMessage;
 
-// ---- Price Message: 13 bytes -------------------------------------------------
-
-entrypoint typedef struct _PriceMessage {
+typedef struct _PriceMessage {
   UINT32BE timestamp_nanoseconds;  // bytes 0 to 3
   UINT8 price_type;                // byte 4
   UINT32BE order_book_id;          // bytes 5 to 8
   UINT32BE price;                  // bytes 9 to 12, signed, read here as unsigned
 } PriceMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x54: SecondsMessage seconds_message;
+    case 0x52: OrderBookDirectory order_book_directory;
+    case 0x4D: CombinationOrderBookLeg combination_order_book_leg;
+    case 0x4C: TickSizeTableEntry tick_size_table_entry;
+    case 0x53: SystemEventMessage system_event_message;
+    case 0x4F: OrderBookStateMessage order_book_state_message;
+    case 0x72: ReportedTrade reported_trade;
+    case 0x42: BrokenTradeMessage broken_trade_message;
+    case 0x6F: OpenInterestMessage open_interest_message;
+    case 0x70: PriceMessage price_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// Mold Udp64 Message
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16BE message_length { message_length >= 1 };                                                                                                                 // bytes 0 to 1
+  UINT8 message_type;                                                                                                                                              // byte 2
+  Payload(message_type, (((UINT32) message_length) - 1)) payload[:byte-size-single-element-array (((UINT32) message_length) - 1)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// Mold Udp64 Message
+typedef struct _MessageRun (UINT16 message_count, UINT32 available, mutable UINT32 * tally) {
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size available];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} MessageRun;
+
+// Branch
+casetype _Messages (UINT16 selector, UINT16 message_count, UINT32 available, mutable UINT32 * tally) {
+  switch (selector) {
+    case 0x0000: unit heartbeat;
+    case 0xFFFF: unit end_of_session;
+    default: MessageRun(message_count, available, tally) message;
+  }
+} Messages;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Itch Mold Udp 64 Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 20) {
+  UINT8 session[10];                                                                                                           // bytes 0 to 9
+  UINT64BE sequence_number;                                                                                                    // bytes 10 to 17
+  UINT16BE message_count;                                                                                                      // bytes 18 to 19
+  Messages(message_count, message_count, (available - 20), tally) messages[:byte-size-single-element-array (available - 20)];
+} Packet;
 

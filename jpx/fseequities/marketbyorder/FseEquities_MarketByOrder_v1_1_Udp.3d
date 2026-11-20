@@ -1,54 +1,127 @@
-// Japan Exchange Group Market By Order
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Jpx FseEquities MarketByOrder Flex v1.1
 //
+// Protocol:
+//   Organization: Japan Exchange Group
+//   Protocol: Market By Order
+//   Encoding: Flex
+//   Version: 1.1
+//   Date: 11/20/2024
+//   Specification: TSEarrowhead_FLEX_MarketbyOrderSpecifications_ver.1.1.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, UdpPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out FseEquities_MarketByOrder_v1_1_Udp.3d
-//
-// What this definition does not state, and the model does:
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 26 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Jpx Flex 26 byte packet header
-entrypoint typedef struct _PacketHeader {
-  UINT8 multicast_group_number;    // byte 0
-  UINT8 number_of_system_reboots;  // byte 1
-  UINT32BE sequence_number;        // bytes 2 to 5
-  UINT8 issue_code[12];            // bytes 6 to 17
-  UINT32BE update_number;          // bytes 18 to 21
-  UINT8 packet_number;             // byte 22
-  UINT8 total_number_of_packets;   // byte 23
-  UINT8 utility_flag;              // byte 24
-  UINT8 message_count;             // byte 25
-} PacketHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_SECONDS_TIMESTAMP_MESSAGE 0x54          // Seconds Timestamp Message
+#define MESSAGE_TYPE_TRADING_STATUS_MESSAGE 0x4F             // Trading Status Message
+#define MESSAGE_TYPE_EXECUTION_SUMMARY_MESSAGE 0x4B          // Execution Summary Message
+#define MESSAGE_TYPE_ADD_ORDER_MESSAGE 0x41                  // Add Order Message
+#define MESSAGE_TYPE_ORDER_EXECUTED_MESSAGE 0x45             // Order Executed Message
+#define MESSAGE_TYPE_ORDER_EXECUTED_WITH_PRICE_MESSAGE 0x43  // Order Executed With Price Message
+#define MESSAGE_TYPE_ORDER_DELETE_MESSAGE 0x44               // Order Delete Message
+#define MESSAGE_TYPE_RESET_MESSAGE 0x52                      // Reset Message
+#define MESSAGE_TYPE_COMMUNICATION_CONTROL_MESSAGE 0x4C      // Communication Control Message
 
-// ---- Message Header: 2 bytes -------------------------------------------------
+// Market Status: one byte code
+#define MARKET_STATUS_MORNING_SESSION_ORDER_ACCEPTANCE_TIME 0x0B    // Morning Session Order Acceptance Time
+#define MARKET_STATUS_MORNING_SESSION_TRADING_HOURS 0x0C            // Morning Session Trading Hours
+#define MARKET_STATUS_END_OF_MORNING_SESSION 0x13                   // End Of Morning Session
+#define MARKET_STATUS_AFTERNOON_SESSION_ORDER_ACCEPTANCE_TIME 0x15  // Afternoon Session Order Acceptance Time
+#define MARKET_STATUS_AFTERNOON_SESSION_TRADING_HOURS 0x16          // Afternoon Session Trading Hours
+#define MARKET_STATUS_AFTERNOON_SESSION_PRE_CLOSING 0x17            // Afternoon Session Pre Closing
+#define MARKET_STATUS_END_OF_AFTERNOON_SESSION 0x1D                 // End Of Afternoon Session
 
-// Jpx Flex tag header carrying length prefix and message type discriminator
-entrypoint typedef struct _MessageHeader {
-  UINT8 tag_length;    // byte 0
-  UINT8 message_type;  // byte 1
-} MessageHeader;
+// Short Selling Status: one byte code
+#define SHORT_SELLING_STATUS_SHORT_SELLING_REGULATION_IS_NOT_APPLIED 0x00  // Short Selling Regulation Is Not Applied
+#define SHORT_SELLING_STATUS_SHORT_SELLING_REGULATION_IS_APPLIED 0x01      // Short Selling Regulation Is Applied
 
-// ---- Seconds Timestamp Message: 4 bytes --------------------------------------
+// Pricing Method: one byte code
+#define PRICING_METHOD_ITAYOSE_METHOD 0x01                         // Itayose Method
+#define PRICING_METHOD_ZARABA_METHOD 0x02                          // Zaraba Method
+#define PRICING_METHOD_SELL_SPECIAL_QUOTE_DISPLAYED 0x03           // Sell Special Quote Displayed
+#define PRICING_METHOD_BUY_SPECIAL_QUOTE_DISPLAYED 0x04            // Buy Special Quote Displayed
+#define PRICING_METHOD_SELL_SEQUENTIAL_TRADE_QUOTE_DISPLAYED 0x05  // Sell Sequential Trade Quote Displayed
+#define PRICING_METHOD_BUY_SEQUENTIAL_TRADE_QUOTE_DISPLAYED 0x06   // Buy Sequential Trade Quote Displayed
+#define PRICING_METHOD_OTHER_THAN_THE_ABOVE 0x00                   // Other Than The Above
+
+// Triggered Side: one byte code
+#define TRIGGERED_SIDE_SELL_ORDER 0x53         // Sell Order
+#define TRIGGERED_SIDE_BUY_ORDER 0x42          // Buy Order
+#define TRIGGERED_SIDE_ITAYOSE_EXECUTION 0x20  // Itayose Execution
+
+// Side: one byte code
+#define SIDE_SELL_ORDER 0x53  // Sell Order
+#define SIDE_BUY_ORDER 0x42   // Buy Order
+
+// Order Condition: one byte code
+#define ORDER_CONDITION_NON_CONDITIONAL 0x00  // Non Conditional
+#define ORDER_CONDITION_ON_OPEN 0x02          // On Open
+#define ORDER_CONDITION_ON_CLOSE 0x04         // On Close
+#define ORDER_CONDITION_FUNARI 0x06           // Funari
+
+// Modification Flag: one byte code
+#define MODIFICATION_FLAG_CANCEL_ORDER_OR_MODIFICATION_ORDER_THAT_CHANGES_TIME_PRIORITY 0x00  // Cancel Order Or Modification Order That Changes Time Priority
+#define MODIFICATION_FLAG_MODIFICATION_ORDER_THAT_DOES_NOT_CHANGE_TIME_PRIORITY 0x01          // Modification Order That Does Not Change Time Priority
+
+// Adopted Pricing Method: one byte code
+#define ADOPTED_PRICING_METHOD_ITAYOSE_METHOD 0x01   // Itayose Method
+#define ADOPTED_PRICING_METHOD_QUOTE_DISPLAYED 0x02  // Quote Displayed
+
+// Reset Start End Flag: one byte code
+#define RESET_START_END_FLAG_START_OF_RESET_DISSEMINATION 0x01  // Start Of Reset Dissemination
+#define RESET_START_END_FLAG_END_OF_RESET_DISSEMINATION 0x02    // End Of Reset Dissemination
+
+// Test Mode Flag: one byte code
+#define TEST_MODE_FLAG_PRODUCTION 0x01  // Production
+#define TEST_MODE_FLAG_TEST 0x02        // Test
+
+// Communication Start End Flag: one byte code
+#define COMMUNICATION_START_END_FLAG_HEALTH_CHECK_CONTROL 0x00  // Health Check Control
+#define COMMUNICATION_START_END_FLAG_COMMUNICATION_START 0x01   // Communication Start
+#define COMMUNICATION_START_END_FLAG_COMMUNICATION_END 0x02     // Communication End
+
+// ---- Types -------------------------------------------------------------------
 
 // Provides information about the time of processing on the Trading Server to the nearest second. Always delivered at the time the information is generated, except for Reset and Communication Control. Only one tag is delivered per process and stored at the top of the first packet.
-entrypoint typedef struct _SecondsTimestampMessage {
+typedef struct _SecondsTimestampMessage {
   UINT32BE time_seconds;  // bytes 0 to 3
 } SecondsTimestampMessage;
 
-// ---- Trading Status Message: 17 bytes ----------------------------------------
-
 // Provides information about the status of trading on a per-issue basis. Delivered when there is a change in the tag.
-entrypoint typedef struct _TradingStatusMessage {
+typedef struct _TradingStatusMessage {
   UINT32BE time_microseconds;  // bytes 0 to 3
   UINT8 market_status;         // byte 4
   UINT8 status_flag[2];        // bytes 5 to 6
@@ -57,10 +130,8 @@ entrypoint typedef struct _TradingStatusMessage {
   UINT64BE book_center_price;  // bytes 9 to 16
 } TradingStatusMessage;
 
-// ---- Execution Summary Message: 45 bytes -------------------------------------
-
 // Provides summary information about execution. Delivered when an execution occurs.
-entrypoint typedef struct _ExecutionSummaryMessage {
+typedef struct _ExecutionSummaryMessage {
   UINT32BE time_microseconds;   // bytes 0 to 3
   UINT8 triggered_side;         // byte 4
   UINT8 total_volume[6];        // bytes 5 to 10
@@ -71,10 +142,8 @@ entrypoint typedef struct _ExecutionSummaryMessage {
   UINT64BE best_bid;            // bytes 37 to 44
 } ExecutionSummaryMessage;
 
-// ---- Add Order Message: 25 bytes ---------------------------------------------
-
 // Provides information about book registration. Delivered when a new order or modification order is registered.
-entrypoint typedef struct _AddOrderMessage {
+typedef struct _AddOrderMessage {
   UINT32BE time_microseconds;  // bytes 0 to 3
   UINT32BE order_id;           // bytes 4 to 7
   UINT8 side;                  // byte 8
@@ -84,10 +153,8 @@ entrypoint typedef struct _AddOrderMessage {
   UINT8 modification_flag;     // byte 24
 } AddOrderMessage;
 
-// ---- Order Executed Message: 19 bytes ----------------------------------------
-
 // Provides information about registered orders in case of Zaraba execution. Delivered when an execution occurs in Zaraba.
-entrypoint typedef struct _OrderExecutedMessage {
+typedef struct _OrderExecutedMessage {
   UINT32BE time_microseconds;  // bytes 0 to 3
   UINT32BE order_id;           // bytes 4 to 7
   UINT8 side;                  // byte 8
@@ -95,10 +162,8 @@ entrypoint typedef struct _OrderExecutedMessage {
   UINT32BE match_id;           // bytes 15 to 18
 } OrderExecutedMessage;
 
-// ---- Order Executed With Price Message: 28 bytes -----------------------------
-
 // Provides information about registered orders in case of Itayose execution. Delivered when an execution occurs by the Itayose method or while an SQ or STQ is displayed.
-entrypoint typedef struct _OrderExecutedWithPriceMessage {
+typedef struct _OrderExecutedWithPriceMessage {
   UINT32BE time_microseconds;    // bytes 0 to 3
   UINT32BE order_id;             // bytes 4 to 7
   UINT8 side;                    // byte 8
@@ -108,28 +173,64 @@ entrypoint typedef struct _OrderExecutedWithPriceMessage {
   UINT8 adopted_pricing_method;  // byte 27
 } OrderExecutedWithPriceMessage;
 
-// ---- Order Delete Message: 10 bytes ------------------------------------------
-
 // Provides information about order deletion from the order book. Delivered when an order is deleted via a cancel order or a modification order or when a registered order expires.
-entrypoint typedef struct _OrderDeleteMessage {
+typedef struct _OrderDeleteMessage {
   UINT32BE time_microseconds;  // bytes 0 to 3
   UINT32BE order_id;           // bytes 4 to 7
   UINT8 side;                  // byte 8
   UINT8 modification_flag;     // byte 9
 } OrderDeleteMessage;
 
-// ---- Reset Message: 1 byte ---------------------------------------------------
-
 // A tag requesting the resetting (i.e. cancellation) of all distributed information. When the user receives this tag, the user must clear all valid A tags.
-entrypoint typedef struct _ResetMessage {
+typedef struct _ResetMessage {
   UINT8 reset_start_end_flag;  // byte 0
 } ResetMessage;
 
-// ---- Communication Control Message: 2 bytes ----------------------------------
-
 // Provides information about communication control. Delivered when communication starts and ends, and in between at minute intervals.
-entrypoint typedef struct _CommunicationControlMessage {
+typedef struct _CommunicationControlMessage {
   UINT8 test_mode_flag;                // byte 0
   UINT8 communication_start_end_flag;  // byte 1
 } CommunicationControlMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x54: SecondsTimestampMessage seconds_timestamp_message;
+    case 0x4F: TradingStatusMessage trading_status_message;
+    case 0x4B: ExecutionSummaryMessage execution_summary_message;
+    case 0x41: AddOrderMessage add_order_message;
+    case 0x45: OrderExecutedMessage order_executed_message;
+    case 0x43: OrderExecutedWithPriceMessage order_executed_with_price_message;
+    case 0x44: OrderDeleteMessage order_delete_message;
+    case 0x52: ResetMessage reset_message;
+    case 0x4C: CommunicationControlMessage communication_control_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// Jpx Flex tag wrapper
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT8 tag_length { tag_length >= 1 };                                                                                                                            // byte 0
+  UINT8 message_type;                                                                                                                                              // byte 1
+  Payload(message_type, ((((UINT32) tag_length) + 1) - 2)) payload[:byte-size-single-element-array ((((UINT32) tag_length) + 1) - 2)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// ---- Packet: UdpPacket -------------------------------------------------------
+
+// Jpx Flex Udp Packet
+entrypoint typedef struct _UdpPacket (UINT32 available, mutable UINT32 * tally) where (available >= 26) {
+  UINT8 multicast_group_number;                                                                                             // byte 0
+  UINT8 number_of_system_reboots;                                                                                           // byte 1
+  UINT32BE sequence_number;                                                                                                 // bytes 2 to 5
+  UINT8 issue_code[12];                                                                                                     // bytes 6 to 17
+  UINT32BE update_number;                                                                                                   // bytes 18 to 21
+  UINT8 packet_number;                                                                                                      // byte 22
+  UINT8 total_number_of_packets;                                                                                            // byte 23
+  UINT8 utility_flag;                                                                                                       // byte 24
+  UINT8 message_count;                                                                                                      // byte 25
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size (available - 26)];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} UdpPacket;
 

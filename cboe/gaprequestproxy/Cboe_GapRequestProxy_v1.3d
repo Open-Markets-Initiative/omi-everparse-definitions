@@ -1,70 +1,141 @@
-// Chicago Board Options Exchange
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Cboe GapRequestProxy Pitch v1
 //
+// Protocol:
+//   Organization: Chicago Board Options Exchange
+//   Protocol:
+//   Encoding: Pitch
+//   Version: 1
+//   Date: 04/01/2026
+//   Specification: http://markets.cboe.com/us/options/support/technical/
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out Cboe_GapRequestProxy_v1.3d
-//
-// What this definition does not state, and the model does:
-// - a Reassemble rule
-// - a run filling what frames it
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 8 bytes --------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-entrypoint typedef struct _PacketHeader {
-  UINT16 length;        // bytes 0 to 1
-  UINT8 message_count;  // byte 2
-  UINT8 unit_;          // byte 3
-  UINT32 sequence;      // bytes 4 to 7
-} PacketHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_LOGIN_MESSAGE 0x01           // Login Message
+#define MESSAGE_TYPE_LOGIN_RESPONSE_MESSAGE 0x02  // Login Response Message
+#define MESSAGE_TYPE_GAP_REQUEST_MESSAGE 0x03     // Gap Request Message
+#define MESSAGE_TYPE_GAP_RESPONSE_MESSAGE 0x04    // Gap Response Message
 
-// ---- Message Header: 2 bytes -------------------------------------------------
+// Login Response Status: one byte code
+#define LOGIN_RESPONSE_STATUS_LOGIN_ACCEPTED 0x41                            // Login Accepted
+#define LOGIN_RESPONSE_STATUS_NOT_AUTHORIZED_INVALID_USERNAME_PASSWORD 0x4E  // Not Authorized Invalid Username Password
+#define LOGIN_RESPONSE_STATUS_SESSION_IN_USE 0x42                            // Session In Use
+#define LOGIN_RESPONSE_STATUS_INVALID_SESSION 0x53                           // Invalid Session
 
-entrypoint typedef struct _MessageHeader {
-  UINT8 message_length;  // byte 0
-  UINT8 message_type;    // byte 1
-} MessageHeader;
+// Gap Response Status: one byte code
+#define GAP_RESPONSE_STATUS_ACCEPTED 0x41                                          // Accepted
+#define GAP_RESPONSE_STATUS_OUT_OF_RANGE_AHEAD_OF_SEQUENCE_OR_TOO_FAR_BEHIND 0x4F  // Out Of Range Ahead Of Sequence Or Too Far Behind
+#define GAP_RESPONSE_STATUS_DAILY_GAP_REQUEST_ALLOCATION_EXHAUSTED 0x44            // Daily Gap Request Allocation Exhausted
+#define GAP_RESPONSE_STATUS_MINUTE_GAP_REQUEST_ALLOCATION_EXHAUSTED 0x4D           // Minute Gap Request Allocation Exhausted
+#define GAP_RESPONSE_STATUS_SECOND_GAP_REQUEST_ALLOCATION_EXHAUSTED 0x53           // Second Gap Request Allocation Exhausted
+#define GAP_RESPONSE_STATUS_COUNT_REQUEST_LIMIT_FOR_ONE_GAP_REQUEST_EXCEEDED 0x43  // Count Request Limit For One Gap Request Exceeded
+#define GAP_RESPONSE_STATUS_INVALID_UNIT_SPECIFIED_IN_REQUEST 0x49                 // Invalid Unit Specified In Request
+#define GAP_RESPONSE_STATUS_UNIT_IS_CURRENTLY_UNAVAILABLE 0x55                     // Unit Is Currently Unavailable
 
-// ---- Login Message: 20 bytes -------------------------------------------------
+// ---- Types -------------------------------------------------------------------
 
 // The Login message is the first message sent to the Gap Request Proxy by a user's process after the connection is established. Failure to login before sending any other message type will result in the connection being dropped by the Gap Request Proxy.
-entrypoint typedef struct _LoginMessage {
+typedef struct _LoginMessage {
   UINT8 session_sub_id[4];  // bytes 0 to 3
   UINT8 username[4];        // bytes 4 to 7
   UINT8 filler[2];          // bytes 8 to 9
   UINT8 password[10];       // bytes 10 to 19
 } LoginMessage;
 
-// ---- Login Response Message: 1 byte ------------------------------------------
-
 // The Login Response message is sent by the Gap Request Proxy to a user's process in response to a Login message. The status field is used to reflect an accepted login or the reason the session was not accepted. If login fails, the connection will be dropped after the Login Response message is sent.
-entrypoint typedef struct _LoginResponseMessage {
+typedef struct _LoginResponseMessage {
   UINT8 login_response_status;  // byte 0
 } LoginResponseMessage;
 
-// ---- Gap Request Message: 7 bytes --------------------------------------------
-
 // The Gap Request message is used by a user's process to request retransmission of a sequenced message (or messages) by one of Cboe's gap servers.
-entrypoint typedef struct _GapRequestMessage {
+typedef struct _GapRequestMessage {
   UINT8 gap_unit;       // byte 0
   UINT32 gap_sequence;  // bytes 1 to 4
   UINT16 count;         // bytes 5 to 6
 } GapRequestMessage;
 
-// ---- Gap Response Message: 8 bytes -------------------------------------------
-
 // The Gap Response message is sent by the Gap Request Proxy in response to a Gap Request message. The Unit and Sequence fields will match the values supplied in the Gap Request message. A Gap Response message, with a Status of Accepted or reason for failure, will be sent for each Gap Request message received by the Gap Request Proxy.
-entrypoint typedef struct _GapResponseMessage {
+typedef struct _GapResponseMessage {
   UINT8 gap_unit;             // byte 0
   UINT32 gap_sequence;        // bytes 1 to 4
   UINT16 count;               // bytes 5 to 6
   UINT8 gap_response_status;  // byte 7
 } GapResponseMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x01: LoginMessage login_message;
+    case 0x02: LoginResponseMessage login_response_message;
+    case 0x03: GapRequestMessage gap_request_message;
+    case 0x04: GapResponseMessage gap_response_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT8 message_length { message_length >= 2 };                                                                                                                    // byte 0
+  UINT8 message_type;                                                                                                                                              // byte 1
+  Payload(message_type, (((UINT32) message_length) - 2)) payload[:byte-size-single-element-array (((UINT32) message_length) - 2)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+typedef struct _MessageRun (UINT8 message_count, UINT32 available, mutable UINT32 * tally) {
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size available];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} MessageRun;
+
+// Branch
+casetype _Messages (UINT8 selector, UINT8 message_count, UINT32 available, mutable UINT32 * tally) {
+  switch (selector) {
+    case 0x00: unit heartbeat;
+    default: MessageRun(message_count, available, tally) message;
+  }
+} Messages;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Pitch Tcp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 8) {
+  UINT16 length;                                                                                                             // bytes 0 to 1
+  UINT8 message_count;                                                                                                       // byte 2
+  UINT8 unit_;                                                                                                               // byte 3
+  UINT32 sequence;                                                                                                           // bytes 4 to 7
+  Messages(message_count, message_count, (available - 8), tally) messages[:byte-size-single-element-array (available - 8)];
+} Packet;
 

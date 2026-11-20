@@ -1,63 +1,187 @@
-// National Association of Securities Dealers Automated Quotations (Nasdaq) TotalView Itch
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nasdaq NsmEquities TotalView Itch v4.0.f
 //
+// Protocol:
+//   Organization: National Association of Securities Dealers Automated Quotations (Nasdaq)
+//   Protocol: TotalView Itch
+//   Encoding: Itch
+//   Version: 4.0.f
+//   Date: 05/29/2009
+//   Specification: tvitch_v4f.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ServerPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out NsmEquities_TotalView_v4_0_f_Server.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a length prefix framing what follows
-//
-// License: MIT No Attribution
 
-// ---- Server Packet Header: 3 bytes -------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Packet header of a packet sent by the server
-entrypoint typedef struct _ServerPacketHeader {
-  UINT16BE packet_length;    // bytes 0 to 1
-  UINT8 server_packet_type;  // byte 2
-} ServerPacketHeader;
+// Server Packet Type: one byte code
+#define SERVER_PACKET_TYPE_DEBUG_PACKET 0x2B             // Debug Packet
+#define SERVER_PACKET_TYPE_LOGIN_ACCEPTED_PACKET 0x41    // Login Accepted Packet
+#define SERVER_PACKET_TYPE_LOGIN_REJECTED_PACKET 0x4A    // Login Rejected Packet
+#define SERVER_PACKET_TYPE_SEQUENCED_DATA_PACKET 0x53    // Sequenced Data Packet
+#define SERVER_PACKET_TYPE_SERVER_HEARTBEAT_PACKET 0x48  // Server Heartbeat Packet
+#define SERVER_PACKET_TYPE_END_OF_SESSION_PACKET 0x5A    // End Of Session Packet
 
-// ---- Login Accepted Packet: 30 bytes -----------------------------------------
+// Reject Reason Code: one byte code
+#define REJECT_REASON_CODE_NOT_AUTHORIZED 0x41         // Not Authorized
+#define REJECT_REASON_CODE_SESSION_NOT_AVAILABLE 0x53  // Session Not Available
+
+// Event Code: one byte code
+#define EVENT_CODE_START_OF_MESSAGES 0x4F                             // Start Of Messages
+#define EVENT_CODE_START_OF_SYSTEM_HOURS 0x53                         // Start Of System Hours
+#define EVENT_CODE_START_OF_MARKET_HOURS 0x51                         // Start Of Market Hours
+#define EVENT_CODE_END_OF_MARKET_HOURS 0x4D                           // End Of Market Hours
+#define EVENT_CODE_END_OF_SYSTEM_HOURS 0x45                           // End Of System Hours
+#define EVENT_CODE_END_OF_MESSAGES 0x43                               // End Of Messages
+#define EVENT_CODE_EMERGENCY_MARKET_CONDITION_HALT 0x41               // Emergency Market Condition Halt
+#define EVENT_CODE_EMERGENCY_MARKET_CONDITION_QUOTE_ONLY_PERIOD 0x52  // Emergency Market Condition Quote Only Period
+#define EVENT_CODE_EMERGENCY_MARKET_CONDITION_RESUMPTION 0x42         // Emergency Market Condition Resumption
+
+// Market Category: one byte code
+#define MARKET_CATEGORY_CQS 0x54                          // Cqs
+#define MARKET_CATEGORY_NASDAQ_GLOBAL_SELECT_MARKET 0x51  // Nasdaq Global Select Market
+#define MARKET_CATEGORY_NASDAQ_GLOBAL_MARKET 0x47         // Nasdaq Global Market
+#define MARKET_CATEGORY_NASDAQ_CAPITAL_MARKET 0x53        // Nasdaq Capital Market
+
+// Financial Status Indicator: one byte code
+#define FINANCIAL_STATUS_INDICATOR_DEFICIENT 0x44                          // Deficient
+#define FINANCIAL_STATUS_INDICATOR_DELINQUENT 0x45                         // Delinquent
+#define FINANCIAL_STATUS_INDICATOR_BANKRUPT 0x51                           // Bankrupt
+#define FINANCIAL_STATUS_INDICATOR_SUSPENDED 0x53                          // Suspended
+#define FINANCIAL_STATUS_INDICATOR_DEFICIENT_AND_BANKRUPT 0x47             // Deficient And Bankrupt
+#define FINANCIAL_STATUS_INDICATOR_DEFICIENT_AND_DELINQUENT 0x48           // Deficient And Delinquent
+#define FINANCIAL_STATUS_INDICATOR_DELINQUENT_AND_BANKRUPT 0x4A            // Delinquent And Bankrupt
+#define FINANCIAL_STATUS_INDICATOR_DEFICIENT_DELINQUENT_AND_BANKRUPT 0x4B  // Deficient Delinquent And Bankrupt
+#define FINANCIAL_STATUS_INDICATOR_IN_COMPLIANCE 0x20                      // In Compliance
+
+// Round Lots Only: one byte code
+#define ROUND_LOTS_ONLY_ROUND_LOTS_ONLY 0x59         // Round Lots Only
+#define ROUND_LOTS_ONLY_ODD_MIXED_LOTS_ALLOWED 0x4E  // Odd Mixed Lots Allowed
+
+// Trading State: one byte code
+#define TRADING_STATE_HALTED 0x48                 // Halted
+#define TRADING_STATE_QUOTATION_ONLY_PERIOD 0x51  // Quotation Only Period
+#define TRADING_STATE_TRADING 0x54                // Trading
+
+// Primary Market Maker: one byte code
+#define PRIMARY_MARKET_MAKER_PRIMARY 0x59      // Primary
+#define PRIMARY_MARKET_MAKER_NON_PRIMARY 0x4E  // Non Primary
+
+// Market Maker Mode: one byte code
+#define MARKET_MAKER_MODE_NORMAL 0x4E         // Normal
+#define MARKET_MAKER_MODE_PASSIVE 0x50        // Passive
+#define MARKET_MAKER_MODE_SYNDICATE 0x53      // Syndicate
+#define MARKET_MAKER_MODE_PRE_SYNDICATE 0x52  // Pre Syndicate
+#define MARKET_MAKER_MODE_PENALTY 0x4C        // Penalty
+
+// Market Participant State: one byte code
+#define MARKET_PARTICIPANT_STATE_ACTIVE 0x41             // Active
+#define MARKET_PARTICIPANT_STATE_EXCUSED_WITHDRAWN 0x45  // Excused Withdrawn
+#define MARKET_PARTICIPANT_STATE_WITHDRAWN 0x57          // Withdrawn
+#define MARKET_PARTICIPANT_STATE_SUSPENDED 0x53          // Suspended
+#define MARKET_PARTICIPANT_STATE_DELETED 0x44            // Deleted
+
+// Side: one byte code
+#define SIDE_BUY 0x42   // Buy
+#define SIDE_SELL 0x53  // Sell
+
+// Display: one byte code
+#define DISPLAY_DISPLAYABLE 0x59  // Displayable
+#define DISPLAY_FLASH 0x53        // Flash
+
+// Printable: one byte code
+#define PRINTABLE_NON_PRINTABLE 0x4E  // Non Printable
+#define PRINTABLE_PRINTABLE 0x59      // Printable
+
+// Cross Type: one byte code
+#define CROSS_TYPE_OPENING 0x4F         // Opening
+#define CROSS_TYPE_CLOSING 0x43         // Closing
+#define CROSS_TYPE_IPO_AND_HALTED 0x48  // Ipo And Halted
+#define CROSS_TYPE_CROSS_NETWORK 0x49   // Cross Network
+
+// Imbalance Direction: one byte code
+#define IMBALANCE_DIRECTION_BUY 0x42                  // Buy
+#define IMBALANCE_DIRECTION_SELL 0x53                 // Sell
+#define IMBALANCE_DIRECTION_NO_IMBALANCE 0x4E         // No Imbalance
+#define IMBALANCE_DIRECTION_INSUFFICIENT_ORDERS 0x4F  // Insufficient Orders
+
+// Price Variation Indicator: one byte code
+#define PRICE_VARIATION_INDICATOR_LESS_THAN_ONE_PERCENT 0x4C                          // Less Than One Percent
+#define PRICE_VARIATION_INDICATOR_ONE_TO_ONE_POINT_NINE_NINE_PERCENT 0x31             // One To One Point Nine Nine Percent
+#define PRICE_VARIATION_INDICATOR_TWO_TO_TWO_POINT_NINE_NINE_PERCENT 0x32             // Two To Two Point Nine Nine Percent
+#define PRICE_VARIATION_INDICATOR_THREE_TO_THREE_POINT_NINE_NINE_PERCENT 0x33         // Three To Three Point Nine Nine Percent
+#define PRICE_VARIATION_INDICATOR_FOUR_TO_FOUR_POINT_NINE_NINE_PERCENT 0x34           // Four To Four Point Nine Nine Percent
+#define PRICE_VARIATION_INDICATOR_FIVE_TO_FIVE_POINT_NINE_NINE_PERCENT 0x35           // Five To Five Point Nine Nine Percent
+#define PRICE_VARIATION_INDICATOR_SIX_TO_SIX_POINT_NINE_NINE_PERCENT 0x36             // Six To Six Point Nine Nine Percent
+#define PRICE_VARIATION_INDICATOR_SEVEN_TO_SEVEN_POINT_NINE_NINE_PERCENT 0x37         // Seven To Seven Point Nine Nine Percent
+#define PRICE_VARIATION_INDICATOR_EIGHT_TO_EIGHT_POINT_NINE_NINE_PERCENT 0x38         // Eight To Eight Point Nine Nine Percent
+#define PRICE_VARIATION_INDICATOR_NINE_TO_NINE_POINT_NINE_NINE_PERCENT 0x39           // Nine To Nine Point Nine Nine Percent
+#define PRICE_VARIATION_INDICATOR_TEN_TO_NINETEEN_POINT_NINE_NINE_PERCENT 0x41        // Ten To Nineteen Point Nine Nine Percent
+#define PRICE_VARIATION_INDICATOR_TWENTY_TO_TWENTY_NINE_POINT_NINE_NINE_PERCENT 0x42  // Twenty To Twenty Nine Point Nine Nine Percent
+#define PRICE_VARIATION_INDICATOR_THIRTY_PERCENT_OR_GREATER 0x43                      // Thirty Percent Or Greater
+#define PRICE_VARIATION_INDICATOR_CANNOT_BE_CALCULATED 0x20                           // Cannot Be Calculated
+
+// ---- Types -------------------------------------------------------------------
+
+// Debug packets are intended to provide human readable text that may aid in debugging problems
+typedef struct _DebugPacket (UINT16 packet_length) where (packet_length >= 1) {
+  UINT8 debug_text[(((UINT32) packet_length) - 1)];
+} DebugPacket;
 
 // The SoupBinTCP server sends a Login Accepted Packet in response to receiving a valid Login Request from the client
-entrypoint typedef struct _LoginAcceptedPacket {
+typedef struct _LoginAcceptedPacket {
   UINT8 accepted_session[10];          // bytes 0 to 9
   UINT8 accepted_sequence_number[20];  // bytes 10 to 29
 } LoginAcceptedPacket;
 
-// ---- Login Rejected Packet: 1 byte -------------------------------------------
-
 // The SoupBinTCP server sends this packet in response to an invalid Login Request Packet from the client
-entrypoint typedef struct _LoginRejectedPacket {
+typedef struct _LoginRejectedPacket {
   UINT8 reject_reason_code;  // byte 0
 } LoginRejectedPacket;
 
-// ---- Timestamp Message: 4 bytes ----------------------------------------------
-
 // Reflects the number of seconds past midnight that the Timestamp message was generated.
-entrypoint typedef struct _TimestampMessage {
+typedef struct _TimestampMessage {
   UINT32BE second;  // bytes 0 to 3
 } TimestampMessage;
 
-// ---- System Event Message: 5 bytes -------------------------------------------
-
 // The system event message type is used to signal a market or data feed handler event.
-entrypoint typedef struct _SystemEventMessage {
+typedef struct _SystemEventMessage {
   UINT32BE nanoseconds;  // bytes 0 to 3
   UINT8 event_code;      // byte 4
 } SystemEventMessage;
 
-// ---- Stock Directory Message: 17 bytes ---------------------------------------
-
 // Market data redistributors should process this message to populate the Financial Status Indicator (required display field) and the Market Category (recommended display field) for NASDAQ-listed issues.
-entrypoint typedef struct _StockDirectoryMessage {
+typedef struct _StockDirectoryMessage {
   UINT32BE nanoseconds;              // bytes 0 to 3
   UINT8 stock[6];                    // bytes 4 to 9
   UINT8 market_category;             // byte 10
@@ -66,10 +190,8 @@ entrypoint typedef struct _StockDirectoryMessage {
   UINT8 round_lots_only;             // byte 16
 } StockDirectoryMessage;
 
-// ---- Stock Trading Action Message: 16 bytes ----------------------------------
-
 // NASDAQ uses this administrative message to indicate the current trading status of a security to the trading community.
-entrypoint typedef struct _StockTradingActionMessage {
+typedef struct _StockTradingActionMessage {
   UINT32BE nanoseconds;  // bytes 0 to 3
   UINT8 stock[6];        // bytes 4 to 9
   UINT8 trading_state;   // byte 10
@@ -77,10 +199,8 @@ entrypoint typedef struct _StockTradingActionMessage {
   UINT8 reason[4];       // bytes 12 to 15
 } StockTradingActionMessage;
 
-// ---- Market Participant Position Message: 17 bytes ---------------------------
-
 // At the start of each trading day, NASDAQ disseminates a spin of market participant position messages. Throughout the day, NASDAQ will send out this message only if NASDAQ Operations changes the status of a market participant firm in an issue.
-entrypoint typedef struct _MarketParticipantPositionMessage {
+typedef struct _MarketParticipantPositionMessage {
   UINT32BE nanoseconds;            // bytes 0 to 3
   UINT8 mpid[4];                   // bytes 4 to 7
   UINT8 stock[6];                  // bytes 8 to 13
@@ -89,10 +209,8 @@ entrypoint typedef struct _MarketParticipantPositionMessage {
   UINT8 market_participant_state;  // byte 16
 } MarketParticipantPositionMessage;
 
-// ---- Add Order Message: 28 bytes ---------------------------------------------
-
 // This message will be generated for unattributed orders accepted by the NASDAQ system.
-entrypoint typedef struct _AddOrderMessage {
+typedef struct _AddOrderMessage {
   UINT32BE nanoseconds;             // bytes 0 to 3
   UINT64BE order_reference_number;  // bytes 4 to 11
   UINT8 side;                       // byte 12
@@ -102,10 +220,8 @@ entrypoint typedef struct _AddOrderMessage {
   UINT8 display;                    // byte 27
 } AddOrderMessage;
 
-// ---- Add Order With Mpid Message: 31 bytes -----------------------------------
-
 // This message will be generated for attributed orders and quotations accepted by the NASDAQ system.
-entrypoint typedef struct _AddOrderWithMpidMessage {
+typedef struct _AddOrderWithMpidMessage {
   UINT32BE nanoseconds;             // bytes 0 to 3
   UINT64BE order_reference_number;  // bytes 4 to 11
   UINT8 side;                       // byte 12
@@ -115,20 +231,16 @@ entrypoint typedef struct _AddOrderWithMpidMessage {
   UINT8 attribution[4];             // bytes 27 to 30
 } AddOrderWithMpidMessage;
 
-// ---- Order Executed Message: 24 bytes ----------------------------------------
-
 // This message is sent whenever an order on the book is executed in whole or in part.
-entrypoint typedef struct _OrderExecutedMessage {
+typedef struct _OrderExecutedMessage {
   UINT32BE nanoseconds;             // bytes 0 to 3
   UINT64BE order_reference_number;  // bytes 4 to 11
   UINT32BE executed_shares;         // bytes 12 to 15
   UINT64BE match_number;            // bytes 16 to 23
 } OrderExecutedMessage;
 
-// ---- Order Executed With Price Message: 29 bytes -----------------------------
-
 // This message is sent whenever an order on the book is executed in whole or in part at a price different from the initial display price.
-entrypoint typedef struct _OrderExecutedWithPriceMessage {
+typedef struct _OrderExecutedWithPriceMessage {
   UINT32BE nanoseconds;             // bytes 0 to 3
   UINT64BE order_reference_number;  // bytes 4 to 11
   UINT32BE executed_shares;         // bytes 12 to 15
@@ -137,27 +249,21 @@ entrypoint typedef struct _OrderExecutedWithPriceMessage {
   UINT32BE execution_price;         // bytes 25 to 28
 } OrderExecutedWithPriceMessage;
 
-// ---- Order Cancel Message: 16 bytes ------------------------------------------
-
 // This message is sent whenever an order on the book is modified as a result of a partial cancellation.
-entrypoint typedef struct _OrderCancelMessage {
+typedef struct _OrderCancelMessage {
   UINT32BE nanoseconds;             // bytes 0 to 3
   UINT64BE order_reference_number;  // bytes 4 to 11
   UINT32BE canceled_shares;         // bytes 12 to 15
 } OrderCancelMessage;
 
-// ---- Order Delete Message: 12 bytes ------------------------------------------
-
 // This message is sent whenever an order on the book is being cancelled. All remaining shares are no longer accessible so the order must be removed from the book.
-entrypoint typedef struct _OrderDeleteMessage {
+typedef struct _OrderDeleteMessage {
   UINT32BE nanoseconds;             // bytes 0 to 3
   UINT64BE order_reference_number;  // bytes 4 to 11
 } OrderDeleteMessage;
 
-// ---- Order Replace Message: 29 bytes -----------------------------------------
-
 // This message is sent whenever an order on the book has been cancel-replaced. All remaining shares from the original order are no longer accessible, and must be removed. The new order details are provided for the replacement, along with a new order reference number which will be used henceforth.
-entrypoint typedef struct _OrderReplaceMessage {
+typedef struct _OrderReplaceMessage {
   UINT32BE nanoseconds;                      // bytes 0 to 3
   UINT64BE original_order_reference_number;  // bytes 4 to 11
   UINT64BE new_order_reference_number;       // bytes 12 to 19
@@ -166,18 +272,14 @@ entrypoint typedef struct _OrderReplaceMessage {
   UINT8 display;                             // byte 28
 } OrderReplaceMessage;
 
-// ---- Order Display Message: 12 bytes -----------------------------------------
-
 // This message is disseminated to alert the TotalView-ITCH users that a Flash order has been added to the continuous order book for display on all NASDAQ data feeds.
-entrypoint typedef struct _OrderDisplayMessage {
+typedef struct _OrderDisplayMessage {
   UINT32BE nanoseconds;             // bytes 0 to 3
   UINT64BE order_reference_number;  // bytes 4 to 11
 } OrderDisplayMessage;
 
-// ---- Trade Message: 35 bytes -------------------------------------------------
-
 // The Trade Message is designed to provide execution details for normal match events involving non-displayable order types.
-entrypoint typedef struct _TradeMessage {
+typedef struct _TradeMessage {
   UINT32BE nanoseconds;             // bytes 0 to 3
   UINT64BE order_reference_number;  // bytes 4 to 11
   UINT8 side;                       // byte 12
@@ -187,10 +289,8 @@ entrypoint typedef struct _TradeMessage {
   UINT64BE match_number;            // bytes 27 to 34
 } TradeMessage;
 
-// ---- Cross Trade Message: 31 bytes -------------------------------------------
-
 // Cross Trade message indicates that NASDAQ has completed its cross process for a specific security.
-entrypoint typedef struct _CrossTradeMessage {
+typedef struct _CrossTradeMessage {
   UINT32BE nanoseconds;   // bytes 0 to 3
   UINT64BE cross_shares;  // bytes 4 to 11
   UINT8 stock[6];         // bytes 12 to 17
@@ -199,18 +299,14 @@ entrypoint typedef struct _CrossTradeMessage {
   UINT8 cross_type;       // byte 30
 } CrossTradeMessage;
 
-// ---- Broken Trade Message: 12 bytes ------------------------------------------
-
 // The Broken Trade Message is sent whenever an execution on NASDAQ is broken.
-entrypoint typedef struct _BrokenTradeMessage {
+typedef struct _BrokenTradeMessage {
   UINT32BE nanoseconds;   // bytes 0 to 3
   UINT64BE match_number;  // bytes 4 to 11
 } BrokenTradeMessage;
 
-// ---- Net Order Imbalance Indicator Message: 41 bytes -------------------------
-
 // NASDAQ disseminates NOII data at 5-second intervals in the minutes leading up to the NASDAQ Opening Cross and NASDAQ Closing Cross.
-entrypoint typedef struct _NetOrderImbalanceIndicatorMessage {
+typedef struct _NetOrderImbalanceIndicatorMessage {
   UINT32BE nanoseconds;              // bytes 0 to 3
   UINT64BE paired_shares;            // bytes 4 to 11
   UINT64BE imbalance_shares;         // bytes 12 to 19
@@ -222,4 +318,61 @@ entrypoint typedef struct _NetOrderImbalanceIndicatorMessage {
   UINT8 cross_type;                  // byte 39
   UINT8 price_variation_indicator;   // byte 40
 } NetOrderImbalanceIndicatorMessage;
+
+// The sequenced (server to client) message carried by the packet, opaque bytes unless an application source dispatches it
+casetype _SequencedMessage (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x54: TimestampMessage timestamp_message;
+    case 0x53: SystemEventMessage system_event_message;
+    case 0x52: StockDirectoryMessage stock_directory_message;
+    case 0x48: StockTradingActionMessage stock_trading_action_message;
+    case 0x4C: MarketParticipantPositionMessage market_participant_position_message;
+    case 0x41: AddOrderMessage add_order_message;
+    case 0x46: AddOrderWithMpidMessage add_order_with_mpid_message;
+    case 0x45: OrderExecutedMessage order_executed_message;
+    case 0x43: OrderExecutedWithPriceMessage order_executed_with_price_message;
+    case 0x58: OrderCancelMessage order_cancel_message;
+    case 0x44: OrderDeleteMessage order_delete_message;
+    case 0x55: OrderReplaceMessage order_replace_message;
+    case 0x56: OrderDisplayMessage order_display_message;
+    case 0x50: TradeMessage trade_message;
+    case 0x51: CrossTradeMessage cross_trade_message;
+    case 0x42: BrokenTradeMessage broken_trade_message;
+    case 0x49: NetOrderImbalanceIndicatorMessage net_order_imbalance_indicator_message;
+    default: UINT8 unknown[available];
+  }
+} SequencedMessage;
+
+// The Sequenced Data Packets act as an envelope to carry the actual sequenced data messages that are transferred from the server to the client. Each Sequenced Data Packet carries one message from the higher-lever protocol
+typedef struct _SequencedDataPacket (UINT16 packet_length) where (packet_length >= 2) {
+  UINT8 sequenced_message_type;                                                                                                                                // byte 0
+  SequencedMessage(sequenced_message_type, (((UINT32) packet_length) - 2)) sequenced_message[:byte-size-single-element-array (((UINT32) packet_length) - 2)];
+} SequencedDataPacket;
+
+// Branch
+casetype _ServerPayload (UINT8 selector, UINT32 length, UINT16 packet_length, UINT32 available) {
+  switch (selector) {
+    case 0x2B: DebugPacket(packet_length) debug_packet;
+    case 0x41: LoginAcceptedPacket login_accepted_packet;
+    case 0x4A: LoginRejectedPacket login_rejected_packet;
+    case 0x53: SequencedDataPacket(packet_length) sequenced_data_packet[:byte-size-single-element-array length];
+    case 0x48: unit server_heartbeat;
+    case 0x5A: unit end_of_session;
+    default: UINT8 unknown[available];
+  }
+} ServerPayload;
+
+// Soup Bin Tcp Packet sent by the server
+typedef struct _ServerSoupBinTcpPacket {
+  UINT16BE packet_length { packet_length >= 1 };                                                                                                                                                                // bytes 0 to 1
+  UINT8 server_packet_type;                                                                                                                                                                                     // byte 2
+  ServerPayload(server_packet_type, (((UINT32) packet_length) - 1), packet_length, ((((UINT32) packet_length) + 2) - 3)) server_payload[:byte-size-single-element-array ((((UINT32) packet_length) + 2) - 3)];
+} ServerSoupBinTcpPacket;
+
+// ---- Packet: ServerPacket ----------------------------------------------------
+
+// SoupBinTCP Packet sent by the server
+entrypoint typedef struct _ServerPacket (UINT32 available) {
+  ServerSoupBinTcpPacket server_soup_bin_tcp_packet[:byte-size available];
+} ServerPacket;
 

@@ -1,44 +1,125 @@
-// Borsa stanbul A. . Genium Inet
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Bist BorsaIstanbul GeniumInet Ouch v2025.0206
 //
+// Protocol:
+//   Organization: Borsa stanbul A. .
+//   Protocol: Genium Inet
+//   Encoding: Ouch
+//   Version: 2025.0206
+//   Date: 2/6/2025
+//   Specification: bistech-ouch-protocol-specification.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ClientPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out BorsaIstanbul_GeniumInet_v2025_0206_Client.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a length prefix framing what follows
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Client Packet Header: 3 bytes -------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Packet header of a packet sent by the client
-entrypoint typedef struct _ClientPacketHeader {
-  UINT16BE packet_length;    // bytes 0 to 1
-  UINT8 client_packet_type;  // byte 2
-} ClientPacketHeader;
+// Client Packet Type: one byte code
+#define CLIENT_PACKET_TYPE_DEBUG_PACKET 0x2B             // Debug Packet
+#define CLIENT_PACKET_TYPE_LOGIN_REQUEST_PACKET 0x4C     // Login Request Packet
+#define CLIENT_PACKET_TYPE_UNSEQUENCED_DATA_PACKET 0x55  // Unsequenced Data Packet
+#define CLIENT_PACKET_TYPE_CLIENT_HEARTBEAT_PACKET 0x52  // Client Heartbeat Packet
+#define CLIENT_PACKET_TYPE_LOGOUT_REQUEST_PACKET 0x4F    // Logout Request Packet
 
-// ---- Login Request Packet: 46 bytes ------------------------------------------
+// Unsequenced Message Type: one byte code
+#define UNSEQUENCED_MESSAGE_TYPE_ENTER_ORDER 0x4F         // Enter Order
+#define UNSEQUENCED_MESSAGE_TYPE_REPLACE_ORDER 0x55       // Replace Order
+#define UNSEQUENCED_MESSAGE_TYPE_CANCEL_ORDER 0x58        // Cancel Order
+#define UNSEQUENCED_MESSAGE_TYPE_CANCEL_BY_ORDER_ID 0x59  // Cancel By Order Id
+#define UNSEQUENCED_MESSAGE_TYPE_MASS_QUOTE 0x51          // Mass Quote
+
+// Side: one byte code
+#define SIDE_BUY 0x42         // Buy
+#define SIDE_SELL 0x53        // Sell
+#define SIDE_SHORT_SELL 0x54  // Short Sell
+
+// Time In Force: one byte code
+#define TIME_IN_FORCE_DAY 0x00                  // Day
+#define TIME_IN_FORCE_IMMEDIATE_OR_CANCEL 0x03  // Immediate Or Cancel
+#define TIME_IN_FORCE_FILL_OR_KILL 0x04         // Fill Or Kill
+
+// Open Close: one byte code
+#define OPEN_CLOSE_DEFAULT 0x00    // Default
+#define OPEN_CLOSE_OPEN 0x01       // Open
+#define OPEN_CLOSE_CLOSE_NET 0x02  // Close Net
+
+// Client Category: one byte code
+#define CLIENT_CATEGORY_CLIENT 0x01                  // Client
+#define CLIENT_CATEGORY_HOUSE 0x02                   // House
+#define CLIENT_CATEGORY_FUND 0x07                    // Fund
+#define CLIENT_CATEGORY_INVESTMENT_TRUST 0x09        // Investment Trust
+#define CLIENT_CATEGORY_PRIMARY_DEALER_GOVT 0x0A     // Primary Dealer Govt
+#define CLIENT_CATEGORY_PRIMARY_DEALER_CORP 0x0B     // Primary Dealer Corp
+#define CLIENT_CATEGORY_PORTFOLIO_MGMT_COMPANY 0x0C  // Portfolio Mgmt Company
+
+// Off Hours: one byte code
+#define OFF_HOURS_NORMAL_HOURS 0x00     // Normal Hours
+#define OFF_HOURS_OFF_HOUR_ORDERS 0x01  // Off Hour Orders
+
+// Smp Level: one byte code
+#define SMP_LEVEL_EMPTY 0x00            // Empty
+#define SMP_LEVEL_WITHIN_A_MEMBER 0x01  // Within A Member
+#define SMP_LEVEL_ACROSS_MEMBERS 0x02   // Across Members
+
+// Smp Method: one byte code
+#define SMP_METHOD_EMPTY 0x00              // Empty
+#define SMP_METHOD_CANCEL_AGGRESSIVE 0x01  // Cancel Aggressive
+#define SMP_METHOD_CANCEL_PASSIVE 0x02     // Cancel Passive
+#define SMP_METHOD_CANCEL_BOTH 0x03        // Cancel Both
+
+// Replace Open Close: one byte code
+#define REPLACE_OPEN_CLOSE_NO_CHANGE 0x00  // No Change
+#define REPLACE_OPEN_CLOSE_OPEN 0x01       // Open
+#define REPLACE_OPEN_CLOSE_CLOSE_NET 0x02  // Close Net
+#define REPLACE_OPEN_CLOSE_DEFAULT 0x04    // Default
+
+// ---- Types -------------------------------------------------------------------
+
+// Debug packets are intended to provide human readable text that may aid in debugging problems
+typedef struct _DebugPacket (UINT16 packet_length) where (packet_length >= 1) {
+  UINT8 debug_text[(((UINT32) packet_length) - 1)];
+} DebugPacket;
 
 // The SoupBinTCP client must send a Login Request Packet immediately upon establishing a new TCP/IP socket connection to the server
-entrypoint typedef struct _LoginRequestPacket {
+typedef struct _LoginRequestPacket {
   UINT8 username[6];                    // bytes 0 to 5
   UINT8 password[10];                   // bytes 6 to 15
   UINT8 requested_session[10];          // bytes 16 to 25
   UINT8 requested_sequence_number[20];  // bytes 26 to 45
 } LoginRequestPacket;
 
-// ---- Enter Order: 113 bytes --------------------------------------------------
-
 // Enters a new order into the system. The response to a successful Enter Order is an Order Accepted message. If the order is rejected, the Order Rejected message will be returned.
-entrypoint typedef struct _EnterOrder {
+typedef struct _EnterOrder {
   UINT8 order_token[14];                 // bytes 0 to 13
   UINT32BE order_book_id;                // bytes 14 to 17
   UINT8 side;                            // byte 18
@@ -58,10 +139,8 @@ entrypoint typedef struct _EnterOrder {
   UINT16BE reserved_numeric_unsigned_2;  // bytes 111 to 112
 } EnterOrder;
 
-// ---- Replace Order: 121 bytes ------------------------------------------------
-
 // Modifies an existing order entered via OUCH. The response is an Order Replaced message if the modification was successful, or an Order Rejected message if the replace failed.
-entrypoint typedef struct _ReplaceOrder {
+typedef struct _ReplaceOrder {
   UINT8 existing_order_token[14];        // bytes 0 to 13
   UINT8 replacement_order_token[14];     // bytes 14 to 27
   UINT64BE quantity;                     // bytes 28 to 35
@@ -75,19 +154,78 @@ entrypoint typedef struct _ReplaceOrder {
   UINT64BE reserved_numeric_unsigned_8;  // bytes 113 to 120
 } ReplaceOrder;
 
-// ---- Cancel Order: 14 bytes --------------------------------------------------
-
 // Cancels an existing order entered via OUCH. Partial cancels are not supported; use Replace Order to modify an existing order. The response to a successful Cancel Order is an Order Canceled message. Failed Cancel Order messages are rejected with the Order Rejected message.
-entrypoint typedef struct _CancelOrder {
+typedef struct _CancelOrder {
   UINT8 order_token[14];  // bytes 0 to 13
 } CancelOrder;
 
-// ---- Cancel By Order Id: 13 bytes --------------------------------------------
-
 // Cancels any order in the book, regardless of which session it was inserted over, using the system-generated Order ID. The response to a successful Cancel by Order Id is an Order Canceled message. Failed requests are rejected with the Order Rejected message.
-entrypoint typedef struct _CancelByOrderId {
+typedef struct _CancelByOrderId {
   UINT32BE order_book_id;  // bytes 0 to 3
   UINT8 side;              // byte 4
   UINT64BE order_id;       // bytes 5 to 12
 } CancelByOrderId;
+
+// One double-sided quote entry in a repeating Mass Quote QuoteSet group. Repeats No Quote Entries times, up to a maximum of 5, within the containing Mass Quote message.
+typedef struct _QuoteSet {
+  UINT32BE order_book_id;  // bytes 0 to 3
+  UINT32BE bid_price;      // bytes 4 to 7, signed, read here as unsigned
+  UINT32BE offer_price;    // bytes 8 to 11, signed, read here as unsigned
+  UINT64BE bid_size;       // bytes 12 to 19
+  UINT64BE offer_size;     // bytes 20 to 27
+} QuoteSet;
+
+// Used by market makers to send two-sided quotes into a market. Allows submission of multiple quotes (currently restricted to 5) in a single message. Quotes for different securities must belong to the same partition. One quote (two-sided) per participant per instrument is allowed. Quotes can be replaced or cancelled by sending a new Mass Quote for the same instrument(s).
+typedef struct _MassQuote {
+  UINT8 order_token[14];                                              // bytes 0 to 13
+  UINT8 client_category;                                              // byte 14
+  UINT8 client_account[16];                                           // bytes 15 to 30
+  UINT8 exchange_info_alpha_16[16];                                   // bytes 31 to 46
+  UINT16BE no_quote_entries;                                          // bytes 47 to 48
+  QuoteSet quote_set[:byte-size (((UINT32) no_quote_entries) * 28)];
+} MassQuote;
+
+// The unsequenced (client to server) message carried by the packet, opaque bytes unless an application source dispatches it
+casetype _UnsequencedMessage (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x4F: EnterOrder enter_order;
+    case 0x55: ReplaceOrder replace_order;
+    case 0x58: CancelOrder cancel_order;
+    case 0x59: CancelByOrderId cancel_by_order_id;
+    case 0x51: MassQuote mass_quote;
+    default: UINT8 unknown[available];
+  }
+} UnsequencedMessage;
+
+// The Unsequenced Data Packets act as an envelope to carry the actual data messages that are transferred from the client to the server
+typedef struct _UnsequencedDataPacket (UINT16 packet_length) where (packet_length >= 2) {
+  UINT8 unsequenced_message_type;                                                                                                                                    // byte 0
+  UnsequencedMessage(unsequenced_message_type, (((UINT32) packet_length) - 2)) unsequenced_message[:byte-size-single-element-array (((UINT32) packet_length) - 2)];
+} UnsequencedDataPacket;
+
+// Branch
+casetype _ClientPayload (UINT8 selector, UINT32 length, UINT16 packet_length, UINT32 available) {
+  switch (selector) {
+    case 0x2B: DebugPacket(packet_length) debug_packet;
+    case 0x4C: LoginRequestPacket login_request_packet;
+    case 0x55: UnsequencedDataPacket(packet_length) unsequenced_data_packet[:byte-size-single-element-array length];
+    case 0x52: unit client_heartbeat;
+    case 0x4F: unit logout_request;
+    default: UINT8 unknown[available];
+  }
+} ClientPayload;
+
+// Soup Bin Tcp Packet sent by the client
+typedef struct _ClientSoupBinTcpPacket {
+  UINT16BE packet_length { packet_length >= 1 };                                                                                                                                                                // bytes 0 to 1
+  UINT8 client_packet_type;                                                                                                                                                                                     // byte 2
+  ClientPayload(client_packet_type, (((UINT32) packet_length) - 1), packet_length, ((((UINT32) packet_length) + 2) - 3)) client_payload[:byte-size-single-element-array ((((UINT32) packet_length) + 2) - 3)];
+} ClientSoupBinTcpPacket;
+
+// ---- Packet: ClientPacket ----------------------------------------------------
+
+// SoupBinTCP Packet sent by the client
+entrypoint typedef struct _ClientPacket (UINT32 available) {
+  ClientSoupBinTcpPacket client_soup_bin_tcp_packet[:byte-size available];
+} ClientPacket;
 

@@ -1,33 +1,70 @@
-// Japan Exchange Group Market By Order
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Jpx TseEquities MarketByOrder Flex v1.1
 //
+// Protocol:
+//   Organization: Japan Exchange Group
+//   Protocol: Market By Order
+//   Encoding: Flex
+//   Version: 1.1
+//   Date: 11/20/2024
+//   Specification: TSEarrowhead_FLEX_MarketbyOrderSpecifications_ver.1.1.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, TcpPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out TseEquities_MarketByOrder_v1_1_Tcp.3d
-//
-// What this definition does not state, and the model does:
-// - a length prefix framing what follows
-// - a field filling what is left of what holds it
-//
-// License: MIT No Attribution
 
-// ---- Tcp Packet Header: 3 bytes ----------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Jpx Flex Tcp packet header carrying length prefix and packet type discriminator
-entrypoint typedef struct _TcpPacketHeader {
-  UINT16BE packet_length;  // bytes 0 to 1
-  UINT8 packet_type;       // byte 2
-} TcpPacketHeader;
+// Packet Type: one byte code
+#define PACKET_TYPE_LOGIN_REQUEST_RETRANSMISSION_MESSAGE 0x52  // Login Request Retransmission Message
+#define PACKET_TYPE_LOGIN_REQUEST_SNAPSHOT_MESSAGE 0x4C        // Login Request Snapshot Message
+#define PACKET_TYPE_LOGIN_RESULT_ACCEPTED_MESSAGE 0x41         // Login Result Accepted Message
+#define PACKET_TYPE_LOGIN_RESULT_REJECTED_MESSAGE 0x4A         // Login Result Rejected Message
+#define PACKET_TYPE_MESSAGE_RESPONSE_MESSAGE 0x53              // Message Response Message
+#define PACKET_TYPE_END_OF_MESSAGE_MESSAGE 0x47                // End Of Message Message
 
-// ---- Login Request Retransmission Message: 15 bytes --------------------------
+// Result Code: one byte code
+#define RESULT_CODE_ACCEPTED 0x41                   // Accepted
+#define RESULT_CODE_OUT_OF_SERVICE 0x4F             // Out Of Service
+#define RESULT_CODE_INCORRECT_USER_ID 0x55          // Incorrect User Id
+#define RESULT_CODE_INCORRECT_SEQUENCE_NUMBER 0x53  // Incorrect Sequence Number
+#define RESULT_CODE_INCORRECT_PACKET_TYPE 0x54      // Incorrect Packet Type
+#define RESULT_CODE_INCORRECT_MCG_NUMBER 0x4D       // Incorrect Mcg Number
+#define RESULT_CODE_OTHER_ERROR 0x5A                // Other Error
+
+// ---- Types -------------------------------------------------------------------
 
 // Tcp login request selecting retransmission, sent by the user. One of the two Packet Type codes the document gives the 18 byte Login Request.
-entrypoint typedef struct _LoginRequestRetransmissionMessage {
+typedef struct _LoginRequestRetransmissionMessage {
   UINT8 user_id[6];                  // bytes 0 to 5
   UINT8 multicast_group_number;      // byte 6
   UINT8 number_of_system_reboots;    // byte 7
@@ -35,10 +72,8 @@ entrypoint typedef struct _LoginRequestRetransmissionMessage {
   UINT8 requested_message_count[3];  // bytes 12 to 14
 } LoginRequestRetransmissionMessage;
 
-// ---- Login Request Snapshot Message: 15 bytes --------------------------------
-
 // Tcp login request selecting snapshot, sent by the user. Same layout as the retransmission request; Number of System Reboots, Sequence Number and Requested Message Count are all set to 0.
-entrypoint typedef struct _LoginRequestSnapshotMessage {
+typedef struct _LoginRequestSnapshotMessage {
   UINT8 user_id[6];                  // bytes 0 to 5
   UINT8 multicast_group_number;      // byte 6
   UINT8 number_of_system_reboots;    // byte 7
@@ -46,28 +81,49 @@ entrypoint typedef struct _LoginRequestSnapshotMessage {
   UINT8 requested_message_count[3];  // bytes 12 to 14
 } LoginRequestSnapshotMessage;
 
-// ---- Login Result Accepted Message: 2 bytes ----------------------------------
-
 // Tcp login response accepting the request. Result Code carries A.
-entrypoint typedef struct _LoginResultAcceptedMessage {
+typedef struct _LoginResultAcceptedMessage {
   UINT8 multicast_group_number;  // byte 0
   UINT8 result_code;             // byte 1
 } LoginResultAcceptedMessage;
 
-// ---- Login Result Rejected Message: 2 bytes ----------------------------------
-
 // Tcp login response rejecting the request. Same layout as the accepted response; Result Code carries the reason the request failed.
-entrypoint typedef struct _LoginResultRejectedMessage {
+typedef struct _LoginResultRejectedMessage {
   UINT8 multicast_group_number;  // byte 0
   UINT8 result_code;             // byte 1
 } LoginResultRejectedMessage;
 
-// ---- End Of Message Message: 6 bytes -----------------------------------------
+// Tcp message response carrying tag data including their packet headers in response to a retransmission or snapshot request.
+typedef struct _MessageResponseMessage (UINT32 available) {
+  UINT8 data[available];
+} MessageResponseMessage;
 
 // Tcp end of message marker terminating a retransmission or snapshot session.
-entrypoint typedef struct _EndOfMessageMessage {
+typedef struct _EndOfMessageMessage {
   UINT8 multicast_group_number;    // byte 0
   UINT8 number_of_system_reboots;  // byte 1
   UINT32BE next_sequence_number;   // bytes 2 to 5
 } EndOfMessageMessage;
+
+// Branch
+casetype _TcpPayload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x52: LoginRequestRetransmissionMessage login_request_retransmission_message;
+    case 0x4C: LoginRequestSnapshotMessage login_request_snapshot_message;
+    case 0x41: LoginResultAcceptedMessage login_result_accepted_message;
+    case 0x4A: LoginResultRejectedMessage login_result_rejected_message;
+    case 0x53: MessageResponseMessage(available) message_response_message;
+    case 0x47: EndOfMessageMessage end_of_message_message;
+    default: UINT8 unknown[available];
+  }
+} TcpPayload;
+
+// ---- Packet: TcpPacket -------------------------------------------------------
+
+// Jpx Flex Tcp Packet
+entrypoint typedef struct _TcpPacket (UINT32 available) where (available >= 3) {
+  UINT16BE packet_length;                                                                                 // bytes 0 to 1
+  UINT8 packet_type;                                                                                      // byte 2
+  TcpPayload(packet_type, (available - 3)) tcp_payload[:byte-size-single-element-array (available - 3)];
+} TcpPacket;
 

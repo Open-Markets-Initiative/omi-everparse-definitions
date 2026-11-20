@@ -1,49 +1,96 @@
-// Chicago Board Options Exchange Multicast Depth Of Book
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Cboe CxjEquities MulticastDepthOfBook Pitch v1.0.6
 //
+// Protocol:
+//   Organization: Chicago Board Options Exchange
+//   Protocol: Multicast Depth Of Book
+//   Encoding: Pitch
+//   Version: 1.0.6
+//   Date: 02/25/2025
+//   Specification: CXJ Multicast PITCH Specification.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out CxjEquities_MulticastDepthOfBook_Pitch_v1_0_6.3d
-//
-// What this definition does not state, and the model does:
-// - the dispatch that chooses a message by its type
-// - a run filling what frames it
-// - a field read in bits
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 8 bytes --------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-entrypoint typedef struct _PacketHeader {
-  UINT16 length;        // bytes 0 to 1
-  UINT8 message_count;  // byte 2
-  UINT8 unit_;          // byte 3
-  UINT32 sequence;      // bytes 4 to 7
-} PacketHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_UNIT_CLEAR_MESSAGE 0x97      // Unit Clear Message
+#define MESSAGE_TYPE_TRADING_STATUS_MESSAGE 0x50  // Trading Status Message
+#define MESSAGE_TYPE_ADD_ORDER_MESSAGE 0x51       // Add Order Message
+#define MESSAGE_TYPE_ORDER_EXECUTED_MESSAGE 0x52  // Order Executed Message
+#define MESSAGE_TYPE_REDUCE_SIZE_MESSAGE 0x39     // Reduce Size Message
+#define MESSAGE_TYPE_MODIFY_ORDER_MESSAGE 0x3A    // Modify Order Message
+#define MESSAGE_TYPE_DELETE_ORDER_MESSAGE 0x3C    // Delete Order Message
+#define MESSAGE_TYPE_TRADE_MESSAGE 0x53           // Trade Message
+#define MESSAGE_TYPE_TRADE_BREAK_MESSAGE 0x3E     // Trade Break Message
+#define MESSAGE_TYPE_END_OF_SESSION_MESSAGE 0x2D  // End Of Session Message
 
-// ---- Message Header: 2 bytes -------------------------------------------------
+// Trading Status: one byte code
+#define TRADING_STATUS_CLOSED 0x43              // Closed
+#define TRADING_STATUS_TRADING 0x54             // Trading
+#define TRADING_STATUS_HALTED 0x48              // Halted
+#define TRADING_STATUS_HALTED_IN_PRE_OPEN 0x68  // Halted In Pre Open
 
-entrypoint typedef struct _MessageHeader {
-  UINT8 message_length;  // byte 0
-  UINT8 message_type;    // byte 1
-} MessageHeader;
+// Side Indicator: one byte code
+#define SIDE_INDICATOR_BUY_ORDER 0x42   // Buy Order
+#define SIDE_INDICATOR_SELL_ORDER 0x53  // Sell Order
 
-// ---- Unit Clear Message: 4 bytes ---------------------------------------------
+// Tick Direction: one byte code
+#define TICK_DIRECTION_LOWER_THAN_PREVIOUS_LAST_SALE 0x2D                                            // Lower Than Previous Last Sale
+#define TICK_DIRECTION_HIGHER_THAN_PREVIOUS_LAST_SALE 0x2B                                           // Higher Than Previous Last Sale
+#define TICK_DIRECTION_NO_CHANGE_FROM_OR_SINCE_TSE_PREVIOUS_CLOSE_OR_FIRST_TSE_TRADE_OF_AN_IPO 0x30  // No Change From Or Since Tse Previous Close Or First Tse Trade Of An Ipo
+#define TICK_DIRECTION_SAME_AS_PREVIOUS_LAST_SALE_AND_MOST_RECENT_PRICE_CHANGE_WAS_DOWNWARD 0x44     // Same As Previous Last Sale And Most Recent Price Change Was Downward
+#define TICK_DIRECTION_SAME_AS_PREVIOUS_LAST_SALE_AND_MOST_RECENT_PRICE_CHANGE_WAS_UPWARD 0x55       // Same As Previous Last Sale And Most Recent Price Change Was Upward
+
+// ---- Types -------------------------------------------------------------------
 
 // Instructs feed recipients to clear all orders for the Cboe Japan book in the unit specified in the Sequenced Unit Header. It would be distributed in rare recovery events such as a datacenter fail-over.
-entrypoint typedef struct _UnitClearMessage {
+typedef struct _UnitClearMessage {
   UINT32 reserved_4;  // bytes 0 to 3
 } UnitClearMessage;
 
-// ---- Add Order Message: 36 bytes ---------------------------------------------
+// Used to indicate the current trading status of a security. A Trading Status message will be sent whenever trading status changes for a security.
+typedef struct _TradingStatusMessage {
+  UINT64 timestamp;                  // bytes 0 to 7
+  UINT8 symbol[6];                   // bytes 8 to 13
+  UINT8 trading_status;              // byte 14
+  UINT8 short_sell_price_check : 1;  // byte 15
+  UINT8 unused_7 : 7;                // byte 15
+} TradingStatusMessage;
 
 // Represents a newly accepted order on the Cboe Japan book. It includes a day-specific Order Id assigned by Cboe Japan to the order.
-entrypoint typedef struct _AddOrderMessage {
+typedef struct _AddOrderMessage {
   UINT64 timestamp;      // bytes 0 to 7
   UINT64 order_id;       // bytes 8 to 15
   UINT8 side_indicator;  // byte 16
@@ -53,10 +100,8 @@ entrypoint typedef struct _AddOrderMessage {
   UINT8 reserved_1;      // byte 35
 } AddOrderMessage;
 
-// ---- Order Executed Message: 37 bytes ----------------------------------------
-
 // Sent when a visible order on the Cboe Japan book is executed in whole or in part. The execution price equals the order price found in the original Add Order message or the order price in the latest Modify Order message referencing the Order Id.
-entrypoint typedef struct _OrderExecutedMessage {
+typedef struct _OrderExecutedMessage {
   UINT64 timestamp;          // bytes 0 to 7
   UINT64 order_id;           // bytes 8 to 15
   UINT32 executed_quantity;  // bytes 16 to 19
@@ -65,19 +110,15 @@ entrypoint typedef struct _OrderExecutedMessage {
   UINT8 tick_direction;      // byte 36
 } OrderExecutedMessage;
 
-// ---- Reduce Size Message: 20 bytes -------------------------------------------
-
 // Sent when a visible order on the Cboe Japan book is partially reduced.
-entrypoint typedef struct _ReduceSizeMessage {
+typedef struct _ReduceSizeMessage {
   UINT64 timestamp;           // bytes 0 to 7
   UINT64 order_id;            // bytes 8 to 15
   UINT32 cancelled_quantity;  // bytes 16 to 19
 } ReduceSizeMessage;
 
-// ---- Modify Order Message: 29 bytes ------------------------------------------
-
 // Sent whenever an open order is visibly modified. The Order Id refers to the Order Id of the original Add Order message.
-entrypoint typedef struct _ModifyOrderMessage {
+typedef struct _ModifyOrderMessage {
   UINT64 timestamp;  // bytes 0 to 7
   UINT64 order_id;   // bytes 8 to 15
   UINT32 quantity;   // bytes 16 to 19
@@ -85,18 +126,14 @@ entrypoint typedef struct _ModifyOrderMessage {
   UINT8 reserved_1;  // byte 28
 } ModifyOrderMessage;
 
-// ---- Delete Order Message: 16 bytes ------------------------------------------
-
 // Sent whenever a booked order is cancelled or leaves the order book. The Order Id refers to the Order Id of the original Add Order message.
-entrypoint typedef struct _DeleteOrderMessage {
+typedef struct _DeleteOrderMessage {
   UINT64 timestamp;  // bytes 0 to 7
   UINT64 order_id;   // bytes 8 to 15
 } DeleteOrderMessage;
 
-// ---- Trade Message: 50 bytes -------------------------------------------------
-
 // Sent when there is an execution against any non-displayed portion of an iceberg order. Trade messages do not alter the book and can be ignored if messages are being used solely to build a book.
-entrypoint typedef struct _TradeMessage {
+typedef struct _TradeMessage {
   UINT64 timestamp;        // bytes 0 to 7
   UINT8 symbol[6];         // bytes 8 to 13
   UINT32 quantity;         // bytes 14 to 17
@@ -106,18 +143,63 @@ entrypoint typedef struct _TradeMessage {
   UINT64 contra_order_id;  // bytes 42 to 49
 } TradeMessage;
 
-// ---- Trade Break Message: 16 bytes -------------------------------------------
-
 // Sent whenever an execution on Cboe Japan is cancelled.
-entrypoint typedef struct _TradeBreakMessage {
+typedef struct _TradeBreakMessage {
   UINT64 timestamp;     // bytes 0 to 7
   UINT64 execution_id;  // bytes 8 to 15
 } TradeBreakMessage;
 
-// ---- End Of Session Message: 4 bytes -----------------------------------------
-
 // Sent for each unit when the unit shuts down. No additional sequenced messages will be delivered for this unit, but heartbeats from the unit may be received.
-entrypoint typedef struct _EndOfSessionMessage {
+typedef struct _EndOfSessionMessage {
   UINT32 reserved_4;  // bytes 0 to 3
 } EndOfSessionMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x97: UnitClearMessage unit_clear_message;
+    case 0x50: TradingStatusMessage trading_status_message;
+    case 0x51: AddOrderMessage add_order_message;
+    case 0x52: OrderExecutedMessage order_executed_message;
+    case 0x39: ReduceSizeMessage reduce_size_message;
+    case 0x3A: ModifyOrderMessage modify_order_message;
+    case 0x3C: DeleteOrderMessage delete_order_message;
+    case 0x53: TradeMessage trade_message;
+    case 0x3E: TradeBreakMessage trade_break_message;
+    case 0x2D: EndOfSessionMessage end_of_session_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT8 message_length { message_length >= 2 };                                                                                                                    // byte 0
+  UINT8 message_type;                                                                                                                                              // byte 1
+  Payload(message_type, (((UINT32) message_length) - 2)) payload[:byte-size-single-element-array (((UINT32) message_length) - 2)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+typedef struct _MessageRun (UINT8 message_count, UINT32 available, mutable UINT32 * tally) {
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size available];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} MessageRun;
+
+// Branch
+casetype _Messages (UINT8 selector, UINT8 message_count, UINT32 available, mutable UINT32 * tally) {
+  switch (selector) {
+    case 0x00: unit heartbeat;
+    default: MessageRun(message_count, available, tally) message;
+  }
+} Messages;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Pitch Udp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 8) {
+  UINT16 length;                                                                                                             // bytes 0 to 1
+  UINT8 message_count;                                                                                                       // byte 2
+  UINT8 unit_;                                                                                                               // byte 3
+  UINT32 sequence;                                                                                                           // bytes 4 to 7
+  Messages(message_count, message_count, (available - 8), tally) messages[:byte-size-single-element-array (available - 8)];
+} Packet;
 

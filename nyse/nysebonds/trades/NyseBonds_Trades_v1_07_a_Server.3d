@@ -1,56 +1,108 @@
-// New York Stock Exchange Trades
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nyse NyseBonds Trades Abp v1.07.a
 //
+// Protocol:
+//   Organization: New York Stock Exchange
+//   Protocol: Trades
+//   Encoding: Arca Binary Protocol
+//   Version: 1.07.a
+//   Date: 09/04/2012
+//   Specification: NYSE_Bonds_Trades_Client_Specification_v1.07a.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ServerPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out NyseBonds_Trades_v1_07_a_Server.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-//
-// License: MIT No Attribution
 
-// ---- Message Header: 4 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Nyse Arca Binary Protocol message header
-entrypoint typedef struct _MessageHeader {
-  UINT16BE message_body_length;  // bytes 0 to 1
-  UINT8 message_type;            // byte 2
-  UINT8 padding;                 // byte 3
-} MessageHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_LOGIN_ACCEPTED_MESSAGE 0x51            // Login Accepted Message
+#define MESSAGE_TYPE_LOGIN_REJECTED_MESSAGE 0x52            // Login Rejected Message
+#define MESSAGE_TYPE_HEARTBEAT_MESSAGE 0x48                 // Heartbeat Message
+#define MESSAGE_TYPE_TEST_RESPONSE_MESSAGE 0x53             // Test Response Message
+#define MESSAGE_TYPE_LAST_SALE_MESSAGE 0x58                 // Last Sale Message
+#define MESSAGE_TYPE_TRADE_BUST_OR_CORRECTION_MESSAGE 0x55  // Trade Bust Or Correction Message
+#define MESSAGE_TYPE_NYSE_BOND_CLOSING_PRICE_MESSAGE 0x5A   // Nyse Bond Closing Price Message
 
-// ---- Login Accepted Message: 6 bytes -----------------------------------------
+// Reject Code: one byte code
+#define REJECT_CODE_NOT_AUTHORIZED 0x41                      // Not Authorized
+#define REJECT_CODE_MAXIMUM_SERVER_CONNECTIONS_REACHED 0x4D  // Maximum Server Connections Reached
+#define REJECT_CODE_INVALID_SUBSCRIPTION 0x52                // Invalid Subscription
+#define REJECT_CODE_INVALID_SEQUENCE 0x53                    // Invalid Sequence
+#define REJECT_CODE_TIMEOUT 0x54                             // Timeout
+
+// Price Scale Code: one byte code
+#define PRICE_SCALE_CODE_NO_DIVISION 0x30           // No Division
+#define PRICE_SCALE_CODE_TEN 0x31                   // Ten
+#define PRICE_SCALE_CODE_ONE_HUNDRED 0x32           // One Hundred
+#define PRICE_SCALE_CODE_ONE_THOUSAND 0x33          // One Thousand
+#define PRICE_SCALE_CODE_TEN_THOUSAND 0x34          // Ten Thousand
+#define PRICE_SCALE_CODE_ONE_HUNDRED_THOUSAND 0x35  // One Hundred Thousand
+#define PRICE_SCALE_CODE_ONE_MILLION 0x36           // One Million
+
+// System Code: one byte code
+#define SYSTEM_CODE_BONDS_TRADING_PLATFORM 0x46  // Bonds Trading Platform
+
+// Exchange Code: one byte code
+#define EXCHANGE_CODE_NYSE_LISTED_BOND 0x4E  // Nyse Listed Bond
+
+// Security Type: one byte code
+#define SECURITY_TYPE_CORPORATE_BONDS 0x01  // Corporate Bonds
+
+// Event Code: one byte code
+#define EVENT_CODE_TRADE_BUST 0x42        // Trade Bust
+#define EVENT_CODE_TRADE_CORRECTION 0x43  // Trade Correction
+
+// ---- Types -------------------------------------------------------------------
 
 // Sent to indicate a successful login. Carries the current version of ArcaTrade.
-entrypoint typedef struct _LoginAcceptedMessage {
+typedef struct _LoginAcceptedMessage {
   UINT8 version_id[5];    // bytes 0 to 4
   UINT8 padding_ascii_1;  // byte 5
 } LoginAcceptedMessage;
 
-// ---- Login Rejected Message: 2 bytes -----------------------------------------
-
 // Sent when login fails authentication, the client does not log in within 30 seconds, no trade data feed was subscribed to, the sequence number was invalid, or no connections are available. The socket is closed afterwards.
-entrypoint typedef struct _LoginRejectedMessage {
+typedef struct _LoginRejectedMessage {
   UINT8 reject_code;      // byte 0
   UINT8 padding_ascii_1;  // byte 1
 } LoginRejectedMessage;
 
-// ---- Test Response Message: 20 bytes -----------------------------------------
-
 // Sent in response to a Test Request, echoing back any text the request carried.
-entrypoint typedef struct _TestResponseMessage {
+typedef struct _TestResponseMessage {
   UINT8 test_message[20];  // bytes 0 to 19
 } TestResponseMessage;
 
-// ---- Last Sale Message: 64 bytes ---------------------------------------------
-
 // Sent when an order partially trades or completely trades.
-entrypoint typedef struct _LastSaleMessage {
+typedef struct _LastSaleMessage {
   UINT32BE last_sale_time;          // bytes 0 to 3
   UINT32BE sequence_number;         // bytes 4 to 7
   UINT32BE trade_reference_number;  // bytes 8 to 11
@@ -66,10 +118,8 @@ entrypoint typedef struct _LastSaleMessage {
   UINT8 padding_ascii_3[3];         // bytes 61 to 63
 } LastSaleMessage;
 
-// ---- Trade Bust Or Correction Message: 64 bytes ------------------------------
-
 // Sent when trades are busted or corrected. The Event Code field says which.
-entrypoint typedef struct _TradeBustOrCorrectionMessage {
+typedef struct _TradeBustOrCorrectionMessage {
   UINT32BE last_sale_time;          // bytes 0 to 3
   UINT32BE sequence_number;         // bytes 4 to 7
   UINT32BE trade_reference_number;  // bytes 8 to 11
@@ -86,10 +136,8 @@ entrypoint typedef struct _TradeBustOrCorrectionMessage {
   UINT8 padding_ascii_2[2];         // bytes 62 to 63
 } TradeBustOrCorrectionMessage;
 
-// ---- Nyse Bond Closing Price Message: 64 bytes -------------------------------
-
 // Sent during day end processing with the final closing price and volume for a bond. The specification notes this message is not supported at the time of writing and will be implemented in a future release.
-entrypoint typedef struct _NyseBondClosingPriceMessage {
+typedef struct _NyseBondClosingPriceMessage {
   UINT32BE closing_time;            // bytes 0 to 3
   UINT32BE sequence_number;         // bytes 4 to 7
   UINT32BE trade_reference_number;  // bytes 8 to 11
@@ -104,4 +152,33 @@ entrypoint typedef struct _NyseBondClosingPriceMessage {
   UINT8 cusip_isin[14];             // bytes 47 to 60
   UINT8 padding_ascii_3[3];         // bytes 61 to 63
 } NyseBondClosingPriceMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x51: LoginAcceptedMessage login_accepted_message;
+    case 0x52: LoginRejectedMessage login_rejected_message;
+    case 0x48: unit heartbeat_message;
+    case 0x53: TestResponseMessage test_response_message;
+    case 0x58: LastSaleMessage last_sale_message;
+    case 0x55: TradeBustOrCorrectionMessage trade_bust_or_correction_message;
+    case 0x5A: NyseBondClosingPriceMessage nyse_bond_closing_price_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// Nyse Abp message sent by the exchange
+typedef struct _Message {
+  UINT16BE message_body_length;                                                                                                   // bytes 0 to 1
+  UINT8 message_type;                                                                                                             // byte 2
+  UINT8 padding;                                                                                                                  // byte 3
+  Payload(message_type, ((UINT32) message_body_length)) payload[:byte-size-single-element-array ((UINT32) message_body_length)];
+} Message;
+
+// ---- Packet: ServerPacket ----------------------------------------------------
+
+// Nyse Abp Tcp packet sent by the exchange to the client
+entrypoint typedef struct _ServerPacket (UINT32 available) {
+  Message message[:byte-size available];
+} ServerPacket;
 

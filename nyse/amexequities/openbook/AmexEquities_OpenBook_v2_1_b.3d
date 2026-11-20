@@ -1,54 +1,127 @@
-// New York Stock Exchange Open Book
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nyse AmexEquities OpenBook Ultra v2.1.b
 //
+// Protocol:
+//   Organization: New York Stock Exchange
+//   Protocol: Open Book
+//   Encoding: Openbook Ultra
+//   Version: 2.1.b
+//   Date: 03/9/2018
+//   Specification: OpenBook_Ultra_Client_Spec_v2.1b.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out AmexEquities_OpenBook_v2_1_b.3d
-//
-// What this definition does not state, and the model does:
-// - a length prefix framing what follows
-// - a run counted by a field
-// - a run filling what frames it
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 16 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-entrypoint typedef struct _PacketHeader {
-  UINT16BE packet_size;       // bytes 0 to 1
-  UINT16BE message_type;      // bytes 2 to 3
-  UINT32BE sequence_number;   // bytes 4 to 7
-  UINT32BE timestamp;         // bytes 8 to 11
-  UINT8 product_id;           // byte 12
-  UINT8 retransmission_flag;  // byte 13
-  UINT8 message_count;        // byte 14
-  UINT8 link_flag;            // byte 15
-} PacketHeader;
+// Message Type: 2 byte code
+#define MESSAGE_TYPE_SEQUENCE_NUMBER_RESET_MESSAGE 0x0001          // Sequence Number Reset Message
+#define MESSAGE_TYPE_HEARTBEAT_MESSAGE 0x0002                      // Heartbeat Message
+#define MESSAGE_TYPE_UNAVAILABLE_MESSAGE 0x0005                    // Unavailable Message
+#define MESSAGE_TYPE_REQUEST_RESPONSE_MESSAGE 0x000A               // Request Response Message
+#define MESSAGE_TYPE_HEARTBEAT_SUBSCRIPTION_MESSAGE 0x0013         // Heartbeat Subscription Message
+#define MESSAGE_TYPE_RETRANSMISSION_REQUEST_MESSAGE 0x0014         // Retransmission Request Message
+#define MESSAGE_TYPE_BOOK_REFRESH_REQUEST_MESSAGE 0x0016           // Book Refresh Request Message
+#define MESSAGE_TYPE_HEARTBEAT_RESPONSE_MESSAGE 0x0018             // Heartbeat Response Message
+#define MESSAGE_TYPE_EXTENDED_BOOK_REFRESH_REQUEST_MESSAGE 0x001B  // Extended Book Refresh Request Message
+#define MESSAGE_TYPE_SYMBOL_INDEX_MAPPING_REQUEST_MESSAGE 0x0022   // Symbol Index Mapping Request Message
+#define MESSAGE_TYPE_SYMBOL_INDEX_MAPPING_RESPONSE_MESSAGE 0x0023  // Symbol Index Mapping Response Message
+#define MESSAGE_TYPE_FULL_UPDATE_MESSAGE 0x00E6                    // Full Update Message
+#define MESSAGE_TYPE_DELTA_UPDATE_MESSAGE 0x00E7                   // Delta Update Message
 
-// ---- Sequence Number Reset Message: 4 bytes ----------------------------------
+// Status: one byte code
+#define STATUS_ACCEPTED 0x41  // Accepted
+#define STATUS_REJECTED 0x52  // Rejected
+
+// Reject Reason: one byte code
+#define REJECT_REASON_REQUEST_ACCEPTED 0x30                                                                  // Request Accepted
+#define REJECT_REASON_REJECTED_DUE_TO_PERMISSIONS 0x31                                                       // Rejected Due To Permissions
+#define REJECT_REASON_INVALID_SEQUENCE_RANGE_EG_LOW_HIGH 0x32                                                // Invalid Sequence Range Eg Low High
+#define REJECT_REASON_EXCEEDED_MAX_SEQUENCE_RANGE_1000 0x33                                                  // Exceeded Max Sequence Range 1000
+#define REJECT_REASON_EXCEEDED_MAX_RETRANS_REQUESTS_IN_A_DAY 0x34                                            // Exceeded Max Retrans Requests In A Day
+#define REJECT_REASON_EXCEEDED_MAX_REFRESH_REQUESTS_IN_A_DAY 0x35                                            // Exceeded Max Refresh Requests In A Day
+#define REJECT_REASON_REJECTED_REQUESTED_SEQNUM_1000000_PACKETS_IN_THE_PAST_USE_REFRESH_TO_RECO_adjwhu 0x36  // Rejected Requested Seqnum 1000000 Packets In The Past Use Refresh To Recover Current State If Necessary
+
+// Quote Condition: one byte code
+#define QUOTE_CONDITION_NO_SPECIAL_QUOTE_CONDITION 0x20  // No Special Quote Condition
+#define QUOTE_CONDITION_SLOW_QUOTE 0x57                  // Slow Quote
+
+// Trading Status: one byte code
+#define TRADING_STATUS_PRE_OPENING 0x50             // Pre Opening
+#define TRADING_STATUS_EARLY_SESSION 0x45           // Early Session
+#define TRADING_STATUS_BEGIN_ACCEPTING_ORDERS 0x42  // Begin Accepting Orders
+#define TRADING_STATUS_CORE_SESSION 0x4F            // Core Session
+#define TRADING_STATUS_LATE_SESSION 0x4C            // Late Session
+#define TRADING_STATUS_CLOSED 0x58                  // Closed
+#define TRADING_STATUS_HALTED 0x48                  // Halted
+#define TRADING_STATUS_SUSPENDED 0x36               // Suspended
+
+// Side: one byte code
+#define SIDE_BUY 0x42   // Buy
+#define SIDE_SELL 0x53  // Sell
+
+// Reason Code: one byte code
+#define REASON_CODE_NEW_ORDERADDITIONAL_INTEREST_ADDED 0x4F  // New Orderadditional Interest Added
+#define REASON_CODE_CANCEL 0x43                              // Cancel
+#define REASON_CODE_EXECUTION 0x45                           // Execution
+#define REASON_CODE_MULTIPLE_EVENTS 0x58                     // Multiple Events
+
+// ---- Types -------------------------------------------------------------------
+
+// This message is sent by the NYSE in response to a Symbol Index Request. When requesting Symbol Index Mapping, the request must be sent to the symbol's corresponding channel, otherwise it will not be honored.
+typedef struct _SymbolIndexMappingResponseMessage {
+  UINT8 symbol_11[11];    // bytes 0 to 10
+  UINT8 filler_1;         // byte 11
+  UINT32BE symbol_index;  // bytes 12 to 15, signed, read here as unsigned
+} SymbolIndexMappingResponseMessage;
+
+typedef struct _SymbolIndexMappingResponseMessages (UINT8 message_count) {
+  SymbolIndexMappingResponseMessage symbol_index_mapping_response_message[:byte-size (((UINT32) message_count) * 16)];
+} SymbolIndexMappingResponseMessages;
 
 // This message is sent to reset the Packet Sequence Number.
-entrypoint typedef struct _SequenceNumberResetMessage {
+typedef struct _SequenceNumberResetMessage {
   UINT32BE next_sequence_number;  // bytes 0 to 3, signed, read here as unsigned
 } SequenceNumberResetMessage;
 
-// ---- Unavailable Message: 8 bytes --------------------------------------------
-
 // This message will be sent over the Retransmission multicast channels to inform the clients of unavailability of a range of messages for which they have requested a retransmission.
-entrypoint typedef struct _UnavailableMessage {
+typedef struct _UnavailableMessage {
   UINT32BE begin_seq_num;  // bytes 0 to 3, signed, read here as unsigned
   UINT32BE end_seq_num;    // bytes 4 to 7, signed, read here as unsigned
 } UnavailableMessage;
 
-// ---- Request Response Message: 28 bytes --------------------------------------
-
 // This message will be sent immediately via TCP/IP in response to the client's request for a retransmission, refresh, or Symbol Index information. The requested information will follow in the appropriate retransmission or refresh channel.
-entrypoint typedef struct _RequestResponseMessage {
+typedef struct _RequestResponseMessage {
   UINT32BE source_seq_num;  // bytes 0 to 3, signed, read here as unsigned
   UINT8 source_id[20];      // bytes 4 to 23
   UINT8 status;             // byte 24
@@ -56,44 +129,148 @@ entrypoint typedef struct _RequestResponseMessage {
   UINT8 filler_2[2];        // bytes 26 to 27
 } RequestResponseMessage;
 
-// ---- Retransmission Request Message: 28 bytes --------------------------------
-
 // This message is sent by clients to request a retransmission of missed packets. In response, a Request Response message (type 10) will be sent back over the Request TCP connection, and the retransmitted packets will be delivered over the Retransmission channels.
-entrypoint typedef struct _RetransmissionRequestMessage {
+typedef struct _RetransmissionRequestMessage {
   UINT32BE begin_seq_num;  // bytes 0 to 3, signed, read here as unsigned
   UINT32BE end_seq_num;    // bytes 4 to 7, signed, read here as unsigned
   UINT8 source_id[20];     // bytes 8 to 27
 } RetransmissionRequestMessage;
 
-// ---- Book Refresh Request Message: 36 bytes ----------------------------------
-
 // This message is sent by clients requesting a full book refresh.
-entrypoint typedef struct _BookRefreshRequestMessage {
+typedef struct _BookRefreshRequestMessage {
   UINT8 symbol_16[16];  // bytes 0 to 15
   UINT8 source_id[20];  // bytes 16 to 35
 } BookRefreshRequestMessage;
 
-// ---- Heartbeat Response Message: 20 bytes ------------------------------------
-
 // Clients that remain connected to the Request server intraday must respond within 120 seconds to any heartbeat received with a single message of this type in its own packet. This response demonstrates that the TCP connection is still alive and prevents the Request Server from closing the connection.
-entrypoint typedef struct _HeartbeatResponseMessage {
+typedef struct _HeartbeatResponseMessage {
   UINT8 source_id[20];  // bytes 0 to 19
 } HeartbeatResponseMessage;
 
-// ---- Extended Book Refresh Request Message: 26 bytes -------------------------
-
 // The Extended Book Refresh Request message allows the client to request a refresh by symbol index as opposed to symbol, and to request a refresh of all symbols in a channel.
-entrypoint typedef struct _ExtendedBookRefreshRequestMessage {
+typedef struct _ExtendedBookRefreshRequestMessage {
   UINT8 source_id[20];    // bytes 0 to 19
   UINT32BE symbol_index;  // bytes 20 to 23, signed, read here as unsigned
   UINT16BE msg_type;      // bytes 24 to 25, signed, read here as unsigned
 } ExtendedBookRefreshRequestMessage;
 
-// ---- Symbol Index Mapping Request Message: 24 bytes --------------------------
-
 // This message is sent by clients requesting a refresh of Symbol Index mapping information only.
-entrypoint typedef struct _SymbolIndexMappingRequestMessage {
+typedef struct _SymbolIndexMappingRequestMessage {
   UINT8 source_id[20];    // bytes 0 to 19
   UINT32BE symbol_index;  // bytes 20 to 23, signed, read here as unsigned
 } SymbolIndexMappingRequestMessage;
+
+// Full Message Price Point
+typedef struct _FullPricePoint {
+  UINT32BE price_numerator;  // bytes 0 to 3, signed, read here as unsigned
+  UINT32BE volume;           // bytes 4 to 7, signed, read here as unsigned
+  UINT16BE num_orders;       // bytes 8 to 9, signed, read here as unsigned
+  UINT8 side;                // byte 10
+  UINT8 reserved_1;          // byte 11
+} FullPricePoint;
+
+// This message contains the complete order book for a single symbol, with all price points, an aggregated quantity at each price point and symbol mapping information.
+typedef struct _FullUpdateMessageBody (UINT32 available) where (available >= 32) {
+  UINT32BE symbol_index;                                         // bytes 0 to 3, signed, read here as unsigned
+  UINT32BE source_time;                                          // bytes 4 to 7, signed, read here as unsigned
+  UINT16BE source_time_micro_secs;                               // bytes 8 to 9, signed, read here as unsigned
+  UINT32BE symbol_seq_num;                                       // bytes 10 to 13, signed, read here as unsigned
+  UINT8 source_session_id;                                       // byte 14, signed, read here as unsigned
+  UINT8 symbol_11[11];                                           // bytes 15 to 25
+  UINT8 price_scale_code;                                        // byte 26, signed, read here as unsigned
+  UINT8 quote_condition;                                         // byte 27
+  UINT8 trading_status;                                          // byte 28
+  UINT8 reserved_1;                                              // byte 29
+  UINT16BE mpv;                                                  // bytes 30 to 31, signed, read here as unsigned
+  FullPricePoint full_price_point[:byte-size (available - 32)];
+} FullUpdateMessageBody;
+
+// This message contains the complete order book for a single symbol, with all price points, an aggregated quantity at each price point and symbol mapping information.
+typedef struct _FullUpdateMessage (mutable UINT32 * tally) {
+  UINT16BE update_size { update_size >= 2 };                                                                                                                       // bytes 0 to 1, signed, read here as unsigned
+  FullUpdateMessageBody((((UINT32) update_size) - 2)) full_update_message_body[:byte-size-single-element-array (((UINT32) update_size) - 2)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} FullUpdateMessage;
+
+// This message contains the complete order book for a single symbol, with all price points, an aggregated quantity at each price point and symbol mapping information.
+typedef struct _FullUpdateMessages (UINT8 message_count, UINT32 available, mutable UINT32 * tally) {
+  unit full_update_message_tally_start {:on-success *tally = 0; return true; };
+  FullUpdateMessage(tally) full_update_message[:byte-size available];
+  unit full_update_message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} FullUpdateMessages;
+
+// Delta Message Price Point
+typedef struct _DeltaPricePoint {
+  UINT32BE price_numerator;  // bytes 0 to 3, signed, read here as unsigned
+  UINT32BE volume;           // bytes 4 to 7, signed, read here as unsigned
+  UINT32BE chg_qty;          // bytes 8 to 11, signed, read here as unsigned
+  UINT16BE num_orders;       // bytes 12 to 13, signed, read here as unsigned
+  UINT8 side;                // byte 14
+  UINT8 reason_code;         // byte 15
+  UINT32BE link_id_1;        // bytes 16 to 19, signed, read here as unsigned
+  UINT32BE link_id_2;        // bytes 20 to 23, signed, read here as unsigned
+  UINT32BE link_id_3;        // bytes 24 to 27, signed, read here as unsigned
+} DeltaPricePoint;
+
+// A Delta Update message is published in response to events that occur in the book such as interest being added, executions, cancellations and interest routed to a different market.
+typedef struct _DeltaUpdateMessageBody (UINT32 available) where (available >= 18) {
+  UINT32BE symbol_index;                                           // bytes 0 to 3, signed, read here as unsigned
+  UINT32BE source_time;                                            // bytes 4 to 7, signed, read here as unsigned
+  UINT16BE source_time_micro_secs;                                 // bytes 8 to 9, signed, read here as unsigned
+  UINT32BE source_seq_num;                                         // bytes 10 to 13, signed, read here as unsigned
+  UINT8 source_session_id;                                         // byte 14, signed, read here as unsigned
+  UINT8 quote_condition;                                           // byte 15
+  UINT8 trading_status;                                            // byte 16
+  UINT8 price_scale_code;                                          // byte 17, signed, read here as unsigned
+  DeltaPricePoint delta_price_point[:byte-size (available - 18)];
+} DeltaUpdateMessageBody;
+
+// A Delta Update message is published in response to events that occur in the book such as interest being added, executions, cancellations and interest routed to a different market.
+typedef struct _DeltaUpdateMessage (mutable UINT32 * tally) {
+  UINT16BE delta_size { delta_size >= 2 };                                                                                                                         // bytes 0 to 1, signed, read here as unsigned
+  DeltaUpdateMessageBody((((UINT32) delta_size) - 2)) delta_update_message_body[:byte-size-single-element-array (((UINT32) delta_size) - 2)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} DeltaUpdateMessage;
+
+// A Delta Update message is published in response to events that occur in the book such as interest being added, executions, cancellations and interest routed to a different market.
+typedef struct _DeltaUpdateMessages (UINT8 message_count, UINT32 available, mutable UINT32 * tally) {
+  unit delta_update_message_tally_start {:on-success *tally = 0; return true; };
+  DeltaUpdateMessage(tally) delta_update_message[:byte-size available];
+  unit delta_update_message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} DeltaUpdateMessages;
+
+// Branch
+casetype _Payload (UINT16 selector, UINT8 message_count, UINT32 available, mutable UINT32 * tally) {
+  switch (selector) {
+    case 0x0023: SymbolIndexMappingResponseMessages(message_count) symbol_index_mapping_response_messages;
+    case 0x0001: SequenceNumberResetMessage sequence_number_reset_message;
+    case 0x0002: unit heartbeat_message;
+    case 0x0005: UnavailableMessage unavailable_message;
+    case 0x000A: RequestResponseMessage request_response_message;
+    case 0x0013: unit heartbeat_subscription_message;
+    case 0x0014: RetransmissionRequestMessage retransmission_request_message;
+    case 0x0016: BookRefreshRequestMessage book_refresh_request_message;
+    case 0x0018: HeartbeatResponseMessage heartbeat_response_message;
+    case 0x001B: ExtendedBookRefreshRequestMessage extended_book_refresh_request_message;
+    case 0x0022: SymbolIndexMappingRequestMessage symbol_index_mapping_request_message;
+    case 0x00E6: FullUpdateMessages(message_count, available, tally) full_update_messages;
+    case 0x00E7: DeltaUpdateMessages(message_count, available, tally) delta_update_messages;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Xdp Udp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 16) {
+  UINT16BE packet_size;                                                                                                     // bytes 0 to 1
+  UINT16BE message_type;                                                                                                    // bytes 2 to 3
+  UINT32BE sequence_number;                                                                                                 // bytes 4 to 7
+  UINT32BE timestamp;                                                                                                       // bytes 8 to 11
+  UINT8 product_id;                                                                                                         // byte 12
+  UINT8 retransmission_flag;                                                                                                // byte 13
+  UINT8 message_count;                                                                                                      // byte 14
+  UINT8 link_flag;                                                                                                          // byte 15
+  Payload(message_type, message_count, (available - 16), tally) payload[:byte-size-single-element-array (available - 16)];
+} Packet;
 

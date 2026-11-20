@@ -1,33 +1,368 @@
-// Bolsas y Mercados Espa oles MEFF Full Depth
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Bme Meff FullDepth BmeGate v1.6
 //
+// Protocol:
+//   Organization: Bolsas y Mercados Espa oles
+//   Protocol: MEFF Full Depth
+//   Encoding: BMEGate Binary Interface
+//   Version: 1.6
+//   Date: 06/13/2025
+//   Specification: BMEGate binary protocol B1.6.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out Meff_FullDepth_v1_6.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Message Header: 3 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// What every message carries, in either direction: its length and its type. Section 2.1 gives a published message a third field, the sequence number that lets a listener continue an interrupted session without gaps and without repeated messages, and the message tables state it as the message's own first field - which is where it is declared, since a client's Logon, Replay Request and Logout do not carry one
-entrypoint typedef struct _MessageHeader {
-  UINT16 message_size;  // bytes 0 to 1
-  UINT8 message_type;   // byte 2
-} MessageHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_LOGON_RESPONSE_MESSAGE 0x08                                          // Logon Response Message
+#define MESSAGE_TYPE_LOGOUT_RESPONSE_MESSAGE 0x0B                                         // Logout Response Message
+#define MESSAGE_TYPE_HEARTBEAT_MESSAGE 0x30                                               // Heartbeat Message
+#define MESSAGE_TYPE_NETWORK_STATUS_MESSAGE 0x0A                                          // Network Status Message
+#define MESSAGE_TYPE_TRADING_SESSION_STATUS_MESSAGE 0x68                                  // Trading Session Status Message
+#define MESSAGE_TYPE_NEWS_MESSAGE 0x42                                                    // News Message
+#define MESSAGE_TYPE_SECURITY_LIST_CANCELLATION_REPORT_MESSAGE 0x78                       // Security List Cancellation Report Message
+#define MESSAGE_TYPE_STATISTICS_MESSAGE 0x84                                              // Statistics Message
+#define MESSAGE_TYPE_SECURITY_LIST_MESSAGE 0x79                                           // Security List Message
+#define MESSAGE_TYPE_SECURITY_LIST_UPDATE_REPORT_MESSAGE 0x80                             // Security List Update Report Message
+#define MESSAGE_TYPE_SECURITY_STATUS_MESSAGE 0x66                                         // Security Status Message
+#define MESSAGE_TYPE_FAMILY_STATUS_MESSAGE 0x89                                           // Family Status Message
+#define MESSAGE_TYPE_ORDER_BOOK_CLEAR_MESSAGE 0x81                                        // Order Book Clear Message
+#define MESSAGE_TYPE_ORDER_MARKET_PRE_TRANSPARENCY_INFORMATION_MESSAGE 0x03               // Order Market Pre Transparency Information Message
+#define MESSAGE_TYPE_QUOTE_MARKET_PRE_TRANSPARENCY_INFORMATION_MESSAGE 0x07               // Quote Market Pre Transparency Information Message
+#define MESSAGE_TYPE_ORDER_CANCELLATION_MARKET_MEMBER_MESSAGE 0x01                        // Order Cancellation Market Member Message
+#define MESSAGE_TYPE_QUOTE_CANCELLATION_MARKET_MEMBER_MESSAGE 0x05                        // Quote Cancellation Market Member Message
+#define MESSAGE_TYPE_TRADE_MARKET_POST_TRANSPARENCY_INFORMATION_TOP_OF_BOOK_MESSAGE 0x10  // Trade Market Post Transparency Information Top Of Book Message
+#define MESSAGE_TYPE_TRADE_TRADE_AMENDMENT_OR_CANCELLATION_MESSAGE 0x18                   // Trade Trade Amendment Or Cancellation Message
+#define MESSAGE_TYPE_TRADE_MARKET_POST_TRANSPARENCY_INFORMATION_FULL_DEPTH_MESSAGE 0x11   // Trade Market Post Transparency Information Full Depth Message
+#define MESSAGE_TYPE_INDICATION_OF_INTEREST_MESSAGE 0x36                                  // Indication Of Interest Message
+#define MESSAGE_TYPE_RFQ_MARKET_PRE_TRANSPARENCY_INFORMATION_MESSAGE 0x85                 // Rfq Market Pre Transparency Information Message
+#define MESSAGE_TYPE_TOP_OF_BOOK_MESSAGE 0x82                                             // Top Of Book Message
 
-// ---- Logon Response Message: 26 bytes ----------------------------------------
+// Test Production Ind: one byte code
+#define TEST_PRODUCTION_IND_TEST 0x54        // Test
+#define TEST_PRODUCTION_IND_PRODUCTION 0x50  // Production
+
+// Logout Reason: one byte code
+#define LOGOUT_REASON_TERMINATION_AFTER_A_SOLICITED_LOGOUT_REQUEST 0x00                            // Termination After A Solicited Logout Request
+#define LOGOUT_REASON_END_OF_SESSION_TERMINATION_IN_RECOVERY_SERVER_END_OF_RECOVERY_SNAPSHOT 0x01  // End Of Session Termination In Recovery Server End Of Recovery Snapshot
+#define LOGOUT_REASON_TIMEOUT_CONNECTION_LOST 0x02                                                 // Timeout Connection Lost
+#define LOGOUT_REASON_LACK_OF_HEARTBEAT 0x03                                                       // Lack Of Heartbeat
+#define LOGOUT_REASON_INVALID_USERNAME_OR_PASSWORD 0x10                                            // Invalid Username Or Password
+#define LOGOUT_REASON_INVALID_EXPECTED_SEQUENCE_NUMBER 0x11                                        // Invalid Expected Sequence Number
+#define LOGOUT_REASON_INVALID_PROTOCOL_VERSION 0x12                                                // Invalid Protocol Version
+#define LOGOUT_REASON_NEW_CONNECTION_FROM_USER 0x13                                                // New Connection From User
+
+// Network Status Value: one byte code
+#define NETWORK_STATUS_VALUE_CONNECTED 0x01                         // Connected
+#define NETWORK_STATUS_VALUE_NOT_CONNECTED_DOWN_EXPECTED_UP 0x02    // Not Connected Down Expected Up
+#define NETWORK_STATUS_VALUE_NOT_CONNECTED_DOWN_EXPECTED_DOWN 0x03  // Not Connected Down Expected Down
+#define NETWORK_STATUS_VALUE_IN_PROCESS 0x04                        // In Process
+
+// Trading Session Id: one byte code
+#define TRADING_SESSION_ID_CONTINUOUS_TRADING 0x64         // Continuous Trading
+#define TRADING_SESSION_ID_BLOCK_TRADES 0x66               // Block Trades
+#define TRADING_SESSION_ID_NORMAL_HOURS 0x69               // Normal Hours
+#define TRADING_SESSION_ID_DELTA_AND_BASIS_TRADE 0x6A      // Delta And Basis Trade
+#define TRADING_SESSION_ID_BONO_HOURS 0x6B                 // Bono Hours
+#define TRADING_SESSION_ID_CROSS_TRADES_NORMAL_HOURS 0x6C  // Cross Trades Normal Hours
+#define TRADING_SESSION_ID_CROSS_TRADES_BONO_HOURS 0x6D    // Cross Trades Bono Hours
+#define TRADING_SESSION_ID_RFQ_IBEX_FUTURES_HOURS 0x73     // Rfq Ibex Futures Hours
+#define TRADING_SESSION_ID_RFQ_NORMAL_HOURS 0x74           // Rfq Normal Hours
+#define TRADING_SESSION_ID_RFQ_BONO_HOURS 0x75             // Rfq Bono Hours
+#define TRADING_SESSION_ID_X_ROLLING_ON_STOCKS 0x76        // X Rolling On Stocks
+
+// Trading Session Sub Id: one byte code
+#define TRADING_SESSION_SUB_ID_PRE_TRADING_NOT_STARTED 0x01       // Pre Trading Not Started
+#define TRADING_SESSION_SUB_ID_SCHEDULED_OPENING_AUCTION 0x02     // Scheduled Opening Auction
+#define TRADING_SESSION_SUB_ID_CONTINUOUS_TRADING 0x03            // Continuous Trading
+#define TRADING_SESSION_SUB_ID_SCHEDULED_CLOSING_AUCTION 0x04     // Scheduled Closing Auction
+#define TRADING_SESSION_SUB_ID_POST_TRADING 0x05                  // Post Trading
+#define TRADING_SESSION_SUB_ID_SCHEDULED_INTRADAY_AUCTION 0x06    // Scheduled Intraday Auction
+#define TRADING_SESSION_SUB_ID_UNSCHEDULED_INTRADAY_AUCTION 0x09  // Unscheduled Intraday Auction
+#define TRADING_SESSION_SUB_ID_NOT_STARTED 0xCA                   // Not Started
+#define TRADING_SESSION_SUB_ID_OPEN 0xCB                          // Open
+#define TRADING_SESSION_SUB_ID_CLOSED 0xCC                        // Closed
+
+// Trad Ses Status: one byte code
+#define TRAD_SES_STATUS_HALTED 0x01                // Halted
+#define TRAD_SES_STATUS_OPEN 0x02                  // Open
+#define TRAD_SES_STATUS_CLOSED 0x03                // Closed
+#define TRAD_SES_STATUS_PRE_OPEN_NOT_STARTED 0x04  // Pre Open Not Started
+#define TRAD_SES_STATUS_PRE_CLOSE 0x05             // Pre Close
+#define TRAD_SES_STATUS_REQUEST_REJECTED 0x06      // Request Rejected
+
+// Data Code: one byte code
+#define DATA_CODE_AVERAGE_PRICE 0x44                    // Average Price
+#define DATA_CODE_PREVIOUS_FORWARD_PRICE 0x64           // Previous Forward Price
+#define DATA_CODE_PUBLISHED_CASH_AMOUNT 0x45            // Published Cash Amount
+#define DATA_CODE_ORDER_MODALITY_CASH_AMOUNT 0x65       // Order Modality Cash Amount
+#define DATA_CODE_END_OF_SESSION_INDICATOR 0x66         // End Of Session Indicator
+#define DATA_CODE_FIRST 0x47                            // First
+#define DATA_CODE_HIGH 0x48                             // High
+#define DATA_CODE_MAXIMUM_BID 0x68                      // Maximum Bid
+#define DATA_CODE_NOT_PUBLISHED_VOLUME 0x4A             // Not Published Volume
+#define DATA_CODE_LAST 0x4D                             // Last
+#define DATA_CODE_NUMBER_OF_TRADES 0x4E                 // Number Of Trades
+#define DATA_CODE_PREVIOUS_CLOSING_PRICE 0x51           // Previous Closing Price
+#define DATA_CODE_OPENING_VOLATILITY 0x52               // Opening Volatility
+#define DATA_CODE_PUBLISHED_VOLUME 0x56                 // Published Volume
+#define DATA_CODE_PUBLISHED_VOLUME_ORDER_MODALITY 0x76  // Published Volume Order Modality
+#define DATA_CODE_VOLUME_OF_LAST_TRADE 0x57             // Volume Of Last Trade
+#define DATA_CODE_LOW 0x5A                              // Low
+#define DATA_CODE_MINIMUM_ASK 0x7A                      // Minimum Ask
+#define DATA_CODE_CLOSING_PRICE 0x6A                    // Closing Price
+#define DATA_CODE_CLOSING_YIELD 0x6B                    // Closing Yield
+#define DATA_CODE_VOLATILITY 0x6C                       // Volatility
+#define DATA_CODE_DELTA 0x6D                            // Delta
+#define DATA_CODE_FORWARD_PRICE 0x6E                    // Forward Price
+
+// Liquid Instrument: one byte code
+#define LIQUID_INSTRUMENT_FALSE 0x00  // False
+#define LIQUID_INSTRUMENT_TRUE 0x01   // True
+
+// Admission Requested By Issuer: one byte code
+#define ADMISSION_REQUESTED_BY_ISSUER_FALSE 0x00  // False
+#define ADMISSION_REQUESTED_BY_ISSUER_TRUE 0x01   // True
+
+// Trading Obligation: one byte code
+#define TRADING_OBLIGATION_FALSE 0x00  // False
+#define TRADING_OBLIGATION_TRUE 0x01   // True
+
+// Settl Method: one byte code
+#define SETTL_METHOD_CASH 0x43      // Cash
+#define SETTL_METHOD_PHYSICAL 0x50  // Physical
+
+// Exercise Style: one byte code
+#define EXERCISE_STYLE_AMERICAN 0x41            // American
+#define EXERCISE_STYLE_EUROPEAN 0x45            // European
+#define EXERCISE_STYLE_EUROPEAN_AUTOMATIC 0x56  // European Automatic
+
+// Put Or Call: one byte code
+#define PUT_OR_CALL_CALL 0x43   // Call
+#define PUT_OR_CALL_PUT 0x50    // Put
+#define PUT_OR_CALL_OTHER 0x4F  // Other
+
+// Flexible Indicator: one byte code
+#define FLEXIBLE_INDICATOR_FLEXIBLE 0x59  // Flexible
+#define FLEXIBLE_INDICATOR_STANDARD 0x4E  // Standard
+
+// Adjustments Rule: one byte code
+#define ADJUSTMENTS_RULE_EXTRAORDINARY_DIVIDEND_ADJUSTMENTS_ONLY 0x45  // Extraordinary Dividend Adjustments Only
+#define ADJUSTMENTS_RULE_TOTAL 0x54                                    // Total
+
+// Self Match Prevention: one byte code
+#define SELF_MATCH_PREVENTION_FALSE 0x00  // False
+#define SELF_MATCH_PREVENTION_TRUE 0x01   // True
+
+// Commodity Derivative Indicator: one byte code
+#define COMMODITY_DERIVATIVE_INDICATOR_COMMODITY_DERIVATIVE 0x53  // Commodity Derivative
+#define COMMODITY_DERIVATIVE_INDICATOR_NON_DERIVATIVE 0x4E        // Non Derivative
+#define COMMODITY_DERIVATIVE_INDICATOR_DERIVATIVE 0x44            // Derivative
+
+// Maturity Month Year Increment Units: one byte code
+#define MATURITY_MONTH_YEAR_INCREMENT_UNITS_MONTHS 0x30  // Months
+#define MATURITY_MONTH_YEAR_INCREMENT_UNITS_DAYS 0x31    // Days
+#define MATURITY_MONTH_YEAR_INCREMENT_UNITS_WEEKS 0x32   // Weeks
+#define MATURITY_MONTH_YEAR_INCREMENT_UNITS_YEARS 0x33   // Years
+
+// X Rolling Closing Type: one byte code
+#define X_ROLLING_CLOSING_TYPE_MARKET 0x4D     // Market
+#define X_ROLLING_CLOSING_TYPE_BY_BUYER 0x31   // By Buyer
+#define X_ROLLING_CLOSING_TYPE_BY_SELLER 0x32  // By Seller
+#define X_ROLLING_CLOSING_TYPE_BY_BOTH 0x41    // By Both
+
+// X Rolling Reference Buyer Rate: one byte code
+#define X_ROLLING_REFERENCE_BUYER_RATE_STR_DEFAULT_VALUE_FOR_NON_FLEX_X_ROLLING 0x53  // Str Default Value For Non Flex X Rolling
+#define X_ROLLING_REFERENCE_BUYER_RATE_FIS_ANALITICS 0x46                             // Fis Analitics
+#define X_ROLLING_REFERENCE_BUYER_RATE_MEFF_RATE 0x4D                                 // Meff Rate
+#define X_ROLLING_REFERENCE_BUYER_RATE_ZERO 0x30                                      // Zero
+
+// X Rolling Reference Seller Rate: one byte code
+#define X_ROLLING_REFERENCE_SELLER_RATE_STR 0x53                                             // Str
+#define X_ROLLING_REFERENCE_SELLER_RATE_FIS_ANALITICS 0x46                                   // Fis Analitics
+#define X_ROLLING_REFERENCE_SELLER_RATE_MEFF_RATE_DEFAULT_VALUE_FOR_NON_FLEX_X_ROLLING 0x4D  // Meff Rate Default Value For Non Flex X Rolling
+#define X_ROLLING_REFERENCE_SELLER_RATE_CERO 0x30                                            // Cero
+
+// Leg Side 1: one byte code
+#define LEG_SIDE_1_BUY 0x31   // Buy
+#define LEG_SIDE_1_SELL 0x32  // Sell
+
+// Leg Side 2: one byte code
+#define LEG_SIDE_2_BUY 0x31   // Buy
+#define LEG_SIDE_2_SELL 0x32  // Sell
+
+// Leg Side 3: one byte code
+#define LEG_SIDE_3_BUY 0x31   // Buy
+#define LEG_SIDE_3_SELL 0x32  // Sell
+
+// Leg Side 4: one byte code
+#define LEG_SIDE_4_BUY 0x31   // Buy
+#define LEG_SIDE_4_SELL 0x32  // Sell
+
+// Leg Side 5: one byte code
+#define LEG_SIDE_5_BUY 0x31   // Buy
+#define LEG_SIDE_5_SELL 0x32  // Sell
+
+// Security Trading Status: one byte code
+#define SECURITY_TRADING_STATUS_READY_TO_TRADE 0x11                    // Ready To Trade
+#define SECURITY_TRADING_STATUS_NOT_AVAILABLE_FOR_TRADING 0x12         // Not Available For Trading
+#define SECURITY_TRADING_STATUS_NOT_TRADED_ON_THIS_SEGMENT 0x13        // Not Traded On This Segment
+#define SECURITY_TRADING_STATUS_UNKNOWN_OR_INVALID 0x14                // Unknown Or Invalid
+#define SECURITY_TRADING_STATUS_PRE_OPEN 0x15                          // Pre Open
+#define SECURITY_TRADING_STATUS_POST_CLOSE_READY_TO_TRADE_IN_TAL 0x1A  // Post Close Ready To Trade In Tal
+#define SECURITY_TRADING_STATUS_FAST_MARKET 0x17                       // Fast Market
+#define SECURITY_TRADING_STATUS_EXTRAORDINARY_MARKET_CONDITIONS 0x64   // Extraordinary Market Conditions
+
+// Non Availability Reason: one byte code
+#define NON_AVAILABILITY_REASON_NOT_HALTED 0x00                     // Not Halted
+#define NON_AVAILABILITY_REASON_HALTED_BY_REGULATOR 0x64            // Halted By Regulator
+#define NON_AVAILABILITY_REASON_HALTED_BY_MARKET_SURVEILLANCE 0x65  // Halted By Market Surveillance
+#define NON_AVAILABILITY_REASON_KNOCK_OUT 0x66                      // Knock Out
+#define NON_AVAILABILITY_REASON_KNOCK_IN_PENDING 0x67               // Knock In Pending
+
+// Side: one byte code
+#define SIDE_BUY 0x31          // Buy
+#define SIDE_SELL 0x32         // Sell
+#define SIDE_UNDISCLOSED 0x37  // Undisclosed
+
+// Retail Cl Flag: one byte code
+#define RETAIL_CL_FLAG_FALSE 0x00  // False
+#define RETAIL_CL_FLAG_TRUE 0x01   // True
+
+// Trade Type: one byte code
+#define TRADE_TYPE_CROSS_TRADE_DURING_TRADING_HOURS 0x48                    // Cross Trade During Trading Hours
+#define TRADE_TYPE_DELTA 0x4C                                               // Delta
+#define TRADE_TYPE_MARKET 0x4D                                              // Market
+#define TRADE_TYPE_STRATEGY_TRADES_TIME_SPREAD_FUTURES_AND_STRATEGIES 0x52  // Strategy Trades Time Spread Futures And Strategies
+#define TRADE_TYPE_COMPONENTS_OF_TRADE_R 0x53                               // Components Of Trade R
+#define TRADE_TYPE_TRADE_AMENDMENT 0x57                                     // Trade Amendment
+#define TRADE_TYPE_COUNTERTRADE 0x58                                        // Countertrade
+#define TRADE_TYPE_RFQ 0x33                                                 // Rfq
+#define TRADE_TYPE_RFQ_X_ROLLING 0x34                                       // Rfq X Rolling
+#define TRADE_TYPE_RFQ_X_ROLLING_DURING_AUCTION 0x36                        // Rfq X Rolling During Auction
+#define TRADE_TYPE_RFQ_X_ROLLING_AMENDMENT 0x38                             // Rfq X Rolling Amendment
+#define TRADE_TYPE_RFQ_X_ROLLING_DURING_AUCTION_AMENDMENT 0x39              // Rfq X Rolling During Auction Amendment
+
+// Designation: one byte code
+#define DESIGNATION_TRADE_DURING_OPEN_MARKET 0x31                // Trade During Open Market
+#define DESIGNATION_TRADE_DURING_OPENING_AUCTION 0x32            // Trade During Opening Auction
+#define DESIGNATION_TRADE_DURING_CLOSING_AUCTION 0x33            // Trade During Closing Auction
+#define DESIGNATION_TRADE_DURING_VOLATILITY_AUCTION 0x34         // Trade During Volatility Auction
+#define DESIGNATION_TRADE_DURING_MANUAL_AUCTION 0x35             // Trade During Manual Auction
+#define DESIGNATION_TRADE_DURING_OPENING_AUCTION_EXTENSION 0x36  // Trade During Opening Auction Extension
+#define DESIGNATION_TRADE_DURING_CLOSING_AUCTION_EXTENSION 0x37  // Trade During Closing Auction Extension
+#define DESIGNATION_TRADE_DURING_TAL_PERIOD 0x38                 // Trade During Tal Period
+#define DESIGNATION_TRADE_IN_SPAIN_AT_MID_DARK_BOOK 0x43         // Trade In Spain At Mid Dark Book
+
+// Market Mechanism: one byte code
+#define MARKET_MECHANISM_CENTRAL_LIMIT_ORDER_BOOK 0x30    // Central Limit Order Book
+#define MARKET_MECHANISM_OFF_BOOK_MESSAGING_TRADING 0x31  // Off Book Messaging Trading
+#define MARKET_MECHANISM_REQUEST_FOR_QUOTES 0x36          // Request For Quotes
+
+// Algo Flag: one byte code
+#define ALGO_FLAG_FALSE 0x00  // False
+#define ALGO_FLAG_TRUE 0x01   // True
+
+// Transaction Category: one byte code
+#define TRANSACTION_CATEGORY_NORMAL_CATEGORY 0x20                                      // Normal Category
+#define TRANSACTION_CATEGORY_EXCHANGE_FOR_PHYSICALS_XFPH 0x59                          // Exchange For Physicals Xfph
+#define TRANSACTION_CATEGORY_PACKAGE_TRADE_EXCLUDING_EXCHANGE_FOR_PHYSICALS_TPAC 0x5A  // Package Trade Excluding Exchange For Physicals Tpac
+
+// Last Change Flag: one byte code
+#define LAST_CHANGE_FLAG_FALSE 0x00  // False
+#define LAST_CHANGE_FLAG_TRUE 0x01   // True
+
+// Benc Rfpt Flag: one byte code
+#define BENC_RFPT_FLAG_NORMAL_TRADE 0x20          // Normal Trade
+#define BENC_RFPT_FLAG_BENCHMARK_TRADE_BENC 0x36  // Benchmark Trade Benc
+
+// Trade Price Condition: one byte code
+#define TRADE_PRICE_CONDITION_PLAIN_VANILLA_TRADE 0x20                                                 // Plain Vanilla Trade
+#define TRADE_PRICE_CONDITION_NON_PRICE_FORMING_TRADE_FORMERLY_DEFINED_AS_A_TECHNICAL_TRADE_NPFT 0x35  // Non Price Forming Trade Formerly Defined As A Technical Trade Npft
+
+// Pre Trade Transparency Waiver: one byte code
+#define PRE_TRADE_TRANSPARENCY_WAIVER_NEGOTIATED_TRADE_NEGO 0x20  // Negotiated Trade Nego
+
+// Deferral Waiver: one byte code
+#define DEFERRAL_WAIVER_IMMEDIATE_PUBLICATION 0x20                                            // Immediate Publication
+#define DEFERRAL_WAIVER_NON_IMMEDIATE_PUBLICATION_DEFERRAL_FOR_LARGE_IN_SCALE_LRGS 0x36       // Non Immediate Publication Deferral For Large In Scale Lrgs
+#define DEFERRAL_WAIVER_NON_IMMEDIATE_PUBLICATION_DEFERRAL_FOR_ILLIQUID_INSTRUMENT_ILQD 0x37  // Non Immediate Publication Deferral For Illiquid Instrument Ilqd
+#define DEFERRAL_WAIVER_NON_IMMEDIATE_PUBLICATION_DEFERRAL_FOR_SIZE_SPECIFIC_SIZE_RTS_2 0x38  // Non Immediate Publication Deferral For Size Specific Size Rts 2
+
+// Post Deferral Publication Type: one byte code
+#define POST_DEFERRAL_PUBLICATION_TYPE_NOT_APPLICABLE_NO_RELEVANT_DEFERRAL_OR_ENRICHMENT_TYPE 0x20  // Not Applicable No Relevant Deferral Or Enrichment Type
+#define POST_DEFERRAL_PUBLICATION_TYPE_FULL_DETAILS_OF_EARLIER_DAILY_AGGREGATED_TRADE_DATF 0x38     // Full Details Of Earlier Daily Aggregated Trade Datf
+
+// Amended Trade Type: one byte code
+#define AMENDED_TRADE_TYPE_CROSS_TRADE_DURING_TRADING_HOURS 0x48                    // Cross Trade During Trading Hours
+#define AMENDED_TRADE_TYPE_DELTA 0x4C                                               // Delta
+#define AMENDED_TRADE_TYPE_MARKET 0x4D                                              // Market
+#define AMENDED_TRADE_TYPE_STRATEGY_TRADES_TIME_SPREAD_FUTURES_AND_STRATEGIES 0x52  // Strategy Trades Time Spread Futures And Strategies
+#define AMENDED_TRADE_TYPE_COMPONENTS_OF_TRADE_R 0x53                               // Components Of Trade R
+#define AMENDED_TRADE_TYPE_TRADE_AMENDMENT 0x57                                     // Trade Amendment
+#define AMENDED_TRADE_TYPE_COUNTERTRADE 0x58                                        // Countertrade
+#define AMENDED_TRADE_TYPE_RFQ 0x33                                                 // Rfq
+#define AMENDED_TRADE_TYPE_RFQ_X_ROLLING 0x34                                       // Rfq X Rolling
+#define AMENDED_TRADE_TYPE_RFQ_X_ROLLING_DURING_AUCTION 0x36                        // Rfq X Rolling During Auction
+#define AMENDED_TRADE_TYPE_RFQ_X_ROLLING_AMENDMENT 0x38                             // Rfq X Rolling Amendment
+#define AMENDED_TRADE_TYPE_RFQ_X_ROLLING_DURING_AUCTION_AMENDMENT 0x39              // Rfq X Rolling During Auction Amendment
+
+// Retail Cl Flag 2: one byte code
+#define RETAIL_CL_FLAG_2_FALSE 0x00  // False
+#define RETAIL_CL_FLAG_2_TRUE 0x01   // True
+
+// Ioi Trans Type: one byte code
+#define IOI_TRANS_TYPE_NEW 0x4E      // New
+#define IOI_TRANS_TYPE_CANCEL 0x43   // Cancel
+#define IOI_TRANS_TYPE_REPLACE 0x52  // Replace
+
+// Ioi Qlty Ind: one byte code
+#define IOI_QLTY_IND_HIGH_RFQ_REQUESTED 0x48      // High Rfq Requested
+#define IOI_QLTY_IND_MEDIUM_ORDER_REQUESTED 0x4D  // Medium Order Requested
+
+// Retail Cl Bid Flag 1: one byte code
+#define RETAIL_CL_BID_FLAG_1_FALSE 0x00  // False
+#define RETAIL_CL_BID_FLAG_1_TRUE 0x01   // True
+
+// Retail Cl Ask Flag 1: one byte code
+#define RETAIL_CL_ASK_FLAG_1_FALSE 0x00  // False
+#define RETAIL_CL_ASK_FLAG_1_TRUE 0x01   // True
+
+// ---- Types -------------------------------------------------------------------
 
 // The Logon Response message is used by the Server to accept a new session. In this message the sequence number will always be 0
-entrypoint typedef struct _LogonResponseMessage {
+typedef struct _LogonResponseMessage {
   UINT32 sequence_number;           // bytes 0 to 3
   UINT8 heart_bt_int;               // byte 4
   UINT8 protocol_version[6];        // bytes 5 to 10
@@ -38,33 +373,25 @@ entrypoint typedef struct _LogonResponseMessage {
   UINT32 sequence_number_to;        // bytes 22 to 25
 } LogonResponseMessage;
 
-// ---- Logout Response Message: 5 bytes ----------------------------------------
-
 // The Logout message is used by the Server to notify the end of a session, whether it is solicited or unsolicited. It may also be the answer to a failed logon attempt (see Logon message)
-entrypoint typedef struct _LogoutResponseMessage {
+typedef struct _LogoutResponseMessage {
   UINT32 sequence_number;  // bytes 0 to 3
   UINT8 logout_reason;     // byte 4
 } LogoutResponseMessage;
 
-// ---- Heartbeat Message: 4 bytes ----------------------------------------------
-
 // The Heartbeat message is used by the Server to indicate that the communication is active. In the Heartbeat message, the SequenceNumber of the previously received message will be repeated
-entrypoint typedef struct _HeartbeatMessage {
+typedef struct _HeartbeatMessage {
   UINT32 sequence_number;  // bytes 0 to 3
 } HeartbeatMessage;
 
-// ---- Network Status Message: 5 bytes -----------------------------------------
-
 // Message sent by the server with information about the connectivity between the Server and the central systems. In the Network Status message, the SequenceNumber of the previously received message will be repeated
-entrypoint typedef struct _NetworkStatusMessage {
+typedef struct _NetworkStatusMessage {
   UINT32 sequence_number;      // bytes 0 to 3
   UINT8 network_status_value;  // byte 4
 } NetworkStatusMessage;
 
-// ---- Trading Session Status Message: 15 bytes --------------------------------
-
 // Sent by the server to inform about the session status in each Trading Mode
-entrypoint typedef struct _TradingSessionStatusMessage {
+typedef struct _TradingSessionStatusMessage {
   UINT32 sequence_number;            // bytes 0 to 3
   UINT8 trading_session_id;          // byte 4
   UINT8 trading_session_sub_id;      // byte 5
@@ -72,18 +399,14 @@ entrypoint typedef struct _TradingSessionStatusMessage {
   UINT64 transaction_date_and_time;  // bytes 7 to 14, signed, read here as unsigned
 } TradingSessionStatusMessage;
 
-// ---- News Message: 82 bytes --------------------------------------------------
-
 // Used by the Server to communicate a Market Surveillance or system-wide text message
-entrypoint typedef struct _NewsMessage {
+typedef struct _NewsMessage {
   UINT32 sequence_number;  // bytes 0 to 3
   UINT8 news_text[78];     // bytes 4 to 81
 } NewsMessage;
 
-// ---- Security List Cancellation Report Message: 50 bytes ---------------------
-
 // Message sent by the server for cancelling previously defined securities
-entrypoint typedef struct _SecurityListCancellationReportMessage {
+typedef struct _SecurityListCancellationReportMessage {
   UINT32 sequence_number;      // bytes 0 to 3
   UINT8 market_id[4];          // bytes 4 to 7
   UINT8 market_segment_id[4];  // bytes 8 to 11
@@ -92,10 +415,23 @@ entrypoint typedef struct _SecurityListCancellationReportMessage {
   UINT8 symbol_isin[12];       // bytes 38 to 49
 } SecurityListCancellationReportMessage;
 
-// ---- Security List Message: 713 bytes ----------------------------------------
+// Repeating group of the Statistics message, one entry per data value, DataCount entries
+typedef struct _StatisticsRepeatingGroup {
+  UINT8 data_code;    // byte 0
+  UINT64 data_value;  // bytes 1 to 8, signed, read here as unsigned
+} StatisticsRepeatingGroup;
+
+// Message sent by the server to inform about closing prices and other statistics
+typedef struct _StatisticsMessage {
+  UINT32 sequence_number;                                                                       // bytes 0 to 3
+  UINT32 security_code;                                                                         // bytes 4 to 7
+  UINT64 transaction_date_and_time;                                                             // bytes 8 to 15, signed, read here as unsigned
+  UINT8 data_count;                                                                             // byte 16
+  StatisticsRepeatingGroup statistics_repeating_group[:byte-size (((UINT32) data_count) * 9)];
+} StatisticsMessage;
 
 // Message sent by the server to provide the definition of one security. It shares the same layout as the Security List Update Report message, but with a different Message Type
-entrypoint typedef struct _SecurityListMessage {
+typedef struct _SecurityListMessage {
   UINT32 sequence_number;                       // bytes 0 to 3
   UINT8 market_id[4];                           // bytes 4 to 7
   UINT8 market_segment_id[4];                   // bytes 8 to 11
@@ -186,10 +522,8 @@ entrypoint typedef struct _SecurityListMessage {
   UINT64 leg_price_5;                           // bytes 705 to 712, signed, read here as unsigned
 } SecurityListMessage;
 
-// ---- Security List Update Report Message: 713 bytes --------------------------
-
 // Message sent by the server for reporting updates, during the session, to the security definition
-entrypoint typedef struct _SecurityListUpdateReportMessage {
+typedef struct _SecurityListUpdateReportMessage {
   UINT32 sequence_number;                       // bytes 0 to 3
   UINT8 market_id[4];                           // bytes 4 to 7
   UINT8 market_segment_id[4];                   // bytes 8 to 11
@@ -280,10 +614,8 @@ entrypoint typedef struct _SecurityListUpdateReportMessage {
   UINT64 leg_price_5;                           // bytes 705 to 712, signed, read here as unsigned
 } SecurityListUpdateReportMessage;
 
-// ---- Security Status Message: 34 bytes ---------------------------------------
-
 // Message sent by the server to inform on the status of one security
-entrypoint typedef struct _SecurityStatusMessage {
+typedef struct _SecurityStatusMessage {
   UINT32 sequence_number;            // bytes 0 to 3
   UINT32 security_code;              // bytes 4 to 7
   UINT64 transaction_date_and_time;  // bytes 8 to 15, signed, read here as unsigned
@@ -293,10 +625,8 @@ entrypoint typedef struct _SecurityStatusMessage {
   UINT64 low_limit_price;            // bytes 26 to 33, signed, read here as unsigned
 } SecurityStatusMessage;
 
-// ---- Family Status Message: 21 bytes -----------------------------------------
-
 // Message sent by the server in the Derivatives environment to inform about the status a Family of products
-entrypoint typedef struct _FamilyStatusMessage {
+typedef struct _FamilyStatusMessage {
   UINT32 sequence_number;            // bytes 0 to 3
   UINT8 security_group[2];           // bytes 4 to 5
   UINT8 family_code[5];              // bytes 6 to 10
@@ -305,19 +635,15 @@ entrypoint typedef struct _FamilyStatusMessage {
   UINT8 non_availability_reason;     // byte 20
 } FamilyStatusMessage;
 
-// ---- Order Book Clear Message: 16 bytes --------------------------------------
-
 // Message sent by the UDP full-depth server whenever the information about order prices must be reset. In particular, it is sent by the server when the trading mode changes from auction to open market and vice versa
-entrypoint typedef struct _OrderBookClearMessage {
+typedef struct _OrderBookClearMessage {
   UINT32 sequence_number;            // bytes 0 to 3
   UINT32 security_code;              // bytes 4 to 7
   UINT64 transaction_date_and_time;  // bytes 8 to 15, signed, read here as unsigned
 } OrderBookClearMessage;
 
-// ---- Order Market Pre Transparency Information Message: 42 bytes -------------
-
 // Used by the Server to communicate information about all active visible orders. During a session, any order is uniquely identified by the SecondaryOrderID
-entrypoint typedef struct _OrderMarketPreTransparencyInformationMessage {
+typedef struct _OrderMarketPreTransparencyInformationMessage {
   UINT32 sequence_number;            // bytes 0 to 3
   UINT32 security_code;              // bytes 4 to 7
   UINT64 transaction_date_and_time;  // bytes 8 to 15, signed, read here as unsigned
@@ -330,10 +656,8 @@ entrypoint typedef struct _OrderMarketPreTransparencyInformationMessage {
   UINT8 retail_cl_flag;              // byte 41
 } OrderMarketPreTransparencyInformationMessage;
 
-// ---- Quote Market Pre Transparency Information Message: 56 bytes -------------
-
 // Used by the Server to communicate information about active quotes. In a session, a Quote is univoquely identified by its two orders: SecurityCode and SecondaryOrderID (buy order) and SecondaryOrderID2 (sell order)
-entrypoint typedef struct _QuoteMarketPreTransparencyInformationMessage {
+typedef struct _QuoteMarketPreTransparencyInformationMessage {
   UINT32 sequence_number;            // bytes 0 to 3
   UINT32 security_code;              // bytes 4 to 7
   UINT64 transaction_date_and_time;  // bytes 8 to 15, signed, read here as unsigned
@@ -347,10 +671,8 @@ entrypoint typedef struct _QuoteMarketPreTransparencyInformationMessage {
   UINT32 display_qty_2;              // bytes 52 to 55
 } QuoteMarketPreTransparencyInformationMessage;
 
-// ---- Order Cancellation Market Member Message: 24 bytes ----------------------
-
 // Used by the Server to communicate information order cancellation. The same message is used in Full-Depth data feeds (for order cancellations of any user), in the Order Entry Server (for cancellations of user orders) and in the Market Order Server (for order cancellations of any user)
-entrypoint typedef struct _OrderCancellationMarketMemberMessage {
+typedef struct _OrderCancellationMarketMemberMessage {
   UINT32 sequence_number;            // bytes 0 to 3
   UINT32 security_code;              // bytes 4 to 7
   UINT64 transaction_date_and_time;  // bytes 8 to 15, signed, read here as unsigned
@@ -358,10 +680,8 @@ entrypoint typedef struct _OrderCancellationMarketMemberMessage {
   UINT32 entry_date;                 // bytes 20 to 23, signed, read here as unsigned
 } OrderCancellationMarketMemberMessage;
 
-// ---- Quote Cancellation Market Member Message: 24 bytes ----------------------
-
 // Used by the Server to communicate information about quote cancellation. The same message is used in Full-Depth data feeds (for quote cancellations of any user), in the Order Entry Server (for cancellations of user quotes) and in the Market Order Server (for quote cancellations of any user)
-entrypoint typedef struct _QuoteCancellationMarketMemberMessage {
+typedef struct _QuoteCancellationMarketMemberMessage {
   UINT32 sequence_number;            // bytes 0 to 3
   UINT32 security_code;              // bytes 4 to 7
   UINT64 transaction_date_and_time;  // bytes 8 to 15, signed, read here as unsigned
@@ -369,10 +689,8 @@ entrypoint typedef struct _QuoteCancellationMarketMemberMessage {
   UINT32 secondary_order_id_2;       // bytes 20 to 23
 } QuoteCancellationMarketMemberMessage;
 
-// ---- Trade Market Post Transparency Information Top Of Book Message: 54 bytes ----
-
 // Used by the server to communicate trade information related to trades resulting from order matching in channels C/D and E/F. It is also used in channels A/B when the trade is the result of order matching at the end of an auction period (where only top-of-book information is shown)
-entrypoint typedef struct _TradeMarketPostTransparencyInformationTopOfBookMessage {
+typedef struct _TradeMarketPostTransparencyInformationTopOfBookMessage {
   UINT32 sequence_number;            // bytes 0 to 3
   UINT32 security_code;              // bytes 4 to 7
   UINT64 transaction_date_and_time;  // bytes 8 to 15, signed, read here as unsigned
@@ -390,10 +708,8 @@ entrypoint typedef struct _TradeMarketPostTransparencyInformationTopOfBookMessag
   UINT32 strategy_trd_match_id;      // bytes 50 to 53
 } TradeMarketPostTransparencyInformationTopOfBookMessage;
 
-// ---- Trade Trade Amendment Or Cancellation Message: 89 bytes -----------------
-
 // Sent by the server to inform about a trade produced due to any reason other than order matching, also to inform about trades produced due to order matching in a Dark pool. In this message, all fields with the suffix 2 refer to the sell order, and the ones without the suffix refer either to both legs or the buy order
-entrypoint typedef struct _TradeTradeAmendmentOrCancellationMessage {
+typedef struct _TradeTradeAmendmentOrCancellationMessage {
   UINT32 sequence_number;                // bytes 0 to 3
   UINT32 security_code;                  // bytes 4 to 7
   UINT64 transaction_date_and_time;      // bytes 8 to 15, signed, read here as unsigned
@@ -423,10 +739,8 @@ entrypoint typedef struct _TradeTradeAmendmentOrCancellationMessage {
   UINT32 amended_trade_date;             // bytes 85 to 88, signed, read here as unsigned
 } TradeTradeAmendmentOrCancellationMessage;
 
-// ---- Trade Market Post Transparency Information Full Depth Message: 104 bytes ----
-
 // Used by the server to communicate trade information related to trades resulting from order matching. The message also contains the situation in which the relevant orders will remain in the books
-entrypoint typedef struct _TradeMarketPostTransparencyInformationFullDepthMessage {
+typedef struct _TradeMarketPostTransparencyInformationFullDepthMessage {
   UINT32 sequence_number;            // bytes 0 to 3
   UINT32 security_code;              // bytes 4 to 7
   UINT64 transaction_date_and_time;  // bytes 8 to 15, signed, read here as unsigned
@@ -456,10 +770,8 @@ entrypoint typedef struct _TradeMarketPostTransparencyInformationFullDepthMessag
   UINT8 retail_cl_flag_2;            // byte 103
 } TradeMarketPostTransparencyInformationFullDepthMessage;
 
-// ---- Indication Of Interest Message: 36 bytes --------------------------------
-
 // Used by the Server to notify an indication of interest on a specific instrument. This functionality is available in Fixed Income and Derivatives
-entrypoint typedef struct _IndicationOfInterestMessage {
+typedef struct _IndicationOfInterestMessage {
   UINT32 sequence_number;            // bytes 0 to 3
   UINT32 security_code;              // bytes 4 to 7
   UINT64 transaction_date_and_time;  // bytes 8 to 15, signed, read here as unsigned
@@ -472,10 +784,8 @@ entrypoint typedef struct _IndicationOfInterestMessage {
   UINT8 trading_session_id;          // byte 35
 } IndicationOfInterestMessage;
 
-// ---- Rfq Market Pre Transparency Information Message: 189 bytes --------------
-
 // Used by the server to communicate price information about RFQs. The contents of the RFQID field match those of the field IOIID in the corresponding Indication of Interest message
-entrypoint typedef struct _RfqMarketPreTransparencyInformationMessage {
+typedef struct _RfqMarketPreTransparencyInformationMessage {
   UINT32 sequence_number;            // bytes 0 to 3
   UINT32 rfqid;                      // bytes 4 to 7
   UINT8 trading_session_id;          // byte 8
@@ -519,10 +829,8 @@ entrypoint typedef struct _RfqMarketPreTransparencyInformationMessage {
   UINT64 ask_px_5;                   // bytes 181 to 188, signed, read here as unsigned
 } RfqMarketPreTransparencyInformationMessage;
 
-// ---- Top Of Book Message: 46 bytes -------------------------------------------
-
 // Used by the UDP Servers to communicate Top-of-book price information during auctions. When there is an indicative match price, the fields BidPx1 and AskPx1 will have the same value
-entrypoint typedef struct _TopOfBookMessage {
+typedef struct _TopOfBookMessage {
   UINT32 sequence_number;            // bytes 0 to 3
   UINT32 security_code;              // bytes 4 to 7
   UINT64 transaction_date_and_time;  // bytes 8 to 15, signed, read here as unsigned
@@ -535,4 +843,48 @@ entrypoint typedef struct _TopOfBookMessage {
   UINT64 ask_px_1;                   // bytes 37 to 44, signed, read here as unsigned
   UINT8 retail_cl_ask_flag_1;        // byte 45
 } TopOfBookMessage;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x08: LogonResponseMessage logon_response_message;
+    case 0x0B: LogoutResponseMessage logout_response_message;
+    case 0x30: HeartbeatMessage heartbeat_message;
+    case 0x0A: NetworkStatusMessage network_status_message;
+    case 0x68: TradingSessionStatusMessage trading_session_status_message;
+    case 0x42: NewsMessage news_message;
+    case 0x78: SecurityListCancellationReportMessage security_list_cancellation_report_message;
+    case 0x84: StatisticsMessage statistics_message;
+    case 0x79: SecurityListMessage security_list_message;
+    case 0x80: SecurityListUpdateReportMessage security_list_update_report_message;
+    case 0x66: SecurityStatusMessage security_status_message;
+    case 0x89: FamilyStatusMessage family_status_message;
+    case 0x81: OrderBookClearMessage order_book_clear_message;
+    case 0x03: OrderMarketPreTransparencyInformationMessage order_market_pre_transparency_information_message;
+    case 0x07: QuoteMarketPreTransparencyInformationMessage quote_market_pre_transparency_information_message;
+    case 0x01: OrderCancellationMarketMemberMessage order_cancellation_market_member_message;
+    case 0x05: QuoteCancellationMarketMemberMessage quote_cancellation_market_member_message;
+    case 0x10: TradeMarketPostTransparencyInformationTopOfBookMessage trade_market_post_transparency_information_top_of_book_message;
+    case 0x18: TradeTradeAmendmentOrCancellationMessage trade_trade_amendment_or_cancellation_message;
+    case 0x11: TradeMarketPostTransparencyInformationFullDepthMessage trade_market_post_transparency_information_full_depth_message;
+    case 0x36: IndicationOfInterestMessage indication_of_interest_message;
+    case 0x85: RfqMarketPreTransparencyInformationMessage rfq_market_pre_transparency_information_message;
+    case 0x82: TopOfBookMessage top_of_book_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// Bme BmeGate Message
+typedef struct _Message {
+  UINT16 message_size { message_size >= 3 };                                                                                    // bytes 0 to 1
+  UINT8 message_type;                                                                                                           // byte 2
+  Payload(message_type, (((UINT32) message_size) - 3)) payload[:byte-size-single-element-array (((UINT32) message_size) - 3)];
+} Message;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// A Bme binary feed carries no packet header of its own: section 2.1 states that every feed is a series of sequenced messages, each stating its own length, so a datagram holds whole messages to its end
+entrypoint typedef struct _Packet (UINT32 available) {
+  Message message[:byte-size available];
+} Packet;
 

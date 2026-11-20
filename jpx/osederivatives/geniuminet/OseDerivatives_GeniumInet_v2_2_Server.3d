@@ -1,55 +1,126 @@
-// Japan Exchange Group Genium Inet
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Jpx OseDerivatives GeniumInet Glimpse v2.2
 //
+// Protocol:
+//   Organization: Japan Exchange Group
+//   Protocol: Genium Inet
+//   Encoding: Glimpse
+//   Version: 2.2
+//   Date: 10/31/2025
+//   Specification: J-GATE3.0_ITCH_Connectivity_Manual_V2.2.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ServerPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out OseDerivatives_GeniumInet_v2_2_Server.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a length prefix framing what follows
-//
-// License: MIT No Attribution
 
-// ---- Server Packet Header: 3 bytes -------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Packet header of a packet sent by the server
-entrypoint typedef struct _ServerPacketHeader {
-  UINT16BE packet_length;    // bytes 0 to 1
-  UINT8 server_packet_type;  // byte 2
-} ServerPacketHeader;
+// Server Packet Type: one byte code
+#define SERVER_PACKET_TYPE_DEBUG_PACKET 0x2B             // Debug Packet
+#define SERVER_PACKET_TYPE_LOGIN_ACCEPTED_PACKET 0x41    // Login Accepted Packet
+#define SERVER_PACKET_TYPE_LOGIN_REJECTED_PACKET 0x4A    // Login Rejected Packet
+#define SERVER_PACKET_TYPE_SEQUENCED_DATA_PACKET 0x53    // Sequenced Data Packet
+#define SERVER_PACKET_TYPE_SERVER_HEARTBEAT_PACKET 0x48  // Server Heartbeat Packet
+#define SERVER_PACKET_TYPE_END_OF_SESSION_PACKET 0x5A    // End Of Session Packet
 
-// ---- Login Accepted Packet: 30 bytes -----------------------------------------
+// Reject Reason Code: one byte code
+#define REJECT_REASON_CODE_NOT_AUTHORIZED 0x41         // Not Authorized
+#define REJECT_REASON_CODE_SESSION_NOT_AVAILABLE 0x53  // Session Not Available
+
+// Sequenced Message Type: one byte code
+#define SEQUENCED_MESSAGE_TYPE_SECONDS_MESSAGE 0x54                                  // Seconds Message
+#define SEQUENCED_MESSAGE_TYPE_SERIES_INFORMATION_BASIC_MESSAGE 0x52                 // Series Information Basic Message
+#define SEQUENCED_MESSAGE_TYPE_SERIES_INFORMATION_BASIC_COMBINATION_MESSAGE 0x4D     // Series Information Basic Combination Message
+#define SEQUENCED_MESSAGE_TYPE_TICK_SIZE_DATA_MESSAGE 0x4C                           // Tick Size Data Message
+#define SEQUENCED_MESSAGE_TYPE_SYSTEM_EVENT_DATA_MESSAGE 0x53                        // System Event Data Message
+#define SEQUENCED_MESSAGE_TYPE_TRADING_STATUS_DATA_MESSAGE 0x4F                      // Trading Status Data Message
+#define SEQUENCED_MESSAGE_TYPE_NEW_ORDER_MESSAGE 0x41                                // New Order Message
+#define SEQUENCED_MESSAGE_TYPE_EXECUTION_NOTICE_MESSAGE 0x45                         // Execution Notice Message
+#define SEQUENCED_MESSAGE_TYPE_EXECUTION_NOTICE_WITH_TRADE_INFORMATION_MESSAGE 0x43  // Execution Notice With Trade Information Message
+#define SEQUENCED_MESSAGE_TYPE_DELETED_ORDER_MESSAGE 0x44                            // Deleted Order Message
+#define SEQUENCED_MESSAGE_TYPE_EP_MESSAGE 0x5A                                       // Ep Message
+#define SEQUENCED_MESSAGE_TYPE_SNAPSHOT_COMPLETION_MESSAGE 0x47                      // Snapshot Completion Message
+
+// Financial Product: one byte code
+#define FINANCIAL_PRODUCT_OPTION 0x01              // Option
+#define FINANCIAL_PRODUCT_FUTURES 0x03             // Futures
+#define FINANCIAL_PRODUCT_COMBINATION_SERIES 0x0B  // Combination Series
+
+// Put Or Call: one byte code
+#define PUT_OR_CALL_FUTURES_OR_COMBINATION_SERIES 0x00  // Futures Or Combination Series
+#define PUT_OR_CALL_CALL 0x01                           // Call
+#define PUT_OR_CALL_PUT 0x02                            // Put
+
+// Leg Side: one byte code
+#define LEG_SIDE_BUY_IF_ON_BUY_SIDE_SELL_IF_ON_SELL_SIDE 0x42  // Buy If On Buy Side Sell If On Sell Side
+#define LEG_SIDE_SELL_IF_ON_BUY_SIDE_BUY_IF_ON_SELL_SIDE 0x43  // Sell If On Buy Side Buy If On Sell Side
+
+// Event Code: one byte code
+#define EVENT_CODE_START_OF_MESSAGE_TRANSMISSION 0x4F  // Start Of Message Transmission
+#define EVENT_CODE_END_OF_MESSAGE_TRANSMISSION 0x43    // End Of Message Transmission
+
+// Side: one byte code
+#define SIDE_BUY 0x42   // Buy
+#define SIDE_SELL 0x53  // Sell
+
+// Occurred At Cross: one byte code
+#define OCCURRED_AT_CROSS_EXECUTION_THROUGH_AUCTION 0x59  // Execution Through Auction
+#define OCCURRED_AT_CROSS_EXECUTION_THROUGH_ZARABA 0x4E   // Execution Through Zaraba
+
+// ---- Types -------------------------------------------------------------------
+
+// Debug packets are intended to provide human readable text that may aid in debugging problems
+typedef struct _DebugPacket (UINT16 packet_length) where (packet_length >= 1) {
+  UINT8 debug_text[(((UINT32) packet_length) - 1)];
+} DebugPacket;
 
 // The SoupBinTCP server sends a Login Accepted Packet in response to receiving a valid Login Request from the client
-entrypoint typedef struct _LoginAcceptedPacket {
+typedef struct _LoginAcceptedPacket {
   UINT8 accepted_session[10];          // bytes 0 to 9
   UINT8 accepted_sequence_number[20];  // bytes 10 to 29
 } LoginAcceptedPacket;
 
-// ---- Login Rejected Packet: 1 byte -------------------------------------------
-
 // The SoupBinTCP server sends this packet in response to an invalid Login Request Packet from the client
-entrypoint typedef struct _LoginRejectedPacket {
+typedef struct _LoginRejectedPacket {
   UINT8 reject_reason_code;  // byte 0
 } LoginRejectedPacket;
 
-// ---- Seconds Message: 4 bytes ------------------------------------------------
-
 // Provides data on the seconds when each message is disseminated.
-entrypoint typedef struct _SecondsMessage {
+typedef struct _SecondsMessage {
   UINT32BE second;  // bytes 0 to 3
 } SecondsMessage;
 
-// ---- Series Information Basic Message: 128 bytes -----------------------------
-
 // Provides detailed data about the series that can be traded on a given business day.
-entrypoint typedef struct _SeriesInformationBasicMessage {
+typedef struct _SeriesInformationBasicMessage {
   UINT32BE nanoseconds;                          // bytes 0 to 3
   UINT32BE order_book_id;                        // bytes 4 to 7
   UINT8 symbol[32];                              // bytes 8 to 39
@@ -71,10 +142,8 @@ entrypoint typedef struct _SeriesInformationBasicMessage {
   UINT8 put_or_call;                             // byte 127
 } SeriesInformationBasicMessage;
 
-// ---- Series Information Basic Combination Message: 17 bytes ------------------
-
 // Provides detailed data about the legs of combination trading instruments that can be traded on a given trading day.
-entrypoint typedef struct _SeriesInformationBasicCombinationMessage {
+typedef struct _SeriesInformationBasicCombinationMessage {
   UINT32BE nanoseconds;                // bytes 0 to 3
   UINT32BE combination_order_book_id;  // bytes 4 to 7
   UINT32BE leg_order_book_id;          // bytes 8 to 11
@@ -82,10 +151,8 @@ entrypoint typedef struct _SeriesInformationBasicCombinationMessage {
   UINT32BE leg_ratio;                  // bytes 13 to 16
 } SeriesInformationBasicCombinationMessage;
 
-// ---- Tick Size Data Message: 24 bytes ----------------------------------------
-
 // Provides the tick size of a trading instrument.
-entrypoint typedef struct _TickSizeDataMessage {
+typedef struct _TickSizeDataMessage {
   UINT32BE nanoseconds;    // bytes 0 to 3
   UINT32BE order_book_id;  // bytes 4 to 7
   UINT64BE tick_size;      // bytes 8 to 15
@@ -93,27 +160,21 @@ entrypoint typedef struct _TickSizeDataMessage {
   UINT32BE price_to;       // bytes 20 to 23, signed, read here as unsigned
 } TickSizeDataMessage;
 
-// ---- System Event Data Message: 5 bytes --------------------------------------
-
 // Provides system event update data.
-entrypoint typedef struct _SystemEventDataMessage {
+typedef struct _SystemEventDataMessage {
   UINT32BE nanoseconds;  // bytes 0 to 3
   UINT8 event_code;      // byte 4
 } SystemEventDataMessage;
 
-// ---- Trading Status Data Message: 28 bytes -----------------------------------
-
 // Provides the trading status data of a trading instrument.
-entrypoint typedef struct _TradingStatusDataMessage {
+typedef struct _TradingStatusDataMessage {
   UINT32BE nanoseconds;    // bytes 0 to 3
   UINT32BE order_book_id;  // bytes 4 to 7
   UINT8 state_name[20];    // bytes 8 to 27
 } TradingStatusDataMessage;
 
-// ---- New Order Message: 36 bytes ---------------------------------------------
-
 // Provides quote data related to a new order.
-entrypoint typedef struct _NewOrderMessage {
+typedef struct _NewOrderMessage {
   UINT32BE nanoseconds;          // bytes 0 to 3
   UINT64BE order_id;             // bytes 4 to 11
   UINT32BE order_book_id;        // bytes 12 to 15
@@ -125,10 +186,8 @@ entrypoint typedef struct _NewOrderMessage {
   UINT8 lot_type;                // byte 35
 } NewOrderMessage;
 
-// ---- Execution Notice Message: 51 bytes --------------------------------------
-
 // Provides an execution notice. The Order ID of the order which is already in the order book is set.
-entrypoint typedef struct _ExecutionNoticeMessage {
+typedef struct _ExecutionNoticeMessage {
   UINT32BE nanoseconds;        // bytes 0 to 3
   UINT64BE order_id;           // bytes 4 to 11
   UINT32BE order_book_id;      // bytes 12 to 15
@@ -140,10 +199,8 @@ entrypoint typedef struct _ExecutionNoticeMessage {
   UINT8 reserved_7_b[7];       // bytes 44 to 50
 } ExecutionNoticeMessage;
 
-// ---- Execution Notice With Trade Information Message: 57 bytes ---------------
-
 // Provides an execution notice with trade information.
-entrypoint typedef struct _ExecutionNoticeWithTradeInformationMessage {
+typedef struct _ExecutionNoticeWithTradeInformationMessage {
   UINT32BE nanoseconds;        // bytes 0 to 3
   UINT64BE order_id;           // bytes 4 to 11
   UINT32BE order_book_id;      // bytes 12 to 15
@@ -158,20 +215,16 @@ entrypoint typedef struct _ExecutionNoticeWithTradeInformationMessage {
   UINT8 printable;             // byte 56
 } ExecutionNoticeWithTradeInformationMessage;
 
-// ---- Deleted Order Message: 17 bytes -----------------------------------------
-
 // Provided when an order is deleted and does not exist in the order book.
-entrypoint typedef struct _DeletedOrderMessage {
+typedef struct _DeletedOrderMessage {
   UINT32BE nanoseconds;    // bytes 0 to 3
   UINT64BE order_id;       // bytes 4 to 11
   UINT32BE order_book_id;  // bytes 12 to 15
   UINT8 side;              // byte 16
 } DeletedOrderMessage;
 
-// ---- Ep Message: 52 bytes ----------------------------------------------------
-
 // Provides the equilibrium price for the order reception hours.
-entrypoint typedef struct _EpMessage {
+typedef struct _EpMessage {
   UINT32BE nanoseconds;                                  // bytes 0 to 3
   UINT32BE order_book_id;                                // bytes 4 to 7
   UINT64BE available_bid_quantity_at_equilibrium_price;  // bytes 8 to 15
@@ -183,10 +236,60 @@ entrypoint typedef struct _EpMessage {
   UINT8 reserved_8_b[8];                                 // bytes 44 to 51
 } EpMessage;
 
-// ---- Snapshot Completion Message: 20 bytes -----------------------------------
-
 // Sent after completing the transmission of snapshot data.
-entrypoint typedef struct _SnapshotCompletionMessage {
+typedef struct _SnapshotCompletionMessage {
   UINT8 sequence[20];  // bytes 0 to 19
 } SnapshotCompletionMessage;
+
+// The sequenced (server to client) message carried by the packet, opaque bytes unless an application source dispatches it
+casetype _SequencedMessage (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x54: SecondsMessage seconds_message;
+    case 0x52: SeriesInformationBasicMessage series_information_basic_message;
+    case 0x4D: SeriesInformationBasicCombinationMessage series_information_basic_combination_message;
+    case 0x4C: TickSizeDataMessage tick_size_data_message;
+    case 0x53: SystemEventDataMessage system_event_data_message;
+    case 0x4F: TradingStatusDataMessage trading_status_data_message;
+    case 0x41: NewOrderMessage new_order_message;
+    case 0x45: ExecutionNoticeMessage execution_notice_message;
+    case 0x43: ExecutionNoticeWithTradeInformationMessage execution_notice_with_trade_information_message;
+    case 0x44: DeletedOrderMessage deleted_order_message;
+    case 0x5A: EpMessage ep_message;
+    case 0x47: SnapshotCompletionMessage snapshot_completion_message;
+    default: UINT8 unknown[available];
+  }
+} SequencedMessage;
+
+// The Sequenced Data Packets act as an envelope to carry the actual sequenced data messages that are transferred from the server to the client. Each Sequenced Data Packet carries one message from the higher-lever protocol
+typedef struct _SequencedDataPacket (UINT16 packet_length) where (packet_length >= 2) {
+  UINT8 sequenced_message_type;                                                                                                                                // byte 0
+  SequencedMessage(sequenced_message_type, (((UINT32) packet_length) - 2)) sequenced_message[:byte-size-single-element-array (((UINT32) packet_length) - 2)];
+} SequencedDataPacket;
+
+// Branch
+casetype _ServerPayload (UINT8 selector, UINT32 length, UINT16 packet_length, UINT32 available) {
+  switch (selector) {
+    case 0x2B: DebugPacket(packet_length) debug_packet;
+    case 0x41: LoginAcceptedPacket login_accepted_packet;
+    case 0x4A: LoginRejectedPacket login_rejected_packet;
+    case 0x53: SequencedDataPacket(packet_length) sequenced_data_packet[:byte-size-single-element-array length];
+    case 0x48: unit server_heartbeat;
+    case 0x5A: unit end_of_session;
+    default: UINT8 unknown[available];
+  }
+} ServerPayload;
+
+// Soup Bin Tcp Packet sent by the server
+typedef struct _ServerSoupBinTcpPacket {
+  UINT16BE packet_length { packet_length >= 1 };                                                                                                                                                                // bytes 0 to 1
+  UINT8 server_packet_type;                                                                                                                                                                                     // byte 2
+  ServerPayload(server_packet_type, (((UINT32) packet_length) - 1), packet_length, ((((UINT32) packet_length) + 2) - 3)) server_payload[:byte-size-single-element-array ((((UINT32) packet_length) + 2) - 3)];
+} ServerSoupBinTcpPacket;
+
+// ---- Packet: ServerPacket ----------------------------------------------------
+
+// SoupBinTCP Packet sent by the server
+entrypoint typedef struct _ServerPacket (UINT32 available) {
+  ServerSoupBinTcpPacket server_soup_bin_tcp_packet[:byte-size available];
+} ServerPacket;
 

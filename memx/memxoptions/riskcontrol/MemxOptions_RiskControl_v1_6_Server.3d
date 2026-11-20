@@ -1,109 +1,296 @@
-// The Members Exchange Risk Control
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Memx MemxOptions RiskControl Sbe v1.6
 //
+// Protocol:
+//   Organization: The Members Exchange
+//   Protocol: Risk Control
+//   Encoding: Simple Binary Encoding
+//   Version: 1.6
+//   Date: 11/15/23
+//   Specification: Risk Control for US Options SBE-v1_6.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ServerPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out MemxOptions_RiskControl_v1_6_Server.3d
-//
-// What this definition does not state, and the model does:
-// - a Reassemble rule
-// - the dispatch that chooses a message by its type
-// - a block whose stated length holds more than its fields
-//
-// License: MIT No Attribution
 
-// ---- Common Header: 3 bytes --------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Tcp Common Header
-entrypoint typedef struct _CommonHeader {
-  UINT8 message_type;       // byte 0
-  UINT16BE message_length;  // bytes 1 to 2
-} CommonHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_HEARTBEAT 0x00            // Heartbeat
+#define MESSAGE_TYPE_LOGIN_REQUEST 0x64        // Login Request
+#define MESSAGE_TYPE_REPLAY_REQUEST 0x65       // Replay Request
+#define MESSAGE_TYPE_REPLAY_ALL_REQUEST 0x66   // Replay All Request
+#define MESSAGE_TYPE_STREAM_REQUEST 0x67       // Stream Request
+#define MESSAGE_TYPE_UNSEQUENCED_MESSAGE 0x68  // Unsequenced Message
+#define MESSAGE_TYPE_LOGIN_ACCEPTED 0x01       // Login Accepted
+#define MESSAGE_TYPE_LOGIN_REJECTED 0x02       // Login Rejected
+#define MESSAGE_TYPE_START_OF_SESSION 0x03     // Start Of Session
+#define MESSAGE_TYPE_END_OF_SESSION 0x04       // End Of Session
+#define MESSAGE_TYPE_REPLAY_BEGIN 0x05         // Replay Begin
+#define MESSAGE_TYPE_REPLAY_REJECTED 0x06      // Replay Rejected
+#define MESSAGE_TYPE_REPLAY_COMPLETE 0x07      // Replay Complete
+#define MESSAGE_TYPE_STREAM_BEGIN 0x08         // Stream Begin
+#define MESSAGE_TYPE_STREAM_REJECTED 0x09      // Stream Rejected
+#define MESSAGE_TYPE_STREAM_COMPLETE 0x0A      // Stream Complete
+#define MESSAGE_TYPE_SEQUENCED_MESSAGE 0x0B    // Sequenced Message
 
-// ---- Login Accepted Message: 1 byte ------------------------------------------
+// Supported Request Mode: one byte code
+#define SUPPORTED_REQUEST_MODE_STREAM 0x53         // Stream
+#define SUPPORTED_REQUEST_MODE_REPLAY 0x52         // Replay
+#define SUPPORTED_REQUEST_MODE_SNAPSHOT_MODE 0x54  // Snapshot Mode
+
+// Login Reject Code: one byte code
+#define LOGIN_REJECT_CODE_MALFORMED_TOKEN 0x54         // Malformed Token
+#define LOGIN_REJECT_CODE_TOKEN_TYPE_UNSUPPORTED 0x55  // Token Type Unsupported
+#define LOGIN_REJECT_CODE_TOKEN_TYPE_INVALID 0x56      // Token Type Invalid
+#define LOGIN_REJECT_CODE_AUTHORIZATION_FAILED 0x41    // Authorization Failed
+
+// Replay Reject Code: one byte code
+#define REPLAY_REJECT_CODE_REPLAY_REQUESTS_ARE_NOT_ALLOWED 0x52      // Replay Requests Are Not Allowed
+#define REPLAY_REJECT_CODE_REPLAY_ALL_REQUESTS_ARE_NOT_ALLOWED 0x41  // Replay All Requests Are Not Allowed
+#define REPLAY_REJECT_CODE_NOT_THE_ACTIVE_SESSION 0x50               // Not The Active Session
+#define REPLAY_REJECT_CODE_SEQUENCE_NUMBER_OUT_OF_RANGE 0x53         // Sequence Number Out Of Range
+
+// Stream Reject Code: one byte code
+#define STREAM_REJECT_CODE_STREAM_REQUESTS_ARE_NOT_ALLOWED 0x52  // Stream Requests Are Not Allowed
+#define STREAM_REJECT_CODE_NOT_THE_ACTIVE_SESSION 0x50           // Not The Active Session
+#define STREAM_REJECT_CODE_SEQUENCE_NUMBER_OUT_OF_RANGE 0x53     // Sequence Number Out Of Range
+
+// Template Id: one byte code
+#define TEMPLATE_ID_RISK_SETTINGS_QUERY_MESSAGE 0x01                                     // Risk Settings Query Message
+#define TEMPLATE_ID_ACTIVE_RISK_THRESHOLD_CHANGE_REQ_MESSAGE 0x02                        // Active Risk Threshold Change Req Message
+#define TEMPLATE_ID_ACTIVE_RISK_ACKNOWLEDGEMENT_REQ_MESSAGE 0x03                         // Active Risk Acknowledgement Req Message
+#define TEMPLATE_ID_CP_VOLUME_THRESHOLD_CHANGE_REQ_MESSAGE 0x04                          // Cp Volume Threshold Change Req Message
+#define TEMPLATE_ID_CP_EXECUTED_NOTIONAL_THRESHOLD_CHANGE_REQ_MESSAGE 0x05               // Cp Executed Notional Threshold Change Req Message
+#define TEMPLATE_ID_CP_TOTAL_EXECUTIONS_THRESHOLD_CHANGE_REQ_MESSAGE 0x06                // Cp Total Executions Threshold Change Req Message
+#define TEMPLATE_ID_CP_PERCENT_OUTSTANDING_CONTRACTS_THRESHOLD_CHANGE_REQ_MESSAGE 0x07   // Cp Percent Outstanding Contracts Threshold Change Req Message
+#define TEMPLATE_ID_CP_BREACH_COUNT_THRESHOLD_CHANGE_REQ_MESSAGE 0x08                    // Cp Breach Count Threshold Change Req Message
+#define TEMPLATE_ID_MANUAL_CP_BREACH_TRIGGER_REQ_MESSAGE 0x09                            // Manual Cp Breach Trigger Req Message
+#define TEMPLATE_ID_CP_CLEAR_BREACH_REQ_MESSAGE 0x0A                                     // Cp Clear Breach Req Message
+#define TEMPLATE_ID_SINGLE_ORDER_ALLOW_ISO_ORDERS_CHANGE_REQ_MESSAGE 0x0B                // Single Order Allow Iso Orders Change Req Message
+#define TEMPLATE_ID_SINGLE_ORDER_ALLOW_ORDERS_IN_CROSSED_MARKET_CHANGE_REQ_MESSAGE 0x0C  // Single Order Allow Orders In Crossed Market Change Req Message
+#define TEMPLATE_ID_SINGLE_ORDER_MAX_NOTIONAL_CHANGE_REQ_MESSAGE 0x0D                    // Single Order Max Notional Change Req Message
+#define TEMPLATE_ID_SINGLE_ORDER_MAX_CONTRACTS_CHANGE_REQ_MESSAGE 0x0E                   // Single Order Max Contracts Change Req Message
+#define TEMPLATE_ID_CP_GROSS_NOTIONAL_THRESHOLD_CHANGE_REQ_MESSAGE 0x12                  // Cp Gross Notional Threshold Change Req Message
+#define TEMPLATE_ID_CP_MARKET_ORDER_GROSS_NOTIONAL_THRESHOLD_CHANGE_REQ_MESSAGE 0x13     // Cp Market Order Gross Notional Threshold Change Req Message
+#define TEMPLATE_ID_CP_NET_NOTIONAL_THRESHOLD_CHANGE_REQ_MESSAGE 0x14                    // Cp Net Notional Threshold Change Req Message
+#define TEMPLATE_ID_CP_MARKET_ORDER_NET_NOTIONAL_THRESHOLD_CHANGE_REQ_MESSAGE 0x15       // Cp Market Order Net Notional Threshold Change Req Message
+#define TEMPLATE_ID_CP_DUPLICATE_ORDER_THRESHOLD_CHANGE_REQ_MESSAGE 0x16                 // Cp Duplicate Order Threshold Change Req Message
+#define TEMPLATE_ID_CP_ORDER_RATE_THRESHOLD_CHANGE_REQ_MESSAGE 0x17                      // Cp Order Rate Threshold Change Req Message
+#define TEMPLATE_ID_ACTIVE_RISK_THRESHOLD_STATE_MESSAGE 0x1E                             // Active Risk Threshold State Message
+#define TEMPLATE_ID_ACTIVE_RISK_THRESHOLD_CHANGE_REJ_MESSAGE 0x1F                        // Active Risk Threshold Change Rej Message
+#define TEMPLATE_ID_ACTIVE_RISK_ACKNOWLEDGED_MESSAGE 0x20                                // Active Risk Acknowledged Message
+#define TEMPLATE_ID_ACTIVE_RISK_ACKNOWLEDGE_REJ_MESSAGE 0x21                             // Active Risk Acknowledge Rej Message
+#define TEMPLATE_ID_ACTIVE_RISK_QUANTITY_UPDATE_NOTIFICATION_MESSAGE 0x22                // Active Risk Quantity Update Notification Message
+#define TEMPLATE_ID_CP_VOLUME_THRESHOLD_STATE_MESSAGE 0x23                               // Cp Volume Threshold State Message
+#define TEMPLATE_ID_CP_EXECUTED_NOTIONAL_THRESHOLD_STATE_MESSAGE 0x24                    // Cp Executed Notional Threshold State Message
+#define TEMPLATE_ID_CP_TOTAL_EXECUTIONS_THRESHOLD_STATE_MESSAGE 0x25                     // Cp Total Executions Threshold State Message
+#define TEMPLATE_ID_CP_PERCENT_OUTSTANDING_CONTRACTS_THRESHOLD_STATE_MESSAGE 0x26        // Cp Percent Outstanding Contracts Threshold State Message
+#define TEMPLATE_ID_CP_BREACH_COUNT_THRESHOLD_STATE_MESSAGE 0x27                         // Cp Breach Count Threshold State Message
+#define TEMPLATE_ID_MANUAL_CP_BREACH_TRIGGER_PENDING_MESSAGE 0x28                        // Manual Cp Breach Trigger Pending Message
+#define TEMPLATE_ID_MANUAL_CP_BREACH_TRIGGER_DONE_MESSAGE 0x29                           // Manual Cp Breach Trigger Done Message
+#define TEMPLATE_ID_RISK_THRESHOLD_UPDATE_REJ_MESSAGE 0x2A                               // Risk Threshold Update Rej Message
+#define TEMPLATE_ID_PASSIVE_RISK_THRESHOLD_NOTIFICATION_MESSAGE 0x2B                     // Passive Risk Threshold Notification Message
+#define TEMPLATE_ID_SINGLE_ORDER_ALLOW_ISO_ORDERS_STATE_MESSAGE 0x2C                     // Single Order Allow Iso Orders State Message
+#define TEMPLATE_ID_SINGLE_ORDER_ALLOW_ORDERS_IN_CROSSED_MARKET_STATE_MESSAGE 0x2D       // Single Order Allow Orders In Crossed Market State Message
+#define TEMPLATE_ID_SINGLE_ORDER_MAX_NOTIONAL_THRESHOLD_STATE_MESSAGE 0x2E               // Single Order Max Notional Threshold State Message
+#define TEMPLATE_ID_SINGLE_ORDER_MAX_CONTRACTS_THRESHOLD_STATE_MESSAGE 0x2F              // Single Order Max Contracts Threshold State Message
+#define TEMPLATE_ID_RISK_SETTINGS_QUERY_DONE_MESSAGE 0x30                                // Risk Settings Query Done Message
+#define TEMPLATE_ID_RISK_SETTINGS_QUERY_REJ_MESSAGE 0x31                                 // Risk Settings Query Rej Message
+#define TEMPLATE_ID_MANUAL_CP_BREACH_TRIGGER_REJ_MESSAGE 0x32                            // Manual Cp Breach Trigger Rej Message
+#define TEMPLATE_ID_BREACH_CLEAR_REJ_MESSAGE 0x33                                        // Breach Clear Rej Message
+#define TEMPLATE_ID_BREACH_CLEARED_MESSAGE 0x34                                          // Breach Cleared Message
+#define TEMPLATE_ID_CP_GROSS_NOTIONAL_THRESHOLD_STATE_MESSAGE 0x3C                       // Cp Gross Notional Threshold State Message
+#define TEMPLATE_ID_CP_MARKET_ORDER_GROSS_NOTIONAL_THRESHOLD_STATE_MESSAGE 0x3D          // Cp Market Order Gross Notional Threshold State Message
+#define TEMPLATE_ID_CP_NET_NOTIONAL_THRESHOLD_STATE_MESSAGE 0x3E                         // Cp Net Notional Threshold State Message
+#define TEMPLATE_ID_CP_MARKET_ORDER_NET_NOTIONAL_THRESHOLD_STATE_MESSAGE 0x3F            // Cp Market Order Net Notional Threshold State Message
+#define TEMPLATE_ID_CP_DUPLICATE_ORDER_THRESHOLD_STATE_MESSAGE 0x40                      // Cp Duplicate Order Threshold State Message
+#define TEMPLATE_ID_CP_ORDER_RATE_THRESHOLD_STATE_MESSAGE 0x41                           // Cp Order Rate Threshold State Message
+
+// Reject Reason: 2 byte code
+#define REJECT_REASON_OTHER 0x0000                               // Other
+#define REJECT_REASON_MISSING_CL_ORD_ID 0x0001                   // Missing Cl Ord Id
+#define REJECT_REASON_INVALID_CL_ORD_ID 0x0002                   // Invalid Cl Ord Id
+#define REJECT_REASON_DUPLICATE_CL_ORD_ID 0x0003                 // Duplicate Cl Ord Id
+#define REJECT_REASON_MISSING_TIME_PERIOD 0x0004                 // Missing Time Period
+#define REJECT_REASON_INVALID_TIME_PERIOD 0x0005                 // Invalid Time Period
+#define REJECT_REASON_MISSING_RISK_GROUP_ID 0x0006               // Missing Risk Group Id
+#define REJECT_REASON_INVALID_RISK_GROUP_ID 0x0007               // Invalid Risk Group Id
+#define REJECT_REASON_MISSING_UNDERLIER 0x0008                   // Missing Underlier
+#define REJECT_REASON_INVALID_UNDERLIER 0x0009                   // Invalid Underlier
+#define REJECT_REASON_MISSING_EFID 0x000A                        // Missing Efid
+#define REJECT_REASON_INVALID_EFID 0x000B                        // Invalid Efid
+#define REJECT_REASON_MISSING_THRESHOLD 0x000C                   // Missing Threshold
+#define REJECT_REASON_INVALID_THRESHOLD 0x000D                   // Invalid Threshold
+#define REJECT_REASON_MISSING_QUANTITY 0x000E                    // Missing Quantity
+#define REJECT_REASON_INVALID_QUANTITY 0x000F                    // Invalid Quantity
+#define REJECT_REASON_MISSING_BREACH_ID 0x0010                   // Missing Breach Id
+#define REJECT_REASON_INVALID_BREACH_ID 0x0011                   // Invalid Breach Id
+#define REJECT_REASON_MISSING_VOLUME 0x0012                      // Missing Volume
+#define REJECT_REASON_INVALID_VOLUME 0x0013                      // Invalid Volume
+#define REJECT_REASON_MISSING_PERIOD_IN_MILLI_SECONDS 0x0014     // Missing Period In Milli Seconds
+#define REJECT_REASON_INVALID_PERIOD_IN_MILLI_SECONDS 0x0015     // Invalid Period In Milli Seconds
+#define REJECT_REASON_MISSING_PRICE_IN_DOLLARS 0x0016            // Missing Price In Dollars
+#define REJECT_REASON_INVALID_PRICE_IN_DOLLARS 0x0017            // Invalid Price In Dollars
+#define REJECT_REASON_MISSING_TOTAL_EXECUTIONS 0x0018            // Missing Total Executions
+#define REJECT_REASON_INVALID_TOTAL_EXECUTIONS 0x0019            // Invalid Total Executions
+#define REJECT_REASON_MISSING_PERCENT 0x001A                     // Missing Percent
+#define REJECT_REASON_INVALID_PERCENT 0x001B                     // Invalid Percent
+#define REJECT_REASON_MISSING_COUNT 0x001C                       // Missing Count
+#define REJECT_REASON_INVALID_COUNT 0x001D                       // Invalid Count
+#define REJECT_REASON_MISSING_ALLOW_ISO_ORDERS 0x001E            // Missing Allow Iso Orders
+#define REJECT_REASON_INVALID_ALLOW_ISO_ORDERS 0x001F            // Invalid Allow Iso Orders
+#define REJECT_REASON_MISSING_ALLOW_ORDERS 0x0020                // Missing Allow Orders
+#define REJECT_REASON_INVALID_ALLOW_ORDERS 0x0021                // Invalid Allow Orders
+#define REJECT_REASON_MISSING_MAX_NOTIONAL_IN_DOLLARS 0x0022     // Missing Max Notional In Dollars
+#define REJECT_REASON_INVALID_MAX_NOTIONAL_IN_DOLLARS 0x0023     // Invalid Max Notional In Dollars
+#define REJECT_REASON_MISSING_MAX_CONTRACTS 0x0024               // Missing Max Contracts
+#define REJECT_REASON_INVALID_MAX_CONTRACTS 0x0025               // Invalid Max Contracts
+#define REJECT_REASON_OVER_CONFIRM 0x0026                        // Over Confirm
+#define REJECT_REASON_INVALID_RISK_COMBINATION 0x0027            // Invalid Risk Combination
+#define REJECT_REASON_UNKNOWN_RISK_RULE 0x0028                   // Unknown Risk Rule
+#define REJECT_REASON_MISSING_MAX_DUP_ORDERS 0x0029              // Missing Max Dup Orders
+#define REJECT_REASON_INVALID_MAX_DUP_ORDERS 0x002A              // Invalid Max Dup Orders
+#define REJECT_REASON_MISSING_MAX_ORDER_MSGS 0x002B              // Missing Max Order Msgs
+#define REJECT_REASON_INVALID_MAX_ORDER_MSGS 0x002C              // Invalid Max Order Msgs
+#define REJECT_REASON_BREACH_IN_PROGRESS 0x002D                  // Breach In Progress
+#define REJECT_REASON_NUMBER_OF_BREACHES_FORBID_CLEARING 0x002E  // Number Of Breaches Forbid Clearing
+#define REJECT_REASON_NO_ACTIVE_BREACHES 0x002F                  // No Active Breaches
+#define REJECT_REASON_EXCHANGE_CLOSED 0x0064                     // Exchange Closed
+#define REJECT_REASON_NULL_VALUE 0xFFFF                          // Null Value
+
+// Side: one byte code
+#define SIDE_BUY 0x31   // Buy
+#define SIDE_SELL 0x32  // Sell
+
+// Risk Type: one byte code
+#define RISK_TYPE_CONTRACT_VOLUME 0x01                 // Contract Volume
+#define RISK_TYPE_NOTIONAL_EXECUTED 0x02               // Notional Executed
+#define RISK_TYPE_TOTAL_TRADES_EXECUTED 0x03           // Total Trades Executed
+#define RISK_TYPE_PERCENT_EXECUTED 0x04                // Percent Executed
+#define RISK_TYPE_NUMBER_OF_BREACHES 0x05              // Number Of Breaches
+#define RISK_TYPE_ALLOW_ISO_ORDERS 0x06                // Allow Iso Orders
+#define RISK_TYPE_ALLOW_ORDERS_IN_CROSSED_MARKET 0x07  // Allow Orders In Crossed Market
+#define RISK_TYPE_MAX_NOTIONAL 0x08                    // Max Notional
+#define RISK_TYPE_MAX_CONTRACTS 0x09                   // Max Contracts
+#define RISK_TYPE_GROSS_NOTIONAL 0x0A                  // Gross Notional
+#define RISK_TYPE_MARKET_ORDER_GROSS_NOTIONAL 0x0B     // Market Order Gross Notional
+#define RISK_TYPE_NET_NOTIONAL 0x0C                    // Net Notional
+#define RISK_TYPE_MARKET_ORDER_NET_NOTIONAL 0x0D       // Market Order Net Notional
+#define RISK_TYPE_DUPLICATE_ORDER 0x0E                 // Duplicate Order
+#define RISK_TYPE_ORDER_RATE 0x0F                      // Order Rate
+#define RISK_TYPE_TRIGGERED_BREACH 0xFE                // Triggered Breach
+
+// Rule Type: one byte code
+#define RULE_TYPE_CONTRACT_VOLUME 0x01                 // Contract Volume
+#define RULE_TYPE_NOTIONAL_EXECUTED 0x02               // Notional Executed
+#define RULE_TYPE_TOTAL_TRADES_EXECUTED 0x03           // Total Trades Executed
+#define RULE_TYPE_PERCENT_EXECUTED 0x04                // Percent Executed
+#define RULE_TYPE_NUMBER_OF_BREACHES 0x05              // Number Of Breaches
+#define RULE_TYPE_ALLOW_ISO_ORDERS 0x06                // Allow Iso Orders
+#define RULE_TYPE_ALLOW_ORDERS_IN_CROSSED_MARKET 0x07  // Allow Orders In Crossed Market
+#define RULE_TYPE_MAX_NOTIONAL 0x08                    // Max Notional
+#define RULE_TYPE_MAX_CONTRACTS 0x09                   // Max Contracts
+#define RULE_TYPE_GROSS_NOTIONAL 0x0A                  // Gross Notional
+#define RULE_TYPE_MARKET_ORDER_GROSS_NOTIONAL 0x0B     // Market Order Gross Notional
+#define RULE_TYPE_NET_NOTIONAL 0x0C                    // Net Notional
+#define RULE_TYPE_MARKET_ORDER_NET_NOTIONAL 0x0D       // Market Order Net Notional
+#define RULE_TYPE_DUPLICATE_ORDER 0x0E                 // Duplicate Order
+#define RULE_TYPE_ORDER_RATE 0x0F                      // Order Rate
+#define RULE_TYPE_TRIGGERED_BREACH 0xFE                // Triggered Breach
+
+// Allow Iso Orders: one byte code
+#define ALLOW_ISO_ORDERS_FALSE 0x00  // False
+#define ALLOW_ISO_ORDERS_TRUE 0x01   // True
+
+// Allow Orders: one byte code
+#define ALLOW_ORDERS_FALSE 0x00  // False
+#define ALLOW_ORDERS_TRUE 0x01   // True
+
+// Use Order Price In Dup Check: one byte code
+#define USE_ORDER_PRICE_IN_DUP_CHECK_FALSE 0x00  // False
+#define USE_ORDER_PRICE_IN_DUP_CHECK_TRUE 0x01   // True
+
+// ---- Types -------------------------------------------------------------------
 
 // Memx Tcp Login Accepted Message
-entrypoint typedef struct _LoginAcceptedMessage {
+typedef struct _LoginAcceptedMessage {
   UINT8 supported_request_mode;  // byte 0
 } LoginAcceptedMessage;
 
-// ---- Login Rejected Message: 1 byte ------------------------------------------
-
 // Memx Tcp Login Rejected Message
-entrypoint typedef struct _LoginRejectedMessage {
+typedef struct _LoginRejectedMessage {
   UINT8 login_reject_code;  // byte 0
 } LoginRejectedMessage;
 
-// ---- Start Of Session Message: 8 bytes ---------------------------------------
-
 // Memx Tcp Start of Session Message
-entrypoint typedef struct _StartOfSessionMessage {
+typedef struct _StartOfSessionMessage {
   UINT64BE session_id;  // bytes 0 to 7
 } StartOfSessionMessage;
 
-// ---- Replay Begin Message: 12 bytes ------------------------------------------
-
 // Memx Tcp Replay Begin Message
-entrypoint typedef struct _ReplayBeginMessage {
+typedef struct _ReplayBeginMessage {
   UINT64BE next_sequence_number;   // bytes 0 to 7
   UINT32BE pending_message_count;  // bytes 8 to 11
 } ReplayBeginMessage;
 
-// ---- Replay Rejected Message: 1 byte -----------------------------------------
-
 // Memx Tcp Replay Rejected Message
-entrypoint typedef struct _ReplayRejectedMessage {
+typedef struct _ReplayRejectedMessage {
   UINT8 replay_reject_code;  // byte 0
 } ReplayRejectedMessage;
 
-// ---- Replay Complete Message: 8 bytes ----------------------------------------
-
 // Memx Tcp Replay Complete Message
-entrypoint typedef struct _ReplayCompleteMessage {
+typedef struct _ReplayCompleteMessage {
   UINT64BE message_count;  // bytes 0 to 7
 } ReplayCompleteMessage;
 
-// ---- Stream Begin Message: 16 bytes ------------------------------------------
-
 // Memx Tcp Stream Begin Message
-entrypoint typedef struct _StreamBeginMessage {
+typedef struct _StreamBeginMessage {
   UINT64BE next_sequence_number;  // bytes 0 to 7
   UINT64BE max_sequence_number;   // bytes 8 to 15
 } StreamBeginMessage;
 
-// ---- Stream Rejected Message: 1 byte -----------------------------------------
-
 // Memx Tcp Stream Rejected Message
-entrypoint typedef struct _StreamRejectedMessage {
+typedef struct _StreamRejectedMessage {
   UINT8 stream_reject_code;  // byte 0
 } StreamRejectedMessage;
 
-// ---- Stream Complete Message: 8 bytes ----------------------------------------
-
 // Memx Tcp Stream Complete Message
-entrypoint typedef struct _StreamCompleteMessage {
+typedef struct _StreamCompleteMessage {
   UINT64BE total_sequence_count;  // bytes 0 to 7
 } StreamCompleteMessage;
 
-// ---- Sbe Header: 6 bytes -----------------------------------------------------
-
-// Sbe Header
-entrypoint typedef struct _SbeHeader {
-  UINT16BE block_length;  // bytes 0 to 1
-  UINT8 template_id;      // byte 2
-  UINT8 schema_id;        // byte 3
-  UINT16BE version;       // bytes 4 to 5
-} SbeHeader;
-
-// ---- Active Risk Threshold State Message: 38 bytes ---------------------------
-
 // ActiveRiskThresholdStateMessage
-entrypoint typedef struct _ActiveRiskThresholdStateMessage {
+typedef struct _ActiveRiskThresholdStateMessage {
   UINT8 cl_ord_id_optional[20];  // bytes 0 to 19
   UINT8 underlier[6];            // bytes 20 to 25
   UINT8 efid[4];                 // bytes 26 to 29
@@ -111,10 +298,8 @@ entrypoint typedef struct _ActiveRiskThresholdStateMessage {
   UINT32BE unacked_quantity;     // bytes 34 to 37
 } ActiveRiskThresholdStateMessage;
 
-// ---- Active Risk Threshold Change Rej Message: 36 bytes ----------------------
-
 // ActiveRiskThresholdChangeRejMessage
-entrypoint typedef struct _ActiveRiskThresholdChangeRejMessage {
+typedef struct _ActiveRiskThresholdChangeRejMessage {
   UINT8 cl_ord_id[20];          // bytes 0 to 19
   UINT8 underlier_optional[6];  // bytes 20 to 25
   UINT8 efid_optional[4];       // bytes 26 to 29
@@ -122,10 +307,8 @@ entrypoint typedef struct _ActiveRiskThresholdChangeRejMessage {
   UINT16BE reject_reason;       // bytes 34 to 35
 } ActiveRiskThresholdChangeRejMessage;
 
-// ---- Active Risk Acknowledged Message: 38 bytes ------------------------------
-
 // ActiveRiskAcknowledgedMessage
-entrypoint typedef struct _ActiveRiskAcknowledgedMessage {
+typedef struct _ActiveRiskAcknowledgedMessage {
   UINT8 cl_ord_id[20];        // bytes 0 to 19
   UINT8 underlier[6];         // bytes 20 to 25
   UINT8 efid[4];              // bytes 26 to 29
@@ -133,10 +316,8 @@ entrypoint typedef struct _ActiveRiskAcknowledgedMessage {
   UINT32BE unacked_quantity;  // bytes 34 to 37
 } ActiveRiskAcknowledgedMessage;
 
-// ---- Active Risk Acknowledge Rej Message: 36 bytes ---------------------------
-
 // ActiveRiskAcknowledgeRejMessage
-entrypoint typedef struct _ActiveRiskAcknowledgeRejMessage {
+typedef struct _ActiveRiskAcknowledgeRejMessage {
   UINT8 cl_ord_id[20];          // bytes 0 to 19
   UINT8 underlier[6];           // bytes 20 to 25
   UINT8 efid[4];                // bytes 26 to 29
@@ -144,10 +325,8 @@ entrypoint typedef struct _ActiveRiskAcknowledgeRejMessage {
   UINT16BE reject_reason;       // bytes 34 to 35
 } ActiveRiskAcknowledgeRejMessage;
 
-// ---- Active Risk Quantity Update Notification Message: 67 bytes --------------
-
 // ActiveRiskQuantityUpdateNotificationMessage
-entrypoint typedef struct _ActiveRiskQuantityUpdateNotificationMessage {
+typedef struct _ActiveRiskQuantityUpdateNotificationMessage {
   UINT64BE sending_time;        // bytes 0 to 7
   UINT64BE transact_time;       // bytes 8 to 15
   UINT64BE order_id;            // bytes 16 to 23
@@ -161,10 +340,8 @@ entrypoint typedef struct _ActiveRiskQuantityUpdateNotificationMessage {
   UINT32BE unacked_quantity;    // bytes 63 to 66
 } ActiveRiskQuantityUpdateNotificationMessage;
 
-// ---- Cp Volume Threshold State Message: 44 bytes -----------------------------
-
 // CPVolumeThresholdStateMessage
-entrypoint typedef struct _CpVolumeThresholdStateMessage {
+typedef struct _CpVolumeThresholdStateMessage {
   UINT8 cl_ord_id_optional[20];      // bytes 0 to 19
   UINT8 underlier_optional[6];       // bytes 20 to 25
   UINT8 efid_optional[4];            // bytes 26 to 29
@@ -173,10 +350,8 @@ entrypoint typedef struct _CpVolumeThresholdStateMessage {
   UINT32BE period_in_milli_seconds;  // bytes 40 to 43
 } CpVolumeThresholdStateMessage;
 
-// ---- Cp Executed Notional Threshold State Message: 44 bytes ------------------
-
 // CPExecutedNotionalThresholdStateMessage
-entrypoint typedef struct _CpExecutedNotionalThresholdStateMessage {
+typedef struct _CpExecutedNotionalThresholdStateMessage {
   UINT8 cl_ord_id_optional[20];      // bytes 0 to 19
   UINT8 underlier_optional[6];       // bytes 20 to 25
   UINT8 efid_optional[4];            // bytes 26 to 29
@@ -185,10 +360,8 @@ entrypoint typedef struct _CpExecutedNotionalThresholdStateMessage {
   UINT32BE period_in_milli_seconds;  // bytes 40 to 43
 } CpExecutedNotionalThresholdStateMessage;
 
-// ---- Cp Total Executions Threshold State Message: 40 bytes -------------------
-
 // CPTotalExecutionsThresholdStateMessage
-entrypoint typedef struct _CpTotalExecutionsThresholdStateMessage {
+typedef struct _CpTotalExecutionsThresholdStateMessage {
   UINT8 cl_ord_id_optional[20];      // bytes 0 to 19
   UINT8 underlier_optional[6];       // bytes 20 to 25
   UINT8 efid_optional[4];            // bytes 26 to 29
@@ -197,10 +370,8 @@ entrypoint typedef struct _CpTotalExecutionsThresholdStateMessage {
   UINT32BE period_in_milli_seconds;  // bytes 36 to 39
 } CpTotalExecutionsThresholdStateMessage;
 
-// ---- Cp Percent Outstanding Contracts Threshold State Message: 38 bytes ------
-
 // CPPercentOutstandingContractsThresholdStateMessage
-entrypoint typedef struct _CpPercentOutstandingContractsThresholdStateMessage {
+typedef struct _CpPercentOutstandingContractsThresholdStateMessage {
   UINT8 cl_ord_id_optional[20];      // bytes 0 to 19
   UINT8 underlier_optional[6];       // bytes 20 to 25
   UINT8 efid_optional[4];            // bytes 26 to 29
@@ -208,10 +379,8 @@ entrypoint typedef struct _CpPercentOutstandingContractsThresholdStateMessage {
   UINT32BE period_in_milli_seconds;  // bytes 34 to 37
 } CpPercentOutstandingContractsThresholdStateMessage;
 
-// ---- Cp Breach Count Threshold State Message: 40 bytes -----------------------
-
 // CPBreachCountThresholdStateMessage
-entrypoint typedef struct _CpBreachCountThresholdStateMessage {
+typedef struct _CpBreachCountThresholdStateMessage {
   UINT8 cl_ord_id_optional[20];      // bytes 0 to 19
   UINT8 underlier_optional[6];       // bytes 20 to 25
   UINT8 efid_optional[4];            // bytes 26 to 29
@@ -220,10 +389,8 @@ entrypoint typedef struct _CpBreachCountThresholdStateMessage {
   UINT32BE period_in_milli_seconds;  // bytes 36 to 39
 } CpBreachCountThresholdStateMessage;
 
-// ---- Manual Cp Breach Trigger Pending Message: 40 bytes ----------------------
-
 // ManualCPBreachTriggerPendingMessage
-entrypoint typedef struct _ManualCpBreachTriggerPendingMessage {
+typedef struct _ManualCpBreachTriggerPendingMessage {
   UINT8 cl_ord_id[20];          // bytes 0 to 19
   UINT8 underlier_optional[6];  // bytes 20 to 25
   UINT8 efid_optional[4];       // bytes 26 to 29
@@ -231,10 +398,8 @@ entrypoint typedef struct _ManualCpBreachTriggerPendingMessage {
   UINT64BE breach_id;           // bytes 32 to 39
 } ManualCpBreachTriggerPendingMessage;
 
-// ---- Manual Cp Breach Trigger Done Message: 44 bytes -------------------------
-
 // ManualCPBreachTriggerDoneMessage
-entrypoint typedef struct _ManualCpBreachTriggerDoneMessage {
+typedef struct _ManualCpBreachTriggerDoneMessage {
   UINT8 cl_ord_id[20];             // bytes 0 to 19
   UINT8 underlier_optional[6];     // bytes 20 to 25
   UINT8 efid_optional[4];          // bytes 26 to 29
@@ -243,19 +408,15 @@ entrypoint typedef struct _ManualCpBreachTriggerDoneMessage {
   UINT32BE total_affected_orders;  // bytes 40 to 43
 } ManualCpBreachTriggerDoneMessage;
 
-// ---- Risk Threshold Update Rej Message: 23 bytes -----------------------------
-
 // RiskThresholdUpdateRejMessage
-entrypoint typedef struct _RiskThresholdUpdateRejMessage {
+typedef struct _RiskThresholdUpdateRejMessage {
   UINT8 cl_ord_id[20];     // bytes 0 to 19
   UINT8 risk_type;         // byte 20
   UINT16BE reject_reason;  // bytes 21 to 22
 } RiskThresholdUpdateRejMessage;
 
-// ---- Passive Risk Threshold Notification Message: 30 bytes -------------------
-
 // PassiveRiskThresholdNotificationMessage
-entrypoint typedef struct _PassiveRiskThresholdNotificationMessage {
+typedef struct _PassiveRiskThresholdNotificationMessage {
   UINT8 underlier_optional[6];  // bytes 0 to 5
   UINT8 efid_optional[4];       // bytes 6 to 9
   UINT16BE risk_group_id;       // bytes 10 to 11
@@ -265,10 +426,8 @@ entrypoint typedef struct _PassiveRiskThresholdNotificationMessage {
   UINT64BE transact_time;       // bytes 22 to 29
 } PassiveRiskThresholdNotificationMessage;
 
-// ---- Single Order Allow Iso Orders State Message: 33 bytes -------------------
-
 // SingleOrderAllowISOOrdersStateMessage
-entrypoint typedef struct _SingleOrderAllowIsoOrdersStateMessage {
+typedef struct _SingleOrderAllowIsoOrdersStateMessage {
   UINT8 cl_ord_id_optional[20];  // bytes 0 to 19
   UINT8 underlier_optional[6];   // bytes 20 to 25
   UINT8 efid_optional[4];        // bytes 26 to 29
@@ -276,10 +435,8 @@ entrypoint typedef struct _SingleOrderAllowIsoOrdersStateMessage {
   UINT8 allow_iso_orders;        // byte 32
 } SingleOrderAllowIsoOrdersStateMessage;
 
-// ---- Single Order Allow Orders In Crossed Market State Message: 33 bytes -----
-
 // SingleOrderAllowOrdersInCrossedMarketStateMessage
-entrypoint typedef struct _SingleOrderAllowOrdersInCrossedMarketStateMessage {
+typedef struct _SingleOrderAllowOrdersInCrossedMarketStateMessage {
   UINT8 cl_ord_id_optional[20];  // bytes 0 to 19
   UINT8 underlier_optional[6];   // bytes 20 to 25
   UINT8 efid_optional[4];        // bytes 26 to 29
@@ -287,10 +444,8 @@ entrypoint typedef struct _SingleOrderAllowOrdersInCrossedMarketStateMessage {
   UINT8 allow_orders;            // byte 32
 } SingleOrderAllowOrdersInCrossedMarketStateMessage;
 
-// ---- Single Order Max Notional Threshold State Message: 40 bytes -------------
-
 // SingleOrderMaxNotionalThresholdStateMessage
-entrypoint typedef struct _SingleOrderMaxNotionalThresholdStateMessage {
+typedef struct _SingleOrderMaxNotionalThresholdStateMessage {
   UINT8 cl_ord_id_optional[20];      // bytes 0 to 19
   UINT8 underlier_optional[6];       // bytes 20 to 25
   UINT8 efid_optional[4];            // bytes 26 to 29
@@ -298,10 +453,8 @@ entrypoint typedef struct _SingleOrderMaxNotionalThresholdStateMessage {
   UINT64BE max_notional_in_dollars;  // bytes 32 to 39
 } SingleOrderMaxNotionalThresholdStateMessage;
 
-// ---- Single Order Max Contracts Threshold State Message: 36 bytes ------------
-
 // SingleOrderMaxContractsThresholdStateMessage
-entrypoint typedef struct _SingleOrderMaxContractsThresholdStateMessage {
+typedef struct _SingleOrderMaxContractsThresholdStateMessage {
   UINT8 cl_ord_id_optional[20];  // bytes 0 to 19
   UINT8 underlier_optional[6];   // bytes 20 to 25
   UINT8 efid_optional[4];        // bytes 26 to 29
@@ -309,26 +462,20 @@ entrypoint typedef struct _SingleOrderMaxContractsThresholdStateMessage {
   UINT32BE max_contracts;        // bytes 32 to 35
 } SingleOrderMaxContractsThresholdStateMessage;
 
-// ---- Risk Settings Query Done Message: 24 bytes ------------------------------
-
 // RiskSettingsQueryDoneMessage
-entrypoint typedef struct _RiskSettingsQueryDoneMessage {
+typedef struct _RiskSettingsQueryDoneMessage {
   UINT8 cl_ord_id[20];        // bytes 0 to 19
   UINT32BE number_msgs_sent;  // bytes 20 to 23
 } RiskSettingsQueryDoneMessage;
 
-// ---- Risk Settings Query Rej Message: 22 bytes -------------------------------
-
 // RiskSettingsQueryRejMessage
-entrypoint typedef struct _RiskSettingsQueryRejMessage {
+typedef struct _RiskSettingsQueryRejMessage {
   UINT8 cl_ord_id[20];     // bytes 0 to 19
   UINT16BE reject_reason;  // bytes 20 to 21
 } RiskSettingsQueryRejMessage;
 
-// ---- Manual Cp Breach Trigger Rej Message: 34 bytes --------------------------
-
 // ManualCPBreachTriggerRejMessage
-entrypoint typedef struct _ManualCpBreachTriggerRejMessage {
+typedef struct _ManualCpBreachTriggerRejMessage {
   UINT8 cl_ord_id[20];          // bytes 0 to 19
   UINT8 underlier_optional[6];  // bytes 20 to 25
   UINT8 efid_optional[4];       // bytes 26 to 29
@@ -336,27 +483,21 @@ entrypoint typedef struct _ManualCpBreachTriggerRejMessage {
   UINT16BE reject_reason;       // bytes 32 to 33
 } ManualCpBreachTriggerRejMessage;
 
-// ---- Breach Clear Rej Message: 30 bytes --------------------------------------
-
 // BreachClearRejMessage
-entrypoint typedef struct _BreachClearRejMessage {
+typedef struct _BreachClearRejMessage {
   UINT8 cl_ord_id[20];          // bytes 0 to 19
   UINT64BE breach_id_optional;  // bytes 20 to 27
   UINT16BE reject_reason;       // bytes 28 to 29
 } BreachClearRejMessage;
 
-// ---- Breach Cleared Message: 28 bytes ----------------------------------------
-
 // BreachClearedMessage
-entrypoint typedef struct _BreachClearedMessage {
+typedef struct _BreachClearedMessage {
   UINT8 cl_ord_id_optional[20];  // bytes 0 to 19
   UINT64BE breach_id_optional;   // bytes 20 to 27
 } BreachClearedMessage;
 
-// ---- Cp Gross Notional Threshold State Message: 40 bytes ---------------------
-
 // CPGrossNotionalThresholdStateMessage
-entrypoint typedef struct _CpGrossNotionalThresholdStateMessage {
+typedef struct _CpGrossNotionalThresholdStateMessage {
   UINT8 cl_ord_id_optional[20];  // bytes 0 to 19
   UINT8 underlier_optional[6];   // bytes 20 to 25
   UINT8 efid_optional[4];        // bytes 26 to 29
@@ -364,10 +505,8 @@ entrypoint typedef struct _CpGrossNotionalThresholdStateMessage {
   UINT64BE price_in_dollars;     // bytes 32 to 39
 } CpGrossNotionalThresholdStateMessage;
 
-// ---- Cp Market Order Gross Notional Threshold State Message: 40 bytes --------
-
 // CPMarketOrderGrossNotionalThresholdStateMessage
-entrypoint typedef struct _CpMarketOrderGrossNotionalThresholdStateMessage {
+typedef struct _CpMarketOrderGrossNotionalThresholdStateMessage {
   UINT8 cl_ord_id_optional[20];  // bytes 0 to 19
   UINT8 underlier_optional[6];   // bytes 20 to 25
   UINT8 efid_optional[4];        // bytes 26 to 29
@@ -375,10 +514,8 @@ entrypoint typedef struct _CpMarketOrderGrossNotionalThresholdStateMessage {
   UINT64BE price_in_dollars;     // bytes 32 to 39
 } CpMarketOrderGrossNotionalThresholdStateMessage;
 
-// ---- Cp Net Notional Threshold State Message: 40 bytes -----------------------
-
 // CPNetNotionalThresholdStateMessage
-entrypoint typedef struct _CpNetNotionalThresholdStateMessage {
+typedef struct _CpNetNotionalThresholdStateMessage {
   UINT8 cl_ord_id_optional[20];  // bytes 0 to 19
   UINT8 underlier_optional[6];   // bytes 20 to 25
   UINT8 efid_optional[4];        // bytes 26 to 29
@@ -386,10 +523,8 @@ entrypoint typedef struct _CpNetNotionalThresholdStateMessage {
   UINT64BE price_in_dollars;     // bytes 32 to 39
 } CpNetNotionalThresholdStateMessage;
 
-// ---- Cp Market Order Net Notional Threshold State Message: 40 bytes ----------
-
 // CPMarketOrderNetNotionalThresholdStateMessage
-entrypoint typedef struct _CpMarketOrderNetNotionalThresholdStateMessage {
+typedef struct _CpMarketOrderNetNotionalThresholdStateMessage {
   UINT8 cl_ord_id_optional[20];  // bytes 0 to 19
   UINT8 underlier_optional[6];   // bytes 20 to 25
   UINT8 efid_optional[4];        // bytes 26 to 29
@@ -397,10 +532,8 @@ entrypoint typedef struct _CpMarketOrderNetNotionalThresholdStateMessage {
   UINT64BE price_in_dollars;     // bytes 32 to 39
 } CpMarketOrderNetNotionalThresholdStateMessage;
 
-// ---- Cp Duplicate Order Threshold State Message: 41 bytes --------------------
-
 // CPDuplicateOrderThresholdStateMessage
-entrypoint typedef struct _CpDuplicateOrderThresholdStateMessage {
+typedef struct _CpDuplicateOrderThresholdStateMessage {
   UINT8 cl_ord_id_optional[20];        // bytes 0 to 19
   UINT8 underlier_optional[6];         // bytes 20 to 25
   UINT8 efid_optional[4];              // bytes 26 to 29
@@ -410,10 +543,8 @@ entrypoint typedef struct _CpDuplicateOrderThresholdStateMessage {
   UINT32BE period_in_milli_seconds;    // bytes 37 to 40
 } CpDuplicateOrderThresholdStateMessage;
 
-// ---- Cp Order Rate Threshold State Message: 40 bytes -------------------------
-
 // CPOrderRateThresholdStateMessage
-entrypoint typedef struct _CpOrderRateThresholdStateMessage {
+typedef struct _CpOrderRateThresholdStateMessage {
   UINT8 cl_ord_id_optional[20];      // bytes 0 to 19
   UINT8 underlier_optional[6];       // bytes 20 to 25
   UINT8 efid_optional[4];            // bytes 26 to 29
@@ -421,4 +552,80 @@ entrypoint typedef struct _CpOrderRateThresholdStateMessage {
   UINT32BE max_order_msgs;           // bytes 32 to 35
   UINT32BE period_in_milli_seconds;  // bytes 36 to 39
 } CpOrderRateThresholdStateMessage;
+
+// Message body sent by Memx to the firm
+casetype _ServerPayload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x1E: ActiveRiskThresholdStateMessage active_risk_threshold_state_message;
+    case 0x1F: ActiveRiskThresholdChangeRejMessage active_risk_threshold_change_rej_message;
+    case 0x20: ActiveRiskAcknowledgedMessage active_risk_acknowledged_message;
+    case 0x21: ActiveRiskAcknowledgeRejMessage active_risk_acknowledge_rej_message;
+    case 0x22: ActiveRiskQuantityUpdateNotificationMessage active_risk_quantity_update_notification_message;
+    case 0x23: CpVolumeThresholdStateMessage cp_volume_threshold_state_message;
+    case 0x24: CpExecutedNotionalThresholdStateMessage cp_executed_notional_threshold_state_message;
+    case 0x25: CpTotalExecutionsThresholdStateMessage cp_total_executions_threshold_state_message;
+    case 0x26: CpPercentOutstandingContractsThresholdStateMessage cp_percent_outstanding_contracts_threshold_state_message;
+    case 0x27: CpBreachCountThresholdStateMessage cp_breach_count_threshold_state_message;
+    case 0x28: ManualCpBreachTriggerPendingMessage manual_cp_breach_trigger_pending_message;
+    case 0x29: ManualCpBreachTriggerDoneMessage manual_cp_breach_trigger_done_message;
+    case 0x2A: RiskThresholdUpdateRejMessage risk_threshold_update_rej_message;
+    case 0x2B: PassiveRiskThresholdNotificationMessage passive_risk_threshold_notification_message;
+    case 0x2C: SingleOrderAllowIsoOrdersStateMessage single_order_allow_iso_orders_state_message;
+    case 0x2D: SingleOrderAllowOrdersInCrossedMarketStateMessage single_order_allow_orders_in_crossed_market_state_message;
+    case 0x2E: SingleOrderMaxNotionalThresholdStateMessage single_order_max_notional_threshold_state_message;
+    case 0x2F: SingleOrderMaxContractsThresholdStateMessage single_order_max_contracts_threshold_state_message;
+    case 0x30: RiskSettingsQueryDoneMessage risk_settings_query_done_message;
+    case 0x31: RiskSettingsQueryRejMessage risk_settings_query_rej_message;
+    case 0x32: ManualCpBreachTriggerRejMessage manual_cp_breach_trigger_rej_message;
+    case 0x33: BreachClearRejMessage breach_clear_rej_message;
+    case 0x34: BreachClearedMessage breach_cleared_message;
+    case 0x3C: CpGrossNotionalThresholdStateMessage cp_gross_notional_threshold_state_message;
+    case 0x3D: CpMarketOrderGrossNotionalThresholdStateMessage cp_market_order_gross_notional_threshold_state_message;
+    case 0x3E: CpNetNotionalThresholdStateMessage cp_net_notional_threshold_state_message;
+    case 0x3F: CpMarketOrderNetNotionalThresholdStateMessage cp_market_order_net_notional_threshold_state_message;
+    case 0x40: CpDuplicateOrderThresholdStateMessage cp_duplicate_order_threshold_state_message;
+    case 0x41: CpOrderRateThresholdStateMessage cp_order_rate_threshold_state_message;
+    default: UINT8 unknown[available];
+  }
+} ServerPayload;
+
+// Sbe message sent by Memx to the firm
+typedef struct _ServerSbeMessage (UINT32 available) where (available >= 6) {
+  UINT16BE block_length;                                                                                        // bytes 0 to 1
+  UINT8 template_id;                                                                                            // byte 2
+  UINT8 schema_id;                                                                                              // byte 3
+  UINT16BE version;                                                                                             // bytes 4 to 5
+  ServerPayload(template_id, (available - 6)) server_payload[:byte-size-single-element-array (available - 6)];
+} ServerSbeMessage;
+
+// Memx Tcp sequenced message
+typedef struct _SequencedMessage (UINT32 available) {
+  ServerSbeMessage(available) server_sbe_message;
+} SequencedMessage;
+
+// Session message body sent by Memx to the firm, dispatched on the message type
+casetype _ServerData (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x01: LoginAcceptedMessage login_accepted_message;
+    case 0x02: LoginRejectedMessage login_rejected_message;
+    case 0x03: StartOfSessionMessage start_of_session_message;
+    case 0x05: ReplayBeginMessage replay_begin_message;
+    case 0x06: ReplayRejectedMessage replay_rejected_message;
+    case 0x07: ReplayCompleteMessage replay_complete_message;
+    case 0x08: StreamBeginMessage stream_begin_message;
+    case 0x09: StreamRejectedMessage stream_rejected_message;
+    case 0x0A: StreamCompleteMessage stream_complete_message;
+    case 0x0B: SequencedMessage(available) sequenced_message;
+    default: UINT8 unknown[available];
+  }
+} ServerData;
+
+// ---- Packet: ServerPacket ----------------------------------------------------
+
+// Memx Tcp packet sent by Memx to the firm
+entrypoint typedef struct _ServerPacket {
+  UINT8 message_type;                                                                                                          // byte 0
+  UINT16BE message_length;                                                                                                     // bytes 1 to 2
+  ServerData(message_type, ((UINT32) message_length)) server_data[:byte-size-single-element-array ((UINT32) message_length)];
+} ServerPacket;
 

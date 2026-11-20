@@ -1,61 +1,141 @@
-// National Association of Securities Dealers Automated Quotations (Nasdaq) MRX Options Spread Top Of Market
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nasdaq MrxOptions SpreadTopOfMarket Itch v2.1
 //
+// Protocol:
+//   Organization: National Association of Securities Dealers Automated Quotations (Nasdaq)
+//   Protocol: MRX Options Spread Top Of Market
+//   Encoding: Itch
+//   Version: 2.1
+//   Date: 09/15/2025
+//   Specification: Options_Spread_Feed_2.1.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out MrxOptions_SpreadTopOfMarket_Itch_v2_1_Udp.3d
-//
-// What this definition does not state, and the model does:
-// - the dispatch that chooses a message by its type
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Packet Header: 20 bytes -------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Itch Mold Udp 64 Packet Header
-entrypoint typedef struct _PacketHeader {
-  UINT8 session[10];         // bytes 0 to 9
-  UINT64BE sequence_number;  // bytes 10 to 17
-  UINT16BE message_count;    // bytes 18 to 19
-} PacketHeader;
+// Message Type: one byte code
+#define MESSAGE_TYPE_SYSTEM_EVENT_MESSAGE 0x53                      // System Event Message
+#define MESSAGE_TYPE_COMPLEX_STRATEGY_DIRECTORY_MESSAGE 0x73        // Complex Strategy Directory Message
+#define MESSAGE_TYPE_STRATEGY_TRADING_ACTION_MESSAGE 0x48           // Strategy Trading Action Message
+#define MESSAGE_TYPE_STRATEGY_BEST_BID_AND_ASK_UPDATE_MESSAGE 0x45  // Strategy Best Bid And Ask Update Message
+#define MESSAGE_TYPE_STRATEGY_BEST_BID_UPDATE_MESSAGE 0x63          // Strategy Best Bid Update Message
+#define MESSAGE_TYPE_STRATEGY_BEST_ASK_UPDATE_MESSAGE 0x64          // Strategy Best Ask Update Message
 
-// ---- Message Header: 3 bytes -------------------------------------------------
+// Event Code: one byte code
+#define EVENT_CODE_START_OF_MESSAGES 0x4F                      // Start Of Messages
+#define EVENT_CODE_START_OF_SYSTEM_HOURS 0x53                  // Start Of System Hours
+#define EVENT_CODE_START_OF_OPENING_PROCESS 0x51               // Start Of Opening Process
+#define EVENT_CODE_START_OF_NORMAL_HOURS_CLOSING_PROCESS 0x4E  // Start Of Normal Hours Closing Process
+#define EVENT_CODE_START_OF_LATE_HOURS_CLOSING_PROCESS 0x4C    // Start Of Late Hours Closing Process
+#define EVENT_CODE_END_OF_SYSTEM_HOURS 0x45                    // End Of System Hours
+#define EVENT_CODE_END_OF_MESSAGES 0x43                        // End Of Messages
+#define EVENT_CODE_END_OF_WCO_EARLY_CLOSING 0x57               // End Of Wco Early Closing
 
-// Mold Udp 64 Message Header
-entrypoint typedef struct _MessageHeader {
-  UINT16BE message_length;  // bytes 0 to 1
-  UINT8 message_type;       // byte 2
-} MessageHeader;
+// Strategy Type: one byte code
+#define STRATEGY_TYPE_VERTICAL_SPREAD 0x56   // Vertical Spread
+#define STRATEGY_TYPE_TIME_SPREAD 0x54       // Time Spread
+#define STRATEGY_TYPE_DIAGONAL_SPREAD 0x44   // Diagonal Spread
+#define STRATEGY_TYPE_STRADDLE 0x53          // Straddle
+#define STRATEGY_TYPE_STRANGLE 0x47          // Strangle
+#define STRATEGY_TYPE_COMBO 0x43             // Combo
+#define STRATEGY_TYPE_RISK_REVERSAL 0x52     // Risk Reversal
+#define STRATEGY_TYPE_RATIO_SPREAD 0x41      // Ratio Spread
+#define STRATEGY_TYPE_BOX_SPREAD 0x42        // Box Spread
+#define STRATEGY_TYPE_BUTTERFLY_SPREAD 0x46  // Butterfly Spread
+#define STRATEGY_TYPE_CUSTOM 0x55            // Custom
 
-// ---- System Event Message: 11 bytes ------------------------------------------
+// Option Type: one byte code
+#define OPTION_TYPE_CALL_OPTION 0x43  // Call Option
+#define OPTION_TYPE_PUT_OPTION 0x50   // Put Option
+#define OPTION_TYPE_STOCK_LEG 0x20    // Stock Leg
+
+// Side: one byte code
+#define SIDE_BUY 0x42   // Buy
+#define SIDE_SELL 0x53  // Sell
+
+// Current Trading State: one byte code
+#define CURRENT_TRADING_STATE_HALT_IN_EFFECT 0x48      // Halt In Effect
+#define CURRENT_TRADING_STATE_CONTINUOUS_TRADING 0x54  // Continuous Trading
+#define CURRENT_TRADING_STATE_PRE_OPEN 0x49            // Pre Open
+#define CURRENT_TRADING_STATE_OPENING_AUCTION 0x4F     // Opening Auction
+#define CURRENT_TRADING_STATE_RE_OPENING 0x52          // Re Opening
+#define CURRENT_TRADING_STATE_CLOSED 0x58              // Closed
+
+// ---- Types -------------------------------------------------------------------
 
 // The system event message type is used to signal a market or data feed handler event.
-entrypoint typedef struct _SystemEventMessage {
+typedef struct _SystemEventMessage {
   UINT16BE tracking_number;  // bytes 0 to 1
   UINT64BE timestamp;        // bytes 2 to 9
   UINT8 event_code;          // byte 10
 } SystemEventMessage;
 
-// ---- Strategy Trading Action Message: 15 bytes -------------------------------
+// Leg information
+typedef struct _LegInformation {
+  UINT32BE option_id;              // bytes 0 to 3
+  UINT8 security_symbol[8];        // bytes 4 to 11
+  UINT8 expiration_year;           // byte 12
+  UINT8 expiration_month;          // byte 13
+  UINT8 expiration_day;            // byte 14
+  UINT32BE explicit_strike_price;  // bytes 15 to 18, signed, read here as unsigned
+  UINT8 option_type;               // byte 19
+  UINT8 side;                      // byte 20
+  UINT32BE leg_ratio;              // bytes 21 to 24
+} LegInformation;
+
+// A Complex Strategy Directory Message containing the strategy definition will be sent whenever a complex order is added in the system.
+typedef struct _ComplexStrategyDirectoryMessage {
+  UINT16BE tracking_number;                                                     // bytes 0 to 1
+  UINT64BE timestamp;                                                           // bytes 2 to 9
+  UINT32BE strategy_id;                                                         // bytes 10 to 13
+  UINT8 strategy_type;                                                          // byte 14
+  UINT8 underlying_symbol[13];                                                  // bytes 15 to 27
+  UINT8 reserved_16[16];                                                        // bytes 28 to 43
+  UINT8 number_of_legs;                                                         // byte 44
+  LegInformation leg_information[:byte-size (((UINT32) number_of_legs) * 25)];
+} ComplexStrategyDirectoryMessage;
 
 // The options system uses this administrative message to indicate the current trading status of an index or equity option within the options market.
-entrypoint typedef struct _StrategyTradingActionMessage {
+typedef struct _StrategyTradingActionMessage {
   UINT16BE tracking_number;     // bytes 0 to 1
   UINT64BE timestamp;           // bytes 2 to 9
   UINT32BE strategy_id;         // bytes 10 to 13
   UINT8 current_trading_state;  // byte 14
 } StrategyTradingActionMessage;
 
-// ---- Strategy Best Bid And Ask Update Message: 71 bytes ----------------------
-
 // The options system will continuously calculate its best bid and ask position for active strategies on the options market during the trading day.
-entrypoint typedef struct _StrategyBestBidAndAskUpdateMessage {
+typedef struct _StrategyBestBidAndAskUpdateMessage {
   UINT16BE tracking_number;       // bytes 0 to 1
   UINT64BE timestamp;             // bytes 2 to 9
   UINT32BE strategy_id;           // bytes 10 to 13
@@ -76,10 +156,8 @@ entrypoint typedef struct _StrategyBestBidAndAskUpdateMessage {
   UINT32BE ask_dntt_market_size;  // bytes 67 to 70
 } StrategyBestBidAndAskUpdateMessage;
 
-// ---- Strategy Best Bid Update Message: 43 bytes ------------------------------
-
 // Strategy Best bid OR ask update. Quote update bid side.
-entrypoint typedef struct _StrategyBestBidUpdateMessage {
+typedef struct _StrategyBestBidUpdateMessage {
   UINT16BE tracking_number;   // bytes 0 to 1
   UINT64BE timestamp;         // bytes 2 to 9
   UINT32BE strategy_id;       // bytes 10 to 13
@@ -93,10 +171,8 @@ entrypoint typedef struct _StrategyBestBidUpdateMessage {
   UINT32BE dntt_market_size;  // bytes 39 to 42
 } StrategyBestBidUpdateMessage;
 
-// ---- Strategy Best Ask Update Message: 43 bytes ------------------------------
-
 // Strategy Best bid OR ask update. Quote update ask side.
-entrypoint typedef struct _StrategyBestAskUpdateMessage {
+typedef struct _StrategyBestAskUpdateMessage {
   UINT16BE tracking_number;   // bytes 0 to 1
   UINT64BE timestamp;         // bytes 2 to 9
   UINT32BE strategy_id;       // bytes 10 to 13
@@ -109,4 +185,51 @@ entrypoint typedef struct _StrategyBestAskUpdateMessage {
   UINT32BE dntt_size;         // bytes 35 to 38
   UINT32BE dntt_market_size;  // bytes 39 to 42
 } StrategyBestAskUpdateMessage;
+
+// Branch
+casetype _UdpPayload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x53: SystemEventMessage system_event_message;
+    case 0x73: ComplexStrategyDirectoryMessage complex_strategy_directory_message;
+    case 0x48: StrategyTradingActionMessage strategy_trading_action_message;
+    case 0x45: StrategyBestBidAndAskUpdateMessage strategy_best_bid_and_ask_update_message;
+    case 0x63: StrategyBestBidUpdateMessage strategy_best_bid_update_message;
+    case 0x64: StrategyBestAskUpdateMessage strategy_best_ask_update_message;
+    default: UINT8 unknown[available];
+  }
+} UdpPayload;
+
+// Mold Udp64 Message
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16BE message_length { message_length >= 1 };                                                                                                                 // bytes 0 to 1
+  UINT8 message_type;                                                                                                                                              // byte 2
+  UdpPayload(message_type, (((UINT32) message_length) - 1)) udp_payload[:byte-size-single-element-array (((UINT32) message_length) - 1)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// Mold Udp64 Message
+typedef struct _MessageRun (UINT16 message_count, UINT32 available, mutable UINT32 * tally) {
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size available];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
+} MessageRun;
+
+// Branch
+casetype _Messages (UINT16 selector, UINT16 message_count, UINT32 available, mutable UINT32 * tally) {
+  switch (selector) {
+    case 0x0000: unit heartbeat;
+    case 0xFFFF: unit end_of_session;
+    default: MessageRun(message_count, available, tally) message;
+  }
+} Messages;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Itch Mold Udp 64 Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 20) {
+  UINT8 session[10];                                                                                                           // bytes 0 to 9
+  UINT64BE sequence_number;                                                                                                    // bytes 10 to 17
+  UINT16BE message_count;                                                                                                      // bytes 18 to 19
+  Messages(message_count, message_count, (available - 20), tally) messages[:byte-size-single-element-array (available - 20)];
+} Packet;
 

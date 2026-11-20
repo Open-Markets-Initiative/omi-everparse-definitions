@@ -1,73 +1,354 @@
-// New York Stock Exchange Top Feed
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nyse ArcaOptions TopFeed Pillar v1.2.j
 //
+// Protocol:
+//   Organization: New York Stock Exchange
+//   Protocol: Top Feed
+//   Encoding: Pillar
+//   Version: 1.2.j
+//   Date: 11/18/2025
+//   Specification: PILLAR_TOP_Client_Specification.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out ArcaOptions_TopFeed_v1_2_j.3d
-//
-// What this definition does not state, and the model does:
-// - the dispatch that chooses a message by its type
-// - a run filling what frames it
-// - a run counted by a field
-// - a field present only on a condition
-//
-// License: MIT No Attribution
 
-// ---- Send Time: 8 bytes ------------------------------------------------------
+// ---- Values ------------------------------------------------------------------
+
+// Delivery Flag: one byte code
+#define DELIVERY_FLAG_HEARTBEAT 0x01                        // Heartbeat
+#define DELIVERY_FLAG_PILLAR_FAILOVER 0x0A                  // Pillar Failover
+#define DELIVERY_FLAG_ORIGINAL_MESSAGE 0x0B                 // Original Message
+#define DELIVERY_FLAG_SEQUENCE_NUMBER_RESET_MESSAGE 0x0C    // Sequence Number Reset Message
+#define DELIVERY_FLAG_ONE_RETRANSMISSION_PACKET 0x0D        // One Retransmission Packet
+#define DELIVERY_FLAG_RETRANSMISSION_SEQUENCE_MESSAGE 0x0F  // Retransmission Sequence Message
+#define DELIVERY_FLAG_ONE_REFRESH_PACKET 0x11               // One Refresh Packet
+#define DELIVERY_FLAG_REFRESH_SEQUENCE_START 0x12           // Refresh Sequence Start
+#define DELIVERY_FLAG_REFRESH_SEQUENCE_MESSAGE 0x13         // Refresh Sequence Message
+#define DELIVERY_FLAG_REFRESH_SEQUENCE_END 0x14             // Refresh Sequence End
+#define DELIVERY_FLAG_MESSAGE_UNAVAILABLE 0x15              // Message Unavailable
+
+// Message Type: 2 byte code
+#define MESSAGE_TYPE_SEQUENCE_NUMBER_RESET_MESSAGE 0x0001          // Sequence Number Reset Message
+#define MESSAGE_TYPE_SOURCE_TIME_REFERENCE_MESSAGE 0x0002          // Source Time Reference Message
+#define MESSAGE_TYPE_SYMBOL_INDEX_MAPPING_MESSAGE 0x0003           // Symbol Index Mapping Message
+#define MESSAGE_TYPE_SYMBOL_CLEAR_MESSAGE 0x0020                   // Symbol Clear Message
+#define MESSAGE_TYPE_SECURITY_STATUS_MESSAGE 0x0022                // Security Status Message
+#define MESSAGE_TYPE_OUTRIGHT_SERIES_INDEX_MAPPING_MESSAGE 0x0032  // Outright Series Index Mapping Message
+#define MESSAGE_TYPE_OPTIONS_STATUS_MESSAGE 0x0033                 // Options Status Message
+#define MESSAGE_TYPE_COMPLEX_SERIES_INDEX_MAPPING_MESSAGE 0x003C   // Complex Series Index Mapping Message
+#define MESSAGE_TYPE_RETRANSMISSION_REQUEST_MESSAGE 0x000A         // Retransmission Request Message
+#define MESSAGE_TYPE_REFRESH_HEADER_MESSAGE 0x0023                 // Refresh Header Message
+#define MESSAGE_TYPE_REFRESH_REQUEST_MESSAGE 0x000F                // Refresh Request Message
+#define MESSAGE_TYPE_SYMBOL_INDEX_MAPPING_REQUEST_MESSAGE 0x000D   // Symbol Index Mapping Request Message
+#define MESSAGE_TYPE_MESSAGE_UNAVAILABLE_MESSAGE 0x001F            // Message Unavailable Message
+#define MESSAGE_TYPE_REQUEST_RESPONSE_MESSAGE 0x000B               // Request Response Message
+#define MESSAGE_TYPE_HEARTBEAT_RESPONSE_MESSAGE 0x000C             // Heartbeat Response Message
+#define MESSAGE_TYPE_OPTIONS_QUOTE_MESSAGE 0x0154                  // Options Quote Message
+#define MESSAGE_TYPE_OPTIONS_TRADE_MESSAGE 0x0140                  // Options Trade Message
+#define MESSAGE_TYPE_OPTIONS_TRADE_CANCEL_MESSAGE 0x0141           // Options Trade Cancel Message
+#define MESSAGE_TYPE_OPTIONS_TRADE_CORRECTION_MESSAGE 0x0142       // Options Trade Correction Message
+#define MESSAGE_TYPE_OPTIONS_IMBALANCE_MESSAGE 0x0131              // Options Imbalance Message
+#define MESSAGE_TYPE_SERIES_RFQ_MESSAGE 0x0133                     // Series Rfq Message
+#define MESSAGE_TYPE_OUTRIGHT_SERIES_SUMMARY_MESSAGE 0x0143        // Outright Series Summary Message
+
+// Market Id: 2 byte code
+#define MARKET_ID_NYSE_EQUITIES 0x0001           // Nyse Equities
+#define MARKET_ID_NYSE_ARCA_EQUITIES 0x0003      // Nyse Arca Equities
+#define MARKET_ID_NYSE_ARCA_OPTIONS 0x0004       // Nyse Arca Options
+#define MARKET_ID_NYSE_AMERICAN_OPTIONS 0x0008   // Nyse American Options
+#define MARKET_ID_NYSE_AMERICAN_EQUITIES 0x0009  // Nyse American Equities
+#define MARKET_ID_NYSE_NATIONAL_EQUITIES 0x000A  // Nyse National Equities
+#define MARKET_ID_NYSE_TEXAS_EQUITIES 0x000B     // Nyse Texas Equities
+
+// Exchange Code: one byte code
+#define EXCHANGE_CODE_NYSE_AMERICAN 0x41                               // Nyse American
+#define EXCHANGE_CODE_LTSE 0x4C                                        // Ltse
+#define EXCHANGE_CODE_NYSE_TEXAS 0x4D                                  // Nyse Texas
+#define EXCHANGE_CODE_NYSE 0x4E                                        // Nyse
+#define EXCHANGE_CODE_NYSE_ARCA 0x50                                   // Nyse Arca
+#define EXCHANGE_CODE_NASDAQ 0x51                                      // Nasdaq
+#define EXCHANGE_CODE_IEX 0x56                                         // Iex
+#define EXCHANGE_CODE_CBOE 0x5A                                        // Cboe
+#define EXCHANGE_CODE_OTC_OR_INDEX_BASED_PRODUCT_SPACE_OR_0_X_20 0x20  // Otc Or Index Based Product Space Or 0 X 20
+
+// Price Scale Code: one byte code
+#define PRICE_SCALE_CODE_LOW_PRICED_SECURITIES 0x06     // Low Priced Securities
+#define PRICE_SCALE_CODE_MEDIUM_PRICED_SECURITIES 0x04  // Medium Priced Securities
+#define PRICE_SCALE_CODE_HIGH_PRICED_SECURITIES 0x03    // High Priced Securities
+
+// Security Type: one byte code
+#define SECURITY_TYPE_AMERICAN_DEPOSITARY_RECEIPTS 0x41   // American Depositary Receipts
+#define SECURITY_TYPE_COMMON_STOCK 0x43                   // Common Stock
+#define SECURITY_TYPE_DEBENTURES 0x44                     // Debentures
+#define SECURITY_TYPE_EXCHANGE_TRADED_FUNDS 0x45          // Exchange Traded Funds
+#define SECURITY_TYPE_FOREIGN 0x46                        // Foreign
+#define SECURITY_TYPE_AMERICAN_DEPOSITARY_SHARES 0x48     // American Depositary Shares
+#define SECURITY_TYPE_UNITS 0x49                          // Units
+#define SECURITY_TYPE_INDEX_LINKED_NOTES 0x4C             // Index Linked Notes
+#define SECURITY_TYPE_OTHER_BLANK 0x4D                    // Other Blank
+#define SECURITY_TYPE_ORDINARY_SHARES 0x4F                // Ordinary Shares
+#define SECURITY_TYPE_PREFERRED_STOCK 0x50                // Preferred Stock
+#define SECURITY_TYPE_RIGHTS 0x52                         // Rights
+#define SECURITY_TYPE_SHARES_OF_BENEFICIAL_INTEREST 0x53  // Shares Of Beneficial Interest
+#define SECURITY_TYPE_TEST 0x54                           // Test
+#define SECURITY_TYPE_CLOSED_END_FUND 0x55                // Closed End Fund
+#define SECURITY_TYPE_WARRANTS 0x57                       // Warrants
+
+// Price Resolution: one byte code
+#define PRICE_RESOLUTION_ALL_PENNY 0x00     // All Penny
+#define PRICE_RESOLUTION_PENNY_NICKEL 0x01  // Penny Nickel
+#define PRICE_RESOLUTION_NICKEL_DIME 0x05   // Nickel Dime
+
+// Round Lot: one byte code
+#define ROUND_LOT_YES 0x59  // Yes
+#define ROUND_LOT_NO 0x4E   // No
+
+// Security Status: one byte code
+#define SECURITY_STATUS_TRADING_HALT 0x34                            // Trading Halt
+#define SECURITY_STATUS_RESUME 0x35                                  // Resume
+#define SECURITY_STATUS_SUSPEND 0x36                                 // Suspend
+#define SECURITY_STATUS_SHORT_SALE_RESTRICTION_ACTIVATED_DAY_1 0x41  // Short Sale Restriction Activated Day 1
+#define SECURITY_STATUS_SHORT_SALE_RESTRICTION_CONTINUED_DAY_2 0x43  // Short Sale Restriction Continued Day 2
+#define SECURITY_STATUS_SHORT_SALE_RESTRICTION_DEACTIVATED 0x44      // Short Sale Restriction Deactivated
+#define SECURITY_STATUS_PRE_OPENING 0x50                             // Pre Opening
+#define SECURITY_STATUS_BEGIN_ACCEPTING_ORDERS 0x42                  // Begin Accepting Orders
+#define SECURITY_STATUS_EARLY_SESSION 0x45                           // Early Session
+#define SECURITY_STATUS_CORE_SESSION 0x4F                            // Core Session
+#define SECURITY_STATUS_LATE_SESSION 0x4C                            // Late Session
+#define SECURITY_STATUS_CLOSED 0x58                                  // Closed
+#define SECURITY_STATUS_HALT_RESUME_PRICE_INDICATION 0x49            // Halt Resume Price Indication
+#define SECURITY_STATUS_PRE_OPENING_PRICE_INDICATION 0x47            // Pre Opening Price Indication
+
+// Halt Condition: one byte code
+#define HALT_CONDITION_SECURITY_NOT_DELAYEDHALTED 0x7E                // Security Not Delayedhalted
+#define HALT_CONDITION_NEWS_RELEASED 0x44                             // News Released
+#define HALT_CONDITION_ORDER_IMBALANCE 0x49                           // Order Imbalance
+#define HALT_CONDITION_NEWS_PENDING 0x50                              // News Pending
+#define HALT_CONDITION_LULD_PAUSE 0x4D                                // Luld Pause
+#define HALT_CONDITION_EQUIPMENT_CHANGEOVER 0x58                      // Equipment Changeover
+#define HALT_CONDITION_ADDITIONAL_INFORMATION_REQUESTED 0x41          // Additional Information Requested
+#define HALT_CONDITION_REGULATORY_CONCERN 0x43                        // Regulatory Concern
+#define HALT_CONDITION_MERGER_EFFECTIVE 0x45                          // Merger Effective
+#define HALT_CONDITION_ETF_COMPONENT_PRICES_NOT_AVAILABLE 0x46        // Etf Component Prices Not Available
+#define HALT_CONDITION_CORPORATE_ACTION 0x4E                          // Corporate Action
+#define HALT_CONDITION_NEW_SECURITY_OFFERING 0x4F                     // New Security Offering
+#define HALT_CONDITION_INTRADAY_INDICATIVE_VALUE_NOT_AVAILABLE 0x56   // Intraday Indicative Value Not Available
+#define HALT_CONDITION_SUSPEND 0x36                                   // Suspend
+#define HALT_CONDITION_MARKET_WIDE_CIRCUIT_BREAKER_HALT_LEVEL_1 0x31  // Market Wide Circuit Breaker Halt Level 1
+#define HALT_CONDITION_MARKET_WIDE_CIRCUIT_BREAKER_HALT_LEVEL_2 0x32  // Market Wide Circuit Breaker Halt Level 2
+#define HALT_CONDITION_MARKET_WIDE_CIRCUIT_BREAKER_HALT_LEVEL_3 0x33  // Market Wide Circuit Breaker Halt Level 3
+
+// Ssr Triggering Exchange Id: one byte code
+#define SSR_TRIGGERING_EXCHANGE_ID_NYSE_AMERICAN 0x41   // Nyse American
+#define SSR_TRIGGERING_EXCHANGE_ID_NASDAQ_OMX_BX 0x42   // Nasdaq Omx Bx
+#define SSR_TRIGGERING_EXCHANGE_ID_NYSE_NATIONAL 0x43   // Nyse National
+#define SSR_TRIGGERING_EXCHANGE_ID_FINRA 0x44           // Finra
+#define SSR_TRIGGERING_EXCHANGE_ID_N24_X 0x47           // N24X
+#define SSR_TRIGGERING_EXCHANGE_ID_ISE 0x49             // Ise
+#define SSR_TRIGGERING_EXCHANGE_ID_CBOE_EDGA 0x4A       // Cboe Edga
+#define SSR_TRIGGERING_EXCHANGE_ID_CBOE_EDGX 0x4B       // Cboe Edgx
+#define SSR_TRIGGERING_EXCHANGE_ID_LTSE 0x4C            // Ltse
+#define SSR_TRIGGERING_EXCHANGE_ID_NYSE_TEXAS 0x4D      // Nyse Texas
+#define SSR_TRIGGERING_EXCHANGE_ID_NYSE 0x4E            // Nyse
+#define SSR_TRIGGERING_EXCHANGE_ID_NYSE_ARCA 0x50       // Nyse Arca
+#define SSR_TRIGGERING_EXCHANGE_ID_NASDAQ 0x51          // Nasdaq
+#define SSR_TRIGGERING_EXCHANGE_ID_CTS 0x53             // Cts
+#define SSR_TRIGGERING_EXCHANGE_ID_NASDAQ_OMX 0x54      // Nasdaq Omx
+#define SSR_TRIGGERING_EXCHANGE_ID_IEX 0x56             // Iex
+#define SSR_TRIGGERING_EXCHANGE_ID_CBSX 0x57            // Cbsx
+#define SSR_TRIGGERING_EXCHANGE_ID_NASDAQ_OMX_PSX 0x58  // Nasdaq Omx Psx
+#define SSR_TRIGGERING_EXCHANGE_ID_CBOE_BYX 0x59        // Cboe Byx
+#define SSR_TRIGGERING_EXCHANGE_ID_CBOE_BZX 0x5A        // Cboe Bzx
+#define SSR_TRIGGERING_EXCHANGE_ID_MIAX 0x48            // Miax
+#define SSR_TRIGGERING_EXCHANGE_ID_MEMX 0x55            // Memx
+#define SSR_TRIGGERING_EXCHANGE_ID_NO_VALUE 0x20        // No Value
+
+// Ssr State: one byte code
+#define SSR_STATE_NO_SHORT_SALE_RESTRICTION_IN_EFFECT 0x7E  // No Short Sale Restriction In Effect
+#define SSR_STATE_SHORT_SALE_RESTRICTION_IN_EFFECT 0x45     // Short Sale Restriction In Effect
+
+// Market State: one byte code
+#define MARKET_STATE_PRE_OPENING 0x50                 // Pre Opening
+#define MARKET_STATE_EARLY_SESSION 0x45               // Early Session
+#define MARKET_STATE_CORE_SESSION 0x4F                // Core Session
+#define MARKET_STATE_LATE_SESSION_NON_NYSE_ONLY 0x4C  // Late Session Non Nyse Only
+#define MARKET_STATE_CLOSED 0x58                      // Closed
+
+// Series Type: one byte code
+#define SERIES_TYPE_STANDARD 0x00         // Standard
+#define SERIES_TYPE_FLEX 0x01             // Flex
+#define SERIES_TYPE_FLEX_PERCENTAGE 0x02  // Flex Percentage
+
+// Put Or Call: one byte code
+#define PUT_OR_CALL_PUT 0x00   // Put
+#define PUT_OR_CALL_CALL 0x01  // Call
+
+// Closing Only Indicator: one byte code
+#define CLOSING_ONLY_INDICATOR_STANDARD_SERIES 0x30      // Standard Series
+#define CLOSING_ONLY_INDICATOR_CLOSING_ONLY_SERIES 0x31  // Closing Only Series
+
+// Series Status: one byte code
+#define SERIES_STATUS_TRADING_HALT 0x34            // Trading Halt
+#define SERIES_STATUS_RESUME 0x35                  // Resume
+#define SERIES_STATUS_SUSPEND 0x36                 // Suspend
+#define SERIES_STATUS_PRE_OPENING 0x50             // Pre Opening
+#define SERIES_STATUS_BEGIN_ACCEPTING_ORDERS 0x42  // Begin Accepting Orders
+#define SERIES_STATUS_CORE_SESSION 0x4F            // Core Session
+#define SERIES_STATUS_CLOSED 0x58                  // Closed
+
+// Options Status Halt Condition: one byte code
+#define OPTIONS_STATUS_HALT_CONDITION_SERIES_NOT_DELAYEDHALTED 0x7E  // Series Not Delayedhalted
+#define OPTIONS_STATUS_HALT_CONDITION_OPTION_SERIES_IS_HALTED 0x68   // Option Series Is Halted
+
+// Leg Side: one byte code
+#define LEG_SIDE_BUY 0x42   // Buy
+#define LEG_SIDE_SELL 0x53  // Sell
+
+// Leg Security Type: one byte code
+#define LEG_SECURITY_TYPE_OPTIONS_SERIES_LEG 0x4F  // Options Series Leg
+#define LEG_SECURITY_TYPE_EQUITY_STOCK_LEG 0x45    // Equity Stock Leg
+#define LEG_SECURITY_TYPE_OPTIONS_FLEX_LEG 0x46    // Options Flex Leg
+
+// Retransmit Method: one byte code
+#define RETRANSMIT_METHOD_DELIVER_VIA_UDP 0x00  // Deliver Via Udp
+
+// Status: one byte code
+#define STATUS_MESSAGE_WAS_ACCEPTED 0x30                                                              // Message Was Accepted
+#define STATUS_REJECTED_DUE_TO_AN_INVALID_SOURCE_ID 0x31                                              // Rejected Due To An Invalid Source Id
+#define STATUS_REJECTED_DUE_TO_MAXIMUM_SEQUENCE_RANGE 0x33                                            // Rejected Due To Maximum Sequence Range
+#define STATUS_REJECTED_DUE_TO_MAXIMUM_REQUEST_IN_A_DAY 0x34                                          // Rejected Due To Maximum Request In A Day
+#define STATUS_REJECTED_DUE_TO_MAXIMUM_NUMBER_OF_REFRESH_REQUESTS_IN_A_DAY 0x35                       // Rejected Due To Maximum Number Of Refresh Requests In A Day
+#define STATUS_REJECTED_REQUEST_MESSAGE_SEQ_NUM_TTL_TIME_TO_LIVE_IS_TOO_OLD_USE_REFRESH__dkpgxt 0x36  // Rejected Request Message Seq Num Ttl Time To Live Is Too Old Use Refresh To Recover Current State If Necessary
+#define STATUS_REJECTED_DUE_TO_AN_INVALID_CHANNEL_ID 0x37                                             // Rejected Due To An Invalid Channel Id
+#define STATUS_REJECTED_DUE_TO_AN_INVALID_PRODUCT_ID 0x38                                             // Rejected Due To An Invalid Product Id
+#define STATUS_REJECTED_DUE_TO_1_INVALID_MSG_TYPE_OR_2_MISMATCH_BETWEEN_MSG_TYPE_AND_MSG_SIZE 0x39    // Rejected Due To 1 Invalid Msg Type Or 2 Mismatch Between Msg Type And Msg Size
+
+// Quote Condition: one byte code
+#define QUOTE_CONDITION_REGULAR_TRADING 0x31  // Regular Trading
+#define QUOTE_CONDITION_TRADING_HALTED 0x33   // Trading Halted
+
+// Trade Cond 1: one byte code
+#define TRADE_COND_1_OUTRIGHT_SERIES_CUBE_ORDER_TRADE 0x61                                   // Outright Series Cube Order Trade
+#define TRADE_COND_1_OUTRIGHT_SERIES_QCC_ORDER_OR_CUSTOMER_TO_CUSTOMER_CROSS_ORDER 0x63      // Outright Series Qcc Order Or Customer To Customer Cross Order
+#define TRADE_COND_1_OUTRIGHT_SERIES_FLOOR_TRADE 0x65                                        // Outright Series Floor Trade
+#define TRADE_COND_1_ALL_OUTRIGHT_SERIES_ELECTRONIC_TRADES 0x49                              // All Outright Series Electronic Trades
+#define TRADE_COND_1_INTERMARKET_SWEEP_ORDER 0x53                                            // Intermarket Sweep Order
+#define TRADE_COND_1_COMPLEX_ORDER_TRADES_NOT_PART_OF_CUBEQC_CELECTRONIC_WITH_OUTRIGHT 0x66  // Complex Order Trades Not Part Of Cubeqc Celectronic With Outright
+#define TRADE_COND_1_COMPLEX_CUBE_ORDER_TRADE 0x67                                           // Complex Cube Order Trade
+#define TRADE_COND_1_COMPLEX_QCC_ORDER_OR_CUSTOMER_TO_CUSTOMER_CROSS_ORDER 0x68              // Complex Qcc Order Or Customer To Customer Cross Order
+#define TRADE_COND_1_COMPLEX_ORDER_TO_COMPLEX_ORDER_FLOOR_TRADE 0x69                         // Complex Order To Complex Order Floor Trade
+#define TRADE_COND_1_COMPLEX_ORDER_TRADING_ELECTRONICALLY_WITH_OUTRIGHT_SERIES 0x6A          // Complex Order Trading Electronically With Outright Series
+#define TRADE_COND_1_COMPLEX_ORDER_TO_OUTRIGHT_SERIES_ORDER_FLOOR_TRADE 0x6D                 // Complex Order To Outright Series Order Floor Trade
+#define TRADE_COND_1_COMPLEX_ORDER_WITH_STOCK_TO_COMPLEX_ORDER_WITH_STOCK_FLOOR_TRADE 0x70   // Complex Order With Stock To Complex Order With Stock Floor Trade
+#define TRADE_COND_1_COMPLEX_ORDER_WITH_STOCK_TO_OUTRIGHT_SERIES_ORDER_FLOOR_TRADE 0x73      // Complex Order With Stock To Outright Series Order Floor Trade
+#define TRADE_COND_1_LATE_REPORT_OF_OPENING_TRADE_CORRECT_SEQUENCE 0x48                      // Late Report Of Opening Trade Correct Sequence
+#define TRADE_COND_1_LATE_REPORT_OF_OPENING_TRADE_OUT_OF_SEQUENCE 0x46                       // Late Report Of Opening Trade Out Of Sequence
+#define TRADE_COND_1_TRANSACTION_REPORTED_LATE_CORRECT_SEQUENCE 0x44                         // Transaction Reported Late Correct Sequence
+#define TRADE_COND_1_TRANSACTION_REPORTED_LATE_OUT_OF_SEQUENCE 0x42                          // Transaction Reported Late Out Of Sequence
+
+// Trade Cond 2: one byte code
+#define TRADE_COND_2_NA 0x20                           // Na
+#define TRADE_COND_2_MARKET_CENTER_OPENING_TRADE 0x4F  // Market Center Opening Trade
+#define TRADE_COND_2_REOPENING_TRADE 0x35              // Reopening Trade
+
+// Trade Cond 4: one byte code
+#define TRADE_COND_4_NA 0x20                   // Na
+#define TRADE_COND_4_OFFICIAL_OPEN_PRICE 0x51  // Official Open Price
+
+// Auction Type: one byte code
+#define AUCTION_TYPE_CORE_OPENING_AUCTION 0x4D           // Core Opening Auction
+#define AUCTION_TYPE_REOPENING_AUCTION_HALT_RESUME 0x48  // Reopening Auction Halt Resume
+
+// Imbalance Side: one byte code
+#define IMBALANCE_SIDE_BUY_SIDE 0x42      // Buy Side
+#define IMBALANCE_SIDE_SELL_SIDE 0x53     // Sell Side
+#define IMBALANCE_SIDE_NO_IMBALANCE 0x20  // No Imbalance
+
+// Auction Status: one byte code
+#define AUCTION_STATUS_WILL_RUN_AS_USUAL 0x00                                                // Will Run As Usual
+#define AUCTION_STATUS_AUCTION_WILL_NOT_RUN_BECAUSE_LEGAL_WIDTH_QUOTE_DOES_NOT_EXIST 0x04    // Auction Will Not Run Because Legal Width Quote Does Not Exist
+#define AUCTION_STATUS_AUCTION_WILL_NOT_RUN_BECAUSE_MARKET_MAKER_QUOTE_IS_NOT_RECEIVED 0x05  // Auction Will Not Run Because Market Maker Quote Is Not Received
+
+// Side: one byte code
+#define SIDE_BUY 0x42   // Buy
+#define SIDE_SELL 0x53  // Sell
+
+// Type: one byte code
+#define TYPE_BOLD_OUTRIGHT_ONLY 0x42           // Bold Outright Only
+#define TYPE_COA_COMPLEX_ONLY 0x43             // Coa Complex Only
+#define TYPE_FLEX_PRICE_IMPROVEMENT_CUBE 0x46  // Flex Price Improvement Cube
+#define TYPE_FLEX_AON_SOLICITATION_CUBE 0x4C   // Flex Aon Solicitation Cube
+#define TYPE_PRICE_IMPROVEMENT_CUBE 0x50       // Price Improvement Cube
+#define TYPE_AON_SOLICITATION_CUBE 0x53        // Aon Solicitation Cube
+
+// Capacity: one byte code
+#define CAPACITY_NA 0x20                     // Na
+#define CAPACITY_CUSTOMER 0x30               // Customer
+#define CAPACITY_FIRM 0x31                   // Firm
+#define CAPACITY_BROKER_DEALER 0x32          // Broker Dealer
+#define CAPACITY_MARKET_MAKER 0x33           // Market Maker
+#define CAPACITY_AWAY_MARKET_MAKER 0x35      // Away Market Maker
+#define CAPACITY_PROFESSIONAL_CUSTOMER 0x38  // Professional Customer
+
+// Rfq Status: one byte code
+#define RFQ_STATUS_START_OF_RFQ_AUCTION 0x4F  // Start Of Rfq Auction
+#define RFQ_STATUS_END_OF_RFQ_AUCTION 0x51    // End Of Rfq Auction
+
+// ---- Types -------------------------------------------------------------------
 
 // The time when this packet was published to the multicast channel
-entrypoint typedef struct _SendTime {
+typedef struct _SendTime {
   UINT32 seconds;      // bytes 0 to 3
   UINT32 nanoseconds;  // bytes 4 to 7
 } SendTime;
 
-// ---- Packet Header: 16 bytes -------------------------------------------------
-
-// Pillar common client udp packet header
-entrypoint typedef struct _PacketHeader {
-  UINT16 pkt_size;      // bytes 0 to 1
-  UINT8 delivery_flag;  // byte 2
-  UINT8 number_msgs;    // byte 3
-  UINT32 seq_num;       // bytes 4 to 7
-  SendTime send_time;   // bytes 8 to 15
-} PacketHeader;
-
-// ---- Message Header: 4 bytes -------------------------------------------------
-
-// Pillar message header
-entrypoint typedef struct _MessageHeader {
-  UINT16 message_size;  // bytes 0 to 1
-  UINT16 message_type;  // bytes 2 to 3
-} MessageHeader;
-
-// ---- Sequence Number Reset Message: 10 bytes ---------------------------------
-
 // Sent to reset the Message Sequence Number at start of day, or in response to failure recoveries.
-entrypoint typedef struct _SequenceNumberResetMessage {
+typedef struct _SequenceNumberResetMessage {
   UINT32 source_time;     // bytes 0 to 3
   UINT32 source_time_ns;  // bytes 4 to 7
   UINT8 product_id;       // byte 8
   UINT8 channel_id;       // byte 9
 } SequenceNumberResetMessage;
 
-// ---- Source Time Reference Message: 12 bytes ---------------------------------
-
 // Sent at the start of every second during periods of active data publication.
-entrypoint typedef struct _SourceTimeReferenceMessage {
+typedef struct _SourceTimeReferenceMessage {
   UINT32 id;              // bytes 0 to 3
   UINT32 symbol_seq_num;  // bytes 4 to 7
   UINT32 source_time;     // bytes 8 to 11
 } SourceTimeReferenceMessage;
 
-// ---- Symbol Index Mapping Message: 40 bytes ----------------------------------
-
 // Published over the real-time data channels at system startup or in the context of a refresh sequence. Provides referential data for a single specified symbol or underlying symbol.
-entrypoint typedef struct _SymbolIndexMappingMessage {
+typedef struct _SymbolIndexMappingMessage {
   UINT32 symbol_index;         // bytes 0 to 3
   UINT8 symbol[11];            // bytes 4 to 14
   UINT8 reserved_1;            // byte 15
@@ -86,20 +367,16 @@ entrypoint typedef struct _SymbolIndexMappingMessage {
   UINT8 third_reserved_2[2];   // bytes 38 to 39
 } SymbolIndexMappingMessage;
 
-// ---- Symbol Clear Message: 16 bytes ------------------------------------------
-
 // In case of a failure and recovery, the publisher may send a full state refresh for every symbol or series affected, preceded by a Symbol Clear message.
-entrypoint typedef struct _SymbolClearMessage {
+typedef struct _SymbolClearMessage {
   UINT32 source_time;          // bytes 0 to 3
   UINT32 source_time_ns;       // bytes 4 to 7
   UINT32 symbol_index;         // bytes 8 to 11
   UINT32 next_source_seq_num;  // bytes 12 to 15
 } SymbolClearMessage;
 
-// ---- Security Status Message: 42 bytes ---------------------------------------
-
 // Informs clients of changes in the status of a specific security or underlying symbol, such as Trading Halts, Short Sale Restriction state changes, etc.
-entrypoint typedef struct _SecurityStatusMessage {
+typedef struct _SecurityStatusMessage {
   UINT32 source_time;                // bytes 0 to 3
   UINT32 source_time_ns;             // bytes 4 to 7
   UINT32 symbol_index;               // bytes 8 to 11
@@ -117,10 +394,8 @@ entrypoint typedef struct _SecurityStatusMessage {
   UINT8 session_state;               // byte 41
 } SecurityStatusMessage;
 
-// ---- Outright Series Index Mapping Message: 51 bytes -------------------------
-
 // Published over the real-time data channels at system startup or in the context of a refresh sequence. Provides referential data for a single specified options outright series.
-entrypoint typedef struct _OutrightSeriesIndexMappingMessage {
+typedef struct _OutrightSeriesIndexMappingMessage {
   UINT32 series_index;           // bytes 0 to 3
   UINT8 series_type;             // byte 4
   UINT16 market_id;              // bytes 5 to 6
@@ -137,10 +412,8 @@ entrypoint typedef struct _OutrightSeriesIndexMappingMessage {
   UINT8 reserved_1;              // byte 50
 } OutrightSeriesIndexMappingMessage;
 
-// ---- Options Status Message: 19 bytes ----------------------------------------
-
 // Informs clients of changes in the status of a specific option outright series and complex series, such as Trading Halts.
-entrypoint typedef struct _OptionsStatusMessage {
+typedef struct _OptionsStatusMessage {
   UINT32 source_time;                   // bytes 0 to 3
   UINT32 source_time_ns;                // bytes 4 to 7
   UINT32 series_index;                  // bytes 8 to 11
@@ -150,10 +423,24 @@ entrypoint typedef struct _OptionsStatusMessage {
   UINT8 options_status_halt_condition;  // byte 18
 } OptionsStatusMessage;
 
-// ---- Retransmission Request Message: 20 bytes --------------------------------
+typedef struct _ComplexSeriesIndexMappingLeg {
+  UINT32 symbol_index;      // bytes 0 to 3
+  UINT16 leg_ratio_qty;     // bytes 4 to 5
+  UINT8 leg_side;           // byte 6
+  UINT8 leg_security_type;  // byte 7
+} ComplexSeriesIndexMappingLeg;
+
+// Published over the real-time data channels at system startup or in the context of a refresh sequence. Provides referential data for a single specified options complex series.
+typedef struct _ComplexSeriesIndexMappingMessage {
+  UINT32 series_index;                                                                                    // bytes 0 to 3
+  UINT16 market_id;                                                                                       // bytes 4 to 5
+  UINT8 system_id;                                                                                        // byte 6
+  UINT16 no_of_legs;                                                                                      // bytes 7 to 8
+  ComplexSeriesIndexMappingLeg complex_series_index_mapping_leg[:byte-size (((UINT32) no_of_legs) * 8)];
+} ComplexSeriesIndexMappingMessage;
 
 // Sent by clients via TCP/IP to request retransmission of missed messages.
-entrypoint typedef struct _RetransmissionRequestMessage {
+typedef struct _RetransmissionRequestMessage {
   UINT32 begin_seq_num;  // bytes 0 to 3
   UINT32 end_seq_num;    // bytes 4 to 7
   UINT8 source_id[10];   // bytes 8 to 17
@@ -161,20 +448,37 @@ entrypoint typedef struct _RetransmissionRequestMessage {
   UINT8 channel_id;      // byte 19
 } RetransmissionRequestMessage;
 
-// ---- Refresh Request Message: 16 bytes ---------------------------------------
+// Sequence number fields that only the full Refresh Header carries.
+typedef struct _FullRefreshHeader {
+  UINT32 last_seq_num;         // bytes 0 to 3
+  UINT32 last_symbol_seq_num;  // bytes 4 to 7
+} FullRefreshHeader;
+
+// Sequence number fields that only the full Refresh Header carries.
+casetype _OptionalFullRefreshHeader (Bool present) {
+  switch (present) {
+    case true: FullRefreshHeader full_refresh_header;
+    case false: unit absent;
+  }
+} OptionalFullRefreshHeader;
+
+// The first message in each packet of refresh messages published over the Refresh multicast channels.
+typedef struct _RefreshHeaderMessage {
+  UINT16 current_refresh_pkt;                                                      // bytes 0 to 1
+  UINT16 total_refresh_pkts;                                                       // bytes 2 to 3
+  OptionalFullRefreshHeader((current_refresh_pkt == 0x0001)) full_refresh_header;
+} RefreshHeaderMessage;
 
 // Sent by clients via TCP/IP to request a refresh of the state of one or all symbols in a specific channel.
-entrypoint typedef struct _RefreshRequestMessage {
+typedef struct _RefreshRequestMessage {
   UINT32 symbol_index;  // bytes 0 to 3
   UINT8 source_id[10];  // bytes 4 to 13
   UINT8 product_id;     // byte 14
   UINT8 channel_id;     // byte 15
 } RefreshRequestMessage;
 
-// ---- Symbol Index Mapping Request Message: 17 bytes --------------------------
-
 // Sent by clients via TCP/IP requesting the Symbol Index Mapping messages for one or all symbols in a specified channel.
-entrypoint typedef struct _SymbolIndexMappingRequestMessage {
+typedef struct _SymbolIndexMappingRequestMessage {
   UINT32 symbol_index;      // bytes 0 to 3
   UINT8 source_id[10];      // bytes 4 to 13
   UINT8 product_id;         // byte 14
@@ -182,20 +486,16 @@ entrypoint typedef struct _SymbolIndexMappingRequestMessage {
   UINT8 retransmit_method;  // byte 16
 } SymbolIndexMappingRequestMessage;
 
-// ---- Message Unavailable Message: 10 bytes -----------------------------------
-
 // Sent over the Retransmission multicast channels to inform clients of unavailability of a range of messages.
-entrypoint typedef struct _MessageUnavailableMessage {
+typedef struct _MessageUnavailableMessage {
   UINT32 begin_seq_num;  // bytes 0 to 3
   UINT32 end_seq_num;    // bytes 4 to 7
   UINT8 product_id;      // byte 8
   UINT8 channel_id;      // byte 9
 } MessageUnavailableMessage;
 
-// ---- Request Response Message: 25 bytes --------------------------------------
-
 // Sent immediately via TCP/IP in response to the client's request for retransmission, refresh or Symbol Mapping messages.
-entrypoint typedef struct _RequestResponseMessage {
+typedef struct _RequestResponseMessage {
   UINT32 request_seq_num;  // bytes 0 to 3
   UINT32 begin_seq_num;    // bytes 4 to 7
   UINT32 end_seq_num;      // bytes 8 to 11
@@ -205,17 +505,13 @@ entrypoint typedef struct _RequestResponseMessage {
   UINT8 status;            // byte 24
 } RequestResponseMessage;
 
-// ---- Heartbeat Response Message: 10 bytes ------------------------------------
-
 // Clients who remain connected to the Retransmission Server intraday must respond to a Heartbeat with a Heartbeat Response message within 5 seconds.
-entrypoint typedef struct _HeartbeatResponseMessage {
+typedef struct _HeartbeatResponseMessage {
   UINT8 source_id[10];  // bytes 0 to 9
 } HeartbeatResponseMessage;
 
-// ---- Options Quote Message: 38 bytes -----------------------------------------
-
 // An Options quote message is sent when any event results in a new top of book value on either side of the market.
-entrypoint typedef struct _OptionsQuoteMessage {
+typedef struct _OptionsQuoteMessage {
   UINT32 source_time_ns;       // bytes 0 to 3
   UINT32 series_index;         // bytes 4 to 7
   UINT32 series_seq_num;       // bytes 8 to 11
@@ -229,10 +525,8 @@ entrypoint typedef struct _OptionsQuoteMessage {
   UINT32 bid_customer_volume;  // bytes 34 to 37
 } OptionsQuoteMessage;
 
-// ---- Options Trade Message: 32 bytes -----------------------------------------
-
 // An Options Trade message is sent when there is an execution on the order book.
-entrypoint typedef struct _OptionsTradeMessage {
+typedef struct _OptionsTradeMessage {
   UINT32 source_time;     // bytes 0 to 3
   UINT32 source_time_ns;  // bytes 4 to 7
   UINT32 series_index;    // bytes 8 to 11
@@ -246,10 +540,8 @@ entrypoint typedef struct _OptionsTradeMessage {
   UINT8 trade_cond_4;     // byte 31
 } OptionsTradeMessage;
 
-// ---- Options Trade Cancel Message: 20 bytes ----------------------------------
-
 // In the event that an earlier trade has been reported in error, an Options Trade Cancel message is sent.
-entrypoint typedef struct _OptionsTradeCancelMessage {
+typedef struct _OptionsTradeCancelMessage {
   UINT32 source_time;        // bytes 0 to 3
   UINT32 source_time_ns;     // bytes 4 to 7
   UINT32 series_index;       // bytes 8 to 11
@@ -257,10 +549,8 @@ entrypoint typedef struct _OptionsTradeCancelMessage {
   UINT32 original_trade_id;  // bytes 16 to 19
 } OptionsTradeCancelMessage;
 
-// ---- Options Trade Correction Message: 36 bytes ------------------------------
-
 // In the event that an earlier trade has been reported with one or multiple fields in error, an Options Trade Correction message is sent.
-entrypoint typedef struct _OptionsTradeCorrectionMessage {
+typedef struct _OptionsTradeCorrectionMessage {
   UINT32 source_time;        // bytes 0 to 3
   UINT32 source_time_ns;     // bytes 4 to 7
   UINT32 series_index;       // bytes 8 to 11
@@ -275,10 +565,8 @@ entrypoint typedef struct _OptionsTradeCorrectionMessage {
   UINT8 third_reserved_1;    // byte 35
 } OptionsTradeCorrectionMessage;
 
-// ---- Options Imbalance Message: 61 bytes -------------------------------------
-
 // Options Imbalance messages are published every 5 seconds during opening and reopening auctions to update price and volume information.
-entrypoint typedef struct _OptionsImbalanceMessage {
+typedef struct _OptionsImbalanceMessage {
   UINT32 source_time;                      // bytes 0 to 3
   UINT32 source_time_ns;                   // bytes 4 to 7
   UINT32 series_index;                     // bytes 8 to 11
@@ -299,10 +587,8 @@ entrypoint typedef struct _OptionsImbalanceMessage {
   UINT8 auction_status;                    // byte 60
 } OptionsImbalanceMessage;
 
-// ---- Series Rfq Message: 40 bytes --------------------------------------------
-
 // The Request for Series RFQ message is published for outright series. It is generated by the matching engine to solicit interest in an auction or order.
-entrypoint typedef struct _SeriesRfqMessage {
+typedef struct _SeriesRfqMessage {
   UINT32 source_time;     // bytes 0 to 3
   UINT32 source_time_ns;  // bytes 4 to 7
   UINT32 series_index;    // bytes 8 to 11
@@ -317,10 +603,8 @@ entrypoint typedef struct _SeriesRfqMessage {
   UINT8 rfq_status;       // byte 39
 } SeriesRfqMessage;
 
-// ---- Outright Series Summary Message: 32 bytes -------------------------------
-
 // The outright series summary message is sent every 60 seconds, on a separate multicast channel from the main feed.
-entrypoint typedef struct _OutrightSeriesSummaryMessage {
+typedef struct _OutrightSeriesSummaryMessage {
   UINT32 source_time;     // bytes 0 to 3
   UINT32 source_time_ns;  // bytes 4 to 7
   UINT32 series_index;    // bytes 8 to 11
@@ -330,4 +614,68 @@ entrypoint typedef struct _OutrightSeriesSummaryMessage {
   UINT32 close;           // bytes 24 to 27, signed, read here as unsigned
   UINT32 total_volume;    // bytes 28 to 31
 } OutrightSeriesSummaryMessage;
+
+// Branch
+casetype _Payload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x0001: SequenceNumberResetMessage sequence_number_reset_message;
+    case 0x0002: SourceTimeReferenceMessage source_time_reference_message;
+    case 0x0003: SymbolIndexMappingMessage symbol_index_mapping_message;
+    case 0x0020: SymbolClearMessage symbol_clear_message;
+    case 0x0022: SecurityStatusMessage security_status_message;
+    case 0x0032: OutrightSeriesIndexMappingMessage outright_series_index_mapping_message;
+    case 0x0033: OptionsStatusMessage options_status_message;
+    case 0x003C: ComplexSeriesIndexMappingMessage complex_series_index_mapping_message;
+    case 0x000A: RetransmissionRequestMessage retransmission_request_message;
+    case 0x0023: RefreshHeaderMessage refresh_header_message;
+    case 0x000F: RefreshRequestMessage refresh_request_message;
+    case 0x000D: SymbolIndexMappingRequestMessage symbol_index_mapping_request_message;
+    case 0x001F: MessageUnavailableMessage message_unavailable_message;
+    case 0x000B: RequestResponseMessage request_response_message;
+    case 0x000C: HeartbeatResponseMessage heartbeat_response_message;
+    case 0x0154: OptionsQuoteMessage options_quote_message;
+    case 0x0140: OptionsTradeMessage options_trade_message;
+    case 0x0141: OptionsTradeCancelMessage options_trade_cancel_message;
+    case 0x0142: OptionsTradeCorrectionMessage options_trade_correction_message;
+    case 0x0131: OptionsImbalanceMessage options_imbalance_message;
+    case 0x0133: SeriesRfqMessage series_rfq_message;
+    case 0x0143: OutrightSeriesSummaryMessage outright_series_summary_message;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// Pillar message
+typedef struct _Message (mutable UINT32 * tally) {
+  UINT16 message_size { message_size >= 4 };                                                                                                                       // bytes 0 to 1
+  UINT16 message_type;                                                                                                                                             // bytes 2 to 3
+  Payload(message_type, (((UINT32) message_size) - 4)) payload[:byte-size-single-element-array (((UINT32) message_size) - 4)];
+  unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
+} Message;
+
+// Pillar message
+typedef struct _MessageRun (UINT8 number_msgs, UINT32 available, mutable UINT32 * tally) {
+  unit message_tally_start {:on-success *tally = 0; return true; };
+  Message(tally) message[:byte-size available];
+  unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) number_msgs); };
+} MessageRun;
+
+// Branch
+casetype _Messages (UINT8 selector, UINT8 number_msgs, UINT32 available, mutable UINT32 * tally) {
+  switch (selector) {
+    case 0x01: unit heartbeat;
+    default: MessageRun(number_msgs, available, tally) message;
+  }
+} Messages;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Pillar common client udp packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 16) {
+  UINT16 pkt_size;                                                                                                           // bytes 0 to 1
+  UINT8 delivery_flag;                                                                                                       // byte 2
+  UINT8 number_msgs;                                                                                                         // byte 3
+  UINT32 seq_num;                                                                                                            // bytes 4 to 7
+  SendTime send_time;                                                                                                        // bytes 8 to 15
+  Messages(delivery_flag, number_msgs, (available - 16), tally) messages[:byte-size-single-element-array (available - 16)];
+} Packet;
 

@@ -1,37 +1,124 @@
-// TMX Group Level 1
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Tmx TsxAlpha Level1 Qrtmd v2.1
 //
+// Protocol:
+//   Organization: TMX Group
+//   Protocol: Level 1
+//   Encoding: Quantum Real Time Market Data
+//   Version: 2.1
+//   Date: 10/20/2020
+//   Specification: QRTMD Alpha Level 1.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Packet, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out TsxAlpha_Level1_v2_1.3d
-//
-// What this definition does not state, and the model does:
-// - the dispatch that chooses a message by its type
-//
-// License: MIT No Attribution
 
-// ---- Message Header: 22 bytes ------------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Twenty two byte ascii header carried on every Qrtmd message
-entrypoint typedef struct _MessageHeader {
-  UINT8 message_length[4];          // bytes 0 to 3
-  UINT8 sequence_number[9];         // bytes 4 to 12
-  UINT8 service_identifier[3];      // bytes 13 to 15
-  UINT8 retransmission_identifier;  // byte 16
-  UINT8 continuation_identifier;    // byte 17
-  UINT8 message_type[2];            // bytes 18 to 19
-  UINT8 exchange_identifier[2];     // bytes 20 to 21
-} MessageHeader;
+// Retransmission Identifier: one byte code
+#define RETRANSMISSION_IDENTIFIER_NORMAL_TRANSMISSION 0x30  // Normal Transmission
 
-// ---- Trade Message: 92 bytes -------------------------------------------------
+// Continuation Identifier: one byte code
+#define CONTINUATION_IDENTIFIER_STAND_ALONE_MESSAGE 0x30  // Stand Alone Message
+
+// Message Type: 2 byte code
+#define MESSAGE_TYPE_TRADE_MESSAGE 0x4120                // Trade Message
+#define MESSAGE_TYPE_SYMBOL_STATUS_MESSAGE 0x4220        // Symbol Status Message
+#define MESSAGE_TYPE_STOCK_STATE_MESSAGE 0x4420          // Stock State Message
+#define MESSAGE_TYPE_QUOTE_MESSAGE 0x4520                // Quote Message
+#define MESSAGE_TYPE_GENERAL_MESSAGE 0x4720              // General Message
+#define MESSAGE_TYPE_TRADE_CANCELLATION_MESSAGE 0x4820   // Trade Cancellation Message
+#define MESSAGE_TYPE_MARKET_STATE_MESSAGE 0x5320         // Market State Message
+#define MESSAGE_TYPE_TRADING_TIER_STATUS_MESSAGE 0x5420  // Trading Tier Status Message
+#define MESSAGE_TYPE_TRADE_CORRECTION_MESSAGE 0x5820     // Trade Correction Message
+
+// Cross Type: one byte code
+#define CROSS_TYPE_INTERNAL 0x49                       // Internal
+#define CROSS_TYPE_BASIS 0x42                          // Basis
+#define CROSS_TYPE_CONTINGENT 0x43                     // Contingent
+#define CROSS_TYPE_DERIVATIVE_RELATED 0x44             // Derivative Related
+#define CROSS_TYPE_REGULAR 0x52                        // Regular
+#define CROSS_TYPE_VOLUME_WEIGHTED_AVERAGE_PRICE 0x56  // Volume Weighted Average Price
+#define CROSS_TYPE_DEFAULT 0x20                        // Default
+
+// Bypass: one byte code
+#define BYPASS_YES 0x59  // Yes
+#define BYPASS_NO 0x4E   // No
+
+// Opening Trade: one byte code
+#define OPENING_TRADE_YES 0x59  // Yes
+#define OPENING_TRADE_NO 0x4E   // No
+
+// Settlement Terms: one byte code
+#define SETTLEMENT_TERMS_DEFAULT 0x20                                      // Default
+#define SETTLEMENT_TERMS_CASH 0x43                                         // Cash
+#define SETTLEMENT_TERMS_NON_NET 0x4E                                      // Non Net
+#define SETTLEMENT_TERMS_DERIVATIVES_RELATED_CONTINGENT_EQUITY_TRADE 0x4D  // Derivatives Related Contingent Equity Trade
+#define SETTLEMENT_TERMS_CASH_TODAY 0x54                                   // Cash Today
+#define SETTLEMENT_TERMS_SETTLEMENT_DATE 0x44                              // Settlement Date
+
+// Is Dark: one byte code
+#define IS_DARK_NO 0x4E  // No
+
+// Product Type: one byte code
+#define PRODUCT_TYPE_DEBENTURE 0x42    // Debenture
+#define PRODUCT_TYPE_EQUITY 0x45       // Equity
+#define PRODUCT_TYPE_MUTUAL_FUND 0x4D  // Mutual Fund
+#define PRODUCT_TYPE_ETF 0x46          // Etf
+
+// Listing Market: one byte code
+#define LISTING_MARKET_TSX 0x54   // Tsx
+#define LISTING_MARKET_TSXV 0x56  // Tsxv
+
+// Test Symbol: one byte code
+#define TEST_SYMBOL_YES 0x59  // Yes
+#define TEST_SYMBOL_NO 0x4E   // No
+
+// Bulletin Indicator: one byte code
+#define BULLETIN_INDICATOR_YES 0x59  // Yes
+#define BULLETIN_INDICATOR_NO 0x4E   // No
+
+// Market State: one byte code
+#define MARKET_STATE_PRE_OPEN 0x50              // Pre Open
+#define MARKET_STATE_OPENING 0x4F               // Opening
+#define MARKET_STATE_OPEN 0x53                  // Open
+#define MARKET_STATE_CLOSED 0x43                // Closed
+#define MARKET_STATE_EXTENDED_HOURS_CLOSE 0x46  // Extended Hours Close
+#define MARKET_STATE_EXTENDED_HOURS_CXLS 0x4E   // Extended Hours Cxls
+
+// ---- Types -------------------------------------------------------------------
 
 // A trade in an equity on the Alpha market.
-entrypoint typedef struct _TradeMessage {
+typedef struct _TradeMessage {
   UINT8 symbol[12];                     // bytes 0 to 11
   UINT8 volume[9];                      // bytes 12 to 20
   UINT8 trade_price[11];                // bytes 21 to 31
@@ -48,10 +135,8 @@ entrypoint typedef struct _TradeMessage {
   UINT8 trading_system_time_stamp[23];  // bytes 69 to 91
 } TradeMessage;
 
-// ---- Symbol Status Message: 136 bytes ----------------------------------------
-
 // Reference information for a symbol trading on the current day.
-entrypoint typedef struct _SymbolStatusMessage {
+typedef struct _SymbolStatusMessage {
   UINT8 symbol[12];                     // bytes 0 to 11
   UINT8 trading_system_time_stamp[23];  // bytes 12 to 34
   UINT8 exchange_id[3];                 // bytes 35 to 37
@@ -69,10 +154,8 @@ entrypoint typedef struct _SymbolStatusMessage {
   UINT8 test_symbol;                    // byte 135
 } SymbolStatusMessage;
 
-// ---- Stock State Message: 83 bytes -------------------------------------------
-
 // A change in the trading state of a stock.
-entrypoint typedef struct _StockStateMessage {
+typedef struct _StockStateMessage {
   UINT8 symbol[12];                     // bytes 0 to 11
   UINT8 trading_system_time_stamp[23];  // bytes 12 to 34
   UINT8 comment[40];                    // bytes 35 to 74
@@ -80,10 +163,8 @@ entrypoint typedef struct _StockStateMessage {
   UINT8 opening_time[6];                // bytes 77 to 82
 } StockStateMessage;
 
-// ---- Quote Message: 71 bytes -------------------------------------------------
-
 // Full update quote sent whenever either the bid or the ask has changed.
-entrypoint typedef struct _QuoteMessage {
+typedef struct _QuoteMessage {
   UINT8 symbol[12];                     // bytes 0 to 11
   UINT8 bid_price[9];                   // bytes 12 to 20
   UINT8 bid_size[9];                    // bytes 21 to 29
@@ -92,19 +173,15 @@ entrypoint typedef struct _QuoteMessage {
   UINT8 trading_system_time_stamp[23];  // bytes 48 to 70
 } QuoteMessage;
 
-// ---- General Message: 104 bytes ----------------------------------------------
-
 // Bulletin in textual format.
-entrypoint typedef struct _GeneralMessage {
+typedef struct _GeneralMessage {
   UINT8 trading_system_time_stamp[23];  // bytes 0 to 22
   UINT8 bulletin_indicator;             // byte 23
   UINT8 message_text[80];               // bytes 24 to 103
 } GeneralMessage;
 
-// ---- Trade Cancellation Message: 87 bytes ------------------------------------
-
 // Cancellation of a trade, reducing total volume, value and transactions by the amount of the cancellation.
-entrypoint typedef struct _TradeCancellationMessage {
+typedef struct _TradeCancellationMessage {
   UINT8 symbol[12];                     // bytes 0 to 11
   UINT8 volume[9];                      // bytes 12 to 20
   UINT8 trade_price[11];                // bytes 21 to 31
@@ -116,19 +193,15 @@ entrypoint typedef struct _TradeCancellationMessage {
   UINT8 trading_system_time_stamp[23];  // bytes 64 to 86
 } TradeCancellationMessage;
 
-// ---- Market State Message: 26 bytes ------------------------------------------
-
 // The indication of the current market state for a stock group.
-entrypoint typedef struct _MarketStateMessage {
+typedef struct _MarketStateMessage {
   UINT8 trading_system_time_stamp[23];  // bytes 0 to 22
   UINT8 stock_group[2];                 // bytes 23 to 24
   UINT8 market_state;                   // byte 25
 } MarketStateMessage;
 
-// ---- Trading Tier Status Message: 40 bytes -----------------------------------
-
 // Statistical information on the number of symbols and stock groups for the current trading day, sent at the beginning of each trading day.
-entrypoint typedef struct _TradingTierStatusMessage {
+typedef struct _TradingTierStatusMessage {
   UINT8 exchange_id[3];                   // bytes 0 to 2
   UINT8 total_number_of_symbols[5];       // bytes 3 to 7
   UINT8 total_number_of_stock_groups[3];  // bytes 8 to 10
@@ -136,10 +209,8 @@ entrypoint typedef struct _TradingTierStatusMessage {
   UINT8 trading_tier_id[6];               // bytes 34 to 39
 } TradingTierStatusMessage;
 
-// ---- Trade Correction Message: 101 bytes -------------------------------------
-
 // Correction of a trade already disseminated.
-entrypoint typedef struct _TradeCorrectionMessage {
+typedef struct _TradeCorrectionMessage {
   UINT8 symbol[12];                     // bytes 0 to 11
   UINT8 volume[9];                      // bytes 12 to 20
   UINT8 trade_price[11];                // bytes 21 to 31
@@ -156,4 +227,36 @@ entrypoint typedef struct _TradeCorrectionMessage {
   UINT8 is_dark;                        // byte 77
   UINT8 trading_system_time_stamp[23];  // bytes 78 to 100
 } TradeCorrectionMessage;
+
+// Branch
+casetype _MessageBody (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x4120: TradeMessage trade_message;
+    case 0x4220: SymbolStatusMessage symbol_status_message;
+    case 0x4420: StockStateMessage stock_state_message;
+    case 0x4520: QuoteMessage quote_message;
+    case 0x4720: GeneralMessage general_message;
+    case 0x4820: TradeCancellationMessage trade_cancellation_message;
+    case 0x5320: MarketStateMessage market_state_message;
+    case 0x5420: TradingTierStatusMessage trading_tier_status_message;
+    case 0x5820: TradeCorrectionMessage trade_correction_message;
+    default: UINT8 unknown[available];
+  }
+} MessageBody;
+
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Qrtmd Udp Packet
+entrypoint typedef struct _Packet (UINT32 available) where (available >= 24) {
+  UINT8 qrtmd_stx;                                                                                             // byte 0
+  UINT8 message_length[4];                                                                                     // bytes 1 to 4
+  UINT8 sequence_number[9];                                                                                    // bytes 5 to 13
+  UINT8 service_identifier[3];                                                                                 // bytes 14 to 16
+  UINT8 retransmission_identifier;                                                                             // byte 17
+  UINT8 continuation_identifier;                                                                               // byte 18
+  UINT16BE message_type;                                                                                       // bytes 19 to 20
+  UINT8 exchange_identifier[2];                                                                                // bytes 21 to 22
+  MessageBody(message_type, (available - 24)) message_body[:byte-size-single-element-array (available - 24)];
+  UINT8 qrtmd_etx;
+} Packet;
 

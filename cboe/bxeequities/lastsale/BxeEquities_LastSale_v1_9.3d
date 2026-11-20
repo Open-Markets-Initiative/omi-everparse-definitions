@@ -1,56 +1,87 @@
-// Chicago Board Options Exchange Last Sale
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Cboe BxeEquities LastSale AsciiPitch v1.9
 //
+// Protocol:
+//   Organization: Chicago Board Options Exchange
+//   Protocol: Last Sale
+//   Encoding: Ascii Pitch
+//   Version: 1.9
+//   Date: 2/6/2025
+//   Specification: BATS_Europe_Last_Sale_Specification.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, Frame, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out BxeEquities_LastSale_v1_9.3d
 //
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - the dispatch that chooses a message by its type
-// - a field filling what is left of what holds it
-//
-// License: MIT No Attribution
+// What this definition reads more loosely than the model states:
+// - the stream is a run of frames each ending at a byte 10: the caller splits it there and validates each frame, that byte included
 
-// ---- Debug Packet: 1 byte ----------------------------------------------------
+// ---- Values ------------------------------------------------------------------
+
+// Packet Type: one byte code
+#define PACKET_TYPE_DEBUG_PACKET 0x2B             // Debug Packet
+#define PACKET_TYPE_LOGIN_ACCEPTED_PACKET 0x41    // Login Accepted Packet
+#define PACKET_TYPE_LOGIN_REJECTED_PACKET 0x4A    // Login Rejected Packet
+#define PACKET_TYPE_SEQUENCED_DATA_PACKET 0x53    // Sequenced Data Packet
+#define PACKET_TYPE_SERVER_HEARTBEAT_PACKET 0x48  // Server Heartbeat Packet
+#define PACKET_TYPE_LOGIN_REQUEST_PACKET 0x4C     // Login Request Packet
+#define PACKET_TYPE_UNSEQUENCED_DATA_PACKET 0x55  // Unsequenced Data Packet
+#define PACKET_TYPE_CLIENT_HEARTBEAT_PACKET 0x52  // Client Heartbeat Packet
+#define PACKET_TYPE_LOGOUT_REQUEST_PACKET 0x4F    // Logout Request Packet
+
+// Sequenced Message Type: one byte code
+#define SEQUENCED_MESSAGE_TYPE_LAST_SALE_EUROPE_MESSAGE 0x75      // Last Sale Europe Message
+#define SEQUENCED_MESSAGE_TYPE_LAST_SALE_EUROPE_MESSAGE_NEW 0x37  // Last Sale Europe Message New
+
+// ---- Types -------------------------------------------------------------------
 
 // Debug packets are intended to provide human readable text that may aid in debugging problems.
-entrypoint typedef struct _DebugPacket {
+typedef struct _DebugPacket {
   UINT8 text;  // byte 0
 } DebugPacket;
 
-// ---- Login Accepted Packet: 20 bytes -----------------------------------------
-
 // The Soup 2.0 server sends a Login Accepted Packet in response to receiving a valid Login Request from the client.
-entrypoint typedef struct _LoginAcceptedPacket {
+typedef struct _LoginAcceptedPacket {
   UINT8 session[10];          // bytes 0 to 9
   UINT8 sequence_number[10];  // bytes 10 to 19
 } LoginAcceptedPacket;
 
-// ---- Login Rejected Packet: 1 byte -------------------------------------------
-
 // The Soup 2.0 server sends this packet in response to an invalid Login Request Packet from the client.
-entrypoint typedef struct _LoginRejectedPacket {
+typedef struct _LoginRejectedPacket {
   UINT8 reject_reason_code;  // byte 0
 } LoginRejectedPacket;
 
-// ---- Sequenced Message Header: 9 bytes ---------------------------------------
-
-// Sequenced Message Header
-entrypoint typedef struct _SequencedMessageHeader {
-  UINT8 timestamp[8];            // bytes 0 to 7
-  UINT8 sequenced_message_type;  // byte 8
-} SequencedMessageHeader;
-
-// ---- Last Sale Europe Message: 157 bytes -------------------------------------
-
 // Last Sale Europe Messages are sent when an order on a Cboe order book is executed in whole or in part, or when a reported trade is submitted to Cboe
-entrypoint typedef struct _LastSaleEuropeMessage {
+typedef struct _LastSaleEuropeMessage {
   UINT8 trading_date_time[27];             // bytes 0 to 26
   UINT8 symbol[12];                        // bytes 27 to 38
   UINT8 price[18];                         // bytes 39 to 56
@@ -72,10 +103,8 @@ entrypoint typedef struct _LastSaleEuropeMessage {
   UINT8 jurisdiction[2];                   // bytes 155 to 156
 } LastSaleEuropeMessage;
 
-// ---- Last Sale Europe Message New: 239 bytes ---------------------------------
-
 // Last Sale Europe Messages are sent when an order on a Cboe order book is executed in whole or in part, or when a reported trade is submitted to Cboe
-entrypoint typedef struct _LastSaleEuropeMessageNew {
+typedef struct _LastSaleEuropeMessageNew {
   UINT8 trading_date_time[27];               // bytes 0 to 26
   UINT8 symbol[12];                          // bytes 27 to 38
   UINT8 price[18];                           // bytes 39 to 56
@@ -114,13 +143,54 @@ entrypoint typedef struct _LastSaleEuropeMessageNew {
   UINT8 jurisdiction[2];                     // bytes 237 to 238
 } LastSaleEuropeMessageNew;
 
-// ---- Login Request Packet: 36 bytes ------------------------------------------
+// Branch
+casetype _SequencedMessage (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x75: LastSaleEuropeMessage last_sale_europe_message;
+    case 0x37: LastSaleEuropeMessageNew last_sale_europe_message_new;
+    default: UINT8 unknown[available];
+  }
+} SequencedMessage;
+
+// The Sequenced Data Packets act as an envelope to carry the actual sequenced data messages that are transferred from the server to the client. Each Sequenced Data Packet carries one message from the higher-lever protocol.
+typedef struct _SequencedDataPacket (UINT32 available) where (available >= 9) {
+  UINT8 timestamp[8];                                                                                                            // bytes 0 to 7
+  UINT8 sequenced_message_type;                                                                                                  // byte 8
+  SequencedMessage(sequenced_message_type, (available - 9)) sequenced_message[:byte-size-single-element-array (available - 9)];
+} SequencedDataPacket;
 
 // The Soup 2.0 client must send a Login Request Packet immediately upon establishing a new TCP/IP socket connection to the server.
-entrypoint typedef struct _LoginRequestPacket {
+typedef struct _LoginRequestPacket {
   UINT8 username[6];                    // bytes 0 to 5
   UINT8 password[10];                   // bytes 6 to 15
   UINT8 requested_session[10];          // bytes 16 to 25
   UINT8 requested_sequence_number[10];  // bytes 26 to 35
 } LoginRequestPacket;
+
+// The Unsequenced Data Packets act as an envelope to carry the actual data messages that are transferred from the client to the server. These messages are not sequenced and may be lost in the event of a socket failure.
+typedef struct _UnsequencedDataPacket (UINT32 available) where (available >= 1) {
+  UINT8 unsequenced_message[(available - 1)];
+} UnsequencedDataPacket;
+
+// Branch
+casetype _Payload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x2B: DebugPacket debug_packet;
+    case 0x41: LoginAcceptedPacket login_accepted_packet;
+    case 0x4A: LoginRejectedPacket login_rejected_packet;
+    case 0x53: SequencedDataPacket(available) sequenced_data_packet;
+    case 0x4C: LoginRequestPacket login_request_packet;
+    case 0x55: UnsequencedDataPacket(available) unsequenced_data_packet;
+    default: UINT8 unknown[available];
+  }
+} Payload;
+
+// ---- Packet: Frame -----------------------------------------------------------
+
+// Soup 2.0 Lf terminated record
+entrypoint typedef struct _Frame (UINT32 available) where (available >= 2) {
+  UINT8 packet_type;                                                                               // byte 0
+  Payload(packet_type, (available - 2)) payload[:byte-size-single-element-array (available - 2)];
+  UINT8 soup_lf { soup_lf == 10 };
+} Frame;
 

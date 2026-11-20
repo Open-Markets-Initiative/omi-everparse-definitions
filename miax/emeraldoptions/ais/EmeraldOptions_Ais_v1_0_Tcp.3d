@@ -1,48 +1,204 @@
-// Miami International Holdings Administrative Information Subscriber
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Miax EmeraldOptions Ais Mach v1.0
 //
+// Protocol:
+//   Organization: Miami International Holdings
+//   Protocol: Administrative Information Subscriber
+//   Encoding: Mach
+//   Version: 1.0
+//   Date: 10/09/2018
+//   Specification: MIAX Emerald Administrative Information Subscriber Feed AIS v1.0.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, TcpPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out EmeraldOptions_Ais_v1_0_Tcp.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a length prefix framing what follows
-// - a run counted by a field
-//
-// License: MIT No Attribution
 
-// ---- Sesm Packet Header: 3 bytes ---------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// SesM packet header
-entrypoint typedef struct _SesmPacketHeader {
-  UINT16 sesm_packet_length;  // bytes 0 to 1
-  UINT8 sesm_packet_type;     // byte 2
-} SesmPacketHeader;
+// Sesm Packet Type: one byte code
+#define SESM_PACKET_TYPE_SEQUENCED_DATA_PACKET 0x73     // Sequenced Data Packet
+#define SESM_PACKET_TYPE_UNSEQUENCED_DATA_PACKET 0x55   // Unsequenced Data Packet
+#define SESM_PACKET_TYPE_LOGIN_REQUEST 0x6C             // Login Request
+#define SESM_PACKET_TYPE_LOGIN_RESPONSE 0x72            // Login Response
+#define SESM_PACKET_TYPE_SYNCHRONIZATION_COMPLETE 0x63  // Synchronization Complete
+#define SESM_PACKET_TYPE_RETRANSMISSION_REQUEST 0x61    // Retransmission Request
+#define SESM_PACKET_TYPE_LOGOUT_REQUEST 0x58            // Logout Request
+#define SESM_PACKET_TYPE_GOODBYE_PACKET 0x47            // Goodbye Packet
+#define SESM_PACKET_TYPE_TRADING_SESSION_UPDATE 0x75    // Trading Session Update
+#define SESM_PACKET_TYPE_SERVER_HEARTBEAT 0x30          // Server Heartbeat
+#define SESM_PACKET_TYPE_CLIENT_HEARTBEAT 0x31          // Client Heartbeat
+#define SESM_PACKET_TYPE_TEST_PACKET 0x54               // Test Packet
 
-// ---- Refresh Request Message: 1 byte -----------------------------------------
+// Unsequenced Message Type: one byte code
+#define UNSEQUENCED_MESSAGE_TYPE_REFRESH_REQUEST_MESSAGE 0x52              // Refresh Request Message
+#define UNSEQUENCED_MESSAGE_TYPE_REFRESH_RESPONSE_MESSAGE 0x72             // Refresh Response Message
+#define UNSEQUENCED_MESSAGE_TYPE_END_OF_REFRESH_NOTIFICATION_MESSAGE 0x45  // End Of Refresh Notification Message
+
+// Refresh Message Type: one byte code
+#define REFRESH_MESSAGE_TYPE_SIMPLE_SERIES_UPDATE_REFRESH 0x50         // Simple Series Update Refresh
+#define REFRESH_MESSAGE_TYPE_COMPLEX_STRATEGY_DEFINITION_REFRESH 0x43  // Complex Strategy Definition Refresh
+#define REFRESH_MESSAGE_TYPE_UNDERLYING_TRADING_STATUS_REFRESH 0x55    // Underlying Trading Status Refresh
+#define REFRESH_MESSAGE_TYPE_SYSTEM_STATE_REFRESH 0x53                 // System State Refresh
+
+// Message Type: one byte code
+#define MESSAGE_TYPE_SYSTEM_TIME_MESSAGE 0x31                                   // System Time Message
+#define MESSAGE_TYPE_SIMPLE_SERIES_UPDATE_MESSAGE 0x50                          // Simple Series Update Message
+#define MESSAGE_TYPE_COMPLEX_STRATEGY_DEFINITION_UPDATE_MESSAGE 0x43            // Complex Strategy Definition Update Message
+#define MESSAGE_TYPE_SYSTEM_STATE_MESSAGE 0x53                                  // System State Message
+#define MESSAGE_TYPE_SIMPLE_LIQUIDITY_SEEKING_EVENT_NOTIFICATION_MESSAGE 0x4C   // Simple Liquidity Seeking Event Notification Message
+#define MESSAGE_TYPE_COMPLEX_LIQUIDITY_SEEKING_EVENT_NOTIFICATION_MESSAGE 0x6C  // Complex Liquidity Seeking Event Notification Message
+#define MESSAGE_TYPE_UNDERLYING_TRADING_STATUS_NOTIFICATION_MESSAGE 0x48        // Underlying Trading Status Notification Message
+
+// Call Or Put: one byte code
+#define CALL_OR_PUT_CALL 0x43  // Call
+#define CALL_OR_PUT_PUT 0x50   // Put
+
+// Restricted Option: one byte code
+#define RESTRICTED_OPTION_YES 0x59  // Yes
+#define RESTRICTED_OPTION_NO 0x4E   // No
+
+// Long Term Option: one byte code
+#define LONG_TERM_OPTION_YES 0x59  // Yes
+#define LONG_TERM_OPTION_NO 0x4E   // No
+
+// Active On Emerald: one byte code
+#define ACTIVE_ON_EMERALD_ACTIVE 0x41    // Active
+#define ACTIVE_ON_EMERALD_INACTIVE 0x49  // Inactive
+
+// Emerald Bbo Posting Increment Indicator: one byte code
+#define EMERALD_BBO_POSTING_INCREMENT_INDICATOR_PENNY 0x50            // Penny
+#define EMERALD_BBO_POSTING_INCREMENT_INDICATOR_PENNY_OR_NICKEL 0x4E  // Penny Or Nickel
+#define EMERALD_BBO_POSTING_INCREMENT_INDICATOR_NICKEL_OR_DIME 0x44   // Nickel Or Dime
+
+// Liquidity Acceptance Increment Indicator: one byte code
+#define LIQUIDITY_ACCEPTANCE_INCREMENT_INDICATOR_PENNY 0x50            // Penny
+#define LIQUIDITY_ACCEPTANCE_INCREMENT_INDICATOR_PENNY_OR_NICKEL 0x4E  // Penny Or Nickel
+#define LIQUIDITY_ACCEPTANCE_INCREMENT_INDICATOR_NICKEL_OR_DIME 0x44   // Nickel Or Dime
+
+// Opening Underlying Market Code: one byte code
+#define OPENING_UNDERLYING_MARKET_CODE_NYSE_AMEX 0x41                          // Nyse Amex
+#define OPENING_UNDERLYING_MARKET_CODE_NASDAQ_OMX_BX 0x42                      // Nasdaq Omx Bx
+#define OPENING_UNDERLYING_MARKET_CODE_NATIONAL_STOCK_EXCHANGE 0x43            // National Stock Exchange
+#define OPENING_UNDERLYING_MARKET_CODE_FINRA_ADF 0x44                          // Finra Adf
+#define OPENING_UNDERLYING_MARKET_CODE_MARKET_INDEPENDENT 0x45                 // Market Independent
+#define OPENING_UNDERLYING_MARKET_CODE_INTERNATIONAL_SECURITIES_EXCHANGE 0x49  // International Securities Exchange
+#define OPENING_UNDERLYING_MARKET_CODE_EDGA_EXCHANGE_INC 0x4A                  // Edga Exchange Inc
+#define OPENING_UNDERLYING_MARKET_CODE_EDGX_EXCHANGE_INC 0x4B                  // Edgx Exchange Inc
+#define OPENING_UNDERLYING_MARKET_CODE_CHICAGO_STOCK_EXCHANGE 0x4D             // Chicago Stock Exchange
+#define OPENING_UNDERLYING_MARKET_CODE_NYSE_EURONEXT 0x4E                      // Nyse Euronext
+#define OPENING_UNDERLYING_MARKET_CODE_NYSE_ARCA_EXCHANGE 0x50                 // Nyse Arca Exchange
+#define OPENING_UNDERLYING_MARKET_CODE_NASDAQ_OMX_UTP 0x51                     // Nasdaq Omx Utp
+#define OPENING_UNDERLYING_MARKET_CODE_NASDAQ_OMX_CTA 0x54                     // Nasdaq Omx Cta
+#define OPENING_UNDERLYING_MARKET_CODE_IEX 0x56                                // Iex
+#define OPENING_UNDERLYING_MARKET_CODE_NASDAQ_OMX_PHLX 0x58                    // Nasdaq Omx Phlx
+#define OPENING_UNDERLYING_MARKET_CODE_BATS_Y_EXCHANGE_INC 0x59                // Bats Y Exchange Inc
+#define OPENING_UNDERLYING_MARKET_CODE_BATS_EXCHANGE_INC 0x5A                  // Bats Exchange Inc
+
+// Update Reason: one byte code
+#define UPDATE_REASON_NEW_STRATEGY_CREATED 0x4E  // New Strategy Created
+#define UPDATE_REASON_UPDATED 0x55               // Updated
+
+// Leg Side: one byte code
+#define LEG_SIDE_BID 0x42  // Bid
+#define LEG_SIDE_ASK 0x41  // Ask
+
+// System Status: one byte code
+#define SYSTEM_STATUS_START_OF_SYSTEM_HOURS 0x53  // Start Of System Hours
+#define SYSTEM_STATUS_END_OF_SYSTEM_HOURS 0x43    // End Of System Hours
+#define SYSTEM_STATUS_START_OF_TEST_SESSION 0x31  // Start Of Test Session
+#define SYSTEM_STATUS_END_OF_TEST_SESSION 0x32    // End Of Test Session
+
+// Event Type: one byte code
+#define EVENT_TYPE_OPENING_REOPENING_IMBALANCE_MECHANISM 0x4F   // Opening Reopening Imbalance Mechanism
+#define EVENT_TYPE_OPENING_ROUTE_MECHANISM 0x52                 // Opening Route Mechanism
+#define EVENT_TYPE_EMERALD_PRIME_PAIRED_ORDER 0x50              // Emerald Prime Paired Order
+#define EVENT_TYPE_SETTLEMENT_OPENING_IMBALANCE_MECHANISM 0x53  // Settlement Opening Imbalance Mechanism
+#define EVENT_TYPE_LIQUIDITY_EXPOSURE_PROCESS 0x45              // Liquidity Exposure Process
+#define EVENT_TYPE_COMPLEX_ORDER_AUCTION 0x43                   // Complex Order Auction
+
+// Imbalance Side: one byte code
+#define IMBALANCE_SIDE_BID 0x42  // Bid
+#define IMBALANCE_SIDE_ASK 0x41  // Ask
+
+// Side: one byte code
+#define SIDE_BID 0x42  // Bid
+#define SIDE_ASK 0x41  // Ask
+
+// Trading Status: one byte code
+#define TRADING_STATUS_HALTED 0x48   // Halted
+#define TRADING_STATUS_RESUMED 0x52  // Resumed
+#define TRADING_STATUS_OPENED 0x4F   // Opened
+
+// Event Reason: one byte code
+#define EVENT_REASON_AUTOMATIC 0x41  // Automatic
+#define EVENT_REASON_MANUAL 0x4D     // Manual
+
+// Login Status: one byte code
+#define LOGIN_STATUS_SUCCESSFUL 0x20                                         // Successful
+#define LOGIN_STATUS_INVALID_TRADING_SESSION_REQUESTED 0x53                  // Invalid Trading Session Requested
+#define LOGIN_STATUS_NO_ACTIVE_TRADING_SESSION_EXISTS 0x55                   // No Active Trading Session Exists
+#define LOGIN_STATUS_REJECTED 0x58                                           // Rejected
+#define LOGIN_STATUS_INVALID_START_SEQUENCE_NUMBER_REQUESTED 0x4E            // Invalid Start Sequence Number Requested
+#define LOGIN_STATUS_INCOMPATIBLE_SESSION_PROTOCOL_VERSION 0x49              // Incompatible Session Protocol Version
+#define LOGIN_STATUS_INCOMPATIBLE_APPLICATION_PROTOCOL_VERSION 0x41          // Incompatible Application Protocol Version
+#define LOGIN_STATUS_REQUEST_REJECTED_BECAUSE_CLIENT_ALREADY_LOGGED_IN 0x4C  // Request Rejected Because Client Already Logged In
+
+// Logout Reason: one byte code
+#define LOGOUT_REASON_GRACEFUL_LOGOUT 0x20                     // Graceful Logout
+#define LOGOUT_REASON_BAD_PACKET 0x42                          // Bad Packet
+#define LOGOUT_REASON_TIMED_OUT 0x4C                           // Timed Out
+#define LOGOUT_REASON_APPLICATION_TERMINATING_CONNECTION 0x41  // Application Terminating Connection
+
+// ---- Types -------------------------------------------------------------------
+
+// The SesM server uses Sequenced data packets to send all messages that must be recoverable by the client in case of a connection loss
+typedef struct _SequencedDataPacket {
+  UINT64 sequence_number;        // bytes 0 to 7
+  UINT8 matching_engine_id;      // byte 8
+  UINT8 sequenced_message_type;  // byte 9
+} SequencedDataPacket;
 
 // Sent by the firm over the AIS Retransmission Interface (SesM Unsequenced Data Packet) to request a Last Value Refresh of a particular data set identified by Refresh Message Type.
-entrypoint typedef struct _RefreshRequestMessage {
+typedef struct _RefreshRequestMessage {
   UINT8 refresh_message_type;  // byte 0
 } RefreshRequestMessage;
 
-// ---- System Time Message: 4 bytes --------------------------------------------
-
 // This is the message format that will be used to disseminate the seconds part of the timestamp that is applicable to all messages that are sent in the current second.
-entrypoint typedef struct _SystemTimeMessage {
+typedef struct _SystemTimeMessage {
   UINT32 seconds;  // bytes 0 to 3
 } SystemTimeMessage;
 
-// ---- Simple Series Update Message: 72 bytes ----------------------------------
-
 // This is the message format that will be used to disseminate all Option series traded on Emerald for the current session.
-entrypoint typedef struct _SimpleSeriesUpdateMessage {
+typedef struct _SimpleSeriesUpdateMessage {
   UINT32 nanoseconds;                              // bytes 0 to 3
   UINT32 product_id;                               // bytes 4 to 7
   UINT8 underlying_symbol[11];                     // bytes 8 to 18
@@ -62,20 +218,37 @@ entrypoint typedef struct _SimpleSeriesUpdateMessage {
   UINT8 reserved_8[8];                             // bytes 64 to 71
 } SimpleSeriesUpdateMessage;
 
-// ---- System State Message: 17 bytes ------------------------------------------
+// Complex Strategy Number of Legs
+typedef struct _LegDefinition {
+  UINT32 product_id;     // bytes 0 to 3
+  UINT16 leg_ratio_qty;  // bytes 4 to 5
+  UINT8 leg_side;        // byte 6
+  UINT8 reserved_8[8];   // bytes 7 to 14
+} LegDefinition;
+
+// This is the message format that will be used to disseminate stock option strategies traded on Emerald for the current session.
+typedef struct _ComplexStrategyDefinitionUpdateMessage {
+  UINT32 nanoseconds;                                                         // bytes 0 to 3
+  UINT32 strategy_id;                                                         // bytes 4 to 7
+  UINT8 underlying_symbol[11];                                                // bytes 8 to 18
+  UINT8 active_on_emerald;                                                    // byte 19
+  UINT8 reserved_1;                                                           // byte 20
+  UINT8 update_reason;                                                        // byte 21
+  UINT8 reserved_10[10];                                                      // bytes 22 to 31
+  UINT8 number_of_legs;                                                       // byte 32
+  LegDefinition leg_definition[:byte-size (((UINT32) number_of_legs) * 15)];
+} ComplexStrategyDefinitionUpdateMessage;
 
 // This message format is used to notify the firms of the state changes of the system. This is a notification that applies to each Underlying group. Firms can use notifications as triggers in their system to ensure electronic synchronization of systems.
-entrypoint typedef struct _SystemStateMessage {
+typedef struct _SystemStateMessage {
   UINT32 nanoseconds;    // bytes 0 to 3
   UINT8 ais_version[8];  // bytes 4 to 11
   UINT32 session_id;     // bytes 12 to 15
   UINT8 system_status;   // byte 16
 } SystemStateMessage;
 
-// ---- Simple Liquidity Seeking Event Notification Message: 46 bytes -----------
-
 // This is the message format that will be used to disseminate information each time a Liquidity seeking event (defined in Event Type field below) starts at Emerald.
-entrypoint typedef struct _SimpleLiquiditySeekingEventNotificationMessage {
+typedef struct _SimpleLiquiditySeekingEventNotificationMessage {
   UINT32 nanoseconds;        // bytes 0 to 3
   UINT32 product_id;         // bytes 4 to 7
   UINT8 event_type;          // byte 8
@@ -90,10 +263,8 @@ entrypoint typedef struct _SimpleLiquiditySeekingEventNotificationMessage {
   UINT8 reserved_8[8];       // bytes 38 to 45
 } SimpleLiquiditySeekingEventNotificationMessage;
 
-// ---- Complex Liquidity Seeking Event Notification Message: 42 bytes ----------
-
 // This is the message format that will be used to disseminate information each time a Liquidity seeking event (defined in Event Type field below) starts at Emerald
-entrypoint typedef struct _ComplexLiquiditySeekingEventNotificationMessage {
+typedef struct _ComplexLiquiditySeekingEventNotificationMessage {
   UINT32 nanoseconds;         // bytes 0 to 3
   UINT32 strategy_id;         // bytes 4 to 7
   UINT8 event_type;           // byte 8
@@ -106,10 +277,8 @@ entrypoint typedef struct _ComplexLiquiditySeekingEventNotificationMessage {
   UINT8 reserved_8[8];        // bytes 34 to 41
 } ComplexLiquiditySeekingEventNotificationMessage;
 
-// ---- Underlying Trading Status Notification Message: 25 bytes ----------------
-
 // This message format will be used to notify firms of changes to the trading status of all the options of an underlying.
-entrypoint typedef struct _UnderlyingTradingStatusNotificationMessage {
+typedef struct _UnderlyingTradingStatusNotificationMessage {
   UINT32 nanoseconds;                            // bytes 0 to 3
   UINT8 underlying_symbol[11];                   // bytes 4 to 14
   UINT8 trading_status;                          // byte 15
@@ -118,17 +287,54 @@ entrypoint typedef struct _UnderlyingTradingStatusNotificationMessage {
   UINT32 expected_event_time_nano_seconds_part;  // bytes 21 to 24
 } UnderlyingTradingStatusNotificationMessage;
 
-// ---- End Of Refresh Notification Message: 1 byte -----------------------------
+// Branch
+casetype _Data (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x31: SystemTimeMessage system_time_message;
+    case 0x50: SimpleSeriesUpdateMessage simple_series_update_message;
+    case 0x43: ComplexStrategyDefinitionUpdateMessage complex_strategy_definition_update_message;
+    case 0x53: SystemStateMessage system_state_message;
+    case 0x4C: SimpleLiquiditySeekingEventNotificationMessage simple_liquidity_seeking_event_notification_message;
+    case 0x6C: ComplexLiquiditySeekingEventNotificationMessage complex_liquidity_seeking_event_notification_message;
+    case 0x48: UnderlyingTradingStatusNotificationMessage underlying_trading_status_notification_message;
+    default: UINT8 unknown[available];
+  }
+} Data;
+
+typedef struct _ApplicationMessage (UINT32 available) where (available >= 1) {
+  UINT8 message_type;                                                                         // byte 0
+  Data(message_type, (available - 1)) data[:byte-size-single-element-array (available - 1)];
+} ApplicationMessage;
+
+// Sent by MIAX Emerald over the AIS Retransmission Interface (SesM Unsequenced Data Packet) carrying one Application Message that satisfies a previous Refresh Request. Note: MIAX Emerald PDF assigns Response Type R (uppercase) to this message, colliding with the Request Type R byte; lowercase r is used here to match the Pearl convention for case-distinct discrimination.
+typedef struct _RefreshResponseMessage (UINT16 sesm_packet_length) where (sesm_packet_length >= 10) {
+  UINT64 sequence_number;                                                                                                                              // bytes 0 to 7
+  ApplicationMessage((((UINT32) sesm_packet_length) - 10)) application_message[:byte-size-single-element-array (((UINT32) sesm_packet_length) - 10)];
+} RefreshResponseMessage;
 
 // Sent by MIAX Emerald over the AIS Retransmission Interface (SesM Unsequenced Data Packet) when the refresh response is complete.
-entrypoint typedef struct _EndOfRefreshNotificationMessage {
+typedef struct _EndOfRefreshNotificationMessage {
   UINT8 refresh_message_type;  // byte 0
 } EndOfRefreshNotificationMessage;
 
-// ---- Login Request: 35 bytes -------------------------------------------------
+// Branch
+casetype _UnsequencedMessage (UINT8 selector, UINT16 sesm_packet_length, UINT32 available) {
+  switch (selector) {
+    case 0x52: RefreshRequestMessage refresh_request_message;
+    case 0x72: RefreshResponseMessage(sesm_packet_length) refresh_response_message;
+    case 0x45: EndOfRefreshNotificationMessage end_of_refresh_notification_message;
+    default: UINT8 unknown[available];
+  }
+} UnsequencedMessage;
+
+// Each unsequenced data packet carries one unsequenced message from the higher-lever protocol
+typedef struct _UnsequencedDataPacket (UINT16 sesm_packet_length, UINT32 available) where (available >= 1) {
+  UINT8 unsequenced_message_type;                                                                                                                          // byte 0
+  UnsequencedMessage(unsequenced_message_type, sesm_packet_length, (available - 1)) unsequenced_message[:byte-size-single-element-array (available - 1)];
+} UnsequencedDataPacket;
 
 // The SesM client must send a Login request packet immediately upon establishing a new TCP/IP socket connection to the server
-entrypoint typedef struct _LoginRequest {
+typedef struct _LoginRequest {
   UINT8 sesm_version[5];               // bytes 0 to 4
   UINT8 username[5];                   // bytes 5 to 9
   UINT8 computer_id[8];                // bytes 10 to 17
@@ -137,28 +343,72 @@ entrypoint typedef struct _LoginRequest {
   UINT64 requested_sequence_number;    // bytes 27 to 34
 } LoginRequest;
 
-// ---- Login Response: 11 bytes ------------------------------------------------
-
 // The SesM server sends a Login response packet in response a Login request packet from the client
-entrypoint typedef struct _LoginResponse {
+typedef struct _LoginResponse {
   UINT8 number_of_matching_engines;  // byte 0
   UINT8 login_status;                // byte 1
   UINT8 trading_session_id;          // byte 2
   UINT64 highest_sequence_number;    // bytes 3 to 10
 } LoginResponse;
 
-// ---- Synchronization Complete: 1 byte ----------------------------------------
-
 // The SesM server sends a Login response packet in response a Login request packet from the client
-entrypoint typedef struct _SynchronizationComplete {
+typedef struct _SynchronizationComplete {
   UINT8 number_of_matching_engines;  // byte 0
 } SynchronizationComplete;
 
-// ---- Retransmission Request: 16 bytes ----------------------------------------
-
 // The SesM client uses this packet to request a retransmission server to retransmit a range of packets
-entrypoint typedef struct _RetransmissionRequest {
+typedef struct _RetransmissionRequest {
   UINT64 start_sequence_number;  // bytes 0 to 7
   UINT64 end_sequence_number;    // bytes 8 to 15
 } RetransmissionRequest;
+
+// The client may send a Logout request packet to request the connection be terminated
+typedef struct _LogoutRequest (UINT16 sesm_packet_length) where (sesm_packet_length >= 2) {
+  UINT8 logout_reason;                                     // byte 0
+  UINT8 logout_text[(((UINT32) sesm_packet_length) - 2)];
+} LogoutRequest;
+
+// The server may send a GoodBye packet to inform the client a reason for termination of the connection just before it terminates the connection
+typedef struct _GoodbyePacket (UINT16 sesm_packet_length) where (sesm_packet_length >= 2) {
+  UINT8 logout_reason;                                     // byte 0
+  UINT8 logout_text[(((UINT32) sesm_packet_length) - 2)];
+} GoodbyePacket;
+
+// Test packets are intended to provide human readable text that may aid in debugging problems
+typedef struct _TestPacket (UINT16 sesm_packet_length) where (sesm_packet_length >= 1) {
+  UINT8 test_text[(((UINT32) sesm_packet_length) - 1)];
+} TestPacket;
+
+// Branch
+casetype _SesmPayload (UINT8 selector, UINT32 length, UINT32 length_2, UINT16 sesm_packet_length, UINT32 available) {
+  switch (selector) {
+    case 0x73: SequencedDataPacket sequenced_data_packet[:byte-size-single-element-array length];
+    case 0x55: UnsequencedDataPacket(sesm_packet_length, length_2) unsequenced_data_packet[:byte-size-single-element-array length_2];
+    case 0x6C: LoginRequest login_request;
+    case 0x72: LoginResponse login_response;
+    case 0x63: SynchronizationComplete synchronization_complete;
+    case 0x61: RetransmissionRequest retransmission_request;
+    case 0x58: LogoutRequest(sesm_packet_length) logout_request;
+    case 0x47: GoodbyePacket(sesm_packet_length) goodbye_packet;
+    case 0x75: unit trading_session_update;
+    case 0x30: unit server_heartbeat;
+    case 0x31: unit client_heartbeat;
+    case 0x54: TestPacket(sesm_packet_length) test_packet;
+    default: UINT8 unknown[available];
+  }
+} SesmPayload;
+
+// SesM Tcp Packet
+typedef struct _SesmTcpPacket {
+  UINT16 sesm_packet_length { sesm_packet_length >= 1 };                                                                                                                                                                                                           // bytes 0 to 1
+  UINT8 sesm_packet_type;                                                                                                                                                                                                                                          // byte 2
+  SesmPayload(sesm_packet_type, (((UINT32) sesm_packet_length) - 1), (((UINT32) sesm_packet_length) - 1), sesm_packet_length, ((((UINT32) sesm_packet_length) + 2) - 3)) sesm_payload[:byte-size-single-element-array ((((UINT32) sesm_packet_length) + 2) - 3)];
+} SesmTcpPacket;
+
+// ---- Packet: TcpPacket -------------------------------------------------------
+
+// SesM Packet
+entrypoint typedef struct _TcpPacket (UINT32 available) {
+  SesmTcpPacket sesm_tcp_packet[:byte-size available];
+} TcpPacket;
 

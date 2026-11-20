@@ -1,63 +1,118 @@
-// National Association of Securities Dealers Automated Quotations (Nasdaq) CHIXMMD Multicast Market Data
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nasdaq NasdaqCanada Chixmmd Glimpse v1.0
 //
+// Protocol:
+//   Organization: National Association of Securities Dealers Automated Quotations (Nasdaq)
+//   Protocol: CHIXMMD Multicast Market Data
+//   Encoding: Glimpse
+//   Version: 1.0
+//   Date: 09/01/2025
+//   Specification: NasdaqCanadaGlimpse1.0Specification.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ServerFrame, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out NasdaqCanada_Chixmmd_v1_0_Server.3d
 //
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a field filling what is left of what holds it
-// - the dispatch that chooses a message by its type
-//
-// License: MIT No Attribution
+// What this definition reads more loosely than the model states:
+// - the stream is a run of frames each ending at a byte 10: the caller splits it there and validates each frame, that byte included
 
-// ---- Server Packet Header: 1 byte --------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// SoupTcp Packet Header sent by the server
-entrypoint typedef struct _ServerPacketHeader {
-  UINT8 server_packet_type;  // byte 0
-} ServerPacketHeader;
+// Server Packet Type: one byte code
+#define SERVER_PACKET_TYPE_DEBUG_PACKET 0x2B             // Debug Packet
+#define SERVER_PACKET_TYPE_LOGIN_ACCEPTED_PACKET 0x41    // Login Accepted Packet
+#define SERVER_PACKET_TYPE_LOGIN_REJECTED_PACKET 0x4A    // Login Rejected Packet
+#define SERVER_PACKET_TYPE_SEQUENCED_DATA_PACKET 0x53    // Sequenced Data Packet
+#define SERVER_PACKET_TYPE_SERVER_HEARTBEAT_PACKET 0x48  // Server Heartbeat Packet
 
-// ---- Login Accepted Packet: 20 bytes -----------------------------------------
+// Message Type: one byte code
+#define MESSAGE_TYPE_SYSTEM_EVENT_MESSAGE 0x53         // System Event Message
+#define MESSAGE_TYPE_STOCK_STATUS_MESSAGE 0x48         // Stock Status Message
+#define MESSAGE_TYPE_ADD_ORDER_MESSAGE 0x41            // Add Order Message
+#define MESSAGE_TYPE_LONG_FORM_ADD_ORDER_MESSAGE 0x61  // Long Form Add Order Message
+
+// Event Code: one byte code
+#define EVENT_CODE_START_OF_MESSAGES 0x4F                        // Start Of Messages
+#define EVENT_CODE_START_OF_NASDAQ_CANADA_TRADING_SESSION 0x53   // Start Of Nasdaq Canada Trading Session
+#define EVENT_CODE_START_OF_PRIMARY_MARKET_TRADING_SESSION 0x51  // Start Of Primary Market Trading Session
+#define EVENT_CODE_END_OF_PRIMARY_MARKET_TRADING_SESSION 0x4D    // End Of Primary Market Trading Session
+#define EVENT_CODE_END_OF_SYSTEM_HOURS 0x45                      // End Of System Hours
+#define EVENT_CODE_END_OF_MESSAGES 0x43                          // End Of Messages
+#define EVENT_CODE_MARKET_WIDE_CIRCUIT_BREAKER_HALT 0x57         // Market Wide Circuit Breaker Halt
+#define EVENT_CODE_MARKET_WIDE_CIRCUIT_BREAKER_RESUMPTION 0x52   // Market Wide Circuit Breaker Resumption
+
+// Trading State: one byte code
+#define TRADING_STATE_HALTED 0x48   // Halted
+#define TRADING_STATE_TRADING 0x54  // Trading
+
+// Listing Market: one byte code
+#define LISTING_MARKET_TSX 0x54          // Tsx
+#define LISTING_MARKET_TSX_VENTURE 0x56  // Tsx Venture
+#define LISTING_MARKET_CSE 0x43          // Cse
+#define LISTING_MARKET_NEO 0x4E          // Neo
+
+// Gef Eligible: one byte code
+#define GEF_ELIGIBLE_GEF_ELIGIBLE 0x59      // Gef Eligible
+#define GEF_ELIGIBLE_NOT_GEF_ELIGIBLE 0x4E  // Not Gef Eligible
+
+// Buy Sell Indicator: one byte code
+#define BUY_SELL_INDICATOR_BUY 0x42   // Buy
+#define BUY_SELL_INDICATOR_SELL 0x53  // Sell
+
+// ---- Types -------------------------------------------------------------------
+
+// Debug packets are intended to provide human readable text that may aid in debugging problems.
+typedef struct _DebugPacket (UINT32 available) where (available >= 1) {
+  UINT8 text[(available - 1)];
+} DebugPacket;
 
 // The SoupTcp server sends a Login Accepted Packet in response to receiving a valid Login Request from the client.
-entrypoint typedef struct _LoginAcceptedPacket {
+typedef struct _LoginAcceptedPacket {
   UINT8 accepted_session[10];          // bytes 0 to 9
   UINT8 accepted_sequence_number[10];  // bytes 10 to 19
 } LoginAcceptedPacket;
 
-// ---- Login Rejected Packet: 1 byte -------------------------------------------
-
 // The SoupTcp server sends this packet in response to an invalid Login Request Packet from the client.
-entrypoint typedef struct _LoginRejectedPacket {
+typedef struct _LoginRejectedPacket {
   UINT8 reject_reason_code;  // byte 0
 } LoginRejectedPacket;
 
-// ---- Sequenced Message Header: 9 bytes ---------------------------------------
-
-// Time and type carried ahead of every sequenced Itch message
-entrypoint typedef struct _SequencedMessageHeader {
-  UINT8 timestamp[8];  // bytes 0 to 7
-  UINT8 message_type;  // byte 8
-} SequencedMessageHeader;
-
-// ---- System Event Message: 1 byte --------------------------------------------
-
 // The system event message type is used to signal a market or data feed handler event.
-entrypoint typedef struct _SystemEventMessage {
+typedef struct _SystemEventMessage {
   UINT8 event_code;  // byte 0
 } SystemEventMessage;
 
-// ---- Stock Status Message: 21 bytes ------------------------------------------
-
 // At the start of each Canada GLIMPSE transmission, Nasdaq will disseminate stock status messages for all symbols in Nasdaq execution system for the current trading day. The Symbol Status spin may include halted issues.
-entrypoint typedef struct _StockStatusMessage {
+typedef struct _StockStatusMessage {
   UINT8 stock[10];          // bytes 0 to 9
   UINT8 trading_state;      // byte 10
   UINT8 reserved_1;         // byte 11
@@ -67,10 +122,8 @@ entrypoint typedef struct _StockStatusMessage {
   UINT8 gef_eligible;       // byte 20
 } StockStatusMessage;
 
-// ---- Add Order Message: 39 bytes ---------------------------------------------
-
 // An Add Order Message indicates that CXC or CX2 has accepted a visible order into the book. It includes a day-unique Order Reference key assigned to the order. The issuing of an Add Order Message is not necessarily always for a new order (see Modification of Existing Orders). Not applicable to CXD.
-entrypoint typedef struct _AddOrderMessage {
+typedef struct _AddOrderMessage {
   UINT8 order_reference[9];  // bytes 0 to 8
   UINT8 buy_sell_indicator;  // byte 9
   UINT8 shares[6];           // bytes 10 to 15
@@ -79,10 +132,8 @@ entrypoint typedef struct _AddOrderMessage {
   UINT8 broker[3];           // bytes 36 to 38
 } AddOrderMessage;
 
-// ---- Long Form Add Order Message: 52 bytes -----------------------------------
-
 // An Add Order Message indicates that CXC or CX2 has accepted a visible order into the book. It includes a day-unique Order Reference key assigned to the order. The issuing of an Add Order Message is not necessarily always for a new order (see Modification of Existing Orders). Not applicable to CXD. Long form messages are used when either the price or size is larger than the standard messages can permit.
-entrypoint typedef struct _LongFormAddOrderMessage {
+typedef struct _LongFormAddOrderMessage {
   UINT8 order_reference[9];  // bytes 0 to 8
   UINT8 buy_sell_indicator;  // byte 9
   UINT8 long_shares[10];     // bytes 10 to 19
@@ -90,4 +141,42 @@ entrypoint typedef struct _LongFormAddOrderMessage {
   UINT8 long_price[19];      // bytes 30 to 48
   UINT8 broker[3];           // bytes 49 to 51
 } LongFormAddOrderMessage;
+
+// Branch
+casetype _SequencedMessage (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x53: SystemEventMessage system_event_message;
+    case 0x48: StockStatusMessage stock_status_message;
+    case 0x41: AddOrderMessage add_order_message;
+    case 0x61: LongFormAddOrderMessage long_form_add_order_message;
+    default: UINT8 unknown[available];
+  }
+} SequencedMessage;
+
+// The Sequenced Data Packets act as an envelope to carry the actual sequenced data messages that are transferred from the server to the client. Each Sequenced Data Packet carries one message from the higher-lever protocol.
+typedef struct _SequencedDataPacket (UINT32 available) where (available >= 9) {
+  UINT8 timestamp[8];                                                                                                  // bytes 0 to 7
+  UINT8 message_type;                                                                                                  // byte 8
+  SequencedMessage(message_type, (available - 9)) sequenced_message[:byte-size-single-element-array (available - 9)];
+} SequencedDataPacket;
+
+// Branch
+casetype _ServerPayload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x2B: DebugPacket(available) debug_packet;
+    case 0x41: LoginAcceptedPacket login_accepted_packet;
+    case 0x4A: LoginRejectedPacket login_rejected_packet;
+    case 0x53: SequencedDataPacket(available) sequenced_data_packet;
+    default: UINT8 unknown[available];
+  }
+} ServerPayload;
+
+// ---- Packet: ServerFrame -----------------------------------------------------
+
+// One SoupTcp packet sent by the server, closed by a line feed
+entrypoint typedef struct _ServerFrame (UINT32 available) where (available >= 2) {
+  UINT8 server_packet_type;                                                                                            // byte 0
+  ServerPayload(server_packet_type, (available - 2)) server_payload[:byte-size-single-element-array (available - 2)];
+  UINT8 soup_lf { soup_lf == 10 };
+} ServerFrame;
 

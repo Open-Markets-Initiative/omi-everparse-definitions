@@ -1,42 +1,110 @@
-// National Association of Securities Dealers Automated Quotations (Nasdaq) Orders
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Nasdaq PsxEquities Orders Ouch v4.2
 //
+// Protocol:
+//   Organization: National Association of Securities Dealers Automated Quotations (Nasdaq)
+//   Protocol: Orders
+//   Encoding: Ouch
+//   Version: 4.2
+//   Date: 7/8/2019
+//   Specification: psxouch42.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for each record below and proves, of that C, that it reads no byte
-// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
-// the record describes.
+// writes a C validator for the packet, ClientPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out PsxEquities_Orders_v4_2_Client.3d
-//
-// What this definition does not state, and the model does:
-// - a run filling what frames it
-// - a length prefix framing what follows
-//
-// License: MIT No Attribution
 
-// ---- Client Packet Header: 3 bytes -------------------------------------------
+// ---- Values ------------------------------------------------------------------
 
-// Packet header of a packet sent by the client
-entrypoint typedef struct _ClientPacketHeader {
-  UINT16BE packet_length;    // bytes 0 to 1
-  UINT8 client_packet_type;  // byte 2
-} ClientPacketHeader;
+// Client Packet Type: one byte code
+#define CLIENT_PACKET_TYPE_DEBUG_PACKET 0x2B             // Debug Packet
+#define CLIENT_PACKET_TYPE_LOGIN_REQUEST_PACKET 0x4C     // Login Request Packet
+#define CLIENT_PACKET_TYPE_UNSEQUENCED_DATA_PACKET 0x55  // Unsequenced Data Packet
+#define CLIENT_PACKET_TYPE_CLIENT_HEARTBEAT_PACKET 0x52  // Client Heartbeat Packet
+#define CLIENT_PACKET_TYPE_LOGOUT_REQUEST_PACKET 0x4F    // Logout Request Packet
 
-// ---- Login Request Packet: 46 bytes ------------------------------------------
+// Unsequenced Message Type: one byte code
+#define UNSEQUENCED_MESSAGE_TYPE_ENTER_ORDER_MESSAGE 0x4F    // Enter Order Message
+#define UNSEQUENCED_MESSAGE_TYPE_REPLACE_ORDER_MESSAGE 0x55  // Replace Order Message
+#define UNSEQUENCED_MESSAGE_TYPE_CANCEL_ORDER_MESSAGE 0x58   // Cancel Order Message
+#define UNSEQUENCED_MESSAGE_TYPE_MODIFY_ORDER_MESSAGE 0x4D   // Modify Order Message
+
+// Buy Sell Indicator: one byte code
+#define BUY_SELL_INDICATOR_BUY 0x42                // Buy
+#define BUY_SELL_INDICATOR_SELL 0x53               // Sell
+#define BUY_SELL_INDICATOR_SELL_SHORT 0x54         // Sell Short
+#define BUY_SELL_INDICATOR_SELL_SHORT_EXEMPT 0x45  // Sell Short Exempt
+
+// Display: one byte code
+#define DISPLAY_ATTRIBUTABLE_PRICE 0x41        // Attributable Price
+#define DISPLAY_ANONYMOUS_PRICE 0x59           // Anonymous Price
+#define DISPLAY_NON_DISPLAY 0x4E               // Non Display
+#define DISPLAY_POST_ONLY 0x50                 // Post Only
+#define DISPLAY_CHANGED_TO_NON_DISPLAYED 0x5A  // Changed To Non Displayed
+#define DISPLAY_IMBALANCE_ONLY 0x49            // Imbalance Only
+#define DISPLAY_MID_POINT_PEG 0x4D             // Mid Point Peg
+#define DISPLAY_MID_POINT_PEG_POST_ONLY 0x57   // Mid Point Peg Post Only
+
+// Capacity: one byte code
+#define CAPACITY_OTHER 0x4F      // Other
+#define CAPACITY_AGENCY 0x41     // Agency
+#define CAPACITY_PRINCIPAL 0x50  // Principal
+#define CAPACITY_RISKLESS 0x52   // Riskless
+
+// Intermarket Sweep Eligibility: one byte code
+#define INTERMARKET_SWEEP_ELIGIBILITY_ELIGIBLE 0x59      // Eligible
+#define INTERMARKET_SWEEP_ELIGIBILITY_NOT_ELIGIBLE 0x4E  // Not Eligible
+#define INTERMARKET_SWEEP_ELIGIBILITY_TRADE_AT 0x79      // Trade At
+
+// Cross Type: one byte code
+#define CROSS_TYPE_NO_CROSS 0x4E  // No Cross
+#define CROSS_TYPE_OPENING 0x4F   // Opening
+#define CROSS_TYPE_CLOSING 0x43   // Closing
+
+// ---- Types -------------------------------------------------------------------
+
+// Debug packets are intended to provide human readable text that may aid in debugging problems
+typedef struct _DebugPacket (UINT16 packet_length) where (packet_length >= 1) {
+  UINT8 debug_text[(((UINT32) packet_length) - 1)];
+} DebugPacket;
 
 // The SoupBinTCP client must send a Login Request Packet immediately upon establishing a new TCP/IP socket connection to the server
-entrypoint typedef struct _LoginRequestPacket {
+typedef struct _LoginRequestPacket {
   UINT8 username[6];                    // bytes 0 to 5
   UINT8 password[10];                   // bytes 6 to 15
   UINT8 requested_session[10];          // bytes 16 to 25
   UINT8 requested_sequence_number[20];  // bytes 26 to 45
 } LoginRequestPacket;
 
-// ---- Enter Order Message: 47 bytes -------------------------------------------
-
-entrypoint typedef struct _EnterOrderMessage {
+typedef struct _EnterOrderMessage {
   UINT8 order_token[14];                // bytes 0 to 13
   UINT8 buy_sell_indicator;             // byte 14
   UINT32BE shares;                      // bytes 15 to 18
@@ -51,9 +119,7 @@ entrypoint typedef struct _EnterOrderMessage {
   UINT8 cross_type;                     // byte 46
 } EnterOrderMessage;
 
-// ---- Replace Order Message: 46 bytes -----------------------------------------
-
-entrypoint typedef struct _ReplaceOrderMessage {
+typedef struct _ReplaceOrderMessage {
   UINT8 existing_order_token[14];              // bytes 0 to 13
   UINT8 replacement_order_token_token_14[14];  // bytes 14 to 27
   UINT32BE shares;                             // bytes 28 to 31
@@ -64,18 +130,57 @@ entrypoint typedef struct _ReplaceOrderMessage {
   UINT32BE minimum_quantity;                   // bytes 42 to 45
 } ReplaceOrderMessage;
 
-// ---- Cancel Order Message: 18 bytes ------------------------------------------
-
-entrypoint typedef struct _CancelOrderMessage {
+typedef struct _CancelOrderMessage {
   UINT8 order_token[14];  // bytes 0 to 13
   UINT32BE shares;        // bytes 14 to 17
 } CancelOrderMessage;
 
-// ---- Modify Order Message: 19 bytes ------------------------------------------
-
-entrypoint typedef struct _ModifyOrderMessage {
+typedef struct _ModifyOrderMessage {
   UINT8 order_token[14];     // bytes 0 to 13
   UINT8 buy_sell_indicator;  // byte 14
   UINT32BE shares;           // bytes 15 to 18
 } ModifyOrderMessage;
+
+// The unsequenced (client to server) message carried by the packet, opaque bytes unless an application source dispatches it
+casetype _UnsequencedMessage (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x4F: EnterOrderMessage enter_order_message;
+    case 0x55: ReplaceOrderMessage replace_order_message;
+    case 0x58: CancelOrderMessage cancel_order_message;
+    case 0x4D: ModifyOrderMessage modify_order_message;
+    default: UINT8 unknown[available];
+  }
+} UnsequencedMessage;
+
+// The Unsequenced Data Packets act as an envelope to carry the actual data messages that are transferred from the client to the server
+typedef struct _UnsequencedDataPacket (UINT16 packet_length) where (packet_length >= 2) {
+  UINT8 unsequenced_message_type;                                                                                                                                    // byte 0
+  UnsequencedMessage(unsequenced_message_type, (((UINT32) packet_length) - 2)) unsequenced_message[:byte-size-single-element-array (((UINT32) packet_length) - 2)];
+} UnsequencedDataPacket;
+
+// Branch
+casetype _ClientPayload (UINT8 selector, UINT32 length, UINT16 packet_length, UINT32 available) {
+  switch (selector) {
+    case 0x2B: DebugPacket(packet_length) debug_packet;
+    case 0x4C: LoginRequestPacket login_request_packet;
+    case 0x55: UnsequencedDataPacket(packet_length) unsequenced_data_packet[:byte-size-single-element-array length];
+    case 0x52: unit client_heartbeat;
+    case 0x4F: unit logout_request;
+    default: UINT8 unknown[available];
+  }
+} ClientPayload;
+
+// Soup Bin Tcp Packet sent by the client
+typedef struct _ClientSoupBinTcpPacket {
+  UINT16BE packet_length { packet_length >= 1 };                                                                                                                                                                // bytes 0 to 1
+  UINT8 client_packet_type;                                                                                                                                                                                     // byte 2
+  ClientPayload(client_packet_type, (((UINT32) packet_length) - 1), packet_length, ((((UINT32) packet_length) + 2) - 3)) client_payload[:byte-size-single-element-array ((((UINT32) packet_length) + 2) - 3)];
+} ClientSoupBinTcpPacket;
+
+// ---- Packet: ClientPacket ----------------------------------------------------
+
+// SoupBinTCP Packet sent by the client
+entrypoint typedef struct _ClientPacket (UINT32 available) {
+  ClientSoupBinTcpPacket client_soup_bin_tcp_packet[:byte-size available];
+} ClientPacket;
 

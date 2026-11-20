@@ -6,9 +6,10 @@ or in the model it reads.
 
 ## What is here
 
-- `<organization>/<division>/<protocol>/<Name>.3d` — one definition per protocol framing: a
-  3d struct per record, its fields in wire order. Each definition is self contained, so
-  everparse reads one without reading any other.
+- `<organization>/<division>/<protocol>/<Name>.3d` — one definition per protocol framing: the
+  whole packet in 3d, a struct per group, a casetype per choice, lengths and counts framing what
+  they measure. Where 3d cannot state some shape of the packet, the records alone, and the
+  header says why. Each definition is self contained, so everparse reads one on its own.
 - `check.sh`, `Makefile` — what a check runs.
 
 ## Checking it
@@ -28,18 +29,20 @@ A definition that does not verify is a generator defect, not a file to patch.
 
 ## What a definition here claims
 
-Everparse writes a C validator for each record and proves of it that:
+Everparse writes a C validator for the packet and proves of it that:
 
 - it reads no byte outside the buffer it is given;
 - it reads no byte twice;
-- it accepts exactly the byte strings the record describes.
+- it accepts exactly the byte strings the packet describes.
 
 An integer is read at its width and in its byte order; 3d has unsigned integers only, so a
 signed field is declared unsigned and marked. Every other field is the bytes it occupies.
 
-A definition's header says what of its model it does **not** state — the framing, the
-dispatch, a counted run — so nothing here is read as a claim about a whole packet. A record
-of fixed fields validates only that its bytes are there.
+A field's listed values are `#define` constants named for the field and the value. They
+document the codes and do not constrain them: an unlisted code is still accepted.
+
+A definition's header says what it reads more loosely than its model states — a count it
+cannot check, say — or, where it states records alone, which shape stopped the packet.
 
 ## The same protocols, elsewhere
 
