@@ -22,18 +22,18 @@
 // The protocol compiler technologies used to produce this file
 // are the subject of patents owned by Scaled Sources LLC. Those patent
 // rights are retained and are not transferred by this contribution:
-//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US12101388B2/en
 //   https://patents.google.com/patent/US20240419416A1/en
+//   https://patents.google.com/patent/US20260368281A1/en
 //
 // Open Markets Initiative website:
 //   https://openmarketsinitiative.com
 // ---------------------------------------------------------------------
 
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for the packet, ClientPacket, and proves of that C that it reads
-// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
-// strings the packet describes: its header, its messages, the choice of each message by its
-// type, every length framing what it measures and every count of what it counts.
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
@@ -41,6 +41,12 @@
 // do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out NseCd_DropCopy_v1_7_Client.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a Integrity rule
+// - a Composite rule
+// - the packet as a whole, which is an arm not leading with what the choice is made on, at clientpacket.clientdirectpacket.clientpacketbody.clientsessionpacket
 
 // ---- Values ------------------------------------------------------------------
 
@@ -57,10 +63,33 @@
 #define TRANSACTION_CODE_GIVEUP_APP_CONFIRM_TM_MESSAGE 0x119A  // Giveup App Confirm Tm Message
 #define TRANSACTION_CODE_GIVEUP_REJ_CONFIRM_TM_MESSAGE 0x119B  // Giveup Rej Confirm Tm Message
 
-// ---- Types -------------------------------------------------------------------
+// ---- Packet Header: 6 bytes --------------------------------------------------
+
+// Packet Length and Sequence number, the first six bytes of the direct interface's twenty two byte packet header; its last sixteen open each packet body branch
+entrypoint typedef struct _PacketHeader {
+  UINT16BE packet_length;           // bytes 0 to 1
+  UINT32BE packet_sequence_number;  // bytes 2 to 5
+} PacketHeader;
+
+// ---- Message Header: 40 bytes ------------------------------------------------
+
+// MESSAGE_HEADER
+entrypoint typedef struct _MessageHeader {
+  UINT16BE transaction_code;  // bytes 0 to 1, values TRANSACTION_CODE_, signed, read here as unsigned
+  UINT32BE log_time;          // bytes 2 to 5, signed, read here as unsigned
+  UINT8 alpha_char[2];        // bytes 6 to 7
+  UINT32BE trader_id;         // bytes 8 to 11, signed, read here as unsigned
+  UINT16BE error_code;        // bytes 12 to 13, signed, read here as unsigned
+  UINT64BE header_timestamp;  // bytes 14 to 21, signed, read here as unsigned
+  UINT8 time_stamp_1[8];      // bytes 22 to 29
+  UINT8 time_stamp_2[8];      // bytes 30 to 37
+  UINT16BE message_length;    // bytes 38 to 39, signed, read here as unsigned
+} MessageHeader;
+
+// ---- Signon In Message: 238 bytes --------------------------------------------
 
 // Logs the user on to the drop copy feed
-typedef struct _SignonInMessage {
+entrypoint typedef struct _SignonInMessage {
   UINT32BE user_id;              // bytes 0 to 3, signed, read here as unsigned
   UINT8 reserved_8[8];           // bytes 4 to 11
   UINT8 password[12];            // bytes 12 to 23
@@ -72,43 +101,4 @@ typedef struct _SignonInMessage {
   UINT8 second_reserved_16[16];  // bytes 206 to 221
   UINT8 third_reserved_16[16];   // bytes 222 to 237
 } SignonInMessage;
-
-// Requests the trade download for one stream, named in the first byte of Alpha Char, from the time given in Sequence Number
-typedef struct _DcDownloadRequestMessage {
-  UINT8 sequence_number[8];  // bytes 0 to 7
-} DcDownloadRequestMessage;
-
-// Branch
-casetype _ClientMessagePayload (UINT16 selector, UINT32 available) {
-  switch (selector) {
-    case 0x08FC: SignonInMessage signon_in_message;
-    case 0x5BD2: unit heartbeat_message;
-    case 0x1F40: DcDownloadRequestMessage dc_download_request_message;
-    default: UINT8 unknown[available];
-  }
-} ClientMessagePayload;
-
-// One framed interactive message sent by the firm
-typedef struct _ClientDirectPacket {
-  UINT16BE packet_length { packet_length >= 62 };                                                                                                                   // bytes 0 to 1
-  UINT32BE packet_sequence_number;                                                                                                                                  // bytes 2 to 5
-  UINT8 checksum[16];                                                                                                                                               // bytes 6 to 21
-  UINT16BE transaction_code;                                                                                                                                        // bytes 22 to 23, signed, read here as unsigned
-  UINT32BE log_time;                                                                                                                                                // bytes 24 to 27, signed, read here as unsigned
-  UINT8 alpha_char[2];                                                                                                                                              // bytes 28 to 29
-  UINT32BE trader_id;                                                                                                                                               // bytes 30 to 33, signed, read here as unsigned
-  UINT16BE error_code;                                                                                                                                              // bytes 34 to 35, signed, read here as unsigned
-  UINT64BE header_timestamp;                                                                                                                                        // bytes 36 to 43, signed, read here as unsigned
-  UINT8 time_stamp_1[8];                                                                                                                                            // bytes 44 to 51
-  UINT8 time_stamp_2[8];                                                                                                                                            // bytes 52 to 59
-  UINT16BE message_length;                                                                                                                                          // bytes 60 to 61, signed, read here as unsigned
-  ClientMessagePayload(transaction_code, (((UINT32) packet_length) - 62)) client_message_payload[:byte-size-single-element-array (((UINT32) packet_length) - 62)];
-} ClientDirectPacket;
-
-// ---- Packet: ClientPacket ----------------------------------------------------
-
-// Nnf direct interface Tcp block of one or more packets sent by the firm
-entrypoint typedef struct _ClientPacket (UINT32 available) {
-  ClientDirectPacket client_direct_packet[:byte-size available];
-} ClientPacket;
 

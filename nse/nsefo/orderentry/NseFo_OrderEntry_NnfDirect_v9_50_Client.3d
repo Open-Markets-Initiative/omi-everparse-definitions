@@ -22,18 +22,18 @@
 // The protocol compiler technologies used to produce this file
 // are the subject of patents owned by Scaled Sources LLC. Those patent
 // rights are retained and are not transferred by this contribution:
-//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US12101388B2/en
 //   https://patents.google.com/patent/US20240419416A1/en
+//   https://patents.google.com/patent/US20260368281A1/en
 //
 // Open Markets Initiative website:
 //   https://openmarketsinitiative.com
 // ---------------------------------------------------------------------
 
 // Generated from the binary model, in the 3d language of EverParse. From this file everparse
-// writes a C validator for the packet, ClientPacket, and proves of that C that it reads
-// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
-// strings the packet describes: its header, its messages, the choice of each message by its
-// type, every length framing what it measures and every count of what it counts.
+// writes a C validator for each record below and proves, of that C, that it reads no byte
+// outside the buffer it is given, reads no byte twice, and accepts exactly the byte strings
+// the record describes.
 //
 // An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
 // signed field is declared unsigned and marked. Every other field is the bytes it occupies.
@@ -41,6 +41,14 @@
 // do not constrain them: a code the document does not list is still accepted.
 //
 // Verify and write the validators: everparse.sh --odir out NseFo_OrderEntry_NnfDirect_v9_50_Client.3d
+//
+// What this definition does not state, and the model does:
+// - a run filling what frames it
+// - a Integrity rule
+// - a Composite rule
+// - a field read in bits
+// - a run of a stated number of entries
+// - the packet as a whole, which is an arm not leading with what the choice is made on, at clientpacket.clientdirectpacket.clientpacketbody.clientsessionpacket
 
 // ---- Values ------------------------------------------------------------------
 
@@ -475,138 +483,85 @@
 #define PL_MARKET_STATUS_AUCTION_PRE_OPEN_ENDED 0x0003  // Pre Open Ended
 #define PL_MARKET_STATUS_AUCTION_POSTCLOSE 0x0004       // Postclose
 
-// Participant Type: one byte code
-#define PARTICIPANT_TYPE_INITIATOR 0x49   // Initiator
-#define PARTICIPANT_TYPE_COMPETITOR 0x43  // Competitor
-#define PARTICIPANT_TYPE_SOLICITOR 0x53   // Solicitor
-
-// Modified Cancelled By: one byte code
-#define MODIFIED_CANCELLED_BY_TRADER 0x54             // Trader
-#define MODIFIED_CANCELLED_BY_BRANCH_MANAGER 0x42     // Branch Manager
-#define MODIFIED_CANCELLED_BY_CORPORATE_MANAGER 0x4D  // Corporate Manager
-#define MODIFIED_CANCELLED_BY_EXCHANGE 0x43           // Exchange
-
-// Reason Code: 2 byte code
-#define REASON_CODE_EXERCISE 0x0002                // Exercise
-#define REASON_CODE_POSITION_LIQUIDATION 0x0003    // Position Liquidation
-#define REASON_CODE_SECURITY 0x0005                // Security
-#define REASON_CODE_BROKER 0x0006                  // Broker
-#define REASON_CODE_BRANCH 0x0007                  // Branch
-#define REASON_CODE_USER 0x0008                    // User
-#define REASON_CODE_PARTICIPANT 0x0009             // Participant
-#define REASON_CODE_COUNTER_PARTY 0x000A           // Counter Party
-#define REASON_CODE_ORDER_NUMBER 0x000B            // Order Number
-#define REASON_CODE_MARKET_STATUS 0x000C           // Market Status
-#define REASON_CODE_AUCTION_NUMBER 0x000F          // Auction Number
-#define REASON_CODE_ORDER_TYPE 0x0010              // Order Type
-#define REASON_CODE_PRICE_FREEZE 0x0011            // Price Freeze
-#define REASON_CODE_QUANTITY_FREEZE 0x0012         // Quantity Freeze
-#define REASON_CODE_CONTRACT 0x0014                // Contract
-#define REASON_CODE_EXERCISE_MODE_MISMATCH 0x001E  // Exercise Mode Mismatch
-
-// Book Type: 2 byte code
-#define BOOK_TYPE_REGULAR_LOT_ORDER 0x0001       // Regular Lot Order
-#define BOOK_TYPE_SPECIAL_TERMS_ORDER 0x0002     // Special Terms Order
-#define BOOK_TYPE_STOP_LOSS_OR_MIT_ORDER 0x0003  // Stop Loss Or Mit Order
-#define BOOK_TYPE_NEGOTIATED_ORDER 0x0004        // Negotiated Order
-#define BOOK_TYPE_ODD_LOT_ORDER 0x0005           // Odd Lot Order
-#define BOOK_TYPE_SPOT_ORDER 0x0006              // Spot Order
-#define BOOK_TYPE_AUCTION_ORDER 0x0007           // Auction Order
-
-// Buy Sell Indicator: 2 byte code
-#define BUY_SELL_INDICATOR_BUY_ORDER 0x0001   // Buy Order
-#define BUY_SELL_INDICATOR_SELL_ORDER 0x0002  // Sell Order
-
-// Buy Sell: 2 byte code
-#define BUY_SELL_BUY_ORDER 0x0001   // Buy Order
-#define BUY_SELL_SELL_ORDER 0x0002  // Sell Order
-
 // Mkt Type: one byte code
 #define MKT_TYPE_NORMAL_MARKET 0x31   // Normal Market
 #define MKT_TYPE_ODD_LOT_MARKET 0x32  // Odd Lot Market
 #define MKT_TYPE_SPOT_MARKET 0x33     // Spot Market
 #define MKT_TYPE_AUCTION_MARKET 0x34  // Auction Market
 
-// Book Type 1: 2 byte code
-#define BOOK_TYPE_1_REGULAR_LOT_ORDER 0x0001    // Regular Lot Order
-#define BOOK_TYPE_1_SPECIAL_TERMS_ORDER 0x0002  // Special Terms Order
+// ---- Packet Header: 6 bytes --------------------------------------------------
 
-// ---- Types -------------------------------------------------------------------
+// Packet Length and Sequence number, the first six bytes of the direct interface's twenty two byte packet header; its last sixteen open each packet body branch
+entrypoint typedef struct _PacketHeader {
+  UINT16BE packet_length;           // bytes 0 to 1
+  UINT32BE packet_sequence_number;  // bytes 2 to 5
+} PacketHeader;
 
-// Logs a trader on to the trading system
-typedef struct _SignOnRequestInMessage {
-  UINT32BE user_id;                    // bytes 0 to 3, signed, read here as unsigned
-  UINT8 reserved_8[8];                 // bytes 4 to 11
-  UINT8 password[8];                   // bytes 12 to 19
-  UINT8 second_reserved_8[8];          // bytes 20 to 27
-  UINT8 new_password[8];               // bytes 28 to 35
-  UINT8 trader_name[26];               // bytes 36 to 61
-  UINT32BE last_password_change_date;  // bytes 62 to 65, signed, read here as unsigned
-  UINT8 broker_id[5];                  // bytes 66 to 70
-  UINT8 reserved_1;                    // byte 71
-  UINT16BE branch_id;                  // bytes 72 to 73, signed, read here as unsigned
-  UINT32BE version_number;             // bytes 74 to 77, signed, read here as unsigned
-  UINT32BE batch_2_start_time;         // bytes 78 to 81, signed, read here as unsigned
-  UINT8 host_switch_context;           // byte 82
-  UINT8 colour[50];                    // bytes 83 to 132
-  UINT8 second_reserved_1;             // byte 133
-  UINT16BE user_type;                  // bytes 134 to 135, signed, read here as unsigned
-  UINT8 sequence_number[8];            // bytes 136 to 143
-  UINT8 ws_class_name[14];             // bytes 144 to 157
-  UINT8 broker_status;                 // byte 158
-  UINT8 show_index;                    // byte 159
-  UINT16BE normal_market : 1;          // bytes 160 to 161
-  UINT16BE oddlot_market : 1;          // bytes 160 to 161
-  UINT16BE spot_market : 1;            // bytes 160 to 161
-  UINT16BE auction_market : 1;         // bytes 160 to 161
-  UINT16BE reserved_212 : 11;          // bytes 160 to 161
-  UINT16BE pre_open : 1;               // bytes 160 to 161
-  UINT16BE member_type;                // bytes 162 to 163, signed, read here as unsigned
-  UINT8 clearing_status;               // byte 164
-  UINT8 broker_name[25];               // bytes 165 to 189
-  UINT8 reserved_16[16];               // bytes 190 to 205
-  UINT8 second_reserved_16[16];        // bytes 206 to 221
-  UINT8 third_reserved_16[16];         // bytes 222 to 237
-} SignOnRequestInMessage;
+// ---- Message Header: 40 bytes ------------------------------------------------
+
+// MESSAGE_HEADER
+entrypoint typedef struct _MessageHeader {
+  UINT16BE transaction_code;  // bytes 0 to 1, values TRANSACTION_CODE_, signed, read here as unsigned
+  UINT32BE log_time;          // bytes 2 to 5, signed, read here as unsigned
+  UINT8 alpha_char[2];        // bytes 6 to 7
+  UINT32BE trader_id;         // bytes 8 to 11, signed, read here as unsigned
+  UINT16BE error_code;        // bytes 12 to 13, values ERROR_CODE_, signed, read here as unsigned
+  UINT64BE header_timestamp;  // bytes 14 to 21, signed, read here as unsigned
+  UINT8 time_stamp_1[8];      // bytes 22 to 29
+  UINT8 time_stamp_2[8];      // bytes 30 to 37
+  UINT16BE message_length;    // bytes 38 to 39, signed, read here as unsigned
+} MessageHeader;
+
+// ---- System Information In Message: 4 bytes ----------------------------------
 
 // Requests the system information of the trading system
-typedef struct _SystemInformationInMessage {
+entrypoint typedef struct _SystemInformationInMessage {
   UINT32BE last_update_portfolio_t_ime;  // bytes 0 to 3, signed, read here as unsigned
 } SystemInformationInMessage;
 
+// ---- Gateway Router Request Message: 8 bytes ---------------------------------
+
 // Asks the gateway router which gateway server to connect to
-typedef struct _GatewayRouterRequestMessage {
+entrypoint typedef struct _GatewayRouterRequestMessage {
   UINT16BE box_id;     // bytes 0 to 1, signed, read here as unsigned
   UINT8 broker_id[5];  // bytes 2 to 6
   UINT8 filler;        // byte 7
 } GatewayRouterRequestMessage;
 
+// ---- St Market Status: 8 bytes -----------------------------------------------
+
 // ST_MARKET_STATUS
-typedef struct _StMarketStatus {
-  UINT16BE market_status_normal;   // bytes 0 to 1, signed, read here as unsigned
-  UINT16BE market_status_oddlot;   // bytes 2 to 3, signed, read here as unsigned
-  UINT16BE market_status_spot;     // bytes 4 to 5, signed, read here as unsigned
-  UINT16BE market_status_auction;  // bytes 6 to 7, signed, read here as unsigned
+entrypoint typedef struct _StMarketStatus {
+  UINT16BE market_status_normal;   // bytes 0 to 1, values MARKET_STATUS_NORMAL_, signed, read here as unsigned
+  UINT16BE market_status_oddlot;   // bytes 2 to 3, values MARKET_STATUS_ODDLOT_, signed, read here as unsigned
+  UINT16BE market_status_spot;     // bytes 4 to 5, values MARKET_STATUS_SPOT_, signed, read here as unsigned
+  UINT16BE market_status_auction;  // bytes 6 to 7, values MARKET_STATUS_AUCTION_, signed, read here as unsigned
 } StMarketStatus;
 
+// ---- St Ex Market Status: 8 bytes --------------------------------------------
+
 // ST_EX_MARKET_STATUS
-typedef struct _StExMarketStatus {
-  UINT16BE ex_market_status_normal;   // bytes 0 to 1, signed, read here as unsigned
-  UINT16BE ex_market_status_oddlot;   // bytes 2 to 3, signed, read here as unsigned
-  UINT16BE ex_market_status_spot;     // bytes 4 to 5, signed, read here as unsigned
-  UINT16BE ex_market_status_auction;  // bytes 6 to 7, signed, read here as unsigned
+entrypoint typedef struct _StExMarketStatus {
+  UINT16BE ex_market_status_normal;   // bytes 0 to 1, values EX_MARKET_STATUS_NORMAL_, signed, read here as unsigned
+  UINT16BE ex_market_status_oddlot;   // bytes 2 to 3, values EX_MARKET_STATUS_ODDLOT_, signed, read here as unsigned
+  UINT16BE ex_market_status_spot;     // bytes 4 to 5, values EX_MARKET_STATUS_SPOT_, signed, read here as unsigned
+  UINT16BE ex_market_status_auction;  // bytes 6 to 7, values EX_MARKET_STATUS_AUCTION_, signed, read here as unsigned
 } StExMarketStatus;
 
+// ---- St Pl Market Status: 8 bytes --------------------------------------------
+
 // ST_PL_MARKET_STATUS
-typedef struct _StPlMarketStatus {
-  UINT16BE pl_market_status_normal;   // bytes 0 to 1, signed, read here as unsigned
-  UINT16BE pl_market_status_oddlot;   // bytes 2 to 3, signed, read here as unsigned
-  UINT16BE pl_market_status_spot;     // bytes 4 to 5, signed, read here as unsigned
-  UINT16BE pl_market_status_auction;  // bytes 6 to 7, signed, read here as unsigned
+entrypoint typedef struct _StPlMarketStatus {
+  UINT16BE pl_market_status_normal;   // bytes 0 to 1, values PL_MARKET_STATUS_NORMAL_, signed, read here as unsigned
+  UINT16BE pl_market_status_oddlot;   // bytes 2 to 3, values PL_MARKET_STATUS_ODDLOT_, signed, read here as unsigned
+  UINT16BE pl_market_status_spot;     // bytes 4 to 5, values PL_MARKET_STATUS_SPOT_, signed, read here as unsigned
+  UINT16BE pl_market_status_auction;  // bytes 6 to 7, values PL_MARKET_STATUS_AUCTION_, signed, read here as unsigned
 } StPlMarketStatus;
 
+// ---- Update Local Database In Message: 42 bytes ------------------------------
+
 // Requests the local database download of contracts and participants
-typedef struct _UpdateLocalDatabaseInMessage {
+entrypoint typedef struct _UpdateLocalDatabaseInMessage {
   UINT32BE last_update_security_time;     // bytes 0 to 3, signed, read here as unsigned
   UINT32BE last_update_participant_time;  // bytes 4 to 7, signed, read here as unsigned
   UINT32BE last_update_instrument_time;   // bytes 8 to 11, signed, read here as unsigned
@@ -618,13 +573,10 @@ typedef struct _UpdateLocalDatabaseInMessage {
   StPlMarketStatus st_pl_market_status;   // bytes 34 to 41
 } UpdateLocalDatabaseInMessage;
 
-// Requests the message download for one stream
-typedef struct _DownloadRequestMessage {
-  UINT8 sequence_number[8];  // bytes 0 to 7
-} DownloadRequestMessage;
+// ---- Contract Desc: 28 bytes -------------------------------------------------
 
 // CONTRACT_DESC
-typedef struct _ContractDesc {
+entrypoint typedef struct _ContractDesc {
   UINT8 instrument_name[6];  // bytes 0 to 5
   UINT8 symbol[10];          // bytes 6 to 15
   UINT32BE expiry_date;      // bytes 16 to 19, signed, read here as unsigned
@@ -633,122 +585,16 @@ typedef struct _ContractDesc {
   UINT16BE ca_level;         // bytes 26 to 27, signed, read here as unsigned
 } ContractDesc;
 
-// Order Entry Body
-typedef struct _OrderEntryBody {
-  UINT8 participant_type;               // byte 0
-  UINT8 reserved_1;                     // byte 1
-  UINT16BE competitor_period;           // bytes 2 to 3, signed, read here as unsigned
-  UINT16BE solicitor_period;            // bytes 4 to 5, signed, read here as unsigned
-  UINT8 modified_cancelled_by;          // byte 6
-  UINT8 second_reserved_1;              // byte 7
-  UINT16BE reason_code;                 // bytes 8 to 9, signed, read here as unsigned
-  UINT8 reserved_4[4];                  // bytes 10 to 13
-  UINT32BE token_no;                    // bytes 14 to 17, signed, read here as unsigned
-  ContractDesc contract_desc;           // bytes 18 to 45
-  UINT8 counter_party_broker_id[5];     // bytes 46 to 50
-  UINT8 third_reserved_1;               // byte 51
-  UINT8 reserved_2[2];                  // bytes 52 to 53
-  UINT8 closeout_flag;                  // byte 54
-  UINT8 fourth_reserved_1;              // byte 55
-  UINT16BE order_type;                  // bytes 56 to 57, signed, read here as unsigned
-  UINT8 order_number[8];                // bytes 58 to 65
-  UINT8 account_number[10];             // bytes 66 to 75
-  UINT16BE book_type;                   // bytes 76 to 77, signed, read here as unsigned
-  UINT16BE buy_sell_indicator;          // bytes 78 to 79, signed, read here as unsigned
-  UINT32BE disclosed_volume;            // bytes 80 to 83, signed, read here as unsigned
-  UINT32BE disclosed_volume_remaining;  // bytes 84 to 87, signed, read here as unsigned
-  UINT32BE total_volume_remaining;      // bytes 88 to 91, signed, read here as unsigned
-  UINT32BE volume;                      // bytes 92 to 95, signed, read here as unsigned
-  UINT32BE volume_filled_today;         // bytes 96 to 99, signed, read here as unsigned
-  UINT32BE price;                       // bytes 100 to 103, signed, read here as unsigned
-  UINT32BE trigger_price;               // bytes 104 to 107, signed, read here as unsigned
-  UINT32BE good_till_date;              // bytes 108 to 111, signed, read here as unsigned
-  UINT32BE entry_date_time;             // bytes 112 to 115, signed, read here as unsigned
-  UINT32BE minimum_fill_aon_volume;     // bytes 116 to 119, signed, read here as unsigned
-  UINT32BE last_modified;               // bytes 120 to 123, signed, read here as unsigned
-  UINT16BE ato : 1;                     // bytes 124 to 125
-  UINT16BE market : 1;                  // bytes 124 to 125
-  UINT16BE sl : 1;                      // bytes 124 to 125
-  UINT16BE mit : 1;                     // bytes 124 to 125
-  UINT16BE day : 1;                     // bytes 124 to 125
-  UINT16BE gtc : 1;                     // bytes 124 to 125
-  UINT16BE ioc : 1;                     // bytes 124 to 125
-  UINT16BE aon : 1;                     // bytes 124 to 125
-  UINT16BE mf : 1;                      // bytes 124 to 125
-  UINT16BE matched_ind : 1;             // bytes 124 to 125
-  UINT16BE traded : 1;                  // bytes 124 to 125
-  UINT16BE modified : 1;                // bytes 124 to 125
-  UINT16BE frozen : 1;                  // bytes 124 to 125
-  UINT16BE order_pre_open : 1;          // bytes 124 to 125
-  UINT16BE reserved_12 : 2;             // bytes 124 to 125
-  UINT16BE branch_id;                   // bytes 126 to 127, signed, read here as unsigned
-  UINT32BE trader_id;                   // bytes 128 to 131, signed, read here as unsigned
-  UINT8 broker_id[5];                   // bytes 132 to 136
-  UINT8 c_ord_filler[24];               // bytes 137 to 160
-  UINT8 open_close;                     // byte 161
-  UINT8 settlor[12];                    // bytes 162 to 173
-  UINT16BE pro_client_indicator;        // bytes 174 to 175, signed, read here as unsigned
-  UINT16BE settlement_period;           // bytes 176 to 177, signed, read here as unsigned
-  UINT8 boc : 1;                        // byte 178
-  UINT8 col : 1;                        // byte 178
-  UINT8 reserved_34 : 2;                // byte 178
-  UINT8 stpc : 1;                       // byte 178
-  UINT8 reserved_68 : 3;                // byte 178
-  UINT8 fifth_reserved_1;               // byte 179
-  UINT8 filler_116[2];                  // bytes 180 to 181
-  UINT8 filler_17;                      // byte 182
-  UINT8 filler_18;                      // byte 183
-  UINT8 nnf_field[8];                   // bytes 184 to 191
-  UINT64BE mkt_replay;                  // bytes 192 to 199, signed, read here as unsigned
-  UINT8 pan[10];                        // bytes 200 to 209
-  UINT32BE algo_id;                     // bytes 210 to 213, signed, read here as unsigned
-  UINT8 second_reserved_2[2];           // bytes 214 to 215
-  UINT64BE last_activity_reference;     // bytes 216 to 223, signed, read here as unsigned
-  UINT8 reserved_52[52];                // bytes 224 to 275
-} OrderEntryBody;
-
-// Order entry request, carried in the shared order entry structure
-typedef struct _OrderEntryRequestMessage {
-  OrderEntryBody order_entry_body;  // bytes 0 to 275
-} OrderEntryRequestMessage;
-
-// Order modification request, carried in the shared order entry structure
-typedef struct _OrderModificationRequestMessage {
-  OrderEntryBody order_entry_body;  // bytes 0 to 275
-} OrderModificationRequestMessage;
-
-// Order cancellation request, carried in the shared order entry structure
-typedef struct _OrderCancellationRequestMessage {
-  OrderEntryBody order_entry_body;  // bytes 0 to 275
-} OrderCancellationRequestMessage;
-
-// Cancels all of a trader's orders, or all on one contract, carried in the shared order entry structure
-typedef struct _KillSwitchRequestMessage {
-  OrderEntryBody order_entry_body;  // bytes 0 to 275
-} KillSwitchRequestMessage;
-
-// Modifies the price of a live order, and its acknowledgement
-typedef struct _PriceModificationMessage {
-  UINT32BE token_no;                 // bytes 0 to 3, signed, read here as unsigned
-  UINT32BE trader_id;                // bytes 4 to 7, signed, read here as unsigned
-  UINT8 order_number[8];             // bytes 8 to 15
-  UINT16BE buy_sell;                 // bytes 16 to 17, signed, read here as unsigned
-  UINT32BE price;                    // bytes 18 to 21, signed, read here as unsigned
-  UINT32BE volume;                   // bytes 22 to 25, signed, read here as unsigned
-  UINT32BE last_modified;            // bytes 26 to 29, signed, read here as unsigned
-  UINT8 reference[4];                // bytes 30 to 33
-  UINT64BE last_activity_reference;  // bytes 34 to 41, signed, read here as unsigned
-  UINT8 reserved_24[24];             // bytes 42 to 65
-} PriceModificationMessage;
+// ---- Trade Inquiry Message: 194 bytes ----------------------------------------
 
 // Trade modification and cancellation requests, the cancellation response and the trade error, all carried in the shared trade structure. Transaction Code in the header names the operation
-typedef struct _TradeInquiryMessage {
+entrypoint typedef struct _TradeInquiryMessage {
   UINT32BE token_no;              // bytes 0 to 3, signed, read here as unsigned
   ContractDesc contract_desc;     // bytes 4 to 31
   UINT32BE fill_number;           // bytes 32 to 35, signed, read here as unsigned
   UINT32BE fill_quantity;         // bytes 36 to 39, signed, read here as unsigned
   UINT32BE fill_price;            // bytes 40 to 43, signed, read here as unsigned
-  UINT8 mkt_type;                 // byte 44
+  UINT8 mkt_type;                 // byte 44, values MKT_TYPE_
   UINT8 buy_open_close;           // byte 45
   UINT8 reserved_4[4];            // bytes 46 to 49
   UINT8 buy_broker_id[5];         // bytes 50 to 54
@@ -766,293 +612,61 @@ typedef struct _TradeInquiryMessage {
   UINT8 reserved_60[60];          // bytes 134 to 193
 } TradeInquiryMessage;
 
-// MS_SPD_LEG_INFO
-typedef struct _MsSpdLegInfo {
-  UINT32BE token_2;                    // bytes 0 to 3, signed, read here as unsigned
-  ContractDesc contract_desc;          // bytes 4 to 31
-  UINT8 op_broker_id_2[5];             // bytes 32 to 36
-  UINT8 fillerx_2;                     // byte 37
-  UINT16BE order_type_2;               // bytes 38 to 39, signed, read here as unsigned
-  UINT16BE buy_sell_2;                 // bytes 40 to 41, signed, read here as unsigned
-  UINT32BE disclosed_vol_2;            // bytes 42 to 45, signed, read here as unsigned
-  UINT32BE disclosed_vol_remaining_2;  // bytes 46 to 49, signed, read here as unsigned
-  UINT32BE total_vol_remaining_2;      // bytes 50 to 53, signed, read here as unsigned
-  UINT32BE volume_2;                   // bytes 54 to 57, signed, read here as unsigned
-  UINT32BE volume_filled_today_2;      // bytes 58 to 61, signed, read here as unsigned
-  UINT32BE price_2;                    // bytes 62 to 65, signed, read here as unsigned
-  UINT32BE trigger_price_2;            // bytes 66 to 69, signed, read here as unsigned
-  UINT32BE min_fill_aon_2;             // bytes 70 to 73, signed, read here as unsigned
-  UINT16BE ato : 1;                    // bytes 74 to 75
-  UINT16BE market : 1;                 // bytes 74 to 75
-  UINT16BE sl : 1;                     // bytes 74 to 75
-  UINT16BE mit : 1;                    // bytes 74 to 75
-  UINT16BE day : 1;                    // bytes 74 to 75
-  UINT16BE gtc : 1;                    // bytes 74 to 75
-  UINT16BE ioc : 1;                    // bytes 74 to 75
-  UINT16BE aon : 1;                    // bytes 74 to 75
-  UINT16BE mf : 1;                     // bytes 74 to 75
-  UINT16BE matched_ind : 1;            // bytes 74 to 75
-  UINT16BE traded : 1;                 // bytes 74 to 75
-  UINT16BE modified : 1;               // bytes 74 to 75
-  UINT16BE frozen : 1;                 // bytes 74 to 75
-  UINT16BE order_pre_open : 1;         // bytes 74 to 75
-  UINT16BE reserved_12 : 2;            // bytes 74 to 75
-  UINT8 open_close_2;                  // byte 76
-  UINT8 boc : 1;                       // byte 77
-  UINT8 col : 1;                       // byte 77
-  UINT8 reserved_34 : 2;               // byte 77
-  UINT8 stpc : 1;                      // byte 77
-  UINT8 reserved_68 : 3;               // byte 77
-  UINT8 reserved_1;                    // byte 78
-  UINT8 filler_y;                      // byte 79
-} MsSpdLegInfo;
-
-// Spread Order Body
-typedef struct _SpreadOrderBody {
-  UINT8 participant_type_1;                      // byte 0
-  UINT8 filler_1;                                // byte 1
-  UINT16BE competitor_period_1;                  // bytes 2 to 3, signed, read here as unsigned
-  UINT16BE solicitor_period_1;                   // bytes 4 to 5, signed, read here as unsigned
-  UINT8 mod_cxl_by_1;                            // byte 6
-  UINT8 filler_9;                                // byte 7
-  UINT16BE reason_code_1;                        // bytes 8 to 9, signed, read here as unsigned
-  UINT8 start_alpha_1[2];                        // bytes 10 to 11
-  UINT8 end_alpha_1[2];                          // bytes 12 to 13
-  UINT32BE token_1;                              // bytes 14 to 17, signed, read here as unsigned
-  ContractDesc contract_desc;                    // bytes 18 to 45
-  UINT8 op_broker_id_1[5];                       // bytes 46 to 50
-  UINT8 fillerx_1;                               // byte 51
-  UINT8 filler_options_1[3];                     // bytes 52 to 54
-  UINT8 fillery_1;                               // byte 55
-  UINT16BE order_type_1;                         // bytes 56 to 57, signed, read here as unsigned
-  UINT8 order_number_1[8];                       // bytes 58 to 65
-  UINT8 account_number_1[10];                    // bytes 66 to 75
-  UINT16BE book_type_1;                          // bytes 76 to 77, signed, read here as unsigned
-  UINT16BE buy_sell_1;                           // bytes 78 to 79, signed, read here as unsigned
-  UINT32BE disclosed_vol_1;                      // bytes 80 to 83, signed, read here as unsigned
-  UINT32BE disclosed_vol_remaining_1;            // bytes 84 to 87, signed, read here as unsigned
-  UINT32BE total_vol_remaining_1;                // bytes 88 to 91, signed, read here as unsigned
-  UINT32BE volume_1;                             // bytes 92 to 95, signed, read here as unsigned
-  UINT32BE volume_filled_today_1;                // bytes 96 to 99, signed, read here as unsigned
-  UINT32BE price_1;                              // bytes 100 to 103, signed, read here as unsigned
-  UINT32BE trigger_price_1;                      // bytes 104 to 107, signed, read here as unsigned
-  UINT32BE good_till_date_1;                     // bytes 108 to 111, signed, read here as unsigned
-  UINT32BE entry_date_time_1;                    // bytes 112 to 115, signed, read here as unsigned
-  UINT32BE min_fill_aon_1;                       // bytes 116 to 119, signed, read here as unsigned
-  UINT32BE last_modified_1;                      // bytes 120 to 123, signed, read here as unsigned
-  UINT16BE ato : 1;                              // bytes 124 to 125
-  UINT16BE market : 1;                           // bytes 124 to 125
-  UINT16BE sl : 1;                               // bytes 124 to 125
-  UINT16BE mit : 1;                              // bytes 124 to 125
-  UINT16BE day : 1;                              // bytes 124 to 125
-  UINT16BE gtc : 1;                              // bytes 124 to 125
-  UINT16BE ioc : 1;                              // bytes 124 to 125
-  UINT16BE aon : 1;                              // bytes 124 to 125
-  UINT16BE mf : 1;                               // bytes 124 to 125
-  UINT16BE matched_ind : 1;                      // bytes 124 to 125
-  UINT16BE traded : 1;                           // bytes 124 to 125
-  UINT16BE modified : 1;                         // bytes 124 to 125
-  UINT16BE frozen : 1;                           // bytes 124 to 125
-  UINT16BE order_pre_open : 1;                   // bytes 124 to 125
-  UINT16BE reserved_12 : 2;                      // bytes 124 to 125
-  UINT16BE branch_id_1;                          // bytes 126 to 127, signed, read here as unsigned
-  UINT32BE trader_id_1;                          // bytes 128 to 131, signed, read here as unsigned
-  UINT8 broker_id_1[5];                          // bytes 132 to 136
-  UINT8 c_ord_filler[24];                        // bytes 137 to 160
-  UINT8 open_close_1;                            // byte 161
-  UINT8 settlor_1[12];                           // bytes 162 to 173
-  UINT16BE pro_client_1;                         // bytes 174 to 175, signed, read here as unsigned
-  UINT16BE settlement_period_1;                  // bytes 176 to 177, signed, read here as unsigned
-  UINT8 boc : 1;                                 // byte 178
-  UINT8 col : 1;                                 // byte 178
-  UINT8 reserved_34 : 2;                         // byte 178
-  UINT8 stpc : 1;                                // byte 178
-  UINT8 reserved_68 : 3;                         // byte 178
-  UINT8 reserved_1;                              // byte 179
-  UINT8 filler_116[2];                           // bytes 180 to 181
-  UINT8 filler_17;                               // byte 182
-  UINT8 filler_18;                               // byte 183
-  UINT8 nnf_field[8];                            // bytes 184 to 191
-  UINT64BE mkt_replay;                           // bytes 192 to 199, signed, read here as unsigned
-  UINT8 pan[10];                                 // bytes 200 to 209
-  UINT32BE algo_id;                              // bytes 210 to 213, signed, read here as unsigned
-  UINT8 reserved_2[2];                           // bytes 214 to 215
-  UINT64BE last_activity_reference;              // bytes 216 to 223, signed, read here as unsigned
-  UINT8 reserved_52[52];                         // bytes 224 to 275
-  UINT32BE price_diff;                           // bytes 276 to 279, signed, read here as unsigned
-  MsSpdLegInfo ms_spd_leg_info[:byte-size 160];  // bytes 280 to 439
-} SpreadOrderBody;
-
-// Spread and 2L and 3L order entry, modification and cancellation, and their confirmations and errors, all carried in the shared spread structure. Transaction Code in the header names the operation
-typedef struct _SpreadOrderEntryMessage {
-  SpreadOrderBody spread_order_body;  // bytes 0 to 439
-} SpreadOrderEntryMessage;
+// ---- Secure Box Registration Request In Message: 2 bytes ---------------------
 
 // Registers the box with the allocated gateway server
-typedef struct _SecureBoxRegistrationRequestInMessage {
+entrypoint typedef struct _SecureBoxRegistrationRequestInMessage {
   UINT16BE box_id;  // bytes 0 to 1, signed, read here as unsigned
 } SecureBoxRegistrationRequestInMessage;
 
+// ---- Box Sign On Request In Message: 20 bytes --------------------------------
+
 // Signs the box on to the allocated gateway server
-typedef struct _BoxSignOnRequestInMessage {
+entrypoint typedef struct _BoxSignOnRequestInMessage {
   UINT16BE box_id;       // bytes 0 to 1, signed, read here as unsigned
   UINT8 broker_id[5];    // bytes 2 to 6
   UINT8 reserved_5[5];   // bytes 7 to 11
   UINT8 session_key[8];  // bytes 12 to 19
 } BoxSignOnRequestInMessage;
 
+// ---- Box Sign Off Message: 2 bytes -------------------------------------------
+
 // Signs the box off the gateway server
-typedef struct _BoxSignOffMessage {
+entrypoint typedef struct _BoxSignOffMessage {
   UINT16BE box_id;  // bytes 0 to 1, signed, read here as unsigned
 } BoxSignOffMessage;
 
-// BRANCH_LIMITS
-typedef struct _BranchLimits {
-  UINT8 branch_buy_value_limit[8];   // bytes 0 to 7
-  UINT8 branch_sell_value_limit[8];  // bytes 8 to 15
-  UINT8 reserved_16[16];             // bytes 16 to 31
-} BranchLimits;
-
-// Sets the buy and sell value limits for a branch
-typedef struct _BranchOrderValueLimitUpdateMessage {
-  UINT8 broker_id[5];       // bytes 0 to 4
-  UINT8 reserved_25[25];    // bytes 5 to 29
-  UINT16BE branch_id;       // bytes 30 to 31, signed, read here as unsigned
-  UINT8 branch_limits[64];  // bytes 32 to 95
-} BranchOrderValueLimitUpdateMessage;
-
-// USER_LIMITS
-typedef struct _UserLimits {
-  UINT8 reserved_32[32];                 // bytes 0 to 31
-  UINT8 user_order_buy_value_limit[8];   // bytes 32 to 39
-  UINT8 user_order_sell_value_limit[8];  // bytes 40 to 47
-  UINT8 reserved_16[16];                 // bytes 48 to 63
-} UserLimits;
-
-// Sets the buy and sell order value limits for a user
-typedef struct _UserOrderValueLimitUpdateMessage {
-  UINT8 broker_id[5];      // bytes 0 to 4
-  UINT8 reserved_1;        // byte 5
-  UINT16BE branch_id;      // bytes 6 to 7, signed, read here as unsigned
-  UINT8 reserved_26[26];   // bytes 8 to 33
-  UINT32BE user_id;        // bytes 34 to 37, signed, read here as unsigned
-  UINT8 reserved_2[2];     // bytes 38 to 39
-  UINT8 user_limits[128];  // bytes 40 to 167
-} UserOrderValueLimitUpdateMessage;
-
-// Sets the order quantity and value limits for a user
-typedef struct _NormalOrderLimitUpdateMessage {
-  UINT8 broker_id[5];        // bytes 0 to 4
-  UINT8 reserved_1;          // byte 5
-  UINT32BE user_id;          // bytes 6 to 9, signed, read here as unsigned
-  UINT8 order_qty_limit[8];  // bytes 10 to 17
-  UINT8 order_val_limit[8];  // bytes 18 to 25
-} NormalOrderLimitUpdateMessage;
+// ---- Reset User Password Message: 18 bytes -----------------------------------
 
 // Requests a reset of the user password
-typedef struct _ResetUserPasswordMessage {
+entrypoint typedef struct _ResetUserPasswordMessage {
   UINT32BE user_id;       // bytes 0 to 3, signed, read here as unsigned
   UINT8 reserved_14[14];  // bytes 4 to 17
 } ResetUserPasswordMessage;
 
+// ---- Collateral User Status Change Request Message: 12 bytes -----------------
+
 // Changes the collateral status of a user
-typedef struct _CollateralUserStatusChangeRequestMessage {
+entrypoint typedef struct _CollateralUserStatusChangeRequestMessage {
   UINT32BE user_id;     // bytes 0 to 3, signed, read here as unsigned
   UINT8 col_user_bit;   // byte 4
   UINT8 reserved_7[7];  // bytes 5 to 11
 } CollateralUserStatusChangeRequestMessage;
 
+// ---- User Trade Modify Cancel Status Change Request Message: 12 bytes --------
+
 // Changes whether a user may modify or cancel trades
-typedef struct _UserTradeModifyCancelStatusChangeRequestMessage {
+entrypoint typedef struct _UserTradeModifyCancelStatusChangeRequestMessage {
   UINT32BE user_id;       // bytes 0 to 3, signed, read here as unsigned
   UINT8 trd_mod_cxl_bit;  // byte 4
   UINT8 reserved_7[7];    // bytes 5 to 11
 } UserTradeModifyCancelStatusChangeRequestMessage;
 
+// ---- User Address Unlock Request Message: 74 bytes ---------------------------
+
 // Requests that a locked user address be unlocked
-typedef struct _UserAddressUnlockRequestMessage {
+entrypoint typedef struct _UserAddressUnlockRequestMessage {
   UINT32BE user_id;       // bytes 0 to 3, signed, read here as unsigned
   UINT8 reserved_70[70];  // bytes 4 to 73
 } UserAddressUnlockRequestMessage;
-
-// Branch
-casetype _ClientMessagePayload (UINT16 selector, UINT32 available) {
-  switch (selector) {
-    case 0x08FC: SignOnRequestInMessage sign_on_request_in_message;
-    case 0x0640: SystemInformationInMessage system_information_in_message;
-    case 0x0960: GatewayRouterRequestMessage gateway_router_request_message;
-    case 0x0910: unit sign_off_request_in_message;
-    case 0x1C84: UpdateLocalDatabaseInMessage update_local_database_in_message;
-    case 0x1B58: DownloadRequestMessage download_request_message;
-    case 0x07D0: OrderEntryRequestMessage order_entry_request_message;
-    case 0x07F8: OrderModificationRequestMessage order_modification_request_message;
-    case 0x0816: OrderCancellationRequestMessage order_cancellation_request_message;
-    case 0x080E: KillSwitchRequestMessage kill_switch_request_message;
-    case 0x07DD: PriceModificationMessage price_modification_message;
-    case 0x4FB6: PriceModificationMessage price_modification_message_2;
-    case 0x1545: TradeInquiryMessage trade_inquiry_message;
-    case 0x1540: TradeInquiryMessage trade_inquiry_message_2;
-    case 0x1541: TradeInquiryMessage trade_inquiry_message_3;
-    case 0x08AF: TradeInquiryMessage trade_inquiry_message_4;
-    case 0x0834: SpreadOrderEntryMessage spread_order_entry_message;
-    case 0x0836: SpreadOrderEntryMessage spread_order_entry_message_2;
-    case 0x0838: SpreadOrderEntryMessage spread_order_entry_message_3;
-    case 0x083A: SpreadOrderEntryMessage spread_order_entry_message_4;
-    case 0x0846: SpreadOrderEntryMessage spread_order_entry_message_5;
-    case 0x084C: SpreadOrderEntryMessage spread_order_entry_message_6;
-    case 0x084D: SpreadOrderEntryMessage spread_order_entry_message_7;
-    case 0x084E: SpreadOrderEntryMessage spread_order_entry_message_8;
-    case 0x084F: SpreadOrderEntryMessage spread_order_entry_message_9;
-    case 0x0852: SpreadOrderEntryMessage spread_order_entry_message_10;
-    case 0x0853: SpreadOrderEntryMessage spread_order_entry_message_11;
-    case 0x0854: SpreadOrderEntryMessage spread_order_entry_message_12;
-    case 0x0855: SpreadOrderEntryMessage spread_order_entry_message_13;
-    case 0x0858: SpreadOrderEntryMessage spread_order_entry_message_14;
-    case 0x086A: SpreadOrderEntryMessage spread_order_entry_message_15;
-    case 0x086B: SpreadOrderEntryMessage spread_order_entry_message_16;
-    case 0x086C: SpreadOrderEntryMessage spread_order_entry_message_17;
-    case 0x232C: SpreadOrderEntryMessage spread_order_entry_message_18;
-    case 0x4FB8: SpreadOrderEntryMessage spread_order_entry_message_19;
-    case 0x4FBA: SpreadOrderEntryMessage spread_order_entry_message_20;
-    case 0x4FBC: SpreadOrderEntryMessage spread_order_entry_message_21;
-    case 0x4FBE: SpreadOrderEntryMessage spread_order_entry_message_22;
-    case 0x4FC0: SpreadOrderEntryMessage spread_order_entry_message_23;
-    case 0x59E0: SecureBoxRegistrationRequestInMessage secure_box_registration_request_in_message;
-    case 0x59D8: BoxSignOnRequestInMessage box_sign_on_request_in_message;
-    case 0x5BD2: unit heartbeat_message;
-    case 0x4F62: BoxSignOffMessage box_sign_off_message;
-    case 0x1654: BranchOrderValueLimitUpdateMessage branch_order_value_limit_update_message;
-    case 0x1662: UserOrderValueLimitUpdateMessage user_order_value_limit_update_message;
-    case 0x1664: NormalOrderLimitUpdateMessage normal_order_limit_update_message;
-    case 0x166C: ResetUserPasswordMessage reset_user_password_message;
-    case 0x1670: CollateralUserStatusChangeRequestMessage collateral_user_status_change_request_message;
-    case 0x166A: UserTradeModifyCancelStatusChangeRequestMessage user_trade_modify_cancel_status_change_request_message;
-    case 0x1533: UserAddressUnlockRequestMessage user_address_unlock_request_message;
-    default: UINT8 unknown[available];
-  }
-} ClientMessagePayload;
-
-// One framed interactive message sent by the firm
-typedef struct _ClientDirectPacket {
-  UINT16BE packet_length { packet_length >= 62 };                                                                                                                   // bytes 0 to 1
-  UINT32BE packet_sequence_number;                                                                                                                                  // bytes 2 to 5
-  UINT8 checksum[16];                                                                                                                                               // bytes 6 to 21
-  UINT16BE transaction_code;                                                                                                                                        // bytes 22 to 23, signed, read here as unsigned
-  UINT32BE log_time;                                                                                                                                                // bytes 24 to 27, signed, read here as unsigned
-  UINT8 alpha_char[2];                                                                                                                                              // bytes 28 to 29
-  UINT32BE trader_id;                                                                                                                                               // bytes 30 to 33, signed, read here as unsigned
-  UINT16BE error_code;                                                                                                                                              // bytes 34 to 35, signed, read here as unsigned
-  UINT64BE header_timestamp;                                                                                                                                        // bytes 36 to 43, signed, read here as unsigned
-  UINT8 time_stamp_1[8];                                                                                                                                            // bytes 44 to 51
-  UINT8 time_stamp_2[8];                                                                                                                                            // bytes 52 to 59
-  UINT16BE message_length;                                                                                                                                          // bytes 60 to 61, signed, read here as unsigned
-  ClientMessagePayload(transaction_code, (((UINT32) packet_length) - 62)) client_message_payload[:byte-size-single-element-array (((UINT32) packet_length) - 62)];
-} ClientDirectPacket;
-
-// ---- Packet: ClientPacket ----------------------------------------------------
-
-// Nnf direct interface Tcp block of one or more packets sent by the firm
-entrypoint typedef struct _ClientPacket (UINT32 available) {
-  ClientDirectPacket client_direct_packet[:byte-size available];
-} ClientPacket;
 

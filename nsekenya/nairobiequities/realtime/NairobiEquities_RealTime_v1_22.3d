@@ -1,9 +1,9 @@
 // ---------------------------------------------------------------------
-// EverParse 3d definition for: Nairobi NairobiEquities Snapshot Mitch v1.22
+// EverParse 3d definition for: NseKenya NairobiEquities RealTime Mitch v1.22
 //
 // Protocol:
 //   Organization: Nairobi Securities Exchange
-//   Protocol: Nairobi Equities Snapshot
+//   Protocol: Nairobi Equities Real Time
 //   Encoding: Millennium Itch
 //   Version: 1.22
 //   Date: 11/24/2020
@@ -22,8 +22,9 @@
 // The protocol compiler technologies used to produce this file
 // are the subject of patents owned by Scaled Sources LLC. Those patent
 // rights are retained and are not transferred by this contribution:
-//   https://patents.google.com/patent/US20240129382A1/en
+//   https://patents.google.com/patent/US12101388B2/en
 //   https://patents.google.com/patent/US20240419416A1/en
+//   https://patents.google.com/patent/US20260368281A1/en
 //
 // Open Markets Initiative website:
 //   https://openmarketsinitiative.com
@@ -40,17 +41,11 @@
 // A field the protocol lists values for names them as constants, which document the codes and
 // do not constrain them: a code the document does not list is still accepted.
 //
-// Verify and write the validators: everparse.sh --odir out NairobiEquities_Snapshot_v1_22.3d
+// Verify and write the validators: everparse.sh --odir out NairobiEquities_RealTime_v1_22.3d
 
 // ---- Values ------------------------------------------------------------------
 
 // Message Type: one byte code
-#define MESSAGE_TYPE_LOGIN_REQUEST_MESSAGE 0x01                   // Login Request Message
-#define MESSAGE_TYPE_LOGIN_RESPONSE_MESSAGE 0x02                  // Login Response Message
-#define MESSAGE_TYPE_SNAPSHOT_REQUEST_MESSAGE 0x81                // Snapshot Request Message
-#define MESSAGE_TYPE_SNAPSHOT_RESPONSE_MESSAGE 0x82               // Snapshot Response Message
-#define MESSAGE_TYPE_SNAPSHOT_COMPLETE_MESSAGE 0x83               // Snapshot Complete Message
-#define MESSAGE_TYPE_LOGOUT_REQUEST_MESSAGE 0x05                  // Logout Request Message
 #define MESSAGE_TYPE_TIME_MESSAGE 0x54                            // Time Message
 #define MESSAGE_TYPE_SYSTEM_EVENT_MESSAGE 0x53                    // System Event Message
 #define MESSAGE_TYPE_SYMBOL_DIRECTORY_MESSAGE 0x52                // Symbol Directory Message
@@ -79,32 +74,20 @@
 #define MESSAGE_TYPE_DELETE_PRICE_POINT_MESSAGE 0x72              // Delete Price Point Message
 #define MESSAGE_TYPE_TOP_OF_BOOK_MESSAGE 0x71                     // Top Of Book Message
 
-// Login Status: one byte code
-#define LOGIN_STATUS_LOGIN_ACCEPTED 0x41            // Login Accepted
-#define LOGIN_STATUS_COMP_ID_INACTIVE_LOCKED 0x61   // Comp Id Inactive Locked
-#define LOGIN_STATUS_LOGIN_LIMIT_REACHED 0x62       // Login Limit Reached
-#define LOGIN_STATUS_SERVICE_UNAVAILABLE 0x63       // Service Unavailable
-#define LOGIN_STATUS_CONCURRENT_LIMIT_REACHED 0x64  // Concurrent Limit Reached
-#define LOGIN_STATUS_FAILED_OTHER 0x65              // Failed Other
+// Event Code: one byte code
+#define EVENT_CODE_END_OF_DAY 0x43    // End Of Day
+#define EVENT_CODE_START_OF_DAY 0x4F  // Start Of Day
 
-// Snapshot Type: one byte code
-#define SNAPSHOT_TYPE_ORDER_BOOK 0x00             // Order Book
-#define SNAPSHOT_TYPE_SYMBOL_STATUS 0x01          // Symbol Status
-#define SNAPSHOT_TYPE_INSTRUMENT 0x02             // Instrument
-#define SNAPSHOT_TYPE_TRADES 0x03                 // Trades
-#define SNAPSHOT_TYPE_BOOK_LEVEL_STATISTICS 0x04  // Book Level Statistics
-#define SNAPSHOT_TYPE_NEWS 0x05                   // News
-#define SNAPSHOT_TYPE_TOP_OF_BOOK 0x08            // Top Of Book
+// Symbol Status: one byte code
+#define SYMBOL_STATUS_HALTED 0x48     // Halted
+#define SYMBOL_STATUS_SUSPENDED 0x53  // Suspended
+#define SYMBOL_STATUS_INACTIVE 0x61   // Inactive
+#define SYMBOL_STATUS_ACTIVE 0x20     // Active
 
-// Snapshot Status: one byte code
-#define SNAPSHOT_STATUS_REQUEST_ACCEPTED 0x41                                     // Request Accepted
-#define SNAPSHOT_STATUS_OUT_OF_RANGE 0x4F                                         // Out Of Range
-#define SNAPSHOT_STATUS_SNAPSHOT_UNAVAILABLE 0x55                                 // Snapshot Unavailable
-#define SNAPSHOT_STATUS_SEGMENT_SYMBOL_OR_SUB_BOOK_INVALID_OR_NOT_SPECIFIED 0x61  // Segment Symbol Or Sub Book Invalid Or Not Specified
-#define SNAPSHOT_STATUS_REQUEST_LIMIT_REACHED 0x62                                // Request Limit Reached
-#define SNAPSHOT_STATUS_CONCURRENT_LIMIT_REACHED 0x63                             // Concurrent Limit Reached
-#define SNAPSHOT_STATUS_UNSUPPORTED_MESSAGE_TYPE 0x64                             // Unsupported Message Type
-#define SNAPSHOT_STATUS_FAILED_OTHER 0x65                                         // Failed Other
+// Option Type: one byte code
+#define OPTION_TYPE_CALL_OPTION 0x43    // Call Option
+#define OPTION_TYPE_PUT_OPTION 0x50     // Put Option
+#define OPTION_TYPE_NOT_AN_OPTION 0x20  // Not An Option
 
 // Trading Status: one byte code
 #define TRADING_STATUS_HALT 0x48                                 // Halt
@@ -129,21 +112,6 @@
 #define TRADING_STATUS_CLOSING_PRICE_PUBLICATION 0x7A            // Closing Price Publication
 #define TRADING_STATUS_INTRADAY_AUCTION_CALL 0x6F                // Intraday Auction Call
 #define TRADING_STATUS_AUCTION_EXECUTION 0x30                    // Auction Execution
-
-// Event Code: one byte code
-#define EVENT_CODE_END_OF_DAY 0x43    // End Of Day
-#define EVENT_CODE_START_OF_DAY 0x4F  // Start Of Day
-
-// Symbol Status: one byte code
-#define SYMBOL_STATUS_HALTED 0x48     // Halted
-#define SYMBOL_STATUS_SUSPENDED 0x53  // Suspended
-#define SYMBOL_STATUS_INACTIVE 0x61   // Inactive
-#define SYMBOL_STATUS_ACTIVE 0x20     // Active
-
-// Option Type: one byte code
-#define OPTION_TYPE_CALL_OPTION 0x43    // Call Option
-#define OPTION_TYPE_PUT_OPTION 0x50     // Put Option
-#define OPTION_TYPE_NOT_AN_OPTION 0x20  // Not An Option
 
 // Session Change Reason: one byte code
 #define SESSION_CHANGE_REASON_SCHEDULED_TRANSITION 0x00        // Scheduled Transition
@@ -264,62 +232,6 @@
 #define TOP_OF_BOOK_ACTION_DELETE 0x32  // Delete
 
 // ---- Types -------------------------------------------------------------------
-
-// Used by the client to login to the Replay or Snapshot channel.
-typedef struct _LoginRequestMessage {
-  UINT8 username[6];   // bytes 0 to 5
-  UINT8 password[10];  // bytes 6 to 15
-} LoginRequestMessage;
-
-// Used by the server to accept or reject a login request to the Replay or Snapshot channel.
-typedef struct _LoginResponseMessage {
-  UINT8 login_status;  // byte 0
-} LoginResponseMessage;
-
-// Used by the client to request for a snapshot of the current order book on the Snapshot channel.
-typedef struct _SnapshotRequestMessage {
-  UINT32 sequence_number;      // bytes 0 to 3
-  UINT8 segment[6];            // bytes 4 to 9
-  UINT8 symbol[12];            // bytes 10 to 21
-  UINT8 regular : 1;           // byte 22
-  UINT8 off_book : 1;          // byte 22
-  UINT8 block_trade : 1;       // byte 22
-  UINT8 odd_lot : 1;           // byte 22
-  UINT8 early_settlement : 1;  // byte 22
-  UINT8 bulletin_board : 1;    // byte 22
-  UINT8 auction : 1;           // byte 22
-  UINT8 all_or_none : 1;       // byte 22
-  UINT8 snapshot_type;         // byte 23
-  UINT8 recover_from_time[8];  // bytes 24 to 31
-  UINT32 request_id;           // bytes 32 to 35
-} SnapshotRequestMessage;
-
-// Used by the server to respond to a snapshot request on the Snapshot channel.
-typedef struct _SnapshotResponseMessage {
-  UINT32 sequence_number;  // bytes 0 to 3
-  UINT32 order_count;      // bytes 4 to 7
-  UINT8 snapshot_status;   // byte 8
-  UINT8 snapshot_type;     // byte 9
-  UINT32 request_id;       // bytes 10 to 13
-} SnapshotResponseMessage;
-
-// Used by the server to indicate that the transmission of an order book snapshot is complete.
-typedef struct _SnapshotCompleteMessage {
-  UINT32 sequence_number;      // bytes 0 to 3
-  UINT8 segment[6];            // bytes 4 to 9
-  UINT8 symbol[12];            // bytes 10 to 21
-  UINT8 regular : 1;           // byte 22
-  UINT8 off_book : 1;          // byte 22
-  UINT8 block_trade : 1;       // byte 22
-  UINT8 odd_lot : 1;           // byte 22
-  UINT8 early_settlement : 1;  // byte 22
-  UINT8 bulletin_board : 1;    // byte 22
-  UINT8 auction : 1;           // byte 22
-  UINT8 all_or_none : 1;       // byte 22
-  UINT8 trading_status;        // byte 23
-  UINT8 snapshot_type;         // byte 24
-  UINT32 request_id;           // bytes 25 to 28
-} SnapshotCompleteMessage;
 
 // Sent by the server for every second for which at least one application message is generated; its time is the reference for the nanosecond offsets of every other application message.
 typedef struct _TimeMessage {
@@ -692,12 +604,6 @@ typedef struct _TopOfBookMessage {
 // Branch
 casetype _Payload (UINT8 selector, UINT32 available) {
   switch (selector) {
-    case 0x01: LoginRequestMessage login_request_message;
-    case 0x02: LoginResponseMessage login_response_message;
-    case 0x81: SnapshotRequestMessage snapshot_request_message;
-    case 0x82: SnapshotResponseMessage snapshot_response_message;
-    case 0x83: SnapshotCompleteMessage snapshot_complete_message;
-    case 0x05: unit logout_request_message;
     case 0x54: TimeMessage time_message;
     case 0x53: SystemEventMessage system_event_message;
     case 0x52: SymbolDirectoryMessage symbol_directory_message;
@@ -729,7 +635,7 @@ casetype _Payload (UINT8 selector, UINT32 available) {
   }
 } Payload;
 
-// One Mitch message: its message header and payload
+// Nairobi Mitch Udp Message
 typedef struct _Message (mutable UINT32 * tally) {
   UINT16 message_length { message_length >= 3 };                                                                                                                   // bytes 0 to 1
   UINT8 message_type;                                                                                                                                              // byte 2
@@ -737,21 +643,16 @@ typedef struct _Message (mutable UINT32 * tally) {
   unit counted {:on-success var counted_so_far = *tally; if (counted_so_far < 4294967295) { *tally = counted_so_far + 1; return true; } else { return false; } };
 } Message;
 
-// One unit on the tcp stream: the unit header and its payload messages
-typedef struct _TcpUnit (mutable UINT32 * tally) {
-  UINT16 length { length >= 8 };                                                                                            // bytes 0 to 1
+// ---- Packet: Packet ----------------------------------------------------------
+
+// Nairobi Mitch Udp Packet
+entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) where (available >= 8) {
+  UINT16 length;                                                                                                            // bytes 0 to 1
   UINT8 message_count;                                                                                                      // byte 2
   UINT8 market_data_group;                                                                                                  // byte 3
   UINT32 sequence_number;                                                                                                   // bytes 4 to 7
   unit message_tally_start {:on-success *tally = 0; return true; };
-  Message(tally) message[:byte-size (((UINT32) length) - 8)];
+  Message(tally) message[:byte-size (available - 8)];
   unit message_tally_check {:on-success var counted_so_far = *tally; return counted_so_far == ((UINT32) message_count); };
-} TcpUnit;
-
-// ---- Packet: Packet ----------------------------------------------------------
-
-// Nairobi Mitch Tcp Packet
-entrypoint typedef struct _Packet (UINT32 available, mutable UINT32 * tally) {
-  TcpUnit(tally) tcp_unit[:byte-size available];
 } Packet;
 
