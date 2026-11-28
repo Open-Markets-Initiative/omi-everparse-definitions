@@ -5,6 +5,8 @@
 
 | Division | [Protocol][Omi.Binance.Protocol.Definitions] | [Encoding][Omi.Encoding.Definitions] | Version | Date | Size | [Deployment][Omi.Glossary.Deployment] | [Testing][Omi.Glossary.Testing] | [Documentation][Omi.Binance.Specifications] |
 | --- | --- | --- | --- | ---: | ---: | --- | --- | --- |
+| [BinanceSpot][BinanceSpot.Exchange] | [FixApi][Binance.BinanceSpot.FixApi] | [Sbe][Omi.Encoding.Sbe] | [1.1][Binance.BinanceSpot.FixApi.Sbe.v1.1.Definition] | 3/25/2026 | 2,284 | [Active][Omi.Glossary.Deployment.Active] | [Untested][Omi.Glossary.Testing.Untested] | [url][Binance.BinanceSpot.FixApi.Sbe.v1.1.Md] |
+| [BinanceSpot][BinanceSpot.Exchange] | [FixApi][Binance.BinanceSpot.FixApi] | [Sbe][Omi.Encoding.Sbe] | [1.2][Binance.BinanceSpot.FixApi.Sbe.v1.2.Definition] | 11/11/2026 | 2,300 | [Pending][Omi.Glossary.Deployment.Pending] | [Untested][Omi.Glossary.Testing.Untested] | [url][Binance.BinanceSpot.FixApi.Sbe.v1.2.Md] |
 | [BinanceSpot][BinanceSpot.Exchange] | [MarketData][Binance.BinanceSpot.MarketData] | [Sbe][Omi.Encoding.Sbe] | [1.0][Binance.BinanceSpot.MarketData.Sbe.v1.0.Definition] | 9/18/2026 | 200 | [Active][Omi.Glossary.Deployment.Active] | [Untested][Omi.Glossary.Testing.Untested] | [url][Binance.BinanceSpot.MarketData.Sbe.v1.0.Url] |
 
 
@@ -29,7 +31,12 @@
 [Omi.Binance.Specifications]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/tree/main/Organizations/Binance/Specifications "Binance Specifications Directory"
 [Omi.Encoding.Sbe]: https://github.com/Open-Markets-Initiative/Directory/blob/main/Protocols/Sbe.md "Sbe Encoding"
 [BinanceSpot.Exchange]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/tree/main/Organizations/Binance/Protocols/BinanceSpot "Binance BinanceSpot"
+[Binance.BinanceSpot.FixApi]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/blob/main/Organizations/Binance/Protocols/BinanceSpot/FixApi.md "Fix Api"
 [Binance.BinanceSpot.MarketData]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/blob/main/Organizations/Binance/Protocols/BinanceSpot/MarketData.md "Market Data"
 
+[Binance.BinanceSpot.FixApi.Sbe.v1.1.Definition]: https://github.com/Open-Markets-Initiative/omi-everparse-definitions/blob/main/binance/binancespot/fixapi/BinanceSpot_FixApi_v1_1.3d "Binance BinanceSpot FixApi Sbe v1.1 EverParse Definition"
+[Binance.BinanceSpot.FixApi.Sbe.v1.1.Md]: https://developers.binance.com/en/docs/products/spot "Binance 1.1 Md"
+[Binance.BinanceSpot.FixApi.Sbe.v1.2.Definition]: https://github.com/Open-Markets-Initiative/omi-everparse-definitions/blob/main/binance/binancespot/fixapi/BinanceSpot_FixApi_v1_2.3d "Binance BinanceSpot FixApi Sbe v1.2 EverParse Definition"
+[Binance.BinanceSpot.FixApi.Sbe.v1.2.Md]: https://developers.binance.com/en/docs/products/spot "Binance 1.2 Md"
 [Binance.BinanceSpot.MarketData.Sbe.v1.0.Definition]: https://github.com/Open-Markets-Initiative/omi-everparse-definitions/blob/main/binance/binancespot/marketdata/BinanceSpot_MarketData_v1_0.3d "Binance BinanceSpot MarketData Sbe v1.0 EverParse Definition"
 [Binance.BinanceSpot.MarketData.Sbe.v1.0.Url]: https://developers.binance.com/en/docs/products/spot "Binance 1.0 Url"

@@ -5,6 +5,7 @@
 
 | Division | [Protocol][Omi.Lseg.Protocol.Definitions] | [Encoding][Omi.Encoding.Definitions] | Version | Date | Size | [Deployment][Omi.Glossary.Deployment] | [Testing][Omi.Glossary.Testing] | [Documentation][Omi.Lseg.Specifications] |
 | --- | --- | --- | --- | ---: | ---: | --- | --- | --- |
+| [FxMatching][FxMatching.Exchange] | [MarketData][Lseg.FxMatching.MarketData] | [Sbe][Omi.Encoding.Sbe] | [1.12][Lseg.FxMatching.MarketData.Sbe.v1.12.Definition] | 6/30/2026 | 77 | [Active][Omi.Glossary.Deployment.Active] | [Untested][Omi.Glossary.Testing.Untested] | [url][Lseg.FxMatching.MarketData.Sbe.v1.12.Url] |
 | [Lse][Lse.Exchange] | [Analytics][Lseg.Lse.Analytics] | [Gtp][Omi.Encoding.Gtp] | [26.2][Lseg.Lse.Analytics.Gtp.v26.2.Definition] | 10/15/2025 | 202 | [Active][Omi.Glossary.Deployment.Active] | [Untested][Omi.Glossary.Testing.Untested] | [url][Lseg.Lse.Analytics.Gtp.v26.2.Url] |
 | [Lse][Lse.Exchange] | [Analytics][Lseg.Lse.Analytics] | [Gtp][Omi.Encoding.Gtp] | [27.3][Lseg.Lse.Analytics.Gtp.v27.3.Definition] | 5/18/2026 | 202 | [Active][Omi.Glossary.Deployment.Active] | [Untested][Omi.Glossary.Testing.Untested] | [url][Lseg.Lse.Analytics.Gtp.v27.3.Url] - [pdf][Lseg.Lse.Analytics.Gtp.v27.3.Pdf] |
 | [Lse][Lse.Exchange] | [AnalyticsReplay][Lseg.Lse.AnalyticsReplay] | [Gtp][Omi.Encoding.Gtp] | [26.2][Lseg.Lse.AnalyticsReplay.Gtp.v26.2.Definition] | 10/15/2025 | 266 | [Active][Omi.Glossary.Deployment.Active] | [Untested][Omi.Glossary.Testing.Untested] | [url][Lseg.Lse.AnalyticsReplay.Gtp.v26.2.Url] |
@@ -112,14 +113,17 @@
 [Omi.Encoding.Definitions]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/blob/main/Protocols/ReadMe.md "Encoding Directory"
 [Omi.Lseg.Protocol.Definitions]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/tree/main/Organizations/Lseg/Protocols "Lseg Protocol Directory"
 [Omi.Lseg.Specifications]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/tree/main/Organizations/Lseg/Specifications "Lseg Specifications Directory"
+[Omi.Encoding.Sbe]: https://github.com/Open-Markets-Initiative/Directory/blob/main/Protocols/Sbe.md "Sbe Encoding"
 [Omi.Encoding.Gtp]: https://github.com/Open-Markets-Initiative/Directory/blob/main/Protocols/Gtp.md "Gtp Encoding"
 [Omi.Encoding.Ntgi]: https://github.com/Open-Markets-Initiative/Directory/blob/main/Protocols/Ntgi.md "Ntgi Encoding"
 [Omi.Encoding.Mitch]: https://github.com/Open-Markets-Initiative/Directory/blob/main/Protocols/Mitch.md "Mitch Encoding"
+[FxMatching.Exchange]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/tree/main/Organizations/Lseg/Protocols/FxMatching "Lseg FxMatching"
 [Lse.Exchange]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/tree/main/Organizations/Lseg/Protocols/Lse "Lseg Lse"
 [Lse24.Exchange]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/tree/main/Organizations/Lseg/Protocols/Lse24 "Lseg Lse24"
 [Millennium.Platform]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/tree/main/Organizations/Lseg/Protocols/Millennium "Lseg Millennium"
 [TradeEcho.Exchange]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/tree/main/Organizations/Lseg/Protocols/TradeEcho "Lseg TradeEcho"
 [Turquoise.Exchange]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/tree/main/Organizations/Lseg/Protocols/Turquoise "Lseg Turquoise"
+[Lseg.FxMatching.MarketData]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/blob/main/Organizations/Lseg/Protocols/FxMatching/MarketData.md "Market Data"
 [Lseg.Lse.Analytics]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/blob/main/Organizations/Lseg/Protocols/Lse/Analytics.md "Analytics"
 [Lseg.Lse.AnalyticsReplay]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/blob/main/Organizations/Lseg/Protocols/Lse/AnalyticsReplay.md "Analytics Replay"
 [Lseg.Lse.Level1]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/blob/main/Organizations/Lseg/Protocols/Lse/Level1.md "Level 1"
@@ -179,6 +183,8 @@
 [Lseg.Turquoise.Recovery]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/blob/main/Organizations/Lseg/Protocols/Turquoise/Recovery.md "Recovery"
 [Lseg.Turquoise.Replay]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/blob/main/Organizations/Lseg/Protocols/Turquoise/Replay.md "Replay"
 
+[Lseg.FxMatching.MarketData.Sbe.v1.12.Definition]: https://github.com/Open-Markets-Initiative/omi-everparse-definitions/blob/main/lseg/fxmatching/marketdata/FxMatching_MarketData_v1_12.3d "Lseg FxMatching MarketData Sbe v1.12 EverParse Definition"
+[Lseg.FxMatching.MarketData.Sbe.v1.12.Url]: https://developers.lseg.com/en/api-catalog/fx-venues/fx-market-data-spot-forwards-matching/documentation "London Stock Exchange 1.12 Url"
 [Lseg.Lse.Analytics.Gtp.v26.2.Definition]: https://github.com/Open-Markets-Initiative/omi-everparse-definitions/blob/main/lseg/lse/analytics/Lse_Analytics_v26_2.3d "Lseg Lse Analytics Gtp v26.2 EverParse Definition"
 [Lseg.Lse.Analytics.Gtp.v26.2.Url]: https://www.lseg.com/areas-expertise/technology/group-technology/group-ticker-plant "London Stock Exchange 26.2 Url"
 [Lseg.Lse.Analytics.Gtp.v27.3.Definition]: https://github.com/Open-Markets-Initiative/omi-everparse-definitions/blob/main/lseg/lse/analytics/Lse_Analytics_v27_3.3d "Lseg Lse Analytics Gtp v27.3 EverParse Definition"

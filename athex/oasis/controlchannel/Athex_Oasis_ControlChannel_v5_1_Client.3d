@@ -1,0 +1,135 @@
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Athex Oasis ControlChannel Iocp v5.1
+//
+// Protocol:
+//   Organization: Athens Exchange Group
+//   Protocol: Iocp Control Channel
+//   Encoding: Internet Oriented Communication Portal
+//   Version: 5.1
+//   Date: 7/1/2018
+//   Specification: OASIS IDS Interface Technical Specification-IOCP v5.1.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US12101388B2/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//   https://patents.google.com/patent/US20260368281A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for the packet, ClientPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
+//
+// Verify and write the validators: everparse.sh --odir out Athex_Oasis_ControlChannel_v5_1_Client.3d
+
+// ---- Values ------------------------------------------------------------------
+
+// Client Message Type: 2 byte code
+#define CLIENT_MESSAGE_TYPE_CLIENT_LOGIN 0x434C             // Client Login
+#define CLIENT_MESSAGE_TYPE_CLIENT_CLOSE_CONNECTION 0x4343  // Client Close Connection
+#define CLIENT_MESSAGE_TYPE_CLIENT_CHANNEL_STATUS 0x4353    // Client Channel Status
+#define CLIENT_MESSAGE_TYPE_CLIENT_TRANSMISSION 0x4354      // Client Transmission
+#define CLIENT_MESSAGE_TYPE_CLIENT_RETRANSMISSION 0x4352    // Client Retransmission
+
+// Channel: one byte code
+#define CHANNEL_CONTROL 0x43  // Control
+#define CHANNEL_DATA 0x44     // Data
+
+// State: one byte code
+#define STATE_BEGIN 0x42  // Begin
+#define STATE_STOP 0x53   // Stop
+
+// Dtype: one byte code
+#define DTYPE_ALL_REAL_TIME_DATA_FEED 0x41  // All Real Time Data Feed
+#define DTYPE_OTHER_FEEDS 0x4F              // Other Feeds
+
+// Itype: one byte code
+#define ITYPE_ALL_REAL_TIME_DATA_FEED 0x41  // All Real Time Data Feed
+#define ITYPE_OTHER_FEEDS 0x4F              // Other Feeds
+
+// Rcateg: one byte code
+#define RCATEG_ALL_INSTRUMENT_SUMMARIES 0x47  // All Instrument Summaries
+#define RCATEG_ALL_DATA_FEED 0x41             // All Data Feed
+
+// ---- Types -------------------------------------------------------------------
+
+// Sent by a client to authenticate itself immediately after establishing its control channel and receiving the 'AC' message
+typedef struct _ClientLoginMessage {
+  UINT32 snum;                 // bytes 0 to 3, signed, read here as unsigned
+  UINT8 usernamehash[21];      // bytes 4 to 24
+  UINT8 userpasswordhash[21];  // bytes 25 to 45
+  UINT32 randomnum;            // bytes 46 to 49
+} ClientLoginMessage;
+
+// Sent by a client to terminate its control and/or data connection
+typedef struct _ClientCloseConnectionMessage {
+  UINT32 snum;    // bytes 0 to 3, signed, read here as unsigned
+  UINT8 channel;  // byte 4
+} ClientCloseConnectionMessage;
+
+// Sent by a client to query the status of its control or data connection, also usable as a session keep alive
+typedef struct _ClientChannelStatusMessage {
+  UINT32 snum;    // bytes 0 to 3, signed, read here as unsigned
+  UINT8 channel;  // byte 4
+} ClientChannelStatusMessage;
+
+// Sent by a client to begin or stop the dissemination of time-sensitive or relaxed data feed
+typedef struct _ClientTransmissionMessage {
+  UINT32 snum;         // bytes 0 to 3, signed, read here as unsigned
+  UINT8 state;         // byte 4
+  UINT8 dtype;         // byte 5
+  UINT32 lstpacksent;  // bytes 6 to 9, signed, read here as unsigned
+} ClientTransmissionMessage;
+
+// Sent by a client to begin, or to stop and purge, a retransmission
+typedef struct _ClientRetransmissionMessage {
+  UINT32 snum;     // bytes 0 to 3, signed, read here as unsigned
+  UINT8 state;     // byte 4
+  UINT32 rid;      // bytes 5 to 8, signed, read here as unsigned
+  UINT8 itype;     // byte 9
+  UINT8 rcateg;    // byte 10
+  UINT32 rrangeb;  // bytes 11 to 14, signed, read here as unsigned
+  UINT32 rrangee;  // bytes 15 to 18, signed, read here as unsigned
+} ClientRetransmissionMessage;
+
+// Branch
+casetype _ClientPayload (UINT16 selector, UINT32 available) {
+  switch (selector) {
+    case 0x434C: ClientLoginMessage client_login_message;
+    case 0x4343: ClientCloseConnectionMessage client_close_connection_message;
+    case 0x4353: ClientChannelStatusMessage client_channel_status_message;
+    case 0x4354: ClientTransmissionMessage client_transmission_message;
+    case 0x4352: ClientRetransmissionMessage client_retransmission_message;
+    default: UINT8 unknown[available];
+  }
+} ClientPayload;
+
+// ---- Packet: ClientPacket ----------------------------------------------------
+
+// Iocp control message sent by the client over the control channel
+entrypoint typedef struct _ClientPacket (UINT32 available) where (available >= 2) {
+  UINT16BE client_message_type;                                                                                         // bytes 0 to 1
+  ClientPayload(client_message_type, (available - 2)) client_payload[:byte-size-single-element-array (available - 2)];
+} ClientPacket;
+

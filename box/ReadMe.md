@@ -5,6 +5,8 @@
 
 | Division | [Protocol][Omi.Box.Protocol.Definitions] | [Encoding][Omi.Encoding.Definitions] | Version | Transport | Date | Size | [Deployment][Omi.Glossary.Deployment] | [Testing][Omi.Glossary.Testing] | [Documentation][Omi.Box.Specifications] |
 | --- | --- | --- | --- | --- | ---: | ---: | --- | --- | --- |
+| [BoxOptions][BoxOptions.Exchange] | [BinaryMulticast][Box.BoxOptions.BinaryMulticast] | [BoxBinary][Omi.Encoding.BoxBinary] | [1.0][Box.BoxOptions.BinaryMulticast.BoxBinary.v1.0.Definition] |  | 4/23/2026 | 751 | [Active][Omi.Glossary.Deployment.Active] | [Untested][Omi.Glossary.Testing.Untested] | [url][Box.BoxOptions.BinaryMulticast.BoxBinary.v1.0.Url] - [pdf][Box.BoxOptions.BinaryMulticast.BoxBinary.v1.0.Pdf] |
+| [BoxOptions][BoxOptions.Exchange] | [BinaryRetransmission][Box.BoxOptions.BinaryRetransmission] | [BoxBinary][Omi.Encoding.BoxBinary] | [1.0][Box.BoxOptions.BinaryRetransmission.BoxBinary.v1.0.Definition] |  | 4/23/2026 | 751 | [Active][Omi.Glossary.Deployment.Active] | [Untested][Omi.Glossary.Testing.Untested] | [url][Box.BoxOptions.BinaryRetransmission.BoxBinary.v1.0.Url] - [pdf][Box.BoxOptions.BinaryRetransmission.BoxBinary.v1.0.Pdf] |
 | [BoxOptions][BoxOptions.Exchange] | [SolaMulticast][Box.BoxOptions.SolaMulticast] | [Hsvf][Omi.Encoding.Hsvf] | [1.5][Box.BoxOptions.SolaMulticast.Hsvf.v1.5.Definition] |  | 3/15/2021 | 503 | [Deprecated][Omi.Glossary.Deployment.Deprecated] | [Verified][Omi.Glossary.Testing.Verified] | [pdf][Box.BoxOptions.SolaMulticast.Hsvf.v1.5.Pdf] |
 | [BoxOptions][BoxOptions.Exchange] | [SolaMulticast][Box.BoxOptions.SolaMulticast] | [Hsvf][Omi.Encoding.Hsvf] | [1.8][Box.BoxOptions.SolaMulticast.Hsvf.v1.8.Definition] |  | 10/17/2023 | 503 | [Deprecated][Omi.Glossary.Deployment.Deprecated] | [Verified][Omi.Glossary.Testing.Verified] | [url][Box.BoxOptions.SolaMulticast.Hsvf.v1.8.Url] - [pdf][Box.BoxOptions.SolaMulticast.Hsvf.v1.8.Pdf] |
 | [BoxOptions][BoxOptions.Exchange] | [SolaMulticast][Box.BoxOptions.SolaMulticast] | [Hsvf][Omi.Encoding.Hsvf] | [1.9][Box.BoxOptions.SolaMulticast.Hsvf.v1.9.Definition] |  | 2/15/2024 | 503 | [Deprecated][Omi.Glossary.Deployment.Deprecated] | [Verified][Omi.Glossary.Testing.Verified] | [url][Box.BoxOptions.SolaMulticast.Hsvf.v1.9.Url] - [pdf][Box.BoxOptions.SolaMulticast.Hsvf.v1.9.Pdf] |
@@ -34,15 +36,24 @@
 [Omi.Encoding.Definitions]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/blob/main/Protocols/ReadMe.md "Encoding Directory"
 [Omi.Box.Protocol.Definitions]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/tree/main/Organizations/Box/Protocols "Box Protocol Directory"
 [Omi.Box.Specifications]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/tree/main/Organizations/Box/Specifications "Box Specifications Directory"
+[Omi.Encoding.BoxBinary]: https://github.com/Open-Markets-Initiative/Directory/blob/main/Protocols/BoxBinary.md "BoxBinary Encoding"
 [Omi.Encoding.Hsvf]: https://github.com/Open-Markets-Initiative/Directory/blob/main/Protocols/Hsvf.md "Hsvf Encoding"
 [Omi.Encoding.Sail]: https://github.com/Open-Markets-Initiative/Directory/blob/main/Protocols/Sail.md "Sail Encoding"
 [Omi.Encoding.Atr]: https://github.com/Open-Markets-Initiative/Directory/blob/main/Protocols/Atr.md "Atr Encoding"
 [BoxOptions.Exchange]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/tree/main/Organizations/Box/Protocols/BoxOptions "Box BoxOptions"
+[Box.BoxOptions.BinaryMulticast]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/blob/main/Organizations/Box/Protocols/BoxOptions/BinaryMulticast.md "Binary Multicast"
+[Box.BoxOptions.BinaryRetransmission]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/blob/main/Organizations/Box/Protocols/BoxOptions/BinaryRetransmission.md "Binary Retransmission"
 [Box.BoxOptions.SolaMulticast]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/blob/main/Organizations/Box/Protocols/BoxOptions/SolaMulticast.md "Sola Multicast"
 [Box.BoxOptions.SolaOrderEntry]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/blob/main/Organizations/Box/Protocols/BoxOptions/SolaOrderEntry.md "Sola Order Entry"
 [Box.BoxOptions.SolaTradeReporting]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/blob/main/Organizations/Box/Protocols/BoxOptions/SolaTradeReporting.md "Sola Trade Reporting"
 [Box.BoxOptions.SolaUnicast]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/blob/main/Organizations/Box/Protocols/BoxOptions/SolaUnicast.md "Sola Unicast"
 
+[Box.BoxOptions.BinaryMulticast.BoxBinary.v1.0.Definition]: https://github.com/Open-Markets-Initiative/omi-everparse-definitions/blob/main/box/boxoptions/binarymulticast/BoxOptions_BinaryMulticast_v1_0.3d "Box BoxOptions BinaryMulticast BoxBinary v1.0 EverParse Definition"
+[Box.BoxOptions.BinaryMulticast.BoxBinary.v1.0.Url]: https://boxexchange.com/resources/connectivity/ "Box Options Market 1.0 Url"
+[Box.BoxOptions.BinaryMulticast.BoxBinary.v1.0.Pdf]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/blob/main/Organizations/Box/Specifications/BinaryMarketData/Box.BoxOptions.BinaryMarketData.BoxBinary.v1.0.pdf "Box Options Market 1.0 Pdf"
+[Box.BoxOptions.BinaryRetransmission.BoxBinary.v1.0.Definition]: https://github.com/Open-Markets-Initiative/omi-everparse-definitions/blob/main/box/boxoptions/binaryretransmission/BoxOptions_BinaryRetransmission_v1_0.3d "Box BoxOptions BinaryRetransmission BoxBinary v1.0 EverParse Definition"
+[Box.BoxOptions.BinaryRetransmission.BoxBinary.v1.0.Url]: https://boxexchange.com/resources/connectivity/ "Box Options Market 1.0 Url"
+[Box.BoxOptions.BinaryRetransmission.BoxBinary.v1.0.Pdf]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/blob/main/Organizations/Box/Specifications/BinaryMarketData/Box.BoxOptions.BinaryMarketData.BoxBinary.v1.0.pdf "Box Options Market 1.0 Pdf"
 [Box.BoxOptions.SolaMulticast.Hsvf.v1.5.Definition]: https://github.com/Open-Markets-Initiative/omi-everparse-definitions/blob/main/box/boxoptions/solamulticast/BoxOptions_SolaMulticast_v1_5.3d "Box BoxOptions SolaMulticast Hsvf v1.5 EverParse Definition"
 [Box.BoxOptions.SolaMulticast.Hsvf.v1.5.Pdf]: https://github.com/Open-Markets-Initiative/Open-Markets-Initiative/blob/main/Organizations/Box/Specifications/Hsvf/Box.BoxOptions.Sola.Multicast.Hsvf.v1.5.pdf "Box Options Market 1.5 Pdf"
 [Box.BoxOptions.SolaMulticast.Hsvf.v1.8.Definition]: https://github.com/Open-Markets-Initiative/omi-everparse-definitions/blob/main/box/boxoptions/solamulticast/BoxOptions_SolaMulticast_v1_8.3d "Box BoxOptions SolaMulticast Hsvf v1.8 EverParse Definition"

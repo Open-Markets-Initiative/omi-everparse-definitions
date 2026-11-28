@@ -1,0 +1,79 @@
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Imperative Snapshot Aspen v1.08
+//
+// Protocol:
+//   Organization: Imperative Execution
+//   Protocol: Intelligent Cross Tcp Snapshot
+//   Encoding: Aspen
+//   Version: 1.08
+//   Date: 12/14/2021
+//   Specification: IntelligentCross IQX Market Data Rerequest Specification v1.08.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US12101388B2/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//   https://patents.google.com/patent/US20260368281A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for the packet, ClientPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
+//
+// Verify and write the validators: everparse.sh --odir out IntelligentCross_Snapshot_v1_08_Client.3d
+
+// ---- Values ------------------------------------------------------------------
+
+// Client Message Type: one byte code
+#define CLIENT_MESSAGE_TYPE_LOGIN 0x4C      // Login
+#define CLIENT_MESSAGE_TYPE_HEARTBEAT 0x52  // Heartbeat
+
+// ---- Types -------------------------------------------------------------------
+
+// The client must login to the server before it will receive data
+typedef struct _LoginMessage {
+  UINT8 user[6];                   // bytes 0 to 5
+  UINT8 pass[10];                  // bytes 6 to 15
+  UINT8 market_day_identifier[9];  // bytes 16 to 24
+  UINT8 feed_identifier;           // byte 25
+  UINT8 login_sequence[20];        // bytes 26 to 45
+} LoginMessage;
+
+// Branch
+casetype _ClientPayload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x4C: LoginMessage login_message;
+    default: UINT8 unknown[available];
+  }
+} ClientPayload;
+
+// ---- Packet: ClientPacket ----------------------------------------------------
+
+// TCPOut message sent by the client
+entrypoint typedef struct _ClientPacket (UINT32 available) where (available >= 3) {
+  UINT16 length;                                                                                                        // bytes 0 to 1
+  UINT8 client_message_type;                                                                                            // byte 2
+  ClientPayload(client_message_type, (available - 3)) client_payload[:byte-size-single-element-array (available - 3)];
+} ClientPacket;
+

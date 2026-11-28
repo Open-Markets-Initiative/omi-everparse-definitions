@@ -1,0 +1,230 @@
+// ---------------------------------------------------------------------
+// EverParse 3d definition for: Imperative Snapshot Aspen v1.08
+//
+// Protocol:
+//   Organization: Imperative Execution
+//   Protocol: Intelligent Cross Tcp Snapshot
+//   Encoding: Aspen
+//   Version: 1.08
+//   Date: 12/14/2021
+//   Specification: IntelligentCross IQX Market Data Rerequest Specification v1.08.pdf
+//
+// Script:
+//   Generator: 1.0.0.0
+//   License: MIT No Attribution
+//   Authors: Omi Developers
+//
+// Copyright (c) 2026 Scaled Sources LLC. https://www.scaledsources.com
+//
+// This everparse definition is contributed to The Open Markets Initiative under
+// the license noted above.
+//
+// The protocol compiler technologies used to produce this file
+// are the subject of patents owned by Scaled Sources LLC. Those patent
+// rights are retained and are not transferred by this contribution:
+//   https://patents.google.com/patent/US12101388B2/en
+//   https://patents.google.com/patent/US20240419416A1/en
+//   https://patents.google.com/patent/US20260368281A1/en
+//
+// Open Markets Initiative website:
+//   https://openmarketsinitiative.com
+// ---------------------------------------------------------------------
+
+// Generated from the binary model, in the 3d language of EverParse. From this file everparse
+// writes a C validator for the packet, ServerPacket, and proves of that C that it reads
+// no byte outside the buffer it is given, reads no byte twice, and accepts exactly the byte
+// strings the packet describes: its header, its messages, the choice of each message by its
+// type, every length framing what it measures and every count of what it counts.
+//
+// An integer is read at its width and in its byte order. 3d has unsigned integers only, so a
+// signed field is declared unsigned and marked. Every other field is the bytes it occupies.
+// A field the protocol lists values for names them as constants, which document the codes and
+// do not constrain them: a code the document does not list is still accepted.
+//
+// Verify and write the validators: everparse.sh --odir out IntelligentCross_Snapshot_v1_08_Server.3d
+
+// ---- Values ------------------------------------------------------------------
+
+// Server Message Type: one byte code
+#define SERVER_MESSAGE_TYPE_SUCCESSFUL_LOGIN 0x41  // Successful Login
+#define SERVER_MESSAGE_TYPE_LOGIN_REJECT 0x4A      // Login Reject
+#define SERVER_MESSAGE_TYPE_HEARTBEAT 0x48         // Heartbeat
+#define SERVER_MESSAGE_TYPE_BINARY_DATA 0x53       // Binary Data
+
+// Reason Code: one byte code
+#define REASON_CODE_INVALID_USER_PASSWORD 0x41       // Invalid User Password
+#define REASON_CODE_INVALID_SEQUENCE 0x42            // Invalid Sequence
+#define REASON_CODE_INVALID_MARKET_DAY_FEED_ID 0x53  // Invalid Market Day Feed Id
+
+// Message Type: one byte code
+#define MESSAGE_TYPE_END_OF_SNAPSHOT_MESSAGE 0x58       // End Of Snapshot Message
+#define MESSAGE_TYPE_MARKET_EVENT_MESSAGE 0x41          // Market Event Message
+#define MESSAGE_TYPE_SYMBOL_INFORMATION_MESSAGE 0x42    // Symbol Information Message
+#define MESSAGE_TYPE_SYMBOL_STATE_MESSAGE 0x43          // Symbol State Message
+#define MESSAGE_TYPE_NEW_ORDER_ADD_MESSAGE 0x44         // New Order Add Message
+#define MESSAGE_TYPE_ORDER_PARTIAL_CANCEL_MESSAGE 0x46  // Order Partial Cancel Message
+#define MESSAGE_TYPE_ORDER_CANCEL_ALL_MESSAGE 0x47      // Order Cancel All Message
+#define MESSAGE_TYPE_ORDER_UPDATED_MESSAGE 0x48         // Order Updated Message
+#define MESSAGE_TYPE_ORDER_EXECUTED_MESSAGE 0x4A        // Order Executed Message
+
+// Event: one byte code
+#define EVENT_START_OF_SESSION 0x4F              // Start Of Session
+#define EVENT_MARKET_ACCEPTING_ORDERS 0x53       // Market Accepting Orders
+#define EVENT_MARKET_OPEN_FOR_TRADING 0x51       // Market Open For Trading
+#define EVENT_MARKET_TRADING_ENDED_FOR_DAY 0x45  // Market Trading Ended For Day
+#define EVENT_END_OF_SESSION 0x43                // End Of Session
+
+// Listing Market: one byte code
+#define LISTING_MARKET_NYSE 0x4E    // Nyse
+#define LISTING_MARKET_NASDAQ 0x51  // Nasdaq
+#define LISTING_MARKET_ARCA 0x50    // Arca
+#define LISTING_MARKET_BATS_Z 0x5A  // Bats Z
+#define LISTING_MARKET_AMEX 0x41    // Amex
+#define LISTING_MARKET_IEX 0x56     // Iex
+#define LISTING_MARKET_TXSE 0x46    // Txse
+#define LISTING_MARKET_XCHI 0x4D    // Xchi
+#define LISTING_MARKET_XBOX 0x42    // Xbox
+
+// State: one byte code
+#define STATE_MATCHING_INACTIVE 0x49  // Matching Inactive
+#define STATE_MATCHING_ACTIVE 0x41    // Matching Active
+#define STATE_DISABLED 0x44           // Disabled
+#define STATE_ENABLED 0x45            // Enabled
+
+// Side: one byte code
+#define SIDE_BUY 0x42   // Buy
+#define SIDE_SELL 0x53  // Sell
+
+// ---- Types -------------------------------------------------------------------
+
+// Sent by the server when the login succeeds
+typedef struct _SuccessfulLoginMessage {
+  UINT8 market_day_identifier[9];  // bytes 0 to 8
+  UINT8 feed_identifier;           // byte 9
+  UINT8 login_sequence[20];        // bytes 10 to 29
+} SuccessfulLoginMessage;
+
+// Sent by the server when the login is rejected
+typedef struct _LoginRejectMessage {
+  UINT8 reason_code;  // byte 0
+} LoginRejectMessage;
+
+// Sent once the snapshot has completed
+typedef struct _EndOfSnapshotMessage {
+  UINT64 sequence;  // bytes 0 to 7
+} EndOfSnapshotMessage;
+
+// This message appears on all quote channels and indicates the beginning of a spin message cycle
+typedef struct _MarketEventMessage {
+  UINT8 reserved_2[2];  // bytes 0 to 1
+  UINT64 timestamp;     // bytes 2 to 9
+  UINT8 event;          // byte 10
+} MarketEventMessage;
+
+// Symbol Information
+typedef struct _SymbolInformationMessage {
+  UINT16 symbol_id;       // bytes 0 to 1
+  UINT64 timestamp;       // bytes 2 to 9
+  UINT8 symbol[11];       // bytes 10 to 20
+  UINT8 listing_market;   // byte 21
+  UINT8 reserved_1;       // byte 22
+  UINT32 round_lot_size;  // bytes 23 to 26
+} SymbolInformationMessage;
+
+// Symbol State
+typedef struct _SymbolStateMessage {
+  UINT16 symbol_id;  // bytes 0 to 1
+  UINT64 timestamp;  // bytes 2 to 9
+  UINT8 symbol[11];  // bytes 10 to 20
+  UINT8 state;       // byte 21
+  UINT8 reserved_1;  // byte 22
+  UINT8 info[4];     // bytes 23 to 26
+} SymbolStateMessage;
+
+// New Order Add
+typedef struct _NewOrderAddMessage {
+  UINT16 symbol_id;     // bytes 0 to 1
+  UINT64 timestamp;     // bytes 2 to 9
+  UINT64 order_id;      // bytes 10 to 17
+  UINT8 side;           // byte 18
+  UINT32 shares;        // bytes 19 to 22
+  UINT8 symbol[11];     // bytes 23 to 33
+  UINT64 price;         // bytes 34 to 41, signed, read here as unsigned
+  UINT8 reserved_4[4];  // bytes 42 to 45
+} NewOrderAddMessage;
+
+// Order Partial Cancel
+typedef struct _OrderPartialCancelMessage {
+  UINT16 symbol_id;        // bytes 0 to 1
+  UINT64 timestamp;        // bytes 2 to 9
+  UINT64 order_id;         // bytes 10 to 17
+  UINT32 shares_canceled;  // bytes 18 to 21
+} OrderPartialCancelMessage;
+
+// Order Cancel All
+typedef struct _OrderCancelAllMessage {
+  UINT16 symbol_id;  // bytes 0 to 1
+  UINT64 timestamp;  // bytes 2 to 9
+  UINT64 order_id;   // bytes 10 to 17
+} OrderCancelAllMessage;
+
+// Order Updated
+typedef struct _OrderUpdatedMessage {
+  UINT16 symbol_id;  // bytes 0 to 1
+  UINT64 timestamp;  // bytes 2 to 9
+  UINT64 order_id;   // bytes 10 to 17
+  UINT32 shares;     // bytes 18 to 21
+  UINT64 price;      // bytes 22 to 29, signed, read here as unsigned
+} OrderUpdatedMessage;
+
+// Sent when a visible order is executed
+typedef struct _OrderExecutedMessage {
+  UINT16 symbol_id;     // bytes 0 to 1
+  UINT64 timestamp;     // bytes 2 to 9
+  UINT64 order_id;      // bytes 10 to 17
+  UINT32 shares;        // bytes 18 to 21
+  UINT64 execution_id;  // bytes 22 to 29
+  UINT8 reserved_1;     // byte 30
+  UINT64 price;         // bytes 31 to 38, signed, read here as unsigned
+} OrderExecutedMessage;
+
+// Branch
+casetype _Payload (UINT8 selector) {
+  switch (selector) {
+    case 0x58: EndOfSnapshotMessage end_of_snapshot_message;
+    case 0x41: MarketEventMessage market_event_message;
+    case 0x42: SymbolInformationMessage symbol_information_message;
+    case 0x43: SymbolStateMessage symbol_state_message;
+    case 0x44: NewOrderAddMessage new_order_add_message;
+    case 0x46: OrderPartialCancelMessage order_partial_cancel_message;
+    case 0x47: OrderCancelAllMessage order_cancel_all_message;
+    case 0x48: OrderUpdatedMessage order_updated_message;
+    case 0x4A: OrderExecutedMessage order_executed_message;
+  }
+} Payload;
+
+// Carries one IQX feed message, or the End of Snapshot message, after its three byte header
+typedef struct _BinaryDataMessage {
+  UINT8 message_type;             // byte 0
+  Payload(message_type) payload;
+} BinaryDataMessage;
+
+// Branch
+casetype _ServerPayload (UINT8 selector, UINT32 available) {
+  switch (selector) {
+    case 0x41: SuccessfulLoginMessage successful_login_message;
+    case 0x4A: LoginRejectMessage login_reject_message;
+    case 0x53: BinaryDataMessage binary_data_message[:byte-size available];
+    default: UINT8 unknown[available];
+  }
+} ServerPayload;
+
+// ---- Packet: ServerPacket ----------------------------------------------------
+
+// TCPOut message sent by the server
+entrypoint typedef struct _ServerPacket (UINT32 available) where (available >= 3) {
+  UINT16 length;                                                                                                        // bytes 0 to 1
+  UINT8 server_message_type;                                                                                            // byte 2
+  ServerPayload(server_message_type, (available - 3)) server_payload[:byte-size-single-element-array (available - 3)];
+} ServerPacket;
+
